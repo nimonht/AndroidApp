@@ -66,7 +66,7 @@ app/src/main/java/com/example/androidapp/
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/nimonht/AndroidApp
 cd AndroidApp
 ```
 
