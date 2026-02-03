@@ -38,7 +38,6 @@ Rather than completing all Frontend tasks before Backend (or vice versa), I reco
 Module 1: Project Setup & Architecture
 ├── Setup Jetpack Compose (3h)
 ├── Setup Kotlin DSL (2h)
-├── Configure Hilt Dependency Injection (5h)
 ├── Setup Firebase SDK (3h)
 ├── Setup Room Database (3h)
 ├── Setup Navigation Component (3h)
@@ -162,13 +161,13 @@ Module 5: Room Database Setup
 ├── Create Type Converters (3h)
 └── Setup Database Migrations (5h)
 
-Module 15: Hilt Dependency Injection
-├── Create Firebase Module (3h)
-├── Create Database Module (3h)
-├── Create Repository Module (3h)
-├── Create Network Module (2h)
-├── Create Dispatchers Module (2h)
-└── Create WorkManager Module (2h)
+Module 15: Manual Dependency Injection
+├── Create AppContainer Interface (3h)
+├── Implement AppContainerImpl with Firebase (3h)
+├── Implement Database Dependencies (3h)
+├── Create Network Dependencies (2h)
+├── Setup Dispatchers & Context (2h)
+└── Integrate with Application & Composables (2h)
 
 Total: 87 hours
 ```
@@ -177,7 +176,7 @@ Total: 87 hours
 - [ ] All UI components working in isolation (storybook/preview)
 - [ ] All screens navigable with mock data
 - [ ] Room database operational
-- [ ] Hilt modules configured
+- [ ] DI modules configured
 
 ---
 

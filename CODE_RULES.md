@@ -4,7 +4,7 @@
 
 ```
 app/src/main/java/com/example/androidapp/
-├── di/                          # Dependency Injection (Hilt modules)
+├── di/                          # Dependency Injection (Manual DI)
 │   ├── AppModule.kt
 │   ├── DatabaseModule.kt
 │   ├── FirebaseModule.kt
@@ -146,7 +146,7 @@ app/src/main/java/com/example/androidapp/
 | Room DAO | `{Name}Dao.kt` | `QuizDao.kt` |
 | Firebase DTO | `{Name}Dto.kt` | `QuizDto.kt` |
 | Use Case | `{Action}{Entity}UseCase.kt` | `CreateQuizUseCase.kt` |
-| Hilt Module | `{Name}Module.kt` | `DatabaseModule.kt` |
+| DI Container | `{Name}Container.kt` | `AppContainer.kt` |
 
 ### 2.2 Functions
 
@@ -186,8 +186,7 @@ app/src/main/java/com/example/androidapp/
 
 ```kotlin
 // ✅ CORRECT: ViewModel manages UI state
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeViewModel(
     private val quizRepository: QuizRepository
 ) : ViewModel() {
     
@@ -235,7 +234,7 @@ interface QuizRepository {
 }
 
 // Implementation in data layer
-class QuizRepositoryImpl @Inject constructor(
+class QuizRepositoryImpl(
     private val firestoreService: FirestoreService,
     private val quizDao: QuizDao
 ) : QuizRepository {

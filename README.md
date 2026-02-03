@@ -25,7 +25,7 @@ This project follows **Clean Architecture** with **MVVM** pattern:
 
 ```
 app/src/main/java/com/example/androidapp/
-├── di/                  # Dependency Injection (Hilt)
+├── di/                  # Dependency Injection (Manual DI)
 ├── domain/              # Business Logic Layer
 │   ├── model/           # Domain Models
 │   ├── usecase/         # Use Cases
@@ -51,7 +51,7 @@ app/src/main/java/com/example/androidapp/
 | Cloud Database | Cloud Firestore |
 | Authentication | Firebase Auth |
 | Storage | Firebase Storage |
-| DI | Hilt |
+| DI | Manual DI |
 | Async | Kotlin Coroutines + Flow |
 
 ## Prerequisites

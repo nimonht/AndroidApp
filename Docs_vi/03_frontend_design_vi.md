@@ -412,8 +412,7 @@ fun ChoiceButton(
 ### 4.1 ViewModel Tạo Quiz
 
 ```kotlin
-@HiltViewModel
-class CreateQuizViewModel @Inject constructor(
+class CreateQuizViewModel(
     private val quizRepository: QuizRepository
 ) : ViewModel() {
 
@@ -478,8 +477,7 @@ data class CreateQuizUiState(
 ### 4.2 ViewModel Làm Quiz
 
 ```kotlin
-@HiltViewModel
-class TakeQuizViewModel @Inject constructor(
+class TakeQuizViewModel(
     private val quizRepository: QuizRepository,
     private val attemptRepository: AttemptRepository,
     savedStateHandle: SavedStateHandle
@@ -574,31 +572,38 @@ sealed class TakeQuizUiState {
 
 ## 5. Tích Hợp Firebase
 
-### 5.1 Cài Đặt Firebase (Hilt Module)
+### 5.1 Cài Đặt Firebase (Manual DI)
 
 ```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object FirebaseModule {
+// In AppContainer interface
+interface AppContainer {
+    val firebaseAuth: FirebaseAuth
+    val firebaseFirestore: FirebaseFirestore
+    val firebaseStorage: FirebaseStorage
+    // ... other dependencies
+}
+
+// In AppContainerImpl
+class AppContainerImpl(override val context: Context) : AppContainer {
+    override val firebaseAuth: FirebaseAuth by lazy {
+        Firebase.auth
+    }
     
-    @Provides
-    @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth = Firebase.auth
+    override val firebaseFirestore: FirebaseFirestore by lazy {
+        Firebase.firestore
+    }
     
-    @Provides
-    @Singleton
-    fun provideFirestore(): FirebaseFirestore = Firebase.firestore
-    
-    @Provides
-    @Singleton
-    fun provideFirebaseStorage(): FirebaseStorage = Firebase.storage
+    override val firebaseStorage: FirebaseStorage by lazy {
+        Firebase.storage
+    }
+    // ... other implementations
 }
 ```
 
 ### 5.2 Repository với Firebase
 
 ```kotlin
-class QuizRepository @Inject constructor(
+class QuizRepository(
     private val firestore: FirebaseFirestore,
     private val quizDao: QuizDao // Room cho cache ngoại tuyến
 ) {
@@ -707,8 +712,8 @@ class QuizCodeApp : Application() {
 ### 6.2 Theo Dõi Mạng
 
 ```kotlin
-class NetworkMonitor @Inject constructor(
-    @ApplicationContext private val context: Context
+class NetworkMonitor(
+    private val context: Context
 ) {
     private val connectivityManager = 
         context.getSystemService<ConnectivityManager>()!!
@@ -728,7 +733,7 @@ class NetworkMonitor @Inject constructor(
 ### 6.3 Chế Độ Tiết Kiệm Dữ Liệu
 
 ```kotlin
-class SyncPreferences @Inject constructor(
+class SyncPreferences(
     private val dataStore: DataStore<Preferences>
 ) {
     private val dataSaverKey = booleanPreferencesKey("data_saver_enabled")
@@ -793,8 +798,8 @@ Người Dùng      UI          Importer      Validator      Firestore
 ### 7.2 Bộ Phân Tích CSV
 
 ```kotlin
-class CsvImporter @Inject constructor(
-    @ApplicationContext private val context: Context
+class CsvImporter(
+    private val context: Context
 ) {
     private val requiredColumns = setOf(
         "question", "option_0", "option_1", "option_2", "option_3", "correct_option"
@@ -838,7 +843,7 @@ class CsvImporter @Inject constructor(
 ### 8.1 Pool Repository
 
 ```kotlin
-class PoolRepository @Inject constructor(
+class PoolRepository(
     private val firestore: FirebaseFirestore
 ) {
     private val poolRef = firestore.collection("questionPool")

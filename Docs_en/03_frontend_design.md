@@ -405,11 +405,10 @@ fun ChoiceButton(
 
 ## 4. ViewModel Patterns
 
-### 4.1 Quiz Creation ViewModel
+### 4.1 Create Quiz ViewModel
 
 ```kotlin
-@HiltViewModel
-class CreateQuizViewModel @Inject constructor(
+class CreateQuizViewModel(
     private val quizRepository: QuizRepository
 ) : ViewModel() {
 
@@ -474,8 +473,7 @@ data class CreateQuizUiState(
 ### 4.2 Take Quiz ViewModel
 
 ```kotlin
-@HiltViewModel
-class TakeQuizViewModel @Inject constructor(
+class TakeQuizViewModel(
     private val quizRepository: QuizRepository,
     private val attemptRepository: AttemptRepository,
     savedStateHandle: SavedStateHandle
@@ -570,31 +568,38 @@ sealed class TakeQuizUiState {
 
 ## 5. Firebase Integration
 
-### 5.1 Firebase Setup (Hilt Module)
+### 5.1 Firebase Setup (Manual DI)
 
 ```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object FirebaseModule {
+// In AppContainer interface
+interface AppContainer {
+    val firebaseAuth: FirebaseAuth
+    val firebaseFirestore: FirebaseFirestore
+    val firebaseStorage: FirebaseStorage
+    // ... other dependencies
+}
+
+// In AppContainerImpl
+class AppContainerImpl(override val context: Context) : AppContainer {
+    override val firebaseAuth: FirebaseAuth by lazy {
+        Firebase.auth
+    }
     
-    @Provides
-    @Singleton
-    fun provideFirebaseAuth(): FirebaseAuth = Firebase.auth
+    override val firebaseFirestore: FirebaseFirestore by lazy {
+        Firebase.firestore
+    }
     
-    @Provides
-    @Singleton
-    fun provideFirestore(): FirebaseFirestore = Firebase.firestore
-    
-    @Provides
-    @Singleton
-    fun provideFirebaseStorage(): FirebaseStorage = Firebase.storage
+    override val firebaseStorage: FirebaseStorage by lazy {
+        Firebase.storage
+    }
+    // ... other implementations
 }
 ```
 
 ### 5.2 Repository with Firebase
 
 ```kotlin
-class QuizRepository @Inject constructor(
+class QuizRepository(
     private val firestore: FirebaseFirestore,
     private val quizDao: QuizDao // Room for offline cache
 ) {
@@ -700,11 +705,11 @@ class QuizCodeApp : Application() {
 }
 ```
 
-### 6.2 Network Monitor
+### 6.2 Network Monitoring
 
 ```kotlin
-class NetworkMonitor @Inject constructor(
-    @ApplicationContext private val context: Context
+class NetworkMonitor(
+    private val context: Context
 ) {
     private val connectivityManager = 
         context.getSystemService<ConnectivityManager>()!!
@@ -724,7 +729,7 @@ class NetworkMonitor @Inject constructor(
 ### 6.3 Data Saver Mode
 
 ```kotlin
-class SyncPreferences @Inject constructor(
+class SyncPreferences(
     private val dataStore: DataStore<Preferences>
 ) {
     private val dataSaverKey = booleanPreferencesKey("data_saver_enabled")
@@ -792,8 +797,8 @@ User          UI           Importer       Validator       Firestore
 ### 7.2 CSV Parser
 
 ```kotlin
-class CsvImporter @Inject constructor(
-    @ApplicationContext private val context: Context
+class CsvImporter(
+    private val context: Context
 ) {
     private val requiredColumns = setOf(
         "question", "option_0", "option_1", "option_2", "option_3", "correct_option"
@@ -837,7 +842,7 @@ class CsvImporter @Inject constructor(
 ### 8.1 Pool Repository
 
 ```kotlin
-class PoolRepository @Inject constructor(
+class PoolRepository(
     private val firestore: FirebaseFirestore
 ) {
     private val poolRef = firestore.collection("questionPool")

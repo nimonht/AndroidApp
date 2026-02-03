@@ -286,7 +286,7 @@ data class Attempt(
 ### 4.1 Authentication Repository
 
 ```kotlin
-class AuthRepository @Inject constructor() {
+class AuthRepository() {
     private val auth = Firebase.auth
     
     val currentUser: Flow<FirebaseUser?> = callbackFlow {
@@ -336,7 +336,7 @@ class AuthRepository @Inject constructor() {
 ### 4.2 Quiz Repository
 
 ```kotlin
-class QuizRepository @Inject constructor(
+class QuizRepository(
     private val quizDao: QuizDao // Room DAO for offline cache
 ) {
     private val db = Firebase.firestore
@@ -478,7 +478,7 @@ data class QuizWithQuestions(
 ### 4.3 Attempt Repository
 
 ```kotlin
-class AttemptRepository @Inject constructor() {
+class AttemptRepository() {
     private val db = Firebase.firestore
     private val attemptsRef = db.collection("attempts")
     
@@ -578,7 +578,7 @@ object ChecksumUtil {
 ### 5.2 Sync Manager
 
 ```kotlin
-class SyncManager @Inject constructor(
+class SyncManager(
     private val quizRepository: QuizRepository,
     private val quizDao: QuizDao,
     private val workManager: WorkManager
