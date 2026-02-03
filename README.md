@@ -1,13 +1,13 @@
-# QuizCode - Android Mobile Application
+# Android Mobile Application
 
 ![Android](https://img.shields.io/badge/Platform-Android-green)
 ![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple)
 ![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue)
 ![Firebase](https://img.shields.io/badge/Backend-Firebase-orange)
 
-## 📱 Overview
+## Overview
 
-**QuizCode** is an Android mobile application that enables users to create, share, and take multiple-choice quizzes. The app supports both online (cloud-synced) and offline (local-first) modes.
+Android mobile application that enables users to create, share, and take multiple-choice quizzes. The app supports both online (cloud-synced) and offline (local-first) modes.
 
 ### Key Features
 
@@ -24,7 +24,7 @@
 This project follows **Clean Architecture** with **MVVM** pattern:
 
 ```
-app/src/main/java/com/example/quizcode/
+app/src/main/java/com/example/androidapp/
 ├── di/                  # Dependency Injection (Hilt)
 ├── domain/              # Business Logic Layer
 │   ├── model/           # Domain Models
@@ -125,6 +125,9 @@ Types: feat, fix, docs, style, refactor, test, chore
 # Run instrumented tests
 ./gradlew connectedAndroidTest
 ```
+## Roadmap 
+
+See development plan at [Roadmap.md](Roadmap.md).
 
 ## License
 
