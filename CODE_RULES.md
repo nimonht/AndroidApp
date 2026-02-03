@@ -517,25 +517,6 @@ class QuizCardTest {
 - [ ] No hardcoded colors (use theme)
 - [ ] Follows naming conventions above
 
-### 8.2 Lint Configuration
-
-```kotlin
-// app/build.gradle.kts
-android {
-    lint {
-        warningsAsErrors = true
-        abortOnError = true
-        disable += setOf("ObsoleteLintCustomCheck")
-    }
-}
-```
-
-### 8.3 Detekt Configuration
-
-Create `detekt.yml` for static analysis rules.
-
----
-
 ## 9. Git Conventions
 
 ### 9.1 Branch Naming

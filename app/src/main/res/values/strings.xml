@@ -1,3 +1,38 @@
 <resources>
-    <string name="app_name">AndroidApp</string>
+    <string name="app_name">Application</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="share">Share</string>
+    <string name="submit">Submit</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+
+    <!-- Quiz -->
+    <string name="quiz_create">Create Quiz</string>
+    <string name="quiz_join">Join Quiz</string>
+    <string name="quiz_code_hint">Enter 6-digit code</string>
+    <string name="quiz_questions">%1$d Questions</string>
+    <string name="quiz_attempts">%1$d Attempts</string>
+
+    <!-- Auth -->
+    <string name="login">Log In</string>
+    <string name="register">Sign Up</string>
+    <string name="logout">Log Out</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
 </resources>
