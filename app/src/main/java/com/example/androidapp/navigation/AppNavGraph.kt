@@ -31,8 +31,9 @@ fun AppNavGraph(navController: NavHostController) {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) { backStackEntry ->
             val quizId = backStackEntry.arguments?.getString("id")
-            // QuizDetailScreen(quizId = quizId)
+            com.example.androidapp.ui.quiz.QuizDetailScreen(navController = navController, quizId = quizId)
         }
+
 
         composable(
             route = Screen.TakeQuiz.route,
