@@ -65,6 +65,9 @@ fun AppNavGraph(navController: NavHostController) {
             // GỌI MÀN HÌNH KẾT QUẢ:
             com.example.androidapp.ui.quiz.QuizResultScreen(navController = navController, quizId = quizId)
         }
+        composable(Screen.CreateQuiz.route) {
+            com.example.androidapp.ui.create.CreateQuizScreen(navController)
+        }
 
         // --- CÁC MÀN HÌNH KHÁC ---
         composable(Screen.CreateQuiz.route) { }
