@@ -1,6 +1,4 @@
-# Manual Dependency Injection Guide
-
-This project uses manual dependency injection instead of Hilt. This document explains how to use the DI system.
+# Dependency Injection 
 
 ## Overview
 

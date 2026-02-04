@@ -17,7 +17,7 @@ Android mobile application that enables users to create, share, and take multipl
 - **Public Library** - Browse and search community quizzes
 - **Guest Mode** - Take quizzes without account registration
 - **Question Pool** - Contribute questions for auto-generated quizzes
-- ☁**Cloud Sync** - Automatic backup with integrity verification
+- **Cloud Sync** - Automatic backup with integrity verification
 
 ## Architecture
 
@@ -127,7 +127,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 ```
 ## Roadmap 
 
-See development plan at [Roadmap.md](Roadmap.md).
+See development plan at [Roadmap](Roadmap.md).
 
 ## License
 
