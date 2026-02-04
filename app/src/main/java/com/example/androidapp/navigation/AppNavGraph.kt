@@ -55,8 +55,15 @@ fun AppNavGraph(navController: NavHostController) {
         composable(
             route = Screen.QuizResult.route,
             arguments = listOf(navArgument("id") { type = NavType.StringType })
-        ) {
-            // QuizResultScreen(...) -> Nhiệm vụ 7 sẽ làm
+        )
+        // Nhiệm vụ 7: Màn hình kết quả
+        composable(
+            route = Screen.QuizResult.route,
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val quizId = backStackEntry.arguments?.getString("id") ?: ""
+            // GỌI MÀN HÌNH KẾT QUẢ:
+            com.example.androidapp.ui.quiz.QuizResultScreen(navController = navController, quizId = quizId)
         }
 
         // --- CÁC MÀN HÌNH KHÁC ---
