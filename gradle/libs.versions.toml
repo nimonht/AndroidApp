@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.0"
+agp = "8.13.1"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.27"
 coreKtx = "1.15.0"
@@ -30,6 +30,7 @@ coroutinesPlayServices = "1.9.0"
 
 # Gson
 gson = "2.11.0"
+coreKtxVersion = "1.17.0"
 
 [libraries]
 # AndroidX Core
@@ -80,10 +81,12 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
 
 # Gson
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 

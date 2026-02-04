@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -45,6 +46,9 @@ android {
     buildFeatures {
         compose = true
     }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
@@ -64,6 +68,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime.livedata)
+    implementation(libs.core.ktx)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 
@@ -85,8 +90,8 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.play.services)
-
-
+// Show Image from URL
+    implementation("io.coil-kt:coil-compose:2.5.0")
     // Gson (for Room type converters)
     implementation(libs.gson)
 
