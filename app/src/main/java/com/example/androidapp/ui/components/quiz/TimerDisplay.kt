@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.androidapp.R
 import java.util.Locale
 
 @Composable
@@ -39,7 +41,7 @@ fun TimerDisplay(
     ) {
         Icon(
             imageVector = Icons.Default.Notifications,
-            contentDescription = "Thời gian làm bài", // Hardcode
+            contentDescription = stringResource(R.string.timer_content_description),
             tint = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.size(16.dp)
         )

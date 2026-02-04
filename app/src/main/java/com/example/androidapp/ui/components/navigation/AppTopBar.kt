@@ -6,8 +6,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.androidapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,7 @@ fun AppTopBar(
                 IconButton(onClick = navigateUp) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Quay lại" // Hardcode
+                        contentDescription = stringResource(R.string.back)
                     )
                 }
             }

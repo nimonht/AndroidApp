@@ -8,6 +8,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.androidapp.R
 
 @Composable
 fun CreateQuizFAB(
@@ -17,8 +19,8 @@ fun CreateQuizFAB(
 ) {
     ExtendedFloatingActionButton(
         onClick = onClick,
-        icon = { Icon(Icons.Default.Add, contentDescription = null) },
-        text = { Text(text = "Tạo Quiz") }, // Hardcode
+        icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.quiz_create)) },
+        text = { Text(text = stringResource(R.string.quiz_create)) },
         expanded = expanded,
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,

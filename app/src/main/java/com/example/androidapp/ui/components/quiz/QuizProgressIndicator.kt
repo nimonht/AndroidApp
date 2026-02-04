@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
 
 @Composable
 fun QuizProgressIndicator(
@@ -23,9 +25,12 @@ fun QuizProgressIndicator(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Hardcode format chuỗi: "Câu 1/10"
             Text(
-                text = "Câu ${currentQuestionIndex + 1}/$totalQuestions",
+                text = stringResource(
+                    id = R.string.question_progress,
+                    currentQuestionIndex + 1,
+                    totalQuestions
+                ),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold

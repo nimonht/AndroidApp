@@ -14,6 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import androidx.compose.ui.res.stringResource
+import com.example.androidapp.R
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.common.TagChip
 
@@ -68,7 +70,7 @@ fun QuizCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "bởi ${quiz.authorName}",
+                        text = stringResource(R.string.quiz_by_author, quiz.authorName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -84,7 +86,7 @@ fun QuizCard(
                     }
                     if (quiz.tags.size > 2) {
                         Text(
-                            text = "+${quiz.tags.size - 2}",
+                            text = stringResource(R.string.quiz_more_tags, quiz.tags.size - 2),
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.align(Alignment.CenterVertically),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -103,7 +105,7 @@ fun QuizCard(
             ) {
                 // Số câu hỏi
                 Text(
-                    text = "${quiz.questionCount} câu",
+                    text = stringResource(R.string.quiz_questions, quiz.questionCount),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
