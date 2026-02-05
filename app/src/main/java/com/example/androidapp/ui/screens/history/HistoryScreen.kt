@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.navigation.AppTopBar
 
@@ -29,17 +31,33 @@ fun HistoryScreen(
     modifier: Modifier = Modifier
 ) {
     // TODO: Replace with actual data from ViewModel
-    val attempts = listOf(
-        AttemptPreview("1", "Math Quiz", "8/10", "2 hours ago"),
-        AttemptPreview("2", "Science Trivia", "7/10", "Yesterday"),
-        AttemptPreview("3", "History Quiz", "9/10", "3 days ago")
+    val attemptsSample = listOf(
+        AttemptPreview(
+            "1",
+            stringResource(R.string.history_math_quiz),
+            "8/10",
+            stringResource(R.string.history_time_hours_ago, 2)
+        ),
+        AttemptPreview(
+            "2",
+            stringResource(R.string.history_science_trivia),
+            "7/10",
+            stringResource(R.string.history_time_yesterday)
+        ),
+        AttemptPreview(
+            "3",
+            stringResource(R.string.history_history_quiz),
+            "9/10",
+            stringResource(R.string.history_time_days_ago, 3)
+        )
     )
+    val attempts = attemptsSample
 
     Scaffold(
         modifier = modifier,
         topBar = {
             AppTopBar(
-                title = "Attempt History",
+                title = stringResource(R.string.history_title),
                 canNavigateBack = true,
                 navigateUp = onNavigateBack
             )
@@ -47,8 +65,8 @@ fun HistoryScreen(
     ) { innerPadding ->
         if (attempts.isEmpty()) {
             EmptyState(
-                message = "No attempts yet",
-                actionLabel = "Explore Quizzes",
+                message = stringResource(R.string.history_empty),
+                actionLabel = stringResource(R.string.history_action_explore),
                 onActionClick = onNavigateBack,
                 modifier = Modifier.padding(innerPadding)
             )

@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
 import com.example.androidapp.ui.components.common.AppAlertDialog
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.navigation.AppTopBar
@@ -29,13 +31,20 @@ fun TrashScreen(
     modifier: Modifier = Modifier
 ) {
     // TODO: Replace with actual data from ViewModel
-    var deletedQuizzes by remember {
-        mutableStateOf(
-            listOf(
-                DeletedQuiz("1", "Old Math Quiz", "Deleted 5 days ago"),
-                DeletedQuiz("2", "Draft Quiz", "Deleted 10 days ago")
-            )
+    val deletedQuizzesSample = listOf(
+        DeletedQuiz(
+            "1",
+            stringResource(R.string.trash_sample_old_math_quiz),
+            stringResource(R.string.trash_deleted_days_ago, 5)
+        ),
+        DeletedQuiz(
+            "2",
+            stringResource(R.string.trash_sample_draft_quiz),
+            stringResource(R.string.trash_deleted_days_ago, 10)
         )
+    )
+    var deletedQuizzes by remember(deletedQuizzesSample) {
+        mutableStateOf(deletedQuizzesSample)
     }
     var showDeleteDialog by remember { mutableStateOf<DeletedQuiz?>(null) }
 
@@ -43,7 +52,7 @@ fun TrashScreen(
         modifier = modifier,
         topBar = {
             AppTopBar(
-                title = "Recycle Bin",
+                title = stringResource(R.string.trash_title),
                 canNavigateBack = true,
                 navigateUp = onNavigateBack
             )
@@ -51,7 +60,7 @@ fun TrashScreen(
     ) { innerPadding ->
         if (deletedQuizzes.isEmpty()) {
             EmptyState(
-                message = "Recycle bin is empty",
+                message = stringResource(R.string.trash_empty),
                 icon = Icons.Default.Delete,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -71,7 +80,7 @@ fun TrashScreen(
                     )
                 ) {
                     Text(
-                        text = "Items are permanently deleted after 30 days",
+                        text = stringResource(R.string.trash_info_30_days),
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -102,8 +111,8 @@ fun TrashScreen(
     // Delete confirmation dialog
     showDeleteDialog?.let { quiz ->
         AppAlertDialog(
-            title = "Delete Permanently?",
-            message = "\"${quiz.title}\" will be permanently deleted. This action cannot be undone.",
+            title = stringResource(R.string.trash_delete_permanently_title),
+            message = stringResource(R.string.trash_delete_permanently_message, quiz.title),
             onDismiss = { showDeleteDialog = null },
             onConfirm = {
                 deletedQuizzes = deletedQuizzes - quiz
@@ -155,14 +164,14 @@ private fun DeletedQuizCard(
             IconButton(onClick = onRestore) {
                 Icon(
                     imageVector = Icons.Default.Restore,
-                    contentDescription = "Restore",
+                    contentDescription = stringResource(R.string.trash_action_restore_cd),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete permanently",
+                    contentDescription = stringResource(R.string.trash_action_delete_permanently_cd),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

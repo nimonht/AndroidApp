@@ -47,14 +47,14 @@ fun LoginScreen(
         ) {
             // Title
             Text(
-                text = "Welcome Back!",
+                text = stringResource(R.string.auth_welcome_back),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Login to continue managing your quizzes",
+                text = stringResource(R.string.auth_login_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -127,7 +127,7 @@ fun LoginScreen(
 
             // Sign up link
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Don't have an account? ")
+                Text(stringResource(R.string.auth_no_account))
                 Text(
                     text = stringResource(R.string.register),
                     style = MaterialTheme.typography.bodyLarge,

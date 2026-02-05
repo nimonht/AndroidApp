@@ -1,79 +1,189 @@
 <resources>
-    <string name="app_name">Application</string>
+    <string name="app_name">Ứng dụng</string>
 
     <!-- Navigation -->
-    <string name="nav_home">Home</string>
-    <string name="nav_search">Search</string>
-    <string name="nav_profile">Profile</string>
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_search">Tìm kiếm</string>
+    <string name="nav_profile">Hồ sơ</string>
 
     <!-- Common -->
-    <string name="loading">Loading…</string>
-    <string name="error">Error</string>
-    <string name="error_generic">Something went wrong</string>
-    <string name="retry">Retry</string>
-    <string name="confirm">Confirm</string>
-    <string name="cancel">Cancel</string>
+    <string name="loading">Đang tải…</string>
+    <string name="error">Lỗi</string>
+    <string name="error_generic">Đã có lỗi xảy ra</string>
+    <string name="retry">Thử lại</string>
+    <string name="confirm">Xác nhận</string>
+    <string name="cancel">Hủy</string>
     <string name="ok">OK</string>
-    <string name="save">Save</string>
-    <string name="delete">Delete</string>
-    <string name="edit">Edit</string>
-    <string name="share">Share</string>
-    <string name="submit">Submit</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-    <string name="back">Back</string>
-    <string name="close">Close</string>
-    <string name="warning_title">Warning</string>
-    <string name="continue_action">Continue</string>
-    <string name="delete_confirm_title">Confirm delete</string>
+    <string name="save">Lưu</string>
+    <string name="delete">Xóa</string>
+    <string name="edit">Chỉnh sửa</string>
+    <string name="share">Chia sẻ</string>
+    <string name="submit">Gửi</string>
+    <string name="next">Tiếp</string>
+    <string name="previous">Trước</string>
+    <string name="back">Quay lại</string>
+    <string name="close">Đóng</string>
+    <string name="warning_title">Cảnh báo</string>
+    <string name="continue_action">Tiếp tục</string>
+    <string name="delete_confirm_title">Xác nhận xóa</string>
 
     <!-- Quiz -->
-    <string name="quiz_create">Create Quiz</string>
-    <string name="quiz_join">Join Quiz</string>
-    <string name="quiz_code_hint">Enter 6-digit code</string>
-    <string name="quiz_questions">%1$d Questions</string>
-    <string name="quiz_attempts">%1$d Attempts</string>
-    <string name="quiz_choice_count">%1$d of %2$d choices</string>
-    <string name="quiz_by_author">by %1$s</string>
+    <string name="quiz_create">Tạo bài kiểm tra</string>
+    <string name="quiz_join">Tham gia bài kiểm tra</string>
+    <string name="quiz_code_hint">Nhập mã 6 chữ số</string>
+    <string name="quiz_questions">%1$d câu hỏi</string>
+    <string name="quiz_attempts">%1$d lượt làm</string>
+    <string name="quiz_choice_count">%1$d trên %2$d lựa chọn</string>
+    <string name="quiz_by_author">bởi %1$s</string>
     <string name="quiz_more_tags">+%1$d</string>
-    <string name="question_progress">Question %1$d/%2$d</string>
-    <string name="timer_content_description">Quiz timer</string>
+    <string name="question_progress">Câu hỏi %1$d/%2$d</string>
+    <string name="timer_content_description">Bộ đếm thời gian bài kiểm tra</string>
 
     <!-- Media -->
-    <string name="image_load_error">Unable to load image</string>
-    <string name="play_video">Play video</string>
+    <string name="image_load_error">Không thể tải ảnh</string>
+    <string name="play_video">Phát video</string>
     <string name="video_label">VIDEO</string>
 
     <!-- Bottom sheets -->
-    <string name="share_quiz_title">Share quiz</string>
-    <string name="share_code_label">Share code</string>
-    <string name="copy_code">Copy code</string>
-    <string name="share_link">Share link</string>
-    <string name="create_qr_code">Create QR code</string>
-    <string name="regenerate_code">Regenerate code</string>
-    <string name="options_title">Options</string>
-    <string name="duplicate">Duplicate</string>
-    <string name="filter_title">Filter</string>
+    <string name="share_quiz_title">Chia sẻ bài kiểm tra</string>
+    <string name="share_code_label">Chia sẻ mã</string>
+    <string name="copy_code">Sao chép mã</string>
+    <string name="share_link">Chia sẻ liên kết</string>
+    <string name="create_qr_code">Tạo mã QR</string>
+    <string name="regenerate_code">Tạo lại mã</string>
+    <string name="options_title">Tùy chọn</string>
+    <string name="duplicate">Nhân bản</string>
+    <string name="filter_title">Bộ lọc</string>
     <string name="share_code_example">ABC123</string>
-    <string name="remove_option">Remove %1$s</string>
+    <string name="remove_option">Xóa %1$s</string>
 
     <!-- Score -->
-    <string name="score_title">Result</string>
+    <string name="score_title">Kết quả</string>
     <string name="score_format">%1$d/%2$d</string>
     <string name="percentage_format">%1$d%%</string>
-    <string name="correct_label">Correct</string>
-    <string name="wrong_label">Wrong</string>
-    <string name="time_label">Time</string>
+    <string name="correct_label">Đúng</string>
+    <string name="wrong_label">Sai</string>
+    <string name="time_label">Thời gian</string>
     <string name="score_celebrate_high">🎉</string>
     <string name="score_celebrate_medium">👏</string>
     <string name="score_celebrate_low">💪</string>
     <string name="score_celebrate_min">📚</string>
 
     <!-- Auth -->
-    <string name="login">Log In</string>
-    <string name="register">Sign Up</string>
-    <string name="logout">Log Out</string>
+    <string name="login">Đăng nhập</string>
+    <string name="register">Đăng ký</string>
+    <string name="logout">Đăng xuất</string>
     <string name="email">Email</string>
-    <string name="password">Password</string>
-    <string name="username">Username</string>
+    <string name="password">Mật khẩu</string>
+    <string name="username">Tên người dùng</string>
+
+    <!-- Create Quiz -->
+    <string name="create_add_question_cd">Thêm câu hỏi</string>
+    <string name="create_quiz_title_label">Tiêu đề bài kiểm tra</string>
+    <string name="create_quiz_description_label">Mô tả</string>
+    <string name="create_questions_header">Câu hỏi (%1$d)</string>
+    <string name="create_question_title">Câu hỏi %1$d</string>
+    <string name="create_question_tap_to_edit">Nhấn để chỉnh sửa câu hỏi...</string>
+
+    <!-- Profile -->
+    <string name="profile_avatar_initial">N</string>
+    <string name="profile_user_name_placeholder">Tên người dùng</string>
+    <string name="profile_user_email_placeholder">nguoidung@example.com</string>
+    <string name="profile_section_general">Chung</string>
+    <string name="profile_menu_attempt_history">Lịch sử làm bài</string>
+    <string name="profile_menu_recycle_bin">Thùng rác</string>
+    <string name="profile_menu_settings">Cài đặt</string>
+    <string name="profile_guest_prompt">Bạn chưa đăng nhập</string>
+
+    <!-- Trash -->
+    <string name="trash_title">Thùng rác</string>
+    <string name="trash_empty">Thùng rác trống</string>
+    <string name="trash_info_30_days">Mục sẽ bị xóa vĩnh viễn sau 30 ngày</string>
+    <string name="trash_delete_permanently_title">Xóa vĩnh viễn?</string>
+    <string name="trash_delete_permanently_message">"%1$s" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.</string>
+    <string name="trash_action_restore_cd">Khôi phục</string>
+    <string name="trash_action_delete_permanently_cd">Xóa vĩnh viễn</string>
+    <string name="trash_deleted_days_ago">Đã xóa %1$d ngày trước</string>
+    <string name="trash_sample_old_math_quiz">Bài kiểm tra Toán cũ</string>
+    <string name="trash_sample_draft_quiz">Bài kiểm tra nháp</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Cài đặt</string>
+    <string name="settings_section_notifications">Thông báo</string>
+    <string name="settings_section_appearance">Giao diện</string>
+    <string name="settings_section_data_sync">Dữ liệu &amp; đồng bộ</string>
+    <string name="settings_push_notifications">Thông báo đẩy</string>
+    <string name="settings_push_notifications_desc">Nhận cập nhật về kết quả bài kiểm tra và tính năng mới</string>
+    <string name="settings_dark_mode">Chế độ tối</string>
+    <string name="settings_dark_mode_desc">Sử dụng giao diện tối trong toàn bộ ứng dụng</string>
+    <string name="settings_auto_sync">Tự động đồng bộ</string>
+    <string name="settings_auto_sync_desc">Tự động đồng bộ bài kiểm tra lên đám mây khi có kết nối</string>
+
+    <!-- Search -->
+    <string name="search_top_results">Kết quả nổi bật</string>
+    <string name="search_placeholder">Tìm bài kiểm tra...</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_math">Toán</string>
+    <string name="filter_science">Khoa học</string>
+    <string name="filter_history">Lịch sử</string>
+    <string name="filter_language">Ngôn ngữ</string>
+    <string name="search_quiz_number">Bài kiểm tra #%1$d</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Xin chào! 👋</string>
+    <string name="home_recently_played">Đã chơi gần đây</string>
+    <string name="home_my_quizzes">Bài kiểm tra của tôi</string>
+    <string name="home_trending_quizzes">Bài kiểm tra thịnh hành</string>
+    <string name="home_see_all">Xem tất cả →</string>
+    <string name="home_quiz_number">Bài kiểm tra %1$d</string>
+    <string name="home_math_quiz_101">Bài kiểm tra Toán 101</string>
+    <string name="home_science_trivia">Đố vui Khoa học</string>
+
+    <!-- Take Quiz -->
+    <string name="take_quiz_question_sample">Câu hỏi %1$d: Văn bản câu hỏi mẫu?</string>
+    <string name="take_quiz_option_a">Phương án A</string>
+    <string name="take_quiz_option_b">Phương án B</string>
+    <string name="take_quiz_option_c">Phương án C</string>
+    <string name="take_quiz_option_d">Phương án D</string>
+
+    <!-- History -->
+    <string name="history_title">Lịch sử làm bài</string>
+    <string name="history_empty">Chưa có lượt làm bài</string>
+    <string name="history_action_explore">Khám phá bài kiểm tra</string>
+    <string name="history_math_quiz">Bài kiểm tra Toán</string>
+    <string name="history_science_trivia">Đố vui Khoa học</string>
+    <string name="history_history_quiz">Bài kiểm tra Lịch sử</string>
+    <string name="history_time_hours_ago">%1$d giờ trước</string>
+    <string name="history_time_yesterday">Hôm qua</string>
+    <string name="history_time_days_ago">%1$d ngày trước</string>
+
+    <!-- Auth -->
+    <string name="auth_welcome_back">Chào mừng trở lại!</string>
+    <string name="auth_login_subtitle">Đăng nhập để tiếp tục quản lý bài kiểm tra</string>
+    <string name="auth_no_account">Chưa có tài khoản? </string>
+    <string name="auth_create_account">Tạo tài khoản</string>
+    <string name="auth_register_subtitle">Đăng ký để bắt đầu tạo bài kiểm tra</string>
+    <string name="auth_confirm_password">Xác nhận mật khẩu</string>
+    <string name="auth_have_account">Đã có tài khoản? </string>
+
+    <!-- Quiz Detail -->
+    <string name="quiz_detail_title">Chi tiết bài kiểm tra</string>
+    <string name="quiz_start_now">Bắt đầu làm bài</string>
+    <string name="quiz_thumbnail_label">Bài kiểm tra</string>
+    <string name="quiz_sample_title">Bài kiểm tra mẫu: %1$s</string>
+    <string name="quiz_sample_description">Kiểm tra kiến thức của bạn với bài kiểm tra tổng hợp này.</string>
+    <string name="quiz_stat_questions">10 câu hỏi</string>
+    <string name="quiz_stat_duration">15 phút</string>
+    <string name="quiz_stat_rating">Đánh giá 4.5</string>
+
+    <!-- Media -->
+    <string name="media_sample_image_cd">Hình ảnh mẫu</string>
+    <string name="media_sample_video_cd">Video mẫu</string>
+    <string name="media_preview_null_label">Media với URL rỗng (không hiển thị):</string>
+    <string name="media_preview_end">Kết thúc thành phần</string>
+
+    <!-- Quiz Result -->
+    <string name="quiz_result_go_home">Về trang chủ</string>
+    <string name="quiz_result_try_again">Thử lại</string>
+    <string name="quiz_result_review_answers">Xem lại đáp án</string>
 </resources>

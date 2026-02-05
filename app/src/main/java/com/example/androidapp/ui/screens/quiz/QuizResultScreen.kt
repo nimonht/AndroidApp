@@ -66,7 +66,7 @@ fun QuizResultScreen(
             ) {
                 Icon(Icons.Default.Home, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Go to Home")
+                Text(stringResource(R.string.quiz_result_go_home))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -77,13 +77,13 @@ fun QuizResultScreen(
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Try Again")
+                Text(stringResource(R.string.quiz_result_try_again))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             TextButton(onClick = onReviewAnswers) {
-                Text("Review Answers")
+                Text(stringResource(R.string.quiz_result_review_answers))
             }
         }
     }

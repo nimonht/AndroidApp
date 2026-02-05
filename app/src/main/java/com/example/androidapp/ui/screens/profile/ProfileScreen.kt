@@ -89,7 +89,7 @@ private fun UserProfileHeader(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "U",
+                text = stringResource(R.string.profile_avatar_initial),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -99,11 +99,11 @@ private fun UserProfileHeader(
 
         Column {
             Text(
-                text = "User Name",
+                text = stringResource(R.string.profile_user_name_placeholder),
                 style = MaterialTheme.typography.headlineSmall
             )
             Text(
-                text = "user@example.com",
+                text = stringResource(R.string.profile_user_email_placeholder),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -123,24 +123,24 @@ private fun ProfileMenuSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "General",
+            text = stringResource(R.string.profile_section_general),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         ProfileMenuItem(
             icon = Icons.Default.History,
-            title = "Attempt History",
+            title = stringResource(R.string.profile_menu_attempt_history),
             onClick = onHistoryClick
         )
         ProfileMenuItem(
             icon = Icons.Default.Delete,
-            title = "Recycle Bin",
+            title = stringResource(R.string.profile_menu_recycle_bin),
             onClick = onTrashClick
         )
         ProfileMenuItem(
             icon = Icons.Default.Settings,
-            title = "Settings",
+            title = stringResource(R.string.profile_menu_settings),
             onClick = onSettingsClick
         )
     }
@@ -197,7 +197,7 @@ private fun GuestPrompt(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "You are not logged in",
+            text = stringResource(R.string.profile_guest_prompt),
             style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.height(16.dp))

@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
 
 /**
  * Search/Explore screen for discovering public quizzes.
@@ -29,7 +31,8 @@ fun SearchScreen(
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All") }
+    val allFilter = stringResource(R.string.filter_all)
+    var selectedFilter by remember(allFilter) { mutableStateOf(allFilter) }
 
     Column(
         modifier = modifier
@@ -51,7 +54,7 @@ fun SearchScreen(
 
         // 3. Results Header
         Text(
-            text = "Top Results",
+            text = stringResource(R.string.search_top_results),
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -72,7 +75,7 @@ private fun SearchBar(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier.fillMaxWidth(),
-        placeholder = { Text("Search quizzes...") },
+        placeholder = { Text(stringResource(R.string.search_placeholder)) },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
@@ -90,7 +93,13 @@ private fun FilterChipsRow(
     onFilterSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val filters = listOf("All", "Math", "Science", "History", "Language")
+    val allFilter = stringResource(R.string.filter_all)
+    val filters = listOf(
+        allFilter,
+        stringResource(R.string.filter_math),
+        stringResource(R.string.filter_science),
+        stringResource(R.string.filter_history),
+    )
     
     Row(
         modifier = modifier,
@@ -101,7 +110,7 @@ private fun FilterChipsRow(
                 selected = filter == selectedFilter,
                 onClick = { onFilterSelected(filter) },
                 label = { Text(filter) },
-                leadingIcon = if (filter == "All") {
+                leadingIcon = if (filter == allFilter) {
                     {
                         Icon(
                             imageVector = Icons.Default.FilterList,
@@ -129,7 +138,7 @@ private fun SearchResultsGrid(
     ) {
         items(6) { index ->
             SearchResultCard(
-                title = "Quiz #${index + 1}",
+                title = stringResource(R.string.search_quiz_number, index + 1),
                 onClick = { onQuizClick("quiz_$index") }
             )
         }

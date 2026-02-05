@@ -38,7 +38,7 @@ fun HomeScreen(
     ) {
         // 1. Welcome Header
         Text(
-            text = "Hello! 👋",
+            text = stringResource(R.string.home_greeting),
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -51,21 +51,21 @@ fun HomeScreen(
 
         // 3. Recently Played Section
         SectionHeader(
-            title = "Recently Played",
+            title = stringResource(R.string.home_recently_played),
             onSeeAllClick = onNavigateToSearch
         )
         RecentlyPlayedRow(onQuizClick = onNavigateToQuiz)
 
         // 4. My Quizzes Section
         SectionHeader(
-            title = "My Quizzes",
+            title = stringResource(R.string.home_my_quizzes),
             onSeeAllClick = onNavigateToSearch
         )
         MyQuizzesSection(onQuizClick = onNavigateToQuiz)
 
         // 5. Trending Section
         SectionHeader(
-            title = "Trending Quizzes",
+            title = stringResource(R.string.home_trending_quizzes),
             onSeeAllClick = onNavigateToSearch
         )
         TrendingSection(onQuizClick = onNavigateToQuiz)
@@ -105,7 +105,7 @@ private fun SectionHeader(
     ) {
         Text(text = title, style = MaterialTheme.typography.titleLarge)
         TextButton(onClick = onSeeAllClick) {
-            Text(text = "See All →")
+            Text(text = stringResource(R.string.home_see_all))
         }
     }
 }
@@ -122,7 +122,7 @@ private fun RecentlyPlayedRow(
     ) {
         repeat(3) { index ->
             QuizPreviewCard(
-                title = "Quiz ${index + 1}",
+                title = stringResource(R.string.home_quiz_number, index + 1),
                 onClick = { onQuizClick("quiz_$index") }
             )
         }
@@ -136,7 +136,7 @@ private fun MyQuizzesSection(
 ) {
     // TODO: Replace with actual QuizCard components and data
     QuizPreviewCard(
-        title = "Math Quiz 101",
+        title = stringResource(R.string.home_math_quiz_101),
         onClick = { onQuizClick("math_101") },
         modifier = Modifier.fillMaxWidth()
     )
@@ -149,7 +149,7 @@ private fun TrendingSection(
 ) {
     // TODO: Replace with actual QuizCard components and data
     QuizPreviewCard(
-        title = "Science Trivia",
+        title = stringResource(R.string.home_science_trivia),
         onClick = { onQuizClick("science_trivia") },
         modifier = Modifier.fillMaxWidth()
     )

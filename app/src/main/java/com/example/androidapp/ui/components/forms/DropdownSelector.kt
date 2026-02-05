@@ -256,7 +256,7 @@ private fun DropdownSelectorWithErrorPreview() {
     QuizCodeTheme {
         DropdownSelector(
             label = "Chủ đề",
-            options = listOf("Option 1", "Option 2"),
+            options = listOf("Tùy chọn 1", "Tùy chọn 2"),
             selectedOption = null,
             onOptionSelected = { },
             errorMessage = "Vui lòng chọn một chủ đề",
@@ -271,7 +271,7 @@ private fun MultiSelectDropdownPreview() {
     QuizCodeTheme {
         var selected by remember { mutableStateOf(listOf("Toán học", "Khoa học")) }
         MultiSelectDropdown(
-            label = "Tags",
+            label = "Thẻ",
             options = listOf("Toán học", "Khoa học", "Lịch sử", "Địa lý", "Văn học"),
             selectedOptions = selected,
             onSelectionChanged = { selected = it },

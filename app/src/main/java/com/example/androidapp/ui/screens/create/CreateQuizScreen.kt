@@ -63,7 +63,10 @@ fun CreateQuizScreen(
                     questions = questions + QuestionDraft()
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Question")
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.create_add_question_cd)
+                )
             }
         }
     ) { innerPadding ->
@@ -79,7 +82,7 @@ fun CreateQuizScreen(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Quiz Title") },
+                    label = { Text(stringResource(R.string.create_quiz_title_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
@@ -91,7 +94,7 @@ fun CreateQuizScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") },
+                    label = { Text(stringResource(R.string.create_quiz_description_label)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
@@ -104,7 +107,7 @@ fun CreateQuizScreen(
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
-                    text = "Questions (${questions.size})",
+                    text = stringResource(R.string.create_questions_header, questions.size),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -156,7 +159,7 @@ private fun QuestionCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Question $questionNumber",
+                    text = stringResource(R.string.create_question_title, questionNumber),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -171,7 +174,9 @@ private fun QuestionCard(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = question.content.ifBlank { "Tap to edit question..." },
+                text = question.content.ifBlank {
+                    stringResource(R.string.create_question_tap_to_edit)
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 color = if (question.content.isBlank()) 

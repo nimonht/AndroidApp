@@ -227,7 +227,7 @@ private fun SwitchToggleDisabledPreview() {
                 checked = true,
                 onCheckedChange = { },
                 enabled = false,
-                label = "Tính năng Premium",
+                label = "Tính năng cao cấp",
                 description = "Nâng cấp để mở khóa tính năng này"
             )
         }

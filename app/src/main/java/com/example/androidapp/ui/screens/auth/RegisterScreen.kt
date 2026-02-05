@@ -50,14 +50,14 @@ fun RegisterScreen(
         ) {
             // Title
             Text(
-                text = "Create Account",
+                text = stringResource(R.string.auth_create_account),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Sign up to start creating quizzes",
+                text = stringResource(R.string.auth_register_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -128,7 +128,7 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text("Confirm Password") },
+                label = { Text(stringResource(R.string.auth_confirm_password)) },
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null)
                 },
@@ -164,7 +164,7 @@ fun RegisterScreen(
 
             // Login link
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Already have an account? ")
+                Text(stringResource(R.string.auth_have_account))
                 Text(
                     text = stringResource(R.string.login),
                     style = MaterialTheme.typography.bodyLarge,

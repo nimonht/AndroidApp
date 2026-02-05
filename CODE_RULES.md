@@ -180,6 +180,24 @@ app/src/main/java/com/example/androidapp/
 
 ---
 
+## 2.5 UI Text & Localization (Vietnamese-first)
+
+- **Bắt buộc**: Tất cả chữ hiển thị trên UI phải là **tiếng Việt**.
+- **Không hardcode** chuỗi trong composables, XML layout, hoặc ViewModel.
+- Luôn đặt chuỗi tại `app/src/main/res/values/strings.xml` và truy cập bằng `stringResource(...)` hoặc `getString(...)`.
+- Áp dụng cho **tất cả**: `Text`, `label`, `placeholder`, `contentDescription`, dialog, snackbar, empty state, v.v.
+- Nếu cần dữ liệu mẫu/preview, vẫn dùng chuỗi tiếng Việt (ưu tiên lấy từ `strings.xml`).
+
+```kotlin
+// ✅ ĐÚNG
+Text(text = stringResource(R.string.home_greeting))
+
+// ❌ SAI
+Text("Hello!")
+```
+
+---
+
 ## 3. Architecture Guidelines
 
 ### 3.1 MVVM Pattern

@@ -39,14 +39,32 @@ fun TakeQuizScreen(
     val totalQuestions = 10
     
     // Sample choices for demo
-    val sampleChoices = remember {
-        listOf(
-            Choice(id = "a", content = "Option A", isCorrect = true, position = 0),
-            Choice(id = "b", content = "Option B", isCorrect = false, position = 1),
-            Choice(id = "c", content = "Option C", isCorrect = false, position = 2),
-            Choice(id = "d", content = "Option D", isCorrect = false, position = 3)
+    val sampleChoices = listOf(
+        Choice(
+            id = "a",
+            content = stringResource(R.string.take_quiz_option_a),
+            isCorrect = true,
+            position = 0
+        ),
+        Choice(
+            id = "b",
+            content = stringResource(R.string.take_quiz_option_b),
+            isCorrect = false,
+            position = 1
+        ),
+        Choice(
+            id = "c",
+            content = stringResource(R.string.take_quiz_option_c),
+            isCorrect = false,
+            position = 2
+        ),
+        Choice(
+            id = "d",
+            content = stringResource(R.string.take_quiz_option_d),
+            isCorrect = false,
+            position = 3
         )
-    }
+    )
 
     Scaffold(
         modifier = modifier,
@@ -108,7 +126,10 @@ fun TakeQuizScreen(
 
             // Question content
             Text(
-                text = "Question ${currentQuestionIndex + 1}: Sample question text?",
+                text = stringResource(
+                    R.string.take_quiz_question_sample,
+                    currentQuestionIndex + 1
+                ),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )

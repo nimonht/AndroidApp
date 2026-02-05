@@ -278,7 +278,7 @@ private fun MediaDisplayImagePreview() {
         MediaDisplay(
             mediaUrl = "https://example.com/image.jpg",
             mediaType = MediaType.IMAGE,
-            contentDescription = "Sample image",
+            contentDescription = stringResource(R.string.media_sample_image_cd),
             modifier = Modifier
                 .padding(16.dp)
                 .height(200.dp)
@@ -293,7 +293,7 @@ private fun MediaDisplayVideoPreview() {
         MediaDisplay(
             mediaUrl = "https://example.com/video.mp4",
             mediaType = MediaType.VIDEO,
-            contentDescription = "Sample video",
+            contentDescription = stringResource(R.string.media_sample_video_cd),
             onVideoClick = { /* Play video */ },
             modifier = Modifier.padding(16.dp)
         )
@@ -305,12 +305,12 @@ private fun MediaDisplayVideoPreview() {
 private fun MediaDisplayNullPreview() {
     QuizCodeTheme {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Media with null URL (should not render):")
+            Text(stringResource(R.string.media_preview_null_label))
             MediaDisplay(
                 mediaUrl = null,
                 modifier = Modifier.height(100.dp)
             )
-            Text("End of component")
+            Text(stringResource(R.string.media_preview_end))
         }
     }
 }

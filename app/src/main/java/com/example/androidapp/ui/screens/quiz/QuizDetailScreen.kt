@@ -41,7 +41,7 @@ fun QuizDetailScreen(
         modifier = modifier,
         topBar = {
             AppTopBar(
-                title = "Quiz Details",
+                title = stringResource(R.string.quiz_detail_title),
                 canNavigateBack = true,
                 navigateUp = onNavigateBack
             )
@@ -59,7 +59,7 @@ fun QuizDetailScreen(
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Start Quiz Now",
+                    text = stringResource(R.string.quiz_start_now),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -84,7 +84,7 @@ fun QuizDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Quiz",
+                    text = stringResource(R.string.quiz_thumbnail_label),
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -94,7 +94,7 @@ fun QuizDetailScreen(
 
             // Quiz title (using quizId for demo)
             Text(
-                text = "Sample Quiz: $quizId",
+                text = stringResource(R.string.quiz_sample_title, quizId),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -103,7 +103,7 @@ fun QuizDetailScreen(
 
             // Description
             Text(
-                text = "Test your knowledge with this comprehensive quiz.",
+                text = stringResource(R.string.quiz_sample_description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -118,15 +118,15 @@ fun QuizDetailScreen(
             ) {
                 QuizStatItem(
                     icon = Icons.Default.QuestionAnswer,
-                    label = "10 Questions"
+                    label = stringResource(R.string.quiz_stat_questions)
                 )
                 QuizStatItem(
                     icon = Icons.Default.Timer,
-                    label = "15 Mins"
+                    label = stringResource(R.string.quiz_stat_duration)
                 )
                 QuizStatItem(
                     icon = Icons.Default.Star,
-                    label = "4.5 Rating"
+                    label = stringResource(R.string.quiz_stat_rating)
                 )
             }
         }

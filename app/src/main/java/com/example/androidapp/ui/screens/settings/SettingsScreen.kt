@@ -29,7 +29,7 @@ fun SettingsScreen(
         modifier = modifier,
         topBar = {
             AppTopBar(
-                title = "Settings",
+                title = stringResource(R.string.settings_title),
                 canNavigateBack = true,
                 navigateUp = onNavigateBack
             )
@@ -43,32 +43,32 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Notifications Section
-            SettingsSection(title = "Notifications") {
+            SettingsSection(title = stringResource(R.string.settings_section_notifications)) {
                 SwitchToggle(
                     checked = notificationsEnabled,
                     onCheckedChange = { notificationsEnabled = it },
-                    label = "Push Notifications",
-                    description = "Receive updates about quiz results and new features"
+                    label = stringResource(R.string.settings_push_notifications),
+                    description = stringResource(R.string.settings_push_notifications_desc)
                 )
             }
 
             // Appearance Section
-            SettingsSection(title = "Appearance") {
+            SettingsSection(title = stringResource(R.string.settings_section_appearance)) {
                 SwitchToggle(
                     checked = darkModeEnabled,
                     onCheckedChange = { darkModeEnabled = it },
-                    label = "Dark Mode",
-                    description = "Use dark theme throughout the app"
+                    label = stringResource(R.string.settings_dark_mode),
+                    description = stringResource(R.string.settings_dark_mode_desc)
                 )
             }
 
             // Data Section
-            SettingsSection(title = "Data & Sync") {
+            SettingsSection(title = stringResource(R.string.settings_section_data_sync)) {
                 SwitchToggle(
                     checked = autoSyncEnabled,
                     onCheckedChange = { autoSyncEnabled = it },
-                    label = "Auto Sync",
-                    description = "Automatically sync quizzes to cloud when connected"
+                    label = stringResource(R.string.settings_auto_sync),
+                    description = stringResource(R.string.settings_auto_sync_desc)
                 )
             }
         }
