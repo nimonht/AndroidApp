@@ -66,11 +66,18 @@ fun AppNavGraph(navController: NavHostController) {
             com.example.androidapp.ui.quiz.QuizResultScreen(navController = navController, quizId = quizId)
         }
 
+
+
+
         // --- CÁC MÀN HÌNH KHÁC ---
-        composable(Screen.CreateQuiz.route) { }
+        composable(Screen.CreateQuiz.route) {
+            com.example.androidapp.ui.create.CreateQuizScreen(navController)
+        }
         composable(Screen.Settings.route) { }
         composable(Screen.History.route) { }
         composable(Screen.RecycleBin.route) { }
-        composable(Screen.Login.route) { }
+        composable(Screen.Login.route) {
+            com.example.androidapp.ui.auth.LoginScreen(navController)
+        }
     }
 }
