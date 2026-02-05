@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Attempts Collection Schema",
+  "description": "Schema definition for the attempts collection in Firestore",
+  "type": "object",
+  "properties": {
+    "quizId": {
+      "type": "string",
+      "description": "Reference to the quiz ID being attempted"
+    },
+    "userId": {
+      "type": "string",
+      "description": "Reference to the user ID (or 'guest_xxx' for guest users)",
+      "pattern": "^(guest_[a-z0-9]{8}|[a-zA-Z0-9]+)$"
+    },
+    "questionOrder": {
+      "type": "array",
+      "description": "Randomized order of question IDs as they were presented",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "choiceOrders": {
+      "type": "object",
+      "description": "Map of questionId to randomized array of choiceIds",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "answers": {
+      "type": "object",
+      "description": "Map of questionId to single choiceId (for single-answer questions)",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "string"
+        }
+      }
+    },
+    "multiAnswers": {
+      "type": "object",
+      "description": "Map of questionId to array of choiceIds (for multiple-answer questions)",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "score": {
+      "type": "integer",
+      "description": "Points scored in this attempt",
+      "minimum": 0
+    },
+    "maxScore": {
+      "type": "integer",
+      "description": "Maximum possible score for this quiz",
+      "minimum": 0
+    },
+    "startedAt": {
+      "type": "string",
+      "description": "Timestamp when the attempt was started",
+      "format": "date-time"
+    },
+    "finishedAt": {
+      "type": ["string", "null"],
+      "description": "Timestamp when the attempt was finished (null if in progress)",
+      "format": "date-time"
+    }
+  },
+  "required": ["quizId", "userId", "questionOrder", "choiceOrders", "score", "maxScore", "startedAt"],
+  "additionalProperties": false,
+  "indexes": [
+    {
+      "fields": [
+        {"field": "userId", "order": "ASCENDING"},
+        {"field": "startedAt", "order": "DESCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [
+        {"field": "quizId", "order": "ASCENDING"},
+        {"field": "startedAt", "order": "DESCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [
+        {"field": "userId", "order": "ASCENDING"},
+        {"field": "quizId", "order": "ASCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    }
+  ],
+  "examples": [
+    {
+      "quizId": "quiz123",
+      "userId": "user456",
+      "questionOrder": ["q1", "q3", "q2"],
+      "choiceOrders": {
+        "q1": ["c2", "c1", "c4", "c3"],
+        "q2": ["c8", "c5", "c7", "c6"],
+        "q3": ["c10", "c9"]
+      },
+      "answers": {
+        "q1": "c1",
+        "q2": "c5"
+      },
+      "multiAnswers": {
+        "q3": ["c9", "c10"]
+      },
+      "score": 15,
+      "maxScore": 20,
+      "startedAt": "2024-02-05T10:30:00Z",
+      "finishedAt": "2024-02-05T10:45:00Z"
+    }
+  ]
+}

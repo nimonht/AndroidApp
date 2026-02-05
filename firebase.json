@@ -1,0 +1,26 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "_comment_storage": "[DEPRECATED] Firebase Storage - Use Cloudflare R2 instead. See Docs_en/02_backend_database_design.md",
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "_comment_storage_emulator": "[DEPRECATED] Storage emulator kept for backward compatibility",
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Quizzes Collection Schema",
+  "description": "Schema definition for the quizzes collection in Firestore",
+  "type": "object",
+  "properties": {
+    "ownerId": {
+      "type": "string",
+      "description": "Reference to the user ID who owns this quiz"
+    },
+    "title": {
+      "type": "string",
+      "description": "Quiz title",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Quiz description (optional)",
+      "maxLength": 1000
+    },
+    "isPublic": {
+      "type": "boolean",
+      "description": "Whether the quiz is publicly accessible",
+      "default": false
+    },
+    "shareCode": {
+      "type": ["string", "null"],
+      "description": "6-character unique share code for accessing the quiz",
+      "pattern": "^[A-Z0-9]{6}$"
+    },
+    "tags": {
+      "type": "array",
+      "description": "List of tags for categorizing the quiz",
+      "items": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "maxItems": 10
+    },
+    "checksum": {
+      "type": ["string", "null"],
+      "description": "Hash of quiz content for integrity verification"
+    },
+    "questionCount": {
+      "type": "integer",
+      "description": "Number of questions in this quiz",
+      "minimum": 0,
+      "default": 0
+    },
+    "attemptCount": {
+      "type": "integer",
+      "description": "Number of attempts taken on this quiz",
+      "minimum": 0,
+      "default": 0
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "Timestamp when the quiz was created",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "description": "Timestamp when the quiz was last updated",
+      "format": "date-time"
+    },
+    "deletedAt": {
+      "type": ["string", "null"],
+      "description": "Timestamp when the quiz was soft deleted (null if active)",
+      "format": "date-time"
+    }
+  },
+  "required": ["ownerId", "title", "isPublic", "questionCount", "attemptCount", "createdAt", "updatedAt"],
+  "additionalProperties": false,
+  "indexes": [
+    {
+      "fields": [
+        {"field": "isPublic", "order": "ASCENDING"},
+        {"field": "createdAt", "order": "DESCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [{"field": "ownerId", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [{"field": "shareCode", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [
+        {"field": "tags", "arrayConfig": "CONTAINS"},
+        {"field": "createdAt", "order": "DESCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    }
+  ],
+  "examples": [
+    {
+      "ownerId": "user123",
+      "title": "General Knowledge Quiz",
+      "description": "Test your general knowledge with 10 interesting questions",
+      "isPublic": true,
+      "shareCode": "ABC123",
+      "tags": ["general", "knowledge", "trivia"],
+      "checksum": "sha256:abcd1234...",
+      "questionCount": 10,
+      "attemptCount": 45,
+      "createdAt": "2024-02-05T10:30:00Z",
+      "updatedAt": "2024-02-05T14:20:00Z",
+      "deletedAt": null
+    }
+  ]
+}

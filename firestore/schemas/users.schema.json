@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Users Collection Schema",
+  "description": "Schema definition for the users collection in Firestore",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "Unique username for the user",
+      "minLength": 3,
+      "maxLength": 30,
+      "pattern": "^[a-zA-Z0-9_]+$"
+    },
+    "email": {
+      "type": "string",
+      "description": "User's email address",
+      "format": "email"
+    },
+    "displayName": {
+      "type": ["string", "null"],
+      "description": "User's display name (optional)",
+      "maxLength": 100
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "Timestamp when the user was created",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "description": "Timestamp when the user was last updated",
+      "format": "date-time"
+    },
+    "deletedAt": {
+      "type": ["string", "null"],
+      "description": "Timestamp when the user was soft deleted (null if active)",
+      "format": "date-time"
+    }
+  },
+  "required": ["username", "email", "createdAt"],
+  "additionalProperties": false,
+  "indexes": [
+    {
+      "fields": [{"field": "username", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [{"field": "email", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION"
+    }
+  ],
+  "examples": [
+    {
+      "username": "john_doe",
+      "email": "john@example.com",
+      "displayName": "John Doe",
+      "createdAt": "2024-02-05T10:30:00Z",
+      "updatedAt": "2024-02-05T10:30:00Z",
+      "deletedAt": null
+    }
+  ]
+}

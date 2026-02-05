@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Questions Subcollection Schema",
+  "description": "Schema definition for the questions subcollection under quizzes/{quizId}/questions",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The question text content",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "mediaUrl": {
+      "type": ["string", "null"],
+      "description": "URL to media file (image/video) associated with the question",
+      "format": "uri"
+    },
+    "explanation": {
+      "type": ["string", "null"],
+      "description": "Explanation shown after answering (optional)",
+      "maxLength": 2000
+    },
+    "points": {
+      "type": "integer",
+      "description": "Points awarded for correct answer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 1
+    },
+    "position": {
+      "type": "integer",
+      "description": "Order/position of this question in the quiz",
+      "minimum": 0
+    },
+    "choiceCount": {
+      "type": "integer",
+      "description": "Number of choices for this question (flexible: 2-10)",
+      "minimum": 2,
+      "maximum": 10
+    },
+    "allowMultipleCorrect": {
+      "type": "boolean",
+      "description": "Whether multiple choices can be marked as correct",
+      "default": false
+    }
+  },
+  "required": ["content", "points", "position", "choiceCount", "allowMultipleCorrect"],
+  "additionalProperties": false,
+  "indexes": [
+    {
+      "fields": [{"field": "position", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION_GROUP"
+    }
+  ],
+  "notes": {
+    "subcollectionPath": "quizzes/{quizId}/questions/{questionId}",
+    "parent": "quizzes",
+    "childCollection": "choices"
+  },
+  "examples": [
+    {
+      "content": "What is the capital of France?",
+      "mediaUrl": null,
+      "explanation": "Paris has been the capital of France since 987 AD",
+      "points": 5,
+      "position": 0,
+      "choiceCount": 4,
+      "allowMultipleCorrect": false
+    },
+    {
+      "content": "Which of the following are programming languages?",
+      "_comment_mediaUrl": "Note: URLs should point to Cloudflare R2 bucket, not Firebase Storage",
+      "mediaUrl": "https://your-bucket.r2.dev/quiz-media/prog-langs.png",
+      "explanation": "Python, Java, and JavaScript are all programming languages",
+      "points": 10,
+      "position": 1,
+      "choiceCount": 5,
+      "allowMultipleCorrect": true
+    }
+  ]
+}

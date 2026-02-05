@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Choices Subcollection Schema",
+  "description": "Schema definition for the choices subcollection under questions/{questionId}/choices",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The choice text content",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "isCorrect": {
+      "type": "boolean",
+      "description": "Whether this choice is a correct answer",
+      "default": false
+    },
+    "position": {
+      "type": "integer",
+      "description": "Order/position of this choice within the question",
+      "minimum": 0
+    }
+  },
+  "required": ["content", "isCorrect", "position"],
+  "additionalProperties": false,
+  "indexes": [
+    {
+      "fields": [{"field": "position", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION_GROUP"
+    }
+  ],
+  "notes": {
+    "subcollectionPath": "quizzes/{quizId}/questions/{questionId}/choices/{choiceId}",
+    "parent": "questions",
+    "constraints": [
+      "Each question must have between 2 and 10 choices",
+      "At least one choice must have isCorrect=true",
+      "For allowMultipleCorrect=false questions, exactly one choice should be correct",
+      "For allowMultipleCorrect=true questions, multiple choices can be correct"
+    ]
+  },
+  "examples": [
+    {
+      "content": "Paris",
+      "isCorrect": true,
+      "position": 0
+    },
+    {
+      "content": "London",
+      "isCorrect": false,
+      "position": 1
+    },
+    {
+      "content": "Berlin",
+      "isCorrect": false,
+      "position": 2
+    },
+    {
+      "content": "Madrid",
+      "isCorrect": false,
+      "position": 3
+    }
+  ]
+}

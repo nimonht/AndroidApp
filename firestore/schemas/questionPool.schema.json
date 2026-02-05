@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QuestionPool Collection Schema",
+  "description": "Schema definition for the questionPool collection - community contributed questions",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The question text content",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "choices": {
+      "type": "array",
+      "description": "Array of choice objects (2-10 items, flexible)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "isCorrect": {
+            "type": "boolean"
+          }
+        },
+        "required": ["content", "isCorrect"]
+      },
+      "minItems": 2,
+      "maxItems": 10
+    },
+    "correctIndices": {
+      "type": "array",
+      "description": "Array of indices (0-based) of correct choices",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags for categorizing the question",
+      "items": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "maxItems": 10
+    },
+    "mediaUrl": {
+      "type": ["string", "null"],
+      "description": "URL to media file associated with the question",
+      "format": "uri"
+    },
+    "points": {
+      "type": "integer",
+      "description": "Suggested points for this question",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 5
+    },
+    "allowMultipleCorrect": {
+      "type": "boolean",
+      "description": "Whether multiple choices are correct",
+      "default": false
+    },
+    "contributorId": {
+      "type": ["string", "null"],
+      "description": "User ID who contributed this question (null if anonymized)"
+    },
+    "sourceQuizId": {
+      "type": "string",
+      "description": "Original quiz ID where this question came from"
+    },
+    "isActive": {
+      "type": "boolean",
+      "description": "Whether this question is active and available for use",
+      "default": true
+    },
+    "usageCount": {
+      "type": "integer",
+      "description": "Number of times this question has been used in quizzes",
+      "minimum": 0,
+      "default": 0
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "Timestamp when the question was added to the pool",
+      "format": "date-time"
+    }
+  },
+  "required": ["content", "choices", "correctIndices", "tags", "points", "allowMultipleCorrect", "sourceQuizId", "isActive", "usageCount", "createdAt"],
+  "additionalProperties": false,
+  "indexes": [
+    {
+      "fields": [
+        {"field": "isActive", "order": "ASCENDING"},
+        {"field": "createdAt", "order": "DESCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [
+        {"field": "tags", "arrayConfig": "CONTAINS"},
+        {"field": "usageCount", "order": "DESCENDING"}
+      ],
+      "queryScope": "COLLECTION"
+    },
+    {
+      "fields": [{"field": "contributorId", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION"
+    }
+  ],
+  "examples": [
+    {
+      "content": "What is the time complexity of binary search?",
+      "choices": [
+        {"content": "O(n)", "isCorrect": false},
+        {"content": "O(log n)", "isCorrect": true},
+        {"content": "O(n^2)", "isCorrect": false},
+        {"content": "O(1)", "isCorrect": false}
+      ],
+      "correctIndices": [1],
+      "tags": ["algorithms", "computer-science", "data-structures"],
+      "mediaUrl": null,
+      "points": 10,
+      "allowMultipleCorrect": false,
+      "contributorId": "user789",
+      "sourceQuizId": "quiz456",
+      "isActive": true,
+      "usageCount": 23,
+      "createdAt": "2024-02-05T10:30:00Z"
+    }
+  ]
+}

@@ -1,0 +1,267 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+    
+    // Check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner of a document
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Check if user is a guest (for attempts)
+    function isGuest(userId) {
+      return userId.matches('guest_[a-z0-9]{8}');
+    }
+    
+    // Get quiz data from database
+    function getQuiz(quizId) {
+      return get(/databases/$(database)/documents/quizzes/$(quizId)).data;
+    }
+    
+    // Check if quiz is public
+    function isQuizPublic(quizId) {
+      return getQuiz(quizId).isPublic == true;
+    }
+    
+    // Check if user owns the quiz
+    function isQuizOwner(quizId) {
+      return isSignedIn() && request.auth.uid == getQuiz(quizId).ownerId;
+    }
+    
+    // Check if document is not soft-deleted
+    function isActive() {
+      return !('deletedAt' in resource.data) || resource.data.deletedAt == null;
+    }
+    
+    // Validate string field length
+    function validStringLength(field, minLen, maxLen) {
+      return field is string 
+        && field.size() >= minLen 
+        && field.size() <= maxLen;
+    }
+    
+    // Validate array field length
+    function validArrayLength(field, minLen, maxLen) {
+      return field is list 
+        && field.size() >= minLen 
+        && field.size() <= maxLen;
+    }
+    
+    // ============================================================================
+    // USERS COLLECTION
+    // ============================================================================
+    
+    match /users/{userId} {
+      // Allow read for all authenticated users
+      allow read: if isSignedIn();
+      
+      // Allow write only for own document
+      allow create: if isOwner(userId) 
+        && validStringLength(request.resource.data.username, 3, 30)
+        && validStringLength(request.resource.data.email, 5, 100)
+        && request.resource.data.username.matches('^[a-zA-Z0-9_]+$')
+        && request.resource.data.createdAt == request.time;
+      
+      allow update: if isOwner(userId)
+        && request.resource.data.username == resource.data.username  // Username immutable
+        && request.resource.data.email == resource.data.email        // Email immutable
+        && request.resource.data.createdAt == resource.data.createdAt; // createdAt immutable
+      
+      allow delete: if isOwner(userId);
+    }
+    
+    // ============================================================================
+    // QUIZZES COLLECTION
+    // ============================================================================
+    
+    match /quizzes/{quizId} {
+      // Read rules: public quizzes readable by all, private by owner only
+      allow read: if isActive() && (
+        resource.data.isPublic == true 
+        || isOwner(resource.data.ownerId)
+      );
+      
+      // Create rules: authenticated users can create quizzes
+      allow create: if isSignedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && validStringLength(request.resource.data.title, 1, 200)
+        && (
+          !('description' in request.resource.data) 
+          || request.resource.data.description == null
+          || validStringLength(request.resource.data.description, 0, 1000)
+        )
+        && request.resource.data.isPublic is bool
+        && (
+          !('shareCode' in request.resource.data) 
+          || request.resource.data.shareCode == null
+          || request.resource.data.shareCode.matches('^[A-Z0-9]{6}$')
+        )
+        && request.resource.data.questionCount == 0  // Must start at 0
+        && request.resource.data.attemptCount == 0   // Must start at 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      
+      // Update rules: only owner can update
+      allow update: if isOwner(resource.data.ownerId)
+        && request.resource.data.ownerId == resource.data.ownerId  // Owner immutable
+        && request.resource.data.createdAt == resource.data.createdAt  // createdAt immutable
+        && request.resource.data.updatedAt == request.time;
+      
+      // Delete rules: only owner can delete (soft delete)
+      allow delete: if isOwner(resource.data.ownerId);
+      
+      // ========================================================================
+      // QUESTIONS SUBCOLLECTION
+      // ========================================================================
+      
+      match /questions/{questionId} {
+        // Read rules: inherit from parent quiz
+        allow read: if isActive() && (
+          getQuiz(quizId).isPublic == true 
+          || isQuizOwner(quizId)
+        );
+        
+        // Write rules: only quiz owner can write
+        allow create: if isQuizOwner(quizId)
+          && validStringLength(request.resource.data.content, 1, 1000)
+          && request.resource.data.points >= 1
+          && request.resource.data.points <= 100
+          && request.resource.data.position >= 0
+          && request.resource.data.choiceCount >= 2
+          && request.resource.data.choiceCount <= 10
+          && request.resource.data.allowMultipleCorrect is bool
+          && (
+            !('mediaUrl' in request.resource.data) 
+            || request.resource.data.mediaUrl == null
+            || validStringLength(request.resource.data.mediaUrl, 1, 500)
+          )
+          && (
+            !('explanation' in request.resource.data) 
+            || request.resource.data.explanation == null
+            || validStringLength(request.resource.data.explanation, 0, 2000)
+          );
+        
+        allow update: if isQuizOwner(quizId);
+        
+        allow delete: if isQuizOwner(quizId);
+        
+        // ======================================================================
+        // CHOICES SUBCOLLECTION
+        // ======================================================================
+        
+        match /choices/{choiceId} {
+          // Read rules: inherit from parent question/quiz
+          allow read: if isActive() && (
+            getQuiz(quizId).isPublic == true 
+            || isQuizOwner(quizId)
+          );
+          
+          // Write rules: only quiz owner can write
+          allow create: if isQuizOwner(quizId)
+            && validStringLength(request.resource.data.content, 1, 500)
+            && request.resource.data.isCorrect is bool
+            && request.resource.data.position >= 0;
+          
+          allow update: if isQuizOwner(quizId);
+          
+          allow delete: if isQuizOwner(quizId);
+        }
+      }
+    }
+    
+    // ============================================================================
+    // ATTEMPTS COLLECTION
+    // ============================================================================
+    
+    match /attempts/{attemptId} {
+      // Read rules: attempt owner or quiz owner can read
+      allow read: if (
+        isOwner(resource.data.userId) 
+        || (isGuest(resource.data.userId) && resource.data.userId == request.auth.uid)
+        || isQuizOwner(resource.data.quizId)
+      );
+      
+      // Create rules: anyone can create attempts (including guests)
+      allow create: if (
+        (isSignedIn() && request.resource.data.userId == request.auth.uid)
+        || isGuest(request.resource.data.userId)
+      )
+      && validStringLength(request.resource.data.quizId, 1, 100)
+      && validArrayLength(request.resource.data.questionOrder, 1, 1000)
+      && request.resource.data.choiceOrders is map
+      && request.resource.data.score >= 0
+      && request.resource.data.maxScore >= 0
+      && request.resource.data.score <= request.resource.data.maxScore
+      && request.resource.data.startedAt == request.time;
+      
+      // Update rules: only attempt owner can update (or guest with matching ID)
+      allow update: if (
+        isOwner(resource.data.userId)
+        || (isGuest(resource.data.userId) && resource.data.userId == request.auth.uid)
+      )
+      && request.resource.data.userId == resource.data.userId  // userId immutable
+      && request.resource.data.quizId == resource.data.quizId  // quizId immutable
+      && request.resource.data.startedAt == resource.data.startedAt;  // startedAt immutable
+      
+      // Delete rules: only attempt owner or quiz owner can delete
+      allow delete: if isOwner(resource.data.userId) 
+        || isQuizOwner(resource.data.quizId);
+    }
+    
+    // ============================================================================
+    // QUESTION POOL COLLECTION
+    // ============================================================================
+    
+    match /questionPool/{poolId} {
+      // Read rules: only active questions can be read
+      allow read: if resource.data.isActive == true;
+      
+      // Create rules: authenticated users can contribute questions
+      allow create: if isSignedIn()
+        && validStringLength(request.resource.data.content, 1, 1000)
+        && validArrayLength(request.resource.data.choices, 2, 10)
+        && validArrayLength(request.resource.data.correctIndices, 1, 10)
+        && request.resource.data.points >= 1
+        && request.resource.data.points <= 100
+        && request.resource.data.allowMultipleCorrect is bool
+        && validStringLength(request.resource.data.sourceQuizId, 1, 100)
+        && request.resource.data.isActive == true
+        && request.resource.data.usageCount == 0  // Must start at 0
+        && request.resource.data.createdAt == request.time
+        && (
+          request.resource.data.contributorId == null 
+          || request.resource.data.contributorId == request.auth.uid
+        );
+      
+      // Update rules: only contributor can update (or admin in future)
+      allow update: if isOwner(resource.data.contributorId)
+        && request.resource.data.sourceQuizId == resource.data.sourceQuizId  // sourceQuizId immutable
+        && request.resource.data.createdAt == resource.data.createdAt;  // createdAt immutable
+      
+      // Delete rules: only contributor can delete
+      allow delete: if isOwner(resource.data.contributorId);
+    }
+    
+    // ============================================================================
+    // SHARE CODES COLLECTION
+    // ============================================================================
+    
+    match /shareCodes/{code} {
+      // Read rules: anyone can read share codes for lookup
+      allow read: if true;
+      
+      // Write rules: only server-side (Cloud Functions) can write
+      // Client apps should not be able to create/update/delete share codes
+      allow write: if false;
+    }
+  }
+}

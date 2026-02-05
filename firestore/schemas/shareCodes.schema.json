@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ShareCodes Collection Schema",
+  "description": "Schema definition for the shareCodes lookup collection - maps share codes to quiz IDs",
+  "type": "object",
+  "properties": {
+    "quizId": {
+      "type": "string",
+      "description": "Reference to the quiz ID associated with this share code"
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "Timestamp when the share code was created",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": ["string", "null"],
+      "description": "Optional expiration timestamp for the share code",
+      "format": "date-time"
+    }
+  },
+  "required": ["quizId", "createdAt"],
+  "additionalProperties": false,
+  "notes": {
+    "documentId": "The document ID is the 6-character share code itself (e.g., 'ABC123')",
+    "pattern": "^[A-Z0-9]{6}$",
+    "access": "Read-only for clients, write-only via Cloud Functions or server-side code",
+    "purpose": "Fast lookup of quiz by share code without querying the entire quizzes collection"
+  },
+  "indexes": [
+    {
+      "fields": [{"field": "quizId", "order": "ASCENDING"}],
+      "queryScope": "COLLECTION"
+    }
+  ],
+  "examples": [
+    {
+      "_documentId": "ABC123",
+      "quizId": "quiz789",
+      "createdAt": "2024-02-05T10:30:00Z",
+      "expiresAt": null
+    },
+    {
+      "_documentId": "XYZ999",
+      "quizId": "quiz456",
+      "createdAt": "2024-02-05T11:00:00Z",
+      "expiresAt": "2024-03-05T11:00:00Z"
+    }
+  ]
+}
