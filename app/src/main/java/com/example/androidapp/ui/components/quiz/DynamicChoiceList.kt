@@ -7,7 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
 import com.example.androidapp.domain.model.Choice
 
 /**
@@ -35,7 +37,11 @@ fun DynamicChoiceList(
         // 2. Hiển thị bộ đếm (Chỉ hiện nếu có quá nhiều lựa chọn, giúp user đỡ ngợp)
         if (choices.size > 4) {
             Text(
-                text = "${selectedChoiceIds.size} trên ${choices.size} lựa chọn",
+                text = stringResource(
+                    id = R.string.quiz_choice_count,
+                    selectedChoiceIds.size,
+                    choices.size
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

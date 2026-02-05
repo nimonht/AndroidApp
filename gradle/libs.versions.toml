@@ -32,6 +32,9 @@ coroutinesPlayServices = "1.9.0"
 gson = "2.11.0"
 coreKtxVersion = "1.17.0"
 
+# Kotlinx Serialization (for Room schema export toolchain)
+kotlinxSerialization = "1.7.1"
+
 [libraries]
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -74,6 +77,7 @@ compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling
 compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
 
 # Coroutines
@@ -83,10 +87,12 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxVersion" }
 
+# Kotlinx Serialization
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-

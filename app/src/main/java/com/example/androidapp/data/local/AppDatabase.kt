@@ -35,7 +35,7 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class
     ],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
