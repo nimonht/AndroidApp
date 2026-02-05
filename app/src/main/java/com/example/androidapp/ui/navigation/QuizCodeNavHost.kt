@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.navigation.Routes.Args
 
 /**
@@ -33,7 +34,7 @@ fun QuizCodeNavHost(
         bottomBar = {
             // Show bottom navigation bar only on main screens
             if (shouldShowBottomBar(currentRoute)) {
-                QuizCodeBottomNavBar(
+                BottomNavBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {

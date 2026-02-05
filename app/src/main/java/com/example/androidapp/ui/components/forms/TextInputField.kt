@@ -4,10 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.VisualTransformation
+import com.example.androidapp.R
 
 @Composable
 fun TextInputField(
@@ -59,10 +63,10 @@ fun TextInputField(
             // 3. Icon báo lỗi (Dấu chấm than)
             trailingIcon = {
                 if (errorMessage != null) {
-                    Text(
-                        text = "!",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.titleMedium
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = stringResource(R.string.error),
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }

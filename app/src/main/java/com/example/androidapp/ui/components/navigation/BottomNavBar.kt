@@ -1,4 +1,4 @@
-package com.example.androidapp.ui.navigation
+package com.example.androidapp.ui.components.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -12,9 +12,11 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
+import com.example.androidapp.ui.navigation.Routes
 
 /**
  * Represents a bottom navigation item with its route and icons.
@@ -29,7 +31,7 @@ data class BottomNavItem(
 /**
  * List of bottom navigation items for the app.
  */
-val bottomNavItems = listOf(
+private val bottomNavItems = listOf(
     BottomNavItem(
         route = Routes.SEARCH,
         labelResId = R.string.nav_search,
@@ -58,11 +60,12 @@ val bottomNavItems = listOf(
  * @param onNavigate Callback invoked when a navigation item is clicked.
  */
 @Composable
-fun QuizCodeBottomNavBar(
+fun BottomNavBar(
     currentRoute: String?,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    NavigationBar {
+    NavigationBar(modifier = modifier) {
         bottomNavItems.forEach { item ->
             val isSelected = currentRoute == item.route
 
