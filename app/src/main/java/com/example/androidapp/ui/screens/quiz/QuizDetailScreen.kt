@@ -1,47 +1,55 @@
-package com.example.androidapp.ui.quiz
+package com.example.androidapp.ui.screens.quiz
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-// Import Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.QuestionAnswer
-import androidx.compose.material.icons.filled.Star
+import com.example.androidapp.R
+import com.example.androidapp.ui.components.navigation.AppTopBar
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Quiz detail screen showing quiz information before starting.
+ *
+ * @param quizId The ID of the quiz to display.
+ * @param onNavigateBack Callback to navigate back.
+ * @param onStartQuiz Callback when user starts the quiz.
+ * @param modifier Modifier for styling.
+ */
 @Composable
-fun QuizDetailScreen(navController: NavController, quizId: String) {
+fun QuizDetailScreen(
+    quizId: String,
+    onNavigateBack: () -> Unit,
+    onStartQuiz: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Scaffold(
+        modifier = modifier,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Quiz Details") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
+            AppTopBar(
+                title = "Quiz Details",
+                canNavigateBack = true,
+                navigateUp = onNavigateBack
             )
         },
         bottomBar = {
-            // Nút Bắt đầu dính ở đáy màn hình
+            // Start Quiz Button
             Button(
-                onClick = {
-                    // Chuyển sang màn hình làm bài (Sẽ làm ở nhiệm vụ sau)
-                    // navController.navigate("take_quiz/$quizId")
-                },
+                onClick = onStartQuiz,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -50,7 +58,10 @@ fun QuizDetailScreen(navController: NavController, quizId: String) {
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Start Quiz Now", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = "Start Quiz Now",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
     ) { innerPadding ->
@@ -62,15 +73,18 @@ fun QuizDetailScreen(navController: NavController, quizId: String) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Ảnh minh họa (Giả lập)
+            // Thumbnail placeholder
             Box(
                 modifier = Modifier
                     .size(120.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(20.dp)),
+                    .background(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        RoundedCornerShape(20.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Math",
+                    text = "Quiz",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -78,48 +92,67 @@ fun QuizDetailScreen(navController: NavController, quizId: String) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 2. Tên bài thi
+            // Quiz title (using quizId for demo)
             Text(
-                text = "Basic Mathematics $quizId", // Hiện ID để test
+                text = "Sample Quiz: $quizId",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Description
             Text(
-                text = "Master the basics of algebra and geometry with this comprehensive test.",
+                text = "Test your knowledge with this comprehensive quiz.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 3. Các thông số (Thời gian, Số câu, Điểm)
+            // Stats Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                QuizInfoItem(icon = Icons.Default.QuestionAnswer, label = "10 Questions")
-                QuizInfoItem(icon = Icons.Default.Timer, label = "15 Mins")
-                QuizInfoItem(icon = Icons.Default.Star, label = "4.5 Rating")
+                QuizStatItem(
+                    icon = Icons.Default.QuestionAnswer,
+                    label = "10 Questions"
+                )
+                QuizStatItem(
+                    icon = Icons.Default.Timer,
+                    label = "15 Mins"
+                )
+                QuizStatItem(
+                    icon = Icons.Default.Star,
+                    label = "4.5 Rating"
+                )
             }
         }
     }
 }
 
-// Component con hiển thị thông số
 @Composable
-fun QuizInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun QuizStatItem(
+    icon: ImageVector,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Icon(
-            icon,
+            imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(32.dp)
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelLarge)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge
+        )
     }
 }

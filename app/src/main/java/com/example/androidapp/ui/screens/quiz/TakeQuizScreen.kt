@@ -1,45 +1,66 @@
-package com.example.androidapp.ui.quiz
+package com.example.androidapp.ui.screens.quiz
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-// Import Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
+import com.example.androidapp.domain.model.Choice
+import com.example.androidapp.ui.components.quiz.DynamicChoiceList
+import com.example.androidapp.ui.components.quiz.QuizProgressIndicator
+import com.example.androidapp.ui.components.quiz.TimerDisplay
 
+/**
+ * Take Quiz screen where user answers questions.
+ *
+ * @param quizId The ID of the quiz being taken.
+ * @param onNavigateBack Callback to exit the quiz.
+ * @param onQuizComplete Callback when quiz is submitted.
+ * @param modifier Modifier for styling.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TakeQuizScreen(navController: NavController, quizId: String) {
-    // Biến lưu câu hỏi hiện tại (Bắt đầu từ 0)
+fun TakeQuizScreen(
+    quizId: String,
+    onNavigateBack: () -> Unit,
+    onQuizComplete: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
-    // Biến lưu đáp án đang chọn
-    var selectedOption by remember { mutableStateOf("") }
-
+    var selectedChoiceIds by remember { mutableStateOf(setOf<String>()) }
+    var elapsedSeconds by remember { mutableLongStateOf(0L) }
+    
     val totalQuestions = 10
-    val progress = (currentQuestionIndex + 1).toFloat() / totalQuestions
+    
+    // Sample choices for demo
+    val sampleChoices = remember {
+        listOf(
+            Choice(id = "a", content = "Option A", isCorrect = true, position = 0),
+            Choice(id = "b", content = "Option B", isCorrect = false, position = 1),
+            Choice(id = "c", content = "Option C", isCorrect = false, position = 2),
+            Choice(id = "d", content = "Option D", isCorrect = false, position = 3)
+        )
+    }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("14:30", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                    }
+                    TimerDisplay(secondsElapsed = elapsedSeconds)
                 },
                 actions = {
-                    IconButton(onClick = { navController.popBackStack() }) { // Nút thoát
-                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
                     }
                 }
             )
@@ -48,21 +69,26 @@ fun TakeQuizScreen(navController: NavController, quizId: String) {
             Button(
                 onClick = {
                     if (currentQuestionIndex < totalQuestions - 1) {
-                        currentQuestionIndex++ // Qua câu tiếp theo
-                        selectedOption = ""    // Reset lựa chọn
+                        currentQuestionIndex++
+                        selectedChoiceIds = emptySet()
                     } else {
-                        // Hết câu hỏi -> Chuyển sang màn hình kết quả (Nhiệm vụ 7 sẽ làm)
-                        navController.navigate("quiz_result/$quizId")
+                        // Quiz complete - navigate to results
+                        onQuizComplete(quizId)
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
                     .height(56.dp),
-                enabled = selectedOption.isNotEmpty(), // Phải chọn đáp án mới sáng nút
+                enabled = selectedChoiceIds.isNotEmpty(),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(if (currentQuestionIndex < totalQuestions - 1) "Next Question" else "Submit Quiz")
+                Text(
+                    text = if (currentQuestionIndex < totalQuestions - 1) 
+                        stringResource(R.string.next) 
+                    else 
+                        stringResource(R.string.submit)
+                )
             }
         }
     ) { innerPadding ->
@@ -72,55 +98,32 @@ fun TakeQuizScreen(navController: NavController, quizId: String) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // 1. Thanh tiến độ
-            Text("Question ${currentQuestionIndex + 1}/$totalQuestions", style = MaterialTheme.typography.labelLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth().height(8.dp),
-                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
+            // Progress indicator
+            QuizProgressIndicator(
+                currentQuestionIndex = currentQuestionIndex,
+                totalQuestions = totalQuestions
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // 2. Nội dung câu hỏi
+            // Question content
             Text(
-                text = "Câu hỏi số ${currentQuestionIndex + 1}: Tại sao lá cây lại có màu xanh?",
+                text = "Question ${currentQuestionIndex + 1}: Sample question text?",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 3. Các đáp án (Radio Buttons)
-            val options = listOf("Do diệp lục", "Do ánh sáng", "Do nước", "Do đất")
-
-            Column {
-                options.forEach { text ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .selectable(
-                                selected = (text == selectedOption),
-                                onClick = { selectedOption = text },
-                                role = Role.RadioButton
-                            )
-                            .padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (text == selectedOption),
-                            onClick = null // null vì đã xử lý ở Row click
-                        )
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
-                    }
+            // Choice buttons using reusable component
+            DynamicChoiceList(
+                choices = sampleChoices,
+                selectedChoiceIds = selectedChoiceIds,
+                allowMultipleCorrect = false,
+                onChoiceSelected = { choiceId ->
+                    selectedChoiceIds = setOf(choiceId)
                 }
-            }
+            )
         }
     }
 }

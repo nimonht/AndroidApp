@@ -1,114 +1,86 @@
-package com.example.androidapp.ui.profile
+package com.example.androidapp.ui.screens.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-// Import Icon thủ công nếu cần
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.ChevronRight
+import com.example.androidapp.R
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Profile screen showing user information and settings menu.
+ * Shows login prompt for guests.
+ *
+ * @param onNavigateToLogin Callback to navigate to login screen.
+ * @param onNavigateToSettings Callback to navigate to settings screen.
+ * @param onNavigateToHistory Callback to navigate to attempt history.
+ * @param onNavigateToTrash Callback to navigate to recycle bin.
+ * @param modifier Modifier for styling.
+ */
 @Composable
-fun ProfileScreen(navController: NavController) {
-    // Giả lập trạng thái đăng nhập (Sau này sẽ lấy từ Firebase)
+fun ProfileScreen(
+    onNavigateToLogin: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToHistory: () -> Unit,
+    onNavigateToTrash: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // TODO: Replace with actual auth state from ViewModel
     var isLoggedIn by remember { mutableStateOf(true) }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
-                    selected = false,
-                    onClick = { navController.navigate("home") }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        if (isLoggedIn) {
+            // Logged in user view
+            UserProfileHeader()
+
+            // Menu items
+            ProfileMenuSection(
+                onHistoryClick = onNavigateToHistory,
+                onTrashClick = onNavigateToTrash,
+                onSettingsClick = onNavigateToSettings
+            )
+
+            // Logout button
+            Button(
+                onClick = { isLoggedIn = false },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
                 )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                    label = { Text("Search") },
-                    selected = false,
-                    onClick = { navController.navigate("search") }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    label = { Text("Profile") },
-                    selected = true, // Đang ở Profile nên sáng lên
-                    onClick = { /* Đang ở đây rồi */ }
-                )
+            ) {
+                Icon(Icons.Default.Logout, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.logout))
             }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            if (isLoggedIn) {
-                // --- PHẦN 1: THÔNG TIN USER ---
-                UserProfileHeader()
-
-                // --- PHẦN 2: MENU CHỨC NĂNG ---
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("General", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
-
-                    ProfileMenuItem(
-                        icon = Icons.Default.History,
-                        title = "Attempt History",
-                        onClick = { navController.navigate("history") }
-                    )
-                    ProfileMenuItem(
-                        icon = Icons.Default.Delete,
-                        title = "Recycle Bin",
-                        onClick = { navController.navigate("trash") }
-                    )
-                    ProfileMenuItem(
-                        icon = Icons.Default.Settings,
-                        title = "Settings",
-                        onClick = { navController.navigate("settings") }
-                    )
-                }
-
-                // --- PHẦN 3: ĐĂNG XUẤT ---
-                Button(
-                    onClick = { isLoggedIn = false },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(Icons.Default.Logout, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Log Out")
-                }
-
-            } else {
-                // --- GIAO DIỆN KHI CHƯA ĐĂNG NHẬP ---
-                GuestView(onLoginClick = { navController.navigate("login") })
-            }
+        } else {
+            // Guest view
+            GuestPrompt(onLoginClick = onNavigateToLogin)
         }
     }
 }
 
-// Component hiển thị Header thông tin User
 @Composable
-fun UserProfileHeader() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        // Avatar giả lập
+private fun UserProfileHeader(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar placeholder
         Box(
             modifier = Modifier
                 .size(80.dp)
@@ -116,24 +88,77 @@ fun UserProfileHeader() {
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
-            Text("T", style = MaterialTheme.typography.headlineLarge)
+            Text(
+                text = "U",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
         Column {
-            Text("Thanh Student", style = MaterialTheme.typography.headlineSmall)
-            Text("thanh@huflit.edu.vn", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Text(
+                text = "User Name",
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Text(
+                text = "user@example.com",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
-// Component từng dòng Menu
 @Composable
-fun ProfileMenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, onClick: () -> Unit) {
+private fun ProfileMenuSection(
+    onHistoryClick: () -> Unit,
+    onTrashClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "General",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        ProfileMenuItem(
+            icon = Icons.Default.History,
+            title = "Attempt History",
+            onClick = onHistoryClick
+        )
+        ProfileMenuItem(
+            icon = Icons.Default.Delete,
+            title = "Recycle Bin",
+            onClick = onTrashClick
+        )
+        ProfileMenuItem(
+            icon = Icons.Default.Settings,
+            title = "Settings",
+            onClick = onSettingsClick
+        )
+    }
+}
+
+@Composable
+private fun ProfileMenuItem(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
             modifier = Modifier
@@ -141,26 +166,43 @@ fun ProfileMenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(modifier = Modifier.width(16.dp))
-            Text(title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
+            Text(
+                text = title,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
-// Component cho khách (Chưa đăng nhập)
 @Composable
-fun GuestView(onLoginClick: () -> Unit) {
+private fun GuestPrompt(
+    onLoginClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("You are not logged in", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "You are not logged in",
+            style = MaterialTheme.typography.titleLarge
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onLoginClick) {
-            Text("Login to continue")
+            Text(stringResource(R.string.login))
         }
     }
 }

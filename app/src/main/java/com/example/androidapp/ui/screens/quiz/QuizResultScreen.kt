@@ -1,29 +1,45 @@
-package com.example.androidapp.ui.quiz
+package com.example.androidapp.ui.screens.quiz
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-// Import Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Share
+import com.example.androidapp.R
+import com.example.androidapp.ui.components.feedback.ScoreCard
 
+/**
+ * Quiz result screen showing score and options.
+ *
+ * @param quizId The ID of the completed quiz.
+ * @param attemptId The ID of the attempt (for loading results).
+ * @param onNavigateHome Callback to go back to home.
+ * @param onRetryQuiz Callback to retry the quiz.
+ * @param onReviewAnswers Callback to review answers.
+ * @param modifier Modifier for styling.
+ */
 @Composable
-fun QuizResultScreen(navController: NavController, quizId: String) {
-    // Giả lập kết quả
+fun QuizResultScreen(
+    quizId: String,
+    attemptId: String,
+    onNavigateHome: () -> Unit,
+    onRetryQuiz: () -> Unit,
+    onReviewAnswers: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // TODO: Load actual results from ViewModel based on attemptId
     val score = 8
-    val totalQuestions = 10
-    val percentage = score.toFloat() / totalQuestions
+    val maxScore = 10
+    val correctCount = 8
+    val wrongCount = 2
+    val timeTaken = "8:32"
 
-    Scaffold { innerPadding ->
+    Scaffold(modifier = modifier) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -32,75 +48,42 @@ fun QuizResultScreen(navController: NavController, quizId: String) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Quiz Completed!",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
+            // Score Card (reusable component)
+            ScoreCard(
+                score = score,
+                maxScore = maxScore,
+                correctCount = correctCount,
+                wrongCount = wrongCount,
+                timeTaken = timeTaken
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Vòng tròn điểm số (Giả lập bằng Card và Text cho đơn giản)
-            Card(
-                modifier = Modifier.size(200.dp),
-                shape = RoundedCornerShape(100.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "$score / $totalQuestions",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text("Your Score", style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Great job! You have mastered the basics.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Các nút chức năng
+            // Action Buttons
             Button(
-                onClick = {
-                    // Quay về trang chủ và xóa lịch sử navigation để không back lại được màn hình kết quả
-                    navController.navigate("home") {
-                        popUpTo("home") { inclusive = true }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+                onClick = onNavigateHome,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Home, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Go to Home")
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
-                onClick = {
-                    // Làm lại bài thi
-                    navController.navigate("take_quiz/$quizId") {
-                        popUpTo("home") // Xóa stack cũ
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+                onClick = onRetryQuiz,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Try Again")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TextButton(onClick = onReviewAnswers) {
+                Text("Review Answers")
             }
         }
     }

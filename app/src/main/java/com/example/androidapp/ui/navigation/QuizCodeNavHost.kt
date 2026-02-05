@@ -14,6 +14,18 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.navigation.Routes.Args
+import com.example.androidapp.ui.screens.auth.LoginScreen
+import com.example.androidapp.ui.screens.auth.RegisterScreen
+import com.example.androidapp.ui.screens.create.CreateQuizScreen
+import com.example.androidapp.ui.screens.history.HistoryScreen
+import com.example.androidapp.ui.screens.home.HomeScreen
+import com.example.androidapp.ui.screens.profile.ProfileScreen
+import com.example.androidapp.ui.screens.quiz.QuizDetailScreen
+import com.example.androidapp.ui.screens.quiz.QuizResultScreen
+import com.example.androidapp.ui.screens.quiz.TakeQuizScreen
+import com.example.androidapp.ui.screens.search.SearchScreen
+import com.example.androidapp.ui.screens.settings.SettingsScreen
+import com.example.androidapp.ui.screens.trash.TrashScreen
 
 /**
  * Main navigation host for the QuizCode application.
@@ -38,13 +50,8 @@ fun QuizCodeNavHost(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
-                            // Pop up to the start destination to avoid building up a large back stack
-                            popUpTo(Routes.HOME) {
-                                saveState = true
-                            }
-                            // Avoid multiple copies of the same destination
+                            popUpTo(Routes.HOME) { saveState = true }
                             launchSingleTop = true
-                            // Restore state when reselecting a previously selected item
                             restoreState = true
                         }
                     }
@@ -59,41 +66,61 @@ fun QuizCodeNavHost(
         ) {
             // ==================== Bottom Navigation Screens ====================
             composable(Routes.HOME) {
-                // TODO: Replace with actual HomeScreen
-                PlaceholderScreen(screenName = "Home")
+                HomeScreen(
+                    onNavigateToQuiz = { quizId ->
+                        navController.navigate(Routes.quizDetail(quizId))
+                    },
+                    onNavigateToSearch = {
+                        navController.navigate(Routes.SEARCH)
+                    }
+                )
             }
 
             composable(Routes.SEARCH) {
-                // TODO: Replace with actual SearchScreen
-                PlaceholderScreen(screenName = "Search")
+                SearchScreen(
+                    onNavigateToQuiz = { quizId ->
+                        navController.navigate(Routes.quizDetail(quizId))
+                    }
+                )
             }
 
             composable(Routes.PROFILE) {
-                // TODO: Replace with actual ProfileScreen
-                PlaceholderScreen(screenName = "Profile")
+                ProfileScreen(
+                    onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
+                    onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
+                    onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
+                    onNavigateToTrash = { navController.navigate(Routes.TRASH) }
+                )
             }
 
             // ==================== Quiz Screens ====================
             composable(
                 route = Routes.QUIZ_DETAIL,
-                arguments = listOf(
-                    navArgument(Args.QUIZ_ID) { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
             ) { backStackEntry ->
                 val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
-                // TODO: Replace with actual QuizDetailScreen
-                PlaceholderScreen(screenName = "Quiz Detail: $quizId")
+                QuizDetailScreen(
+                    quizId = quizId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) }
+                )
             }
 
             composable(
                 route = Routes.QUIZ_PLAY,
-                arguments = listOf(
-                    navArgument(Args.QUIZ_ID) { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
             ) { backStackEntry ->
                 val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
-                // TODO: Replace with actual TakeQuizScreen
-                PlaceholderScreen(screenName = "Take Quiz: $quizId")
+                TakeQuizScreen(
+                    quizId = quizId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onQuizComplete = { completedQuizId ->
+                        // Generate attempt ID (in real app, this comes from repository)
+                        navController.navigate(Routes.quizResult(completedQuizId, "attempt_1")) {
+                            popUpTo(Routes.QUIZ_DETAIL) { inclusive = false }
+                        }
+                    }
+                )
             }
 
             composable(
@@ -105,51 +132,83 @@ fun QuizCodeNavHost(
             ) { backStackEntry ->
                 val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
                 val attemptId = backStackEntry.arguments?.getString(Args.ATTEMPT_ID) ?: return@composable
-                // TODO: Replace with actual QuizResultScreen
-                PlaceholderScreen(screenName = "Quiz Result: $quizId / $attemptId")
+                QuizResultScreen(
+                    quizId = quizId,
+                    attemptId = attemptId,
+                    onNavigateHome = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.HOME) { inclusive = true }
+                        }
+                    },
+                    onRetryQuiz = {
+                        navController.navigate(Routes.quizPlay(quizId)) {
+                            popUpTo(Routes.QUIZ_DETAIL) { inclusive = false }
+                        }
+                    },
+                    onReviewAnswers = {
+                        // TODO: Navigate to review screen
+                    }
+                )
             }
 
             composable(Routes.QUIZ_CREATE) {
-                // TODO: Replace with actual CreateQuizScreen
-                PlaceholderScreen(screenName = "Create Quiz")
+                CreateQuizScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaveComplete = { navController.popBackStack() }
+                )
             }
 
             composable(
                 route = Routes.QUIZ_EDIT,
-                arguments = listOf(
-                    navArgument(Args.QUIZ_ID) { type = NavType.StringType }
-                )
+                arguments = listOf(navArgument(Args.QUIZ_ID) { type = NavType.StringType })
             ) { backStackEntry ->
                 val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
-                // TODO: Replace with actual EditQuizScreen
-                PlaceholderScreen(screenName = "Edit Quiz: $quizId")
+                // TODO: Create EditQuizScreen (reuses CreateQuizScreen with pre-populated data)
+                CreateQuizScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaveComplete = { navController.popBackStack() }
+                )
             }
 
             // ==================== User Screens ====================
             composable(Routes.SETTINGS) {
-                // TODO: Replace with actual SettingsScreen
-                PlaceholderScreen(screenName = "Settings")
+                SettingsScreen(onNavigateBack = { navController.popBackStack() })
             }
 
             composable(Routes.HISTORY) {
-                // TODO: Replace with actual HistoryScreen
-                PlaceholderScreen(screenName = "History")
+                HistoryScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onAttemptClick = { attemptId ->
+                        // TODO: Navigate to attempt detail/review
+                    }
+                )
             }
 
             composable(Routes.TRASH) {
-                // TODO: Replace with actual TrashScreen (Recycle Bin)
-                PlaceholderScreen(screenName = "Trash")
+                TrashScreen(onNavigateBack = { navController.popBackStack() })
             }
 
             // ==================== Auth Screens ====================
             composable(Routes.LOGIN) {
-                // TODO: Replace with actual LoginScreen
-                PlaceholderScreen(screenName = "Login")
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    },
+                    onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
+                )
             }
 
             composable(Routes.REGISTER) {
-                // TODO: Replace with actual RegisterScreen
-                PlaceholderScreen(screenName = "Register")
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.REGISTER) { inclusive = true }
+                        }
+                    },
+                    onNavigateToLogin = { navController.popBackStack() }
+                )
             }
         }
     }
@@ -159,9 +218,5 @@ fun QuizCodeNavHost(
  * Determines whether the bottom navigation bar should be visible for the current route.
  */
 private fun shouldShowBottomBar(currentRoute: String?): Boolean {
-    return currentRoute in listOf(
-        Routes.HOME,
-        Routes.SEARCH,
-        Routes.PROFILE
-    )
+    return currentRoute in listOf(Routes.HOME, Routes.SEARCH, Routes.PROFILE)
 }
