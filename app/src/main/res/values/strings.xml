@@ -8,9 +8,12 @@
 
     <!-- Common -->
     <string name="loading">Loading…</string>
+    <string name="error">Error</string>
     <string name="error_generic">Something went wrong</string>
     <string name="retry">Retry</string>
+    <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
@@ -20,6 +23,9 @@
     <string name="previous">Previous</string>
     <string name="back">Back</string>
     <string name="close">Close</string>
+    <string name="warning_title">Warning</string>
+    <string name="continue_action">Continue</string>
+    <string name="delete_confirm_title">Confirm delete</string>
 
     <!-- Quiz -->
     <string name="quiz_create">Create Quiz</string>
@@ -27,6 +33,41 @@
     <string name="quiz_code_hint">Enter 6-digit code</string>
     <string name="quiz_questions">%1$d Questions</string>
     <string name="quiz_attempts">%1$d Attempts</string>
+    <string name="quiz_choice_count">%1$d of %2$d choices</string>
+    <string name="quiz_by_author">by %1$s</string>
+    <string name="quiz_more_tags">+%1$d</string>
+    <string name="question_progress">Question %1$d/%2$d</string>
+    <string name="timer_content_description">Quiz timer</string>
+
+    <!-- Media -->
+    <string name="image_load_error">Unable to load image</string>
+    <string name="play_video">Play video</string>
+    <string name="video_label">VIDEO</string>
+
+    <!-- Bottom sheets -->
+    <string name="share_quiz_title">Share quiz</string>
+    <string name="share_code_label">Share code</string>
+    <string name="copy_code">Copy code</string>
+    <string name="share_link">Share link</string>
+    <string name="create_qr_code">Create QR code</string>
+    <string name="regenerate_code">Regenerate code</string>
+    <string name="options_title">Options</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="filter_title">Filter</string>
+    <string name="share_code_example">ABC123</string>
+    <string name="remove_option">Remove %1$s</string>
+
+    <!-- Score -->
+    <string name="score_title">Result</string>
+    <string name="score_format">%1$d/%2$d</string>
+    <string name="percentage_format">%1$d%%</string>
+    <string name="correct_label">Correct</string>
+    <string name="wrong_label">Wrong</string>
+    <string name="time_label">Time</string>
+    <string name="score_celebrate_high">🎉</string>
+    <string name="score_celebrate_medium">👏</string>
+    <string name="score_celebrate_low">💪</string>
+    <string name="score_celebrate_min">📚</string>
 
     <!-- Auth -->
     <string name="login">Log In</string>
