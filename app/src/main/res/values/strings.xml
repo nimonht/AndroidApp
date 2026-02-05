@@ -38,6 +38,8 @@
     <string name="quiz_more_tags">+%1$d</string>
     <string name="question_progress">Câu hỏi %1$d/%2$d</string>
     <string name="timer_content_description">Bộ đếm thời gian bài kiểm tra</string>
+    <string name="take_quiz_title">Làm bài kiểm tra</string>
+    <string name="take_quiz_empty">Chưa có dữ liệu câu hỏi để hiển thị</string>
 
     <!-- Media -->
     <string name="image_load_error">Không thể tải ảnh</string>
@@ -54,7 +56,6 @@
     <string name="options_title">Tùy chọn</string>
     <string name="duplicate">Nhân bản</string>
     <string name="filter_title">Bộ lọc</string>
-    <string name="share_code_example">ABC123</string>
     <string name="remove_option">Xóa %1$s</string>
 
     <!-- Score -->
@@ -86,9 +87,6 @@
     <string name="create_question_tap_to_edit">Nhấn để chỉnh sửa câu hỏi...</string>
 
     <!-- Profile -->
-    <string name="profile_avatar_initial">N</string>
-    <string name="profile_user_name_placeholder">Tên người dùng</string>
-    <string name="profile_user_email_placeholder">nguoidung@example.com</string>
     <string name="profile_section_general">Chung</string>
     <string name="profile_menu_attempt_history">Lịch sử làm bài</string>
     <string name="profile_menu_recycle_bin">Thùng rác</string>
@@ -104,8 +102,6 @@
     <string name="trash_action_restore_cd">Khôi phục</string>
     <string name="trash_action_delete_permanently_cd">Xóa vĩnh viễn</string>
     <string name="trash_deleted_days_ago">Đã xóa %1$d ngày trước</string>
-    <string name="trash_sample_old_math_quiz">Bài kiểm tra Toán cũ</string>
-    <string name="trash_sample_draft_quiz">Bài kiểm tra nháp</string>
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
@@ -122,37 +118,22 @@
     <!-- Search -->
     <string name="search_top_results">Kết quả nổi bật</string>
     <string name="search_placeholder">Tìm bài kiểm tra...</string>
-    <string name="filter_all">Tất cả</string>
-    <string name="filter_math">Toán</string>
-    <string name="filter_science">Khoa học</string>
-    <string name="filter_history">Lịch sử</string>
-    <string name="filter_language">Ngôn ngữ</string>
-    <string name="search_quiz_number">Bài kiểm tra #%1$d</string>
+    <string name="search_empty">Chưa có kết quả phù hợp</string>
 
     <!-- Home -->
     <string name="home_greeting">Xin chào! 👋</string>
     <string name="home_recently_played">Đã chơi gần đây</string>
+    <string name="home_recently_played_empty">Chưa có bài kiểm tra đã chơi</string>
     <string name="home_my_quizzes">Bài kiểm tra của tôi</string>
+    <string name="home_my_quizzes_empty">Bạn chưa tạo bài kiểm tra nào</string>
     <string name="home_trending_quizzes">Bài kiểm tra thịnh hành</string>
+    <string name="home_trending_empty">Chưa có bài kiểm tra thịnh hành</string>
     <string name="home_see_all">Xem tất cả →</string>
-    <string name="home_quiz_number">Bài kiểm tra %1$d</string>
-    <string name="home_math_quiz_101">Bài kiểm tra Toán 101</string>
-    <string name="home_science_trivia">Đố vui Khoa học</string>
-
-    <!-- Take Quiz -->
-    <string name="take_quiz_question_sample">Câu hỏi %1$d: Văn bản câu hỏi mẫu?</string>
-    <string name="take_quiz_option_a">Phương án A</string>
-    <string name="take_quiz_option_b">Phương án B</string>
-    <string name="take_quiz_option_c">Phương án C</string>
-    <string name="take_quiz_option_d">Phương án D</string>
 
     <!-- History -->
     <string name="history_title">Lịch sử làm bài</string>
     <string name="history_empty">Chưa có lượt làm bài</string>
     <string name="history_action_explore">Khám phá bài kiểm tra</string>
-    <string name="history_math_quiz">Bài kiểm tra Toán</string>
-    <string name="history_science_trivia">Đố vui Khoa học</string>
-    <string name="history_history_quiz">Bài kiểm tra Lịch sử</string>
     <string name="history_time_hours_ago">%1$d giờ trước</string>
     <string name="history_time_yesterday">Hôm qua</string>
     <string name="history_time_days_ago">%1$d ngày trước</string>
@@ -169,21 +150,11 @@
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết bài kiểm tra</string>
     <string name="quiz_start_now">Bắt đầu làm bài</string>
-    <string name="quiz_thumbnail_label">Bài kiểm tra</string>
-    <string name="quiz_sample_title">Bài kiểm tra mẫu: %1$s</string>
-    <string name="quiz_sample_description">Kiểm tra kiến thức của bạn với bài kiểm tra tổng hợp này.</string>
-    <string name="quiz_stat_questions">10 câu hỏi</string>
-    <string name="quiz_stat_duration">15 phút</string>
-    <string name="quiz_stat_rating">Đánh giá 4.5</string>
-
-    <!-- Media -->
-    <string name="media_sample_image_cd">Hình ảnh mẫu</string>
-    <string name="media_sample_video_cd">Video mẫu</string>
-    <string name="media_preview_null_label">Media với URL rỗng (không hiển thị):</string>
-    <string name="media_preview_end">Kết thúc thành phần</string>
+    <string name="quiz_detail_empty">Chưa có dữ liệu bài kiểm tra</string>
 
     <!-- Quiz Result -->
     <string name="quiz_result_go_home">Về trang chủ</string>
     <string name="quiz_result_try_again">Thử lại</string>
     <string name="quiz_result_review_answers">Xem lại đáp án</string>
+    <string name="quiz_result_empty">Chưa có kết quả để hiển thị</string>
 </resources>

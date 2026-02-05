@@ -1,20 +1,14 @@
 package com.example.androidapp.ui.screens.quiz
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
-import com.example.androidapp.domain.model.Choice
-import com.example.androidapp.ui.components.quiz.DynamicChoiceList
-import com.example.androidapp.ui.components.quiz.QuizProgressIndicator
-import com.example.androidapp.ui.components.quiz.TimerDisplay
+import com.example.androidapp.ui.components.feedback.EmptyState
 
 /**
  * Take Quiz screen where user answers questions.
@@ -32,46 +26,12 @@ fun TakeQuizScreen(
     onQuizComplete: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var currentQuestionIndex by remember { mutableIntStateOf(0) }
-    var selectedChoiceIds by remember { mutableStateOf(setOf<String>()) }
-    var elapsedSeconds by remember { mutableLongStateOf(0L) }
-    
-    val totalQuestions = 10
-    
-    // Sample choices for demo
-    val sampleChoices = listOf(
-        Choice(
-            id = "a",
-            content = stringResource(R.string.take_quiz_option_a),
-            isCorrect = true,
-            position = 0
-        ),
-        Choice(
-            id = "b",
-            content = stringResource(R.string.take_quiz_option_b),
-            isCorrect = false,
-            position = 1
-        ),
-        Choice(
-            id = "c",
-            content = stringResource(R.string.take_quiz_option_c),
-            isCorrect = false,
-            position = 2
-        ),
-        Choice(
-            id = "d",
-            content = stringResource(R.string.take_quiz_option_d),
-            isCorrect = false,
-            position = 3
-        )
-    )
-
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
-                    TimerDisplay(secondsElapsed = elapsedSeconds)
+                    Text(text = stringResource(R.string.take_quiz_title))
                 },
                 actions = {
                     IconButton(onClick = onNavigateBack) {
@@ -82,69 +42,13 @@ fun TakeQuizScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            Button(
-                onClick = {
-                    if (currentQuestionIndex < totalQuestions - 1) {
-                        currentQuestionIndex++
-                        selectedChoiceIds = emptySet()
-                    } else {
-                        // Quiz complete - navigate to results
-                        onQuizComplete(quizId)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(56.dp),
-                enabled = selectedChoiceIds.isNotEmpty(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = if (currentQuestionIndex < totalQuestions - 1) 
-                        stringResource(R.string.next) 
-                    else 
-                        stringResource(R.string.submit)
-                )
-            }
         }
     ) { innerPadding ->
-        Column(
+        EmptyState(
+            message = stringResource(R.string.take_quiz_empty),
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Progress indicator
-            QuizProgressIndicator(
-                currentQuestionIndex = currentQuestionIndex,
-                totalQuestions = totalQuestions
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Question content
-            Text(
-                text = stringResource(
-                    R.string.take_quiz_question_sample,
-                    currentQuestionIndex + 1
-                ),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Choice buttons using reusable component
-            DynamicChoiceList(
-                choices = sampleChoices,
-                selectedChoiceIds = selectedChoiceIds,
-                allowMultipleCorrect = false,
-                onChoiceSelected = { choiceId ->
-                    selectedChoiceIds = setOf(choiceId)
-                }
-            )
-        }
+                .fillMaxWidth()
+        )
     }
 }

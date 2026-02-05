@@ -1,19 +1,18 @@
 package com.example.androidapp.ui.screens.search
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
+import com.example.androidapp.ui.components.feedback.EmptyState
 
 /**
  * Search/Explore screen for discovering public quizzes.
@@ -28,11 +27,14 @@ import com.example.androidapp.R
 @Composable
 fun SearchScreen(
     onNavigateToQuiz: (String) -> Unit,
+    filters: List<String> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val allFilter = stringResource(R.string.filter_all)
-    var selectedFilter by remember(allFilter) { mutableStateOf(allFilter) }
+    val availableFilters = filters
+    var selectedFilter by remember(availableFilters) {
+        mutableStateOf(availableFilters.firstOrNull())
+    }
 
     Column(
         modifier = modifier
@@ -48,6 +50,7 @@ fun SearchScreen(
 
         // 2. Filter Chips
         FilterChipsRow(
+            filters = availableFilters,
             selectedFilter = selectedFilter,
             onFilterSelected = { selectedFilter = it }
         )
@@ -59,8 +62,9 @@ fun SearchScreen(
         )
 
         // 4. Results Grid
-        SearchResultsGrid(
-            onQuizClick = onNavigateToQuiz
+        EmptyState(
+            message = stringResource(R.string.search_empty),
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -89,28 +93,23 @@ private fun SearchBar(
 
 @Composable
 private fun FilterChipsRow(
-    selectedFilter: String,
+    filters: List<String>,
+    selectedFilter: String?,
     onFilterSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val allFilter = stringResource(R.string.filter_all)
-    val filters = listOf(
-        allFilter,
-        stringResource(R.string.filter_math),
-        stringResource(R.string.filter_science),
-        stringResource(R.string.filter_history),
-    )
-    
-    Row(
+    if (filters.isEmpty()) return
+
+    LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        filters.forEach { filter ->
+        items(filters) { filter ->
             FilterChip(
                 selected = filter == selectedFilter,
                 onClick = { onFilterSelected(filter) },
                 label = { Text(filter) },
-                leadingIcon = if (filter == allFilter) {
+                leadingIcon = if (filter == filters.first()) {
                     {
                         Icon(
                             imageVector = Icons.Default.FilterList,
@@ -124,51 +123,3 @@ private fun FilterChipsRow(
     }
 }
 
-@Composable
-private fun SearchResultsGrid(
-    onQuizClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // TODO: Replace with actual data from ViewModel
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(6) { index ->
-            SearchResultCard(
-                title = stringResource(R.string.search_quiz_number, index + 1),
-                onClick = { onQuizClick("quiz_$index") }
-            )
-        }
-    }
-}
-
-/**
- * Temporary result card for search results.
- * TODO: Replace with actual QuizCard component when integrated with ViewModel.
- */
-@Composable
-private fun SearchResultCard(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .height(160.dp)
-            .fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(title)
-        }
-    }
-}

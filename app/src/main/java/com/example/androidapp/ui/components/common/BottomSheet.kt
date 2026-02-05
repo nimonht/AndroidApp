@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
 import com.example.androidapp.ui.theme.QuizCodeTheme
-import kotlinx.coroutines.launch
 
 /**
  * Modal bottom sheet wrapper with common functionality.
@@ -44,8 +43,6 @@ fun AppBottomSheet(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = skipPartiallyExpanded
     )
-    val scope = rememberCoroutineScope()
-
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = onDismiss,
@@ -140,12 +137,14 @@ fun BottomSheetDestructiveItem(
     text: String,
     icon: ImageVector,
     onClick: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     BottomSheetItem(
         text = text,
         icon = icon,
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier,
         iconTint = MaterialTheme.colorScheme.error,
         textColor = MaterialTheme.colorScheme.error
@@ -321,7 +320,8 @@ fun OptionsBottomSheet(
         BottomSheetDestructiveItem(
             text = stringResource(R.string.delete),
             icon = Icons.Outlined.Delete,
-            onClick = onDelete
+            onClick = onDelete,
+            enabled = deleteEnabled
         )
     }
 }
@@ -376,51 +376,6 @@ private fun BottomSheetItemPreview() {
             BottomSheetDestructiveItem(
                 text = stringResource(R.string.delete),
                 icon = Icons.Outlined.Delete,
-                onClick = { }
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ShareBottomSheetContentPreview() {
-    QuizCodeTheme {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Preview share code card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(R.string.share_code_label),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.share_code_example),
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }
-            }
-            BottomSheetItem(
-                text = stringResource(R.string.copy_code),
-                icon = Icons.Outlined.ContentCopy,
-                onClick = { }
-            )
-            BottomSheetItem(
-                text = stringResource(R.string.share_link),
-                icon = Icons.Outlined.Share,
                 onClick = { }
             )
         }

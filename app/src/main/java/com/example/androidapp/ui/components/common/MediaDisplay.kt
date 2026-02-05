@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -67,7 +66,6 @@ fun MediaDisplay(
             }
             MediaType.VIDEO -> {
                 VideoThumbnail(
-                    videoUrl = mediaUrl,
                     contentDescription = contentDescription,
                     onPlayClick = onVideoClick
                 )
@@ -128,7 +126,6 @@ private fun ImageContent(
  */
 @Composable
 private fun VideoThumbnail(
-    videoUrl: String,
     contentDescription: String?,
     onPlayClick: (() -> Unit)?,
     modifier: Modifier = Modifier
@@ -268,49 +265,4 @@ private enum class ImageLoadState {
     Loading,
     Success,
     Error
-}
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun MediaDisplayImagePreview() {
-    QuizCodeTheme {
-        MediaDisplay(
-            mediaUrl = "https://example.com/image.jpg",
-            mediaType = MediaType.IMAGE,
-            contentDescription = stringResource(R.string.media_sample_image_cd),
-            modifier = Modifier
-                .padding(16.dp)
-                .height(200.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MediaDisplayVideoPreview() {
-    QuizCodeTheme {
-        MediaDisplay(
-            mediaUrl = "https://example.com/video.mp4",
-            mediaType = MediaType.VIDEO,
-            contentDescription = stringResource(R.string.media_sample_video_cd),
-            onVideoClick = { /* Play video */ },
-            modifier = Modifier.padding(16.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun MediaDisplayNullPreview() {
-    QuizCodeTheme {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(stringResource(R.string.media_preview_null_label))
-            MediaDisplay(
-                mediaUrl = null,
-                modifier = Modifier.height(100.dp)
-            )
-            Text(stringResource(R.string.media_preview_end))
-        }
-    }
 }

@@ -13,16 +13,14 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun EmptyState(
-    message: String = "Không có dữ liệu",
+    message: String,
     icon: ImageVector = Icons.Default.Search,
     actionLabel: String? = null, // Ví dụ: "Tạo mới ngay"
     onActionClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

@@ -5,11 +5,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
+import com.example.androidapp.ui.components.feedback.EmptyState
+import com.example.androidapp.ui.components.forms.CodeInputField
 
 /**
  * Home dashboard screen displaying:
@@ -29,6 +33,8 @@ fun HomeScreen(
     onNavigateToSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val (joinCode, setJoinCode) = remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,8 +50,12 @@ fun HomeScreen(
 
         // 2. Quiz Code Input Card
         QuizCodeCard(
+            code = joinCode,
+            onCodeChange = setJoinCode,
             onJoinQuiz = { code ->
-                // TODO: Validate code and navigate
+                if (code.length == 6) {
+                    onNavigateToQuiz(code)
+                }
             }
         )
 
@@ -54,26 +64,37 @@ fun HomeScreen(
             title = stringResource(R.string.home_recently_played),
             onSeeAllClick = onNavigateToSearch
         )
-        RecentlyPlayedRow(onQuizClick = onNavigateToQuiz)
+        EmptyState(
+            message = stringResource(R.string.home_recently_played_empty),
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // 4. My Quizzes Section
         SectionHeader(
             title = stringResource(R.string.home_my_quizzes),
             onSeeAllClick = onNavigateToSearch
         )
-        MyQuizzesSection(onQuizClick = onNavigateToQuiz)
+        EmptyState(
+            message = stringResource(R.string.home_my_quizzes_empty),
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // 5. Trending Section
         SectionHeader(
             title = stringResource(R.string.home_trending_quizzes),
             onSeeAllClick = onNavigateToSearch
         )
-        TrendingSection(onQuizClick = onNavigateToQuiz)
+        EmptyState(
+            message = stringResource(R.string.home_trending_empty),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun QuizCodeCard(
+    code: String,
+    onCodeChange: (String) -> Unit,
     onJoinQuiz: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -84,8 +105,15 @@ private fun QuizCodeCard(
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // TODO: Integrate CodeInputField when state management is ready
-            Button(onClick = { onJoinQuiz("") }) {
+            CodeInputField(
+                value = code,
+                onValueChange = onCodeChange
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { onJoinQuiz(code) },
+                enabled = code.length == 6
+            ) {
                 Text(stringResource(R.string.quiz_join))
             }
         }
@@ -106,79 +134,6 @@ private fun SectionHeader(
         Text(text = title, style = MaterialTheme.typography.titleLarge)
         TextButton(onClick = onSeeAllClick) {
             Text(text = stringResource(R.string.home_see_all))
-        }
-    }
-}
-
-@Composable
-private fun RecentlyPlayedRow(
-    onQuizClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // TODO: Replace with actual data from ViewModel
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        repeat(3) { index ->
-            QuizPreviewCard(
-                title = stringResource(R.string.home_quiz_number, index + 1),
-                onClick = { onQuizClick("quiz_$index") }
-            )
-        }
-    }
-}
-
-@Composable
-private fun MyQuizzesSection(
-    onQuizClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // TODO: Replace with actual QuizCard components and data
-    QuizPreviewCard(
-        title = stringResource(R.string.home_math_quiz_101),
-        onClick = { onQuizClick("math_101") },
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-@Composable
-private fun TrendingSection(
-    onQuizClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // TODO: Replace with actual QuizCard components and data
-    QuizPreviewCard(
-        title = stringResource(R.string.home_science_trivia),
-        onClick = { onQuizClick("science_trivia") },
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-/**
- * Temporary preview card for quizzes.
- * TODO: Replace with actual QuizCard component when integrated with ViewModel.
- */
-@Composable
-private fun QuizPreviewCard(
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .height(100.dp)
-            .widthIn(min = 120.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(title)
         }
     }
 }

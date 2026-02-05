@@ -89,7 +89,12 @@ fun QuizCodeNavHost(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                     onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) }
+                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
+                    isLoggedIn = false,
+                    displayName = null,
+                    email = null,
+                    avatarInitial = null,
+                    onLogout = {}
                 )
             }
 
@@ -115,10 +120,7 @@ fun QuizCodeNavHost(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
                     onQuizComplete = { completedQuizId ->
-                        // Generate attempt ID (in real app, this comes from repository)
-                        navController.navigate(Routes.quizResult(completedQuizId, "attempt_1")) {
-                            popUpTo(Routes.QUIZ_DETAIL) { inclusive = false }
-                        }
+                        // TODO: Navigate to result once attemptId is available
                     }
                 )
             }

@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,11 +31,13 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToTrash: () -> Unit,
+    isLoggedIn: Boolean,
+    displayName: String?,
+    email: String?,
+    avatarInitial: String?,
+    onLogout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // TODO: Replace with actual auth state from ViewModel
-    var isLoggedIn by remember { mutableStateOf(true) }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,7 +46,11 @@ fun ProfileScreen(
     ) {
         if (isLoggedIn) {
             // Logged in user view
-            UserProfileHeader()
+            UserProfileHeader(
+                displayName = displayName,
+                email = email,
+                avatarInitial = avatarInitial
+            )
 
             // Menu items
             ProfileMenuSection(
@@ -55,7 +61,7 @@ fun ProfileScreen(
 
             // Logout button
             Button(
-                onClick = { isLoggedIn = false },
+                onClick = onLogout,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.error
@@ -74,6 +80,9 @@ fun ProfileScreen(
 
 @Composable
 private fun UserProfileHeader(
+    displayName: String?,
+    email: String?,
+    avatarInitial: String?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -89,7 +98,7 @@ private fun UserProfileHeader(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = stringResource(R.string.profile_avatar_initial),
+                text = avatarInitial ?: "",
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
@@ -99,11 +108,11 @@ private fun UserProfileHeader(
 
         Column {
             Text(
-                text = stringResource(R.string.profile_user_name_placeholder),
+                text = displayName.orEmpty(),
                 style = MaterialTheme.typography.headlineSmall
             )
             Text(
-                text = stringResource(R.string.profile_user_email_placeholder),
+                text = email.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
