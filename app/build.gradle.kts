@@ -7,6 +7,12 @@ plugins {
 }
 
 android {
+    val useFirebaseEmulator = (project.findProperty("useFirebaseEmulator") as String?)
+        ?.toBoolean()
+        ?: true
+    val firebaseEmulatorHost = project.findProperty("firebaseEmulatorHost") as String?
+        ?: "10.0.2.2"
+
     namespace = "com.example.androidapp"
     compileSdk = 36
 
@@ -16,6 +22,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useFirebaseEmulator.toString())
+        buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     kotlinOptions {
         jvmTarget = "17"

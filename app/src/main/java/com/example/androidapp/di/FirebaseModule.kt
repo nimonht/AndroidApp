@@ -8,6 +8,7 @@ import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
+import com.example.androidapp.BuildConfig
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -22,6 +23,8 @@ import com.google.firebase.storage.storage
  */
 class AppContainerImpl(override val context: Context) : AppContainer {
 
+    private val emulatorHost: String = BuildConfig.FIREBASE_EMULATOR_HOST
+
     // ==================== Firebase ====================
 
     /**
@@ -29,7 +32,11 @@ class AppContainerImpl(override val context: Context) : AppContainer {
      * Used for user authentication (email/password, Google Sign-In).
      */
     override val firebaseAuth: FirebaseAuth by lazy {
-        Firebase.auth
+        Firebase.auth.also { auth ->
+            if (BuildConfig.USE_FIREBASE_EMULATOR) {
+                auth.useEmulator(emulatorHost, 9099)
+            }
+        }
     }
 
     /**
@@ -37,7 +44,11 @@ class AppContainerImpl(override val context: Context) : AppContainer {
      * Used for cloud database operations (quizzes, users, attempts).
      */
     override val firebaseFirestore: FirebaseFirestore by lazy {
-        Firebase.firestore
+        Firebase.firestore.also { firestore ->
+            if (BuildConfig.USE_FIREBASE_EMULATOR) {
+                firestore.useEmulator(emulatorHost, 8080)
+            }
+        }
     }
 
     /**
@@ -45,7 +56,11 @@ class AppContainerImpl(override val context: Context) : AppContainer {
      * Used for media file uploads (images, videos).
      */
     override val firebaseStorage: FirebaseStorage by lazy {
-        Firebase.storage
+        Firebase.storage.also { storage ->
+            if (BuildConfig.USE_FIREBASE_EMULATOR) {
+                storage.useEmulator(emulatorHost, 9199)
+            }
+        }
     }
 
     // ==================== Room Database ====================

@@ -1,13 +1,24 @@
 #!/bin/bash
 
 # Firebase Backend Deployment Script
-# This script helps deploy Firebase backend components for QuizCode app
 
 set -e  # Exit on error
 
-echo "=================================="
-echo "Firebase Backend Deployment Script"
-echo "=================================="
+text="=================================================================
+Firebase Backend Deployment Script, Made by Nimonht with luv  ❤️
+================================================================="
+colors=(31 33 32 36 34 35)
+i=0
+for ((j=0; j<${#text}; j++)); do
+    char="${text:$j:1}"
+    if [ "$char" = $'\n' ]; then
+        echo
+    else
+        echo -ne "\033[${colors[$i]}m$char"
+        i=$(( (i+1) % 6 ))
+    fi
+done
+
 echo ""
 
 # Colors for output
@@ -38,15 +49,11 @@ echo ""
 echo "Select deployment option:"
 echo "1) Deploy Firestore Rules only"
 echo "2) Deploy Firestore Indexes only"
-echo "3) [DEPRECATED] Deploy Storage Rules only (Firebase Storage deprecated)"
-echo "4) Deploy All (Rules + Indexes + Storage) [Storage deprecated]"
+echo "3) Deploy Storage Rules only"
+echo "4) Deploy All (Rules + Indexes + Storage)"
 echo "5) Start Emulators for testing"
 echo "6) Deploy to specific project"
 echo "7) Exit"
-echo ""
-echo "⚠️  NOTE: Firebase Storage is deprecated. Use Cloudflare R2 instead."
-echo "    See: Docs_en/02_backend_database_design.md#8-storage-migration-firebase-to-cloudflare-r2"
-echo ""
 
 read -p "Enter your choice [1-7]: " choice
 
@@ -64,8 +71,7 @@ case $choice in
         echo "Check Firebase Console to monitor index creation status."
         ;;
     3)
-        echo -e "${YELLOW}[DEPRECATED] Deploying Storage Rules...${NC}"
-        echo -e "${YELLOW}⚠️  Firebase Storage is deprecated. Consider using Cloudflare R2 instead.${NC}"
+        echo -e "${YELLOW}Deploying Storage Rules...${NC}"
         firebase deploy --only storage
         echo -e "${GREEN}✓ Storage Rules deployed successfully${NC}"
         ;;
@@ -109,7 +115,7 @@ case $choice in
         fi
         ;;
     7)
-        echo "Exiting..."
+        echo "Sayonara!"
         exit 0
         ;;
     *)
@@ -119,13 +125,6 @@ case $choice in
 esac
 
 echo ""
-echo "=================================="
-echo "Deployment Complete!"
-echo "=================================="
-echo ""
-echo "Next steps:"
-echo "1. Verify deployment in Firebase Console"
-echo "2. Check that indexes are building/enabled"
-echo "3. Test security rules with your Android app"
-echo ""
-echo "For more information, see: firestore/DEPLOYMENT.md"
+echo "============================================================="
+echo -e "${GREEN}Script completed successfully${NC}"
+echo "============================================================="
