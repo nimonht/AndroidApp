@@ -152,7 +152,8 @@ fun RegisterScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 enabled = username.isNotBlank() && email.isNotBlank() &&
-                        password.isNotBlank() && password == confirmPassword
+                        android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() &&
+                        password.length >= 8 && password == confirmPassword
             ) {
                 Text(
                     text = stringResource(R.string.register),

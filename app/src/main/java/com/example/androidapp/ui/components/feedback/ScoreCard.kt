@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
+import com.example.androidapp.ui.theme.GoldStar
 import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.Success
 
 /**
  * Displays the quiz result with score, percentage, star rating, and detailed stats.
@@ -139,7 +141,7 @@ private fun StarRating(
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
                 tint = if (index < rating) {
-                    Color(0xFFFFD700) // Gold color
+                    GoldStar
                 } else {
                     MaterialTheme.colorScheme.outlineVariant
                 }
@@ -182,12 +184,12 @@ private fun StatsRow(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = stringResource(R.string.correct_label),
-                        tint = Color(0xFF4CAF50) // Green
+                        tint = Success
                     )
                 },
                 label = stringResource(R.string.correct_label),
                 value = correctCount.toString(),
-                valueColor = Color(0xFF4CAF50)
+                valueColor = Success
             )
 
             // Divider

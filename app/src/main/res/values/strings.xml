@@ -130,6 +130,10 @@
     <string name="home_trending_empty">Chưa có bài kiểm tra thịnh hành</string>
     <string name="home_see_all">Xem tất cả →</string>
 
+    <!-- Dialogs -->
+    <string name="loading_processing">Đang xử lý…</string>
+    <string name="error_default_message">Đã xảy ra lỗi. Vui lòng thử lại.</string>
+
     <!-- History -->
     <string name="history_title">Lịch sử làm bài</string>
     <string name="history_empty">Chưa có lượt làm bài</string>

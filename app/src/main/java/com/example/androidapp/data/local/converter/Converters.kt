@@ -10,7 +10,9 @@ import com.google.gson.reflect.TypeToken
  */
 class Converters {
 
-    private val gson = Gson()
+    companion object {
+        private val gson = Gson()
+    }
 
     /**
      * Convert a List<String> to a JSON string for storage.

@@ -24,6 +24,9 @@ val Error = Color(0xFFF44336)
 val Warning = Color(0xFFFF9800)
 val Info = Color(0xFF2196F3)
 
+// Score Colors
+val GoldStar = Color(0xFFFFD700)
+
 // Surface Colors
 val SurfaceLight = Color(0xFFFFFBFE)
 val SurfaceDark = Color(0xFF1C1B1F)

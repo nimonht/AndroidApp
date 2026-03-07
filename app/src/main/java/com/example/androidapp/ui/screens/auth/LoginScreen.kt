@@ -115,7 +115,9 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                enabled = email.isNotBlank() && password.isNotBlank()
+                        && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
             ) {
                 Text(
                     text = stringResource(R.string.login),

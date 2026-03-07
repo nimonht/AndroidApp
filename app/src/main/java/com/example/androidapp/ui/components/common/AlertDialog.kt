@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
 import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.Warning as WarningColor
 
 /**
  * Reusable alert dialog with title, message, and confirm/cancel actions.
@@ -213,7 +214,7 @@ fun WarningDialog(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = Color(0xFFFF9800) // Orange warning color
+                tint = WarningColor
             )
         },
         title = {
@@ -233,7 +234,7 @@ fun WarningDialog(
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF9800)
+                    containerColor = WarningColor
                 )
             ) {
                 Text(resolvedConfirmText)
@@ -241,7 +242,7 @@ fun WarningDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -255,9 +256,10 @@ fun WarningDialog(
  */
 @Composable
 fun LoadingDialog(
-    message: String = "Đang xử lý...",
+    message: String? = null,
     modifier: Modifier = Modifier
 ) {
+    val displayMessage = message ?: stringResource(R.string.loading_processing)
     AlertDialog(
         onDismissRequest = { /* Cannot dismiss */ },
         modifier = modifier,
@@ -272,7 +274,7 @@ fun LoadingDialog(
                     strokeWidth = 3.dp
                 )
                 Text(
-                    text = message,
+                    text = displayMessage,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }

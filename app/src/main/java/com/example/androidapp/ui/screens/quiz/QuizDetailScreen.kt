@@ -29,7 +29,8 @@ fun QuizDetailScreen(
     onStartQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isReady = false
+    // TODO: Connect to ViewModel to load quiz data and determine readiness
+    val isReady = true
 
     Scaffold(
         modifier = modifier,

@@ -9,15 +9,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.R
 
 @Composable
 fun ErrorState(
-    message: String = "Đã xảy ra lỗi. Vui lòng thử lại.",
+    message: String? = null,
     icon: ImageVector = Icons.Default.Warning,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val displayMessage = message ?: stringResource(R.string.error_default_message)
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -37,7 +40,7 @@ fun ErrorState(
 
         // Dòng thông báo lỗi
         Text(
-            text = message,
+            text = displayMessage,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
@@ -47,7 +50,7 @@ fun ErrorState(
 
         // Nút thử lại
         Button(onClick = onRetry) {
-            Text("Thử lại")
+            Text(stringResource(R.string.retry))
         }
     }
 }
