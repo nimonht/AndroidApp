@@ -58,7 +58,7 @@ app/src/main/java/com/example/androidapp/
 
 - Android Studio Hedgehog (2023.1.1) or later
 - JDK 17
-- Android SDK 34
+- Android SDK 36
 - Firebase project configured
 
 ## Getting Started
