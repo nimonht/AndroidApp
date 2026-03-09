@@ -191,7 +191,8 @@ docker_has_firebase_auth() {
 # ---------------------------------------------------------------------------
 run_firebase() {
     if [ "$USE_DOCKER" = true ]; then
-        local FIREBASE_ARGS=("$@")
+        local FIREBASE_ARGS
+        FIREBASE_ARGS=("$@")
 
         # Determine whether we need emulator port forwarding
         local DOCKER_PORT_ARGS=()
