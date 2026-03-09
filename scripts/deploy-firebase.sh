@@ -259,7 +259,7 @@ case $choice in
         echo ""
         read -p "Deploy all components to this project? (y/n): " deploy_confirm
         if [ "$deploy_confirm" = "y" ] || [ "$deploy_confirm" = "Y" ]; then
-            run_firebase deploy --only firestore,storage
+            run_firebase deploy --project "$project_id" --only firestore,storage
             echo -e "${GREEN}✓ Deployed to $project_id${NC}"
         fi
         ;;
