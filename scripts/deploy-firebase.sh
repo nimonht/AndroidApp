@@ -119,7 +119,7 @@ if [ -n "${XDG_CONFIG_HOME:-}" ]; then
 elif [ -n "${HOME:-}" ]; then
     FIREBASE_CONFIG_BASE_DIR="${HOME}/.config"
 else
-    echo -e "${RED}Error: Unable to determine Firebase config directory because XDG_CONFIG_HOME and HOME are not set.${NC}"
+    echo -e "${RED}Error: Unable to determine Firebase config directory because neither XDG_CONFIG_HOME nor HOME is available.${NC}"
     exit 1
 fi
 
@@ -230,7 +230,7 @@ ensure_firebase_auth() {
 
         if ! docker_has_firebase_auth; then
             echo -e "${RED}Error: Firebase authentication is still unavailable in Docker mode.${NC}"
-            echo "Please make sure the login completed successfully and that Firebase credential files were created in: \"$FIREBASE_CONFIG_DIR\""
+            echo "Please make sure the login completed successfully and that Firebase CLI credentials (for example, firebase-tools.json) were created in: \"$FIREBASE_CONFIG_DIR\""
             echo "If needed, install the Firebase CLI and rerun 'firebase login' natively before starting Docker mode again."
             exit 1
         fi
