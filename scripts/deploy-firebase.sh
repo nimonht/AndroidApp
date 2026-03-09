@@ -56,13 +56,15 @@ DOCKER_AVAILABLE=false
 DOCKER_CMD=""
 
 detect_docker() {
+    local candidate
+
     # 1. Try the standard "docker" command
     if command -v docker &> /dev/null; then
         # Verify the daemon is reachable
         if docker info &> /dev/null; then
             DOCKER_AVAILABLE=true
             DOCKER_CMD="docker"
-            return
+            return 0
         fi
     fi
 
@@ -74,7 +76,7 @@ detect_docker() {
             if [ -x "$candidate" ] && "$candidate" info &> /dev/null; then
                 DOCKER_AVAILABLE=true
                 DOCKER_CMD="$candidate"
-                return
+                return 0
             fi
         done
         # Also try docker.exe directly (might be on PATH without "docker")
@@ -82,7 +84,7 @@ detect_docker() {
             if docker.exe info &> /dev/null; then
                 DOCKER_AVAILABLE=true
                 DOCKER_CMD="docker.exe"
-                return
+                return 0
             fi
         fi
     fi
@@ -96,10 +98,12 @@ detect_docker() {
             if [ -x "$candidate" ] && "$candidate" info &> /dev/null; then
                 DOCKER_AVAILABLE=true
                 DOCKER_CMD="$candidate"
-                return
+                return 0
             fi
         done
     fi
+
+    return 1
 }
 
 detect_docker
@@ -160,9 +164,10 @@ run_firebase() {
             fi
         done
 
-        # Mount the project root and (if needed) forward common emulator ports
+        # Mount the project root, forward Firebase credentials, and (if needed) emulator ports
         "$DOCKER_CMD" run --rm -it \
             -v "$PROJECT_ROOT:/workspace" \
+            -v "$HOME/.config/firebase:/root/.config/firebase" \
             "${DOCKER_PORT_ARGS[@]}" \
             "$FIREBASE_DOCKER_IMAGE" "$@"
     else
