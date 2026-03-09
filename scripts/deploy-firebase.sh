@@ -113,7 +113,9 @@ detect_docker
 # ---------------------------------------------------------------------------
 USE_DOCKER=false
 FIREBASE_DOCKER_IMAGE="firebase-tools-local"
-FIREBASE_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/configstore"
+FIREBASE_CONFIG_BASE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
+FIREBASE_CONFIG_DIR="$FIREBASE_CONFIG_BASE_DIR/configstore"
+FIREBASE_AUTH_CHECK_COMMAND="projects:list"
 
 if [ "$DOCKER_AVAILABLE" = true ]; then
     echo -e "${GREEN}✓ Docker detected (${DOCKER_CMD})${NC}"
@@ -159,7 +161,7 @@ docker_has_firebase_auth() {
     docker_run_firebase_raw \
         -v "$PROJECT_ROOT:/workspace" \
         -v "$FIREBASE_CONFIG_DIR:/root/.config/configstore" \
-        "$FIREBASE_DOCKER_IMAGE" projects:list &> /dev/null
+        "$FIREBASE_DOCKER_IMAGE" "$FIREBASE_AUTH_CHECK_COMMAND" &> /dev/null
 }
 
 # ---------------------------------------------------------------------------
@@ -195,7 +197,7 @@ ensure_firebase_auth() {
             echo -e "${YELLOW}You need to login to Firebase before using Docker mode${NC}"
 
             if command -v firebase &> /dev/null; then
-                echo "Opening native Firebase login so your browser can complete authentication..."
+                echo "Opening system browser for Firebase authentication..."
                 firebase login
             else
                 echo -e "${YELLOW}Native Firebase CLI not found. Falling back to Docker login.${NC}"
@@ -208,11 +210,11 @@ ensure_firebase_auth() {
 
         if ! docker_has_firebase_auth; then
             echo -e "${RED}Error: Firebase authentication is still unavailable in Docker mode.${NC}"
-            echo "Please complete 'firebase login' natively, or use Docker login with '--no-localhost', and try again."
+            echo "Please install the Firebase CLI and run 'firebase login', or authenticate in Docker mode with '--no-localhost', then try again."
             exit 1
         fi
     else
-        if ! firebase projects:list &> /dev/null; then
+        if ! firebase "$FIREBASE_AUTH_CHECK_COMMAND" &> /dev/null; then
             echo -e "${YELLOW}You need to login to Firebase${NC}"
             firebase login
         fi
