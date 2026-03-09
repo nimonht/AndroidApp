@@ -113,6 +113,7 @@ detect_docker
 # ---------------------------------------------------------------------------
 USE_DOCKER=false
 FIREBASE_DOCKER_IMAGE="firebase-tools-local"
+FIREBASE_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/configstore"
 
 if [ "$DOCKER_AVAILABLE" = true ]; then
     echo -e "${GREEN}✓ Docker detected (${DOCKER_CMD})${NC}"
@@ -150,6 +151,10 @@ build_docker_image() {
     fi
 }
 
+docker_run_firebase_raw() {
+    "$DOCKER_CMD" run --rm "$@"
+}
+
 # ---------------------------------------------------------------------------
 # Wrapper: run a firebase command natively or inside Docker
 # ---------------------------------------------------------------------------
@@ -165,14 +170,54 @@ run_firebase() {
         done
 
         # Mount the project root, forward Firebase credentials, and (if needed) emulator ports
-        "$DOCKER_CMD" run --rm -it \
+        docker_run_firebase_raw -it \
             -v "$PROJECT_ROOT:/workspace" \
-            -v "$HOME/.config/firebase:/root/.config/firebase" \
+            -v "$FIREBASE_CONFIG_DIR:/root/.config/configstore" \
             "${DOCKER_PORT_ARGS[@]}" \
             "$FIREBASE_DOCKER_IMAGE" "$@"
     else
         firebase "$@"
     fi
+}
+
+ensure_firebase_auth() {
+    if [ "$USE_DOCKER" = true ]; then
+        mkdir -p "$FIREBASE_CONFIG_DIR"
+
+        if ! docker_run_firebase_raw \
+            -v "$PROJECT_ROOT:/workspace" \
+            -v "$FIREBASE_CONFIG_DIR:/root/.config/configstore" \
+            "$FIREBASE_DOCKER_IMAGE" projects:list &> /dev/null; then
+            echo -e "${YELLOW}You need to login to Firebase before using Docker mode${NC}"
+
+            if command -v firebase &> /dev/null; then
+                echo "Opening native Firebase login so your browser can complete authentication..."
+                firebase login
+            else
+                echo -e "${YELLOW}Native Firebase CLI not found. Falling back to Docker login.${NC}"
+                echo "Complete the browser-based sign-in using the URL/code shown below."
+                docker_run_firebase_raw -it \
+                    -v "$FIREBASE_CONFIG_DIR:/root/.config/configstore" \
+                    "$FIREBASE_DOCKER_IMAGE" login --no-localhost
+            fi
+        fi
+
+        if ! docker_run_firebase_raw \
+            -v "$PROJECT_ROOT:/workspace" \
+            -v "$FIREBASE_CONFIG_DIR:/root/.config/configstore" \
+            "$FIREBASE_DOCKER_IMAGE" projects:list &> /dev/null; then
+            echo -e "${RED}Error: Firebase authentication is still unavailable in Docker mode.${NC}"
+            echo "Please complete 'firebase login' and try again."
+            exit 1
+        fi
+    else
+        if ! firebase projects:list &> /dev/null; then
+            echo -e "${YELLOW}You need to login to Firebase${NC}"
+            firebase login
+        fi
+    fi
+
+    echo -e "${GREEN}✓ Firebase authentication verified${NC}"
 }
 
 # ---------------------------------------------------------------------------
@@ -193,15 +238,9 @@ else
     fi
 
     echo -e "${GREEN}✓ Firebase CLI found${NC}"
-
-    # Check if logged in
-    if ! firebase projects:list &> /dev/null; then
-        echo -e "${YELLOW}You need to login to Firebase${NC}"
-        firebase login
-    fi
-
-    echo -e "${GREEN}✓ Firebase authentication verified${NC}"
 fi
+
+ensure_firebase_auth
 
 echo ""
 
