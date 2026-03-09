@@ -1,0 +1,7 @@
+.git
+app
+build
+.gradle
+*.apk
+*.aab
+node_modules
