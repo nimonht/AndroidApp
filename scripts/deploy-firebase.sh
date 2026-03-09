@@ -113,7 +113,8 @@ detect_docker
 # ---------------------------------------------------------------------------
 USE_DOCKER=false
 FIREBASE_DOCKER_IMAGE="firebase-tools-local"
-FIREBASE_CONFIG_BASE_DIR="${XDG_CONFIG_HOME:-${HOME}/.config}"
+FIREBASE_HOME_DIR="${HOME:-.}"
+FIREBASE_CONFIG_BASE_DIR="${XDG_CONFIG_HOME:-${FIREBASE_HOME_DIR}/.config}"
 FIREBASE_CONFIG_DIR="$FIREBASE_CONFIG_BASE_DIR/configstore"
 FIREBASE_AUTH_CHECK_COMMAND="projects:list"
 
@@ -221,7 +222,7 @@ ensure_firebase_auth() {
 
         if ! docker_has_firebase_auth; then
             echo -e "${RED}Error: Firebase authentication is still unavailable in Docker mode.${NC}"
-            echo "Please make sure the login completed successfully and that credentials exist in: \"$FIREBASE_CONFIG_DIR\""
+            echo "Please make sure the login completed successfully and that Firebase credential files were created in: \"$FIREBASE_CONFIG_DIR\""
             echo "If needed, install the Firebase CLI and rerun 'firebase login' natively before starting Docker mode again."
             exit 1
         fi
