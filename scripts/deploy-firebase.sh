@@ -113,8 +113,15 @@ detect_docker
 # ---------------------------------------------------------------------------
 USE_DOCKER=false
 FIREBASE_DOCKER_IMAGE="firebase-tools-local"
-FIREBASE_HOME_DIR="${HOME:-.}"
-FIREBASE_CONFIG_BASE_DIR="${XDG_CONFIG_HOME:-${FIREBASE_HOME_DIR}/.config}"
+
+if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+    FIREBASE_CONFIG_BASE_DIR="$XDG_CONFIG_HOME"
+elif [ -n "${HOME:-}" ]; then
+    FIREBASE_CONFIG_BASE_DIR="${HOME}/.config"
+else
+    FIREBASE_CONFIG_BASE_DIR="/tmp/firebase-config"
+fi
+
 FIREBASE_CONFIG_DIR="$FIREBASE_CONFIG_BASE_DIR/configstore"
 FIREBASE_AUTH_CHECK_COMMAND="projects:list"
 
