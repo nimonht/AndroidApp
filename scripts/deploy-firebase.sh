@@ -119,7 +119,8 @@ if [ -n "${XDG_CONFIG_HOME:-}" ]; then
 elif [ -n "${HOME:-}" ]; then
     FIREBASE_CONFIG_BASE_DIR="${HOME}/.config"
 else
-    FIREBASE_CONFIG_BASE_DIR="/tmp/firebase-config"
+    echo -e "${RED}Error: Unable to determine Firebase config directory because XDG_CONFIG_HOME and HOME are not set.${NC}"
+    exit 1
 fi
 
 FIREBASE_CONFIG_DIR="$FIREBASE_CONFIG_BASE_DIR/configstore"
