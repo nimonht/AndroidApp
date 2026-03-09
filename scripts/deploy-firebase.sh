@@ -181,7 +181,7 @@ docker_firebase_auth_mount() {
 docker_has_firebase_auth() {
     docker_run_firebase_raw \
         -v "$PROJECT_ROOT:/workspace" \
-        -v "$(docker_firebase_auth_mount ro)" \
+        -v "$(docker_firebase_auth_mount rw)" \
         "$FIREBASE_DOCKER_IMAGE" "$FIREBASE_AUTH_CHECK_COMMAND" &> /dev/null
 }
 
@@ -202,7 +202,7 @@ run_firebase() {
         # Mount the project root, forward Firebase credentials, and (if needed) emulator ports
         docker_run_firebase_raw -it \
             -v "$PROJECT_ROOT:/workspace" \
-            -v "$(docker_firebase_auth_mount ro)" \
+            -v "$(docker_firebase_auth_mount rw)" \
             "${DOCKER_PORT_ARGS[@]}" \
             "$FIREBASE_DOCKER_IMAGE" "$@"
     else
