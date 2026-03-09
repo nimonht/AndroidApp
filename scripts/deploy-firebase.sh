@@ -126,6 +126,7 @@ fi
 
 FIREBASE_CONFIG_DIR="$FIREBASE_CONFIG_BASE_DIR/configstore"
 FIREBASE_AUTH_CHECK_COMMAND="projects:list"
+DOCKER_FIREBASE_EMULATOR_CONFIG_CONTAINER_PATH="/workspace/firebase.docker.json"
 
 if [ "$DOCKER_AVAILABLE" = true ]; then
     echo -e "${GREEN}✓ Docker detected (${DOCKER_CMD})${NC}"
@@ -190,21 +191,37 @@ docker_has_firebase_auth() {
 # ---------------------------------------------------------------------------
 run_firebase() {
     if [ "$USE_DOCKER" = true ]; then
+        local FIREBASE_ARGS=("$@")
+
         # Determine whether we need emulator port forwarding
-        DOCKER_PORT_ARGS=()
-        for arg in "$@"; do
+        local DOCKER_PORT_ARGS=()
+        local use_docker_emulator_config=false
+        for arg in "${FIREBASE_ARGS[@]}"; do
             if [ "$arg" = "emulators:start" ]; then
-                DOCKER_PORT_ARGS=(-p 4000:4000 -p 8080:8080 -p 9099:9099 -p 9199:9199)
+                DOCKER_PORT_ARGS=(-p 4000:4000 -p 4400:4400 -p 4500:4500 -p 8080:8080 -p 9099:9099 -p 9150:9150 -p 9199:9199)
+                use_docker_emulator_config=true
                 break
             fi
         done
 
+        local docker_run_exit_code=0
+
+        if [ "$use_docker_emulator_config" = true ]; then
+            FIREBASE_ARGS+=(--config "$DOCKER_FIREBASE_EMULATOR_CONFIG_CONTAINER_PATH")
+        fi
+
         # Mount the project root, forward Firebase credentials, and (if needed) emulator ports
-        docker_run_firebase_raw -it \
+        if docker_run_firebase_raw -it \
             -v "$PROJECT_ROOT:/workspace" \
             -v "$(docker_firebase_auth_mount rw)" \
             "${DOCKER_PORT_ARGS[@]}" \
-            "$FIREBASE_DOCKER_IMAGE" "$@"
+            "$FIREBASE_DOCKER_IMAGE" "${FIREBASE_ARGS[@]}"; then
+            docker_run_exit_code=0
+        else
+            docker_run_exit_code=$?
+        fi
+
+        return "$docker_run_exit_code"
     else
         firebase "$@"
     fi
