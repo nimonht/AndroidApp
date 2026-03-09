@@ -134,9 +134,9 @@ fi
 # Build the Docker image (only once per session if Docker mode is on)
 # ---------------------------------------------------------------------------
 build_docker_image() {
-    if ! $DOCKER_CMD image inspect "$FIREBASE_DOCKER_IMAGE" &> /dev/null; then
+    if ! "$DOCKER_CMD" image inspect "$FIREBASE_DOCKER_IMAGE" &> /dev/null; then
         echo -e "${YELLOW}Building Firebase Docker image (first-time only)...${NC}"
-        $DOCKER_CMD build \
+        "$DOCKER_CMD" build \
             -t "$FIREBASE_DOCKER_IMAGE" \
             -f "$SCRIPT_DIR/firebase.Dockerfile" \
             "$PROJECT_ROOT"
@@ -161,7 +161,7 @@ run_firebase() {
         done
 
         # Mount the project root and (if needed) forward common emulator ports
-        $DOCKER_CMD run --rm -it \
+        "$DOCKER_CMD" run --rm -it \
             -v "$PROJECT_ROOT:/workspace" \
             "${DOCKER_PORT_ARGS[@]}" \
             "$FIREBASE_DOCKER_IMAGE" "$@"
