@@ -151,13 +151,19 @@ build_docker_image() {
 # ---------------------------------------------------------------------------
 run_firebase() {
     if [ "$USE_DOCKER" = true ]; then
-        # Mount the project root and forward common emulator ports
+        # Determine whether we need emulator port forwarding
+        DOCKER_PORT_ARGS=()
+        for arg in "$@"; do
+            if [ "$arg" = "emulators:start" ]; then
+                DOCKER_PORT_ARGS=(-p 4000:4000 -p 8080:8080 -p 9099:9099 -p 9199:9199)
+                break
+            fi
+        done
+
+        # Mount the project root and (if needed) forward common emulator ports
         $DOCKER_CMD run --rm -it \
             -v "$PROJECT_ROOT:/workspace" \
-            -p 4000:4000 \
-            -p 8080:8080 \
-            -p 9099:9099 \
-            -p 9199:9199 \
+            "${DOCKER_PORT_ARGS[@]}" \
             "$FIREBASE_DOCKER_IMAGE" "$@"
     else
         firebase "$@"
