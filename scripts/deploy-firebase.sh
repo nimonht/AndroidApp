@@ -71,7 +71,7 @@ detect_docker() {
         for candidate in \
             "/c/Program Files/Docker/Docker/resources/bin/docker.exe" \
             "/c/ProgramData/DockerDesktop/version-bin/docker.exe"; do
-            if [ -x "$candidate" ] && "$candidate" info &> /dev/null 2>&1; then
+            if [ -x "$candidate" ] && "$candidate" info &> /dev/null; then
                 DOCKER_AVAILABLE=true
                 DOCKER_CMD="$candidate"
                 return
@@ -79,7 +79,7 @@ detect_docker() {
         done
         # Also try docker.exe directly (might be on PATH without "docker")
         if command -v docker.exe &> /dev/null; then
-            if docker.exe info &> /dev/null 2>&1; then
+            if docker.exe info &> /dev/null; then
                 DOCKER_AVAILABLE=true
                 DOCKER_CMD="docker.exe"
                 return
@@ -93,7 +93,7 @@ detect_docker() {
             "/usr/local/bin/docker" \
             "/opt/homebrew/bin/docker" \
             "$HOME/.docker/bin/docker"; do
-            if [ -x "$candidate" ] && "$candidate" info &> /dev/null 2>&1; then
+            if [ -x "$candidate" ] && "$candidate" info &> /dev/null; then
                 DOCKER_AVAILABLE=true
                 DOCKER_CMD="$candidate"
                 return
