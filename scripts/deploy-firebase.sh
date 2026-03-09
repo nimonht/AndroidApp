@@ -210,7 +210,8 @@ ensure_firebase_auth() {
 
         if ! docker_has_firebase_auth; then
             echo -e "${RED}Error: Firebase authentication is still unavailable in Docker mode.${NC}"
-            echo "Please install the Firebase CLI and run 'firebase login', or authenticate in Docker mode with '--no-localhost', then try again."
+            echo "Please make sure the login completed successfully and that credentials exist in: $FIREBASE_CONFIG_DIR"
+            echo "If needed, install the Firebase CLI and rerun 'firebase login' natively before starting Docker mode again."
             exit 1
         fi
     else
