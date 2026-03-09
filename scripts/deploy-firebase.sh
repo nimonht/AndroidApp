@@ -204,24 +204,16 @@ run_firebase() {
             fi
         done
 
-        local docker_run_exit_code=0
-
         if [ "$use_docker_emulator_config" = true ]; then
             FIREBASE_ARGS+=(--config "$DOCKER_FIREBASE_EMULATOR_CONFIG_CONTAINER_PATH")
         fi
 
         # Mount the project root, forward Firebase credentials, and (if needed) emulator ports
-        if docker_run_firebase_raw -it \
+        docker_run_firebase_raw -it \
             -v "$PROJECT_ROOT:/workspace" \
             -v "$(docker_firebase_auth_mount rw)" \
             "${DOCKER_PORT_ARGS[@]}" \
-            "$FIREBASE_DOCKER_IMAGE" "${FIREBASE_ARGS[@]}"; then
-            docker_run_exit_code=0
-        else
-            docker_run_exit_code=$?
-        fi
-
-        return "$docker_run_exit_code"
+            "$FIREBASE_DOCKER_IMAGE" "${FIREBASE_ARGS[@]}"
     else
         firebase "$@"
     fi
