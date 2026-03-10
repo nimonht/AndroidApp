@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.androidapp.data.local.AppDatabase
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
+import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
@@ -74,6 +75,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .fallbackToDestructiveMigration(false)
             .build()
     }
@@ -111,5 +113,12 @@ class AppContainerImpl(override val context: Context) : AppContainer {
      */
     override val userDao: UserDao by lazy {
         appDatabase.userDao()
+    }
+
+    /**
+     * Provides the PendingSyncDao instance.
+     */
+    override val pendingSyncDao: PendingSyncDao by lazy {
+        appDatabase.pendingSyncDao()
     }
 }

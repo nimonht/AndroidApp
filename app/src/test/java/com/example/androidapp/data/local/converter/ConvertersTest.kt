@@ -137,4 +137,41 @@ class ConvertersTest {
         val restored = converters.toStringListMap(json)
         assertEquals(original, restored)
     }
+
+    // ==================== Timestamp ====================
+
+    @Test
+    fun `fromTimestamp converts Long to Date`() {
+        val timestamp = 1700000000000L
+        val date = converters.fromTimestamp(timestamp)
+        assertEquals(timestamp, date?.time)
+    }
+
+    @Test
+    fun `fromTimestamp handles null by returning null`() {
+        val date = converters.fromTimestamp(null)
+        assertEquals(null, date)
+    }
+
+    @Test
+    fun `dateToTimestamp converts Date to Long`() {
+        val timestamp = 1700000000000L
+        val date = java.util.Date(timestamp)
+        val result = converters.dateToTimestamp(date)
+        assertEquals(timestamp, result)
+    }
+
+    @Test
+    fun `dateToTimestamp handles null by returning null`() {
+        val result = converters.dateToTimestamp(null)
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `timestamp roundtrip preserves data`() {
+        val original = 1700000000000L
+        val date = converters.fromTimestamp(original)
+        val restored = converters.dateToTimestamp(date)
+        assertEquals(original, restored)
+    }
 }

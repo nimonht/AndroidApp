@@ -3,6 +3,7 @@ package com.example.androidapp.data.local.converter
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.util.Date
 
 /**
  * Type converters for Room database.
@@ -76,5 +77,23 @@ class Converters {
         } catch (e: Exception) {
             emptyMap()
         }
+    }
+
+    // ==================== Timestamp ====================
+
+    /**
+     * Convert a timestamp (Long) to a Date object.
+     */
+    @TypeConverter
+    fun fromTimestamp(value: Long?): Date? {
+        return value?.let { Date(it) }
+    }
+
+    /**
+     * Convert a Date object to a timestamp (Long).
+     */
+    @TypeConverter
+    fun dateToTimestamp(date: Date?): Long? {
+        return date?.time
     }
 }

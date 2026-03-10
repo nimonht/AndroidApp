@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.androidapp.data.local.AppDatabase
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
+import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
@@ -30,6 +31,7 @@ interface AppContainer {
     val choiceDao: ChoiceDao
     val attemptDao: AttemptDao
     val userDao: UserDao
+    val pendingSyncDao: PendingSyncDao
 
     // Add repositories and other dependencies here as needed
 }
