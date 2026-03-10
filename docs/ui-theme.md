@@ -5,6 +5,10 @@ All colors, spacing values, corner radii, typography, and elevation levels are d
 in `design-tokens.json` at the repository root and mirrored into both the Compose theme
 package and the Android resource files.
 
+The Compose and XML themes intentionally populate the full Material 3 color system,
+including inverse, container, outline variant, and layered surface roles, so components
+do not fall back to the default baseline palette.
+
 ---
 
 ## 1. Design Tokens
@@ -43,6 +47,17 @@ both the Compose files and the XML resource files.
 | Background | `#F5F7FA` | `#121416` |
 | Surface | `#FFFFFF` | `#1E2126` |
 | SurfaceVariant | `#EAF0F6` | `#2A2F38` |
+
+Layered surfaces used by Material 3 containers:
+
+| Token | Light | Dark |
+|-------|-------|------|
+| SurfaceDim | `#ECEFF4` | `#16191D` |
+| SurfaceBright | `#FFFFFF` | `#363B43` |
+| SurfaceContainerLow | `#F8FAFD` | `#181B20` |
+| SurfaceContainer | `#F2F5F9` | `#1E2126` |
+| SurfaceContainerHigh | `#EDF1F6` | `#252A31` |
+| SurfaceContainerHighest | `#E7ECF3` | `#2D333C` |
 
 ### Semantic Colors
 
@@ -87,7 +102,19 @@ Corner radii follow the MD3 shape system defined in `ui/theme/Shape.kt` and `dim
 | medium | 12 dp | Standard cards |
 | large | 16 dp | Bottom sheets, dialogs (corners) |
 | extraLarge | 28 dp | FAB, large modals |
-| full | 50 dp (pill) | Buttons, avatar rings |
+| full | 50 dp radius helper | Buttons, avatar rings, capsules |
+
+In Compose, `MaterialTheme.shapes` only exposes the standard MD3 slots through
+`extraLarge`. Use `FullShape` for the dedicated pill helper:
+
+```kotlin
+Button(
+    onClick = {},
+    shape = FullShape
+) {
+    Text("Join quiz")
+}
+```
 
 ---
 
@@ -138,7 +165,7 @@ fun MyButton() {
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary   // #4A90E2
         ),
-        shape = MaterialTheme.shapes.large                        // 16 dp
+        shape = FullShape
     ) {
         Text(
             text = "Start Quiz",
@@ -238,8 +265,8 @@ Steps:
 
 | Component | Background | Text | Shape |
 |-----------|-----------|------|-------|
-| Primary button | `primary` | `onPrimary` | `shapes.extraLarge` (pill) |
-| Secondary button | `secondaryContainer` | `onSecondaryContainer` | `shapes.extraLarge` |
+| Primary button | `primary` | `onPrimary` | `FullShape` |
+| Secondary button | `secondaryContainer` | `onSecondaryContainer` | `FullShape` |
 | Quiz card | `surface` | `onSurface` | `shapes.medium` |
 | Choice button | `surfaceVariant` | `onSurfaceVariant` | `shapes.small` |
 | Code input | `surface` | `onSurface` | `shapes.small` |

@@ -13,7 +13,9 @@ import androidx.compose.ui.unit.dp
  *   Medium -> 12 dp
  *   Large -> 16 dp
  *   Extra-Large -> 28 dp
- *   Full -> 50 % (circle / pill)
+ *
+ * MaterialTheme.shapes exposes the standard five MD3 slots above.
+ * Use [FullShape] when a fixed 50 dp pill/capsule shape is needed.
  */
 val Shapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
@@ -22,3 +24,5 @@ val Shapes = Shapes(
     large = RoundedCornerShape(16.dp),
     extraLarge = RoundedCornerShape(28.dp)
 )
+
+val FullShape = RoundedCornerShape(50.dp)

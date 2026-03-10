@@ -7,6 +7,7 @@
         <item name="colorOnPrimary">@color/brand_primary_dark</item>
         <item name="colorPrimaryContainer">@color/brand_primary_dark</item>
         <item name="colorOnPrimaryContainer">@color/brand_primary_light</item>
+        <item name="colorPrimaryInverse">@color/inverse_primary_dark</item>
 
         <!-- Secondary -->
         <item name="colorSecondary">@color/brand_secondary_light</item>
@@ -17,16 +18,34 @@
         <!-- Tertiary -->
         <item name="colorTertiary">@color/brand_tertiary</item>
         <item name="colorOnTertiary">@color/brand_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/brand_tertiary_container_dark</item>
+        <item name="colorOnTertiaryContainer">@color/brand_on_tertiary_container_dark</item>
 
         <!-- Error -->
         <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorErrorContainer">@color/error_container_dark</item>
+        <item name="colorOnErrorContainer">@color/on_error_container_dark</item>
 
         <!-- Background / Surface -->
+        <item name="colorBackground">@color/background_dark</item>
         <item name="android:colorBackground">@color/background_dark</item>
+        <item name="colorOnBackground">@color/on_background_dark</item>
         <item name="colorSurface">@color/surface_dark</item>
         <item name="colorOnSurface">@color/on_surface_dark</item>
         <item name="colorSurfaceVariant">@color/surface_variant_dark</item>
         <item name="colorOnSurfaceVariant">@color/on_surface_variant_dark</item>
+        <item name="colorInverseSurface">@color/inverse_surface_dark</item>
+        <item name="colorInverseOnSurface">@color/inverse_on_surface_dark</item>
+        <item name="colorSurfaceTint">@color/surface_tint_dark</item>
+        <item name="colorSurfaceBright">@color/surface_bright_dark</item>
+        <item name="colorSurfaceDim">@color/surface_dim_dark</item>
+        <item name="colorSurfaceContainerLowest">@color/surface_container_lowest_dark</item>
+        <item name="colorSurfaceContainerLow">@color/surface_container_low_dark</item>
+        <item name="colorSurfaceContainer">@color/surface_container_dark</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high_dark</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_container_highest_dark</item>
         <item name="colorOutline">@color/outline_dark</item>
+        <item name="colorOutlineVariant">@color/outline_variant_dark</item>
     </style>
 </resources>
