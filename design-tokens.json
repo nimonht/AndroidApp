@@ -1,0 +1,137 @@
+{
+  "colors": {
+    "primary": "#4A90E2",
+    "onPrimary": "#FFFFFF",
+    "primaryVariant": "#357ABD",
+    "secondary": "#27AE60",
+    "onSecondary": "#FFFFFF",
+    "secondaryVariant": "#229954",
+    "background": "#F5F7FA",
+    "onBackground": "#2C3E50",
+    "surface": "#FFFFFF",
+    "onSurface": "#2C3E50",
+    "error": "#E74C3C",
+    "onError": "#FFFFFF",
+    "success": "#27AE60",
+    "warning": "#F39C12",
+    "info": "#4A90E2",
+    "textPrimary": "#2C3E50",
+    "textSecondary": "#7F8C8D",
+    "border": "#E1E8ED",
+    "surfaceVariant": "#ECF0F1"
+  },
+  "typography": {
+    "displayLarge": {
+      "size": 57,
+      "weight": 400,
+      "lineHeight": 64,
+      "letterSpacing": -0.25
+    },
+    "displayMedium": {
+      "size": 45,
+      "weight": 400,
+      "lineHeight": 52,
+      "letterSpacing": 0
+    },
+    "displaySmall": {
+      "size": 36,
+      "weight": 400,
+      "lineHeight": 44,
+      "letterSpacing": 0
+    },
+    "headlineLarge": {
+      "size": 32,
+      "weight": 400,
+      "lineHeight": 40,
+      "letterSpacing": 0
+    },
+    "headlineMedium": {
+      "size": 28,
+      "weight": 400,
+      "lineHeight": 36,
+      "letterSpacing": 0
+    },
+    "headlineSmall": {
+      "size": 24,
+      "weight": 400,
+      "lineHeight": 32,
+      "letterSpacing": 0
+    },
+    "titleLarge": {
+      "size": 22,
+      "weight": 400,
+      "lineHeight": 28,
+      "letterSpacing": 0
+    },
+    "titleMedium": {
+      "size": 16,
+      "weight": 500,
+      "lineHeight": 24,
+      "letterSpacing": 0.15
+    },
+    "titleSmall": {
+      "size": 14,
+      "weight": 500,
+      "lineHeight": 20,
+      "letterSpacing": 0.1
+    },
+    "bodyLarge": {
+      "size": 16,
+      "weight": 400,
+      "lineHeight": 24,
+      "letterSpacing": 0.5
+    },
+    "bodyMedium": {
+      "size": 14,
+      "weight": 400,
+      "lineHeight": 20,
+      "letterSpacing": 0.25
+    },
+    "bodySmall": {
+      "size": 12,
+      "weight": 400,
+      "lineHeight": 16,
+      "letterSpacing": 0.4
+    },
+    "labelLarge": {
+      "size": 14,
+      "weight": 500,
+      "lineHeight": 20,
+      "letterSpacing": 0.1
+    },
+    "labelMedium": {
+      "size": 12,
+      "weight": 500,
+      "lineHeight": 16,
+      "letterSpacing": 0.5
+    },
+    "labelSmall": {
+      "size": 11,
+      "weight": 500,
+      "lineHeight": 16,
+      "letterSpacing": 0.5
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "xxl": 48
+  },
+  "radii": {
+    "small": 4,
+    "medium": 8,
+    "large": 16,
+    "extraLarge": 28
+  },
+  "elevation": {
+    "level0": 0,
+    "level1": 1,
+    "level2": 3,
+    "level3": 6,
+    "level4": 8,
+    "level5": 12
+  }
+}
