@@ -1,0 +1,104 @@
+{
+  "$schema": "https://design-tokens.org/schema/1.0",
+  "meta": {
+    "version": "1.0.0",
+    "description": "QuizCode design tokens - single source of truth for colors, typography, spacing, and radii.",
+    "updatedAt": "2026-03-10"
+  },
+  "color": {
+    "brand": {
+      "primary": { "value": "#4A90E2", "comment": "Ocean blue - main action color" },
+      "primaryDark": { "value": "#2C6DB5", "comment": "Pressed / container variant" },
+      "primaryLight": { "value": "#7AB4F0", "comment": "Tonal container (light)" },
+      "onPrimary": { "value": "#FFFFFF" },
+      "secondary": { "value": "#27AE60", "comment": "Success green - secondary actions" },
+      "secondaryDark": { "value": "#1A7D44" },
+      "secondaryLight": { "value": "#52C57F" },
+      "onSecondary": { "value": "#FFFFFF" },
+      "tertiary": { "value": "#F5A623", "comment": "Warm amber - accent / highlights" },
+      "onTertiary": { "value": "#FFFFFF" }
+    },
+    "background": {
+      "light": { "value": "#F5F7FA" },
+      "dark": { "value": "#121416" }
+    },
+    "surface": {
+      "light": { "value": "#FFFFFF" },
+      "dark": { "value": "#1E2126" },
+      "variantLight": { "value": "#EAF0F6" },
+      "variantDark": { "value": "#2A2F38" }
+    },
+    "onSurface": {
+      "light": { "value": "#1A2233" },
+      "dark": { "value": "#E8ECF2" },
+      "variantLight": { "value": "#5A6478" },
+      "variantDark": { "value": "#9BA5B4" }
+    },
+    "outline": {
+      "light": { "value": "#CBD0DA" },
+      "dark": { "value": "#3A404D" }
+    },
+    "semantic": {
+      "success": { "value": "#27AE60" },
+      "successContainer": { "value": "#D4EDDA" },
+      "error": { "value": "#E74C3C" },
+      "errorContainer": { "value": "#FDECEC" },
+      "warning": { "value": "#F5A623" },
+      "warningContainer": { "value": "#FFF3CD" },
+      "info": { "value": "#4A90E2" },
+      "infoContainer": { "value": "#D6E8FC" }
+    },
+    "gamification": {
+      "goldStar": { "value": "#FFD700" }
+    }
+  },
+  "typography": {
+    "fontFamily": { "value": "sans-serif", "comment": "System default / Roboto on Android" },
+    "scale": {
+      "displayLarge":   { "fontSize": "57sp", "lineHeight": "64sp", "letterSpacing": "-0.25sp", "weight": "400" },
+      "displayMedium":  { "fontSize": "45sp", "lineHeight": "52sp", "letterSpacing": "0sp",     "weight": "400" },
+      "displaySmall":   { "fontSize": "36sp", "lineHeight": "44sp", "letterSpacing": "0sp",     "weight": "400" },
+      "headlineLarge":  { "fontSize": "32sp", "lineHeight": "40sp", "letterSpacing": "0sp",     "weight": "400" },
+      "headlineMedium": { "fontSize": "28sp", "lineHeight": "36sp", "letterSpacing": "0sp",     "weight": "400" },
+      "headlineSmall":  { "fontSize": "24sp", "lineHeight": "32sp", "letterSpacing": "0sp",     "weight": "400" },
+      "titleLarge":     { "fontSize": "22sp", "lineHeight": "28sp", "letterSpacing": "0sp",     "weight": "400" },
+      "titleMedium":    { "fontSize": "16sp", "lineHeight": "24sp", "letterSpacing": "0.15sp",  "weight": "500" },
+      "titleSmall":     { "fontSize": "14sp", "lineHeight": "20sp", "letterSpacing": "0.1sp",   "weight": "500" },
+      "bodyLarge":      { "fontSize": "16sp", "lineHeight": "24sp", "letterSpacing": "0.5sp",   "weight": "400" },
+      "bodyMedium":     { "fontSize": "14sp", "lineHeight": "20sp", "letterSpacing": "0.25sp",  "weight": "400" },
+      "bodySmall":      { "fontSize": "12sp", "lineHeight": "16sp", "letterSpacing": "0.4sp",   "weight": "400" },
+      "labelLarge":     { "fontSize": "14sp", "lineHeight": "20sp", "letterSpacing": "0.1sp",   "weight": "500" },
+      "labelMedium":    { "fontSize": "12sp", "lineHeight": "16sp", "letterSpacing": "0.5sp",   "weight": "500" },
+      "labelSmall":     { "fontSize": "11sp", "lineHeight": "16sp", "letterSpacing": "0.5sp",   "weight": "500" }
+    }
+  },
+  "spacing": {
+    "0":  { "value": "0dp" },
+    "1":  { "value": "4dp" },
+    "2":  { "value": "8dp" },
+    "3":  { "value": "12dp" },
+    "4":  { "value": "16dp" },
+    "5":  { "value": "20dp" },
+    "6":  { "value": "24dp" },
+    "8":  { "value": "32dp" },
+    "10": { "value": "40dp" },
+    "12": { "value": "48dp" },
+    "16": { "value": "64dp" }
+  },
+  "radius": {
+    "none": { "value": "0dp" },
+    "xs":   { "value": "4dp" },
+    "sm":   { "value": "8dp" },
+    "md":   { "value": "12dp" },
+    "lg":   { "value": "16dp" },
+    "xl":   { "value": "28dp" },
+    "full": { "value": "50dp", "comment": "Pill / circle shape" }
+  },
+  "elevation": {
+    "0": { "value": "0dp" },
+    "1": { "value": "1dp" },
+    "2": { "value": "2dp" },
+    "4": { "value": "4dp" },
+    "8": { "value": "8dp" }
+  }
+}

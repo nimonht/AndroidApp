@@ -1,5 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand: Primary (ocean blue) -->
+    <color name="brand_primary">#4A90E2</color>
+    <color name="brand_primary_dark">#2C6DB5</color>
+    <color name="brand_primary_light">#7AB4F0</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+
+    <!-- Brand: Secondary (success green) -->
+    <color name="brand_secondary">#27AE60</color>
+    <color name="brand_secondary_dark">#1A7D44</color>
+    <color name="brand_secondary_light">#52C57F</color>
+    <color name="brand_on_secondary">#FFFFFF</color>
+
+    <!-- Brand: Tertiary (warm accent) -->
+    <color name="brand_tertiary">#F5A623</color>
+    <color name="brand_on_tertiary">#FFFFFF</color>
+
+    <!-- Background / Surface (light) -->
+    <color name="background_light">#F5F7FA</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="surface_variant_light">#EAF0F6</color>
+    <color name="on_background_light">#1A2233</color>
+    <color name="on_surface_light">#1A2233</color>
+    <color name="on_surface_variant_light">#5A6478</color>
+
+    <!-- Background / Surface (dark) -->
+    <color name="background_dark">#121416</color>
+    <color name="surface_dark">#1E2126</color>
+    <color name="surface_variant_dark">#2A2F38</color>
+    <color name="on_background_dark">#E8ECF2</color>
+    <color name="on_surface_dark">#E8ECF2</color>
+    <color name="on_surface_variant_dark">#9BA5B4</color>
+
+    <!-- Outline -->
+    <color name="outline_light">#CBD0DA</color>
+    <color name="outline_dark">#3A404D</color>
+
+    <!-- Semantic: success -->
+    <color name="success">#27AE60</color>
+    <color name="success_container">#D4EDDA</color>
+
+    <!-- Semantic: error -->
+    <color name="error">#E74C3C</color>
+    <color name="error_container">#FDECEC</color>
+
+    <!-- Semantic: warning -->
+    <color name="warning">#F5A623</color>
+    <color name="warning_container">#FFF3CD</color>
+
+    <!-- Semantic: info -->
+    <color name="info">#4A90E2</color>
+    <color name="info_container">#D6E8FC</color>
+
+    <!-- Score / Gamification -->
+    <color name="gold_star">#FFD700</color>
+
+    <!-- Backward-compat aliases -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
