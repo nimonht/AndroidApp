@@ -7,7 +7,6 @@
         <item name="colorOnPrimary">@color/brand_on_primary</item>
         <item name="colorPrimaryContainer">@color/brand_primary_light</item>
         <item name="colorOnPrimaryContainer">@color/brand_primary_dark</item>
-        <item name="colorPrimaryInverse">@color/inverse_primary_light</item>
 
         <!-- Secondary -->
         <item name="colorSecondary">@color/brand_secondary</item>
@@ -28,25 +27,12 @@
         <item name="colorOnErrorContainer">@color/on_error_container</item>
 
         <!-- Background / Surface -->
-        <item name="colorBackground">@color/background_light</item>
         <item name="android:colorBackground">@color/background_light</item>
-        <item name="colorOnBackground">@color/on_background_light</item>
         <item name="colorSurface">@color/surface_light</item>
         <item name="colorOnSurface">@color/on_surface_light</item>
         <item name="colorSurfaceVariant">@color/surface_variant_light</item>
         <item name="colorOnSurfaceVariant">@color/on_surface_variant_light</item>
-        <item name="colorInverseSurface">@color/inverse_surface_light</item>
-        <item name="colorInverseOnSurface">@color/inverse_on_surface_light</item>
-        <item name="colorSurfaceTint">@color/surface_tint_light</item>
-        <item name="colorSurfaceBright">@color/surface_bright_light</item>
-        <item name="colorSurfaceDim">@color/surface_dim_light</item>
-        <item name="colorSurfaceContainerLowest">@color/surface_container_lowest_light</item>
-        <item name="colorSurfaceContainerLow">@color/surface_container_low_light</item>
-        <item name="colorSurfaceContainer">@color/surface_container_light</item>
-        <item name="colorSurfaceContainerHigh">@color/surface_container_high_light</item>
-        <item name="colorSurfaceContainerHighest">@color/surface_container_highest_light</item>
         <item name="colorOutline">@color/outline_light</item>
-        <item name="colorOutlineVariant">@color/outline_variant_light</item>
     </style>
 
     <style name="Theme.AndroidApp" parent="Base.Theme.AndroidApp" />
