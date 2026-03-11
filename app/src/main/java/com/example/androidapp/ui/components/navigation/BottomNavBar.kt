@@ -8,15 +8,21 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.androidapp.R
 import com.example.androidapp.ui.navigation.Routes
+import com.example.androidapp.ui.theme.InterFamily
 
 /**
  * Represents a bottom navigation item with its route and icons.
@@ -53,8 +59,8 @@ private val bottomNavItems = listOf(
 )
 
 /**
- * Bottom navigation bar for the QuizCode app.
- * Displays Home, Search, and Profile tabs.
+ * Bottom navigation bar for the QuizCode app — Editorial Minimalist style.
+ * Flat white background, thin-line icons, tiny sans-serif labels.
  *
  * @param currentRoute The current navigation route to determine selected state.
  * @param onNavigate Callback invoked when a navigation item is clicked.
@@ -65,7 +71,11 @@ fun BottomNavBar(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    NavigationBar(modifier = modifier) {
+    NavigationBar(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp
+    ) {
         bottomNavItems.forEach { item ->
             val isSelected = currentRoute == item.route
 
@@ -79,8 +89,20 @@ fun BottomNavBar(
                     )
                 },
                 label = {
-                    Text(text = stringResource(id = item.labelResId))
-                }
+                    Text(
+                        text = stringResource(id = item.labelResId),
+                        fontFamily = InterFamily,
+                        fontSize = 10.sp,
+                        letterSpacing = 0.5.sp
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onBackground,
+                    selectedTextColor = MaterialTheme.colorScheme.onBackground,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = Color.Transparent
+                )
             )
         }
     }

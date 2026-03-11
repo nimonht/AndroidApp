@@ -102,6 +102,9 @@ dependencies {
     // Coil - Image loading from URL
     implementation(libs.coil.compose)
 
+    // Google Fonts for Compose (Playfair Display + Inter)
+    implementation(libs.compose.ui.text.google.fonts)
+
     // Gson (for Room type converters)
     implementation(libs.gson)
 

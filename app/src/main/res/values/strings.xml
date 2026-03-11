@@ -38,8 +38,14 @@
     <string name="quiz_more_tags">+%1$d</string>
     <string name="question_progress">Câu hỏi %1$d/%2$d</string>
     <string name="timer_content_description">Bộ đếm thời gian bài kiểm tra</string>
+    <!-- Take Quiz -->
     <string name="take_quiz_title">Làm bài kiểm tra</string>
     <string name="take_quiz_empty">Chưa có dữ liệu câu hỏi để hiển thị</string>
+    <string name="take_quiz_step_indicator">CÂU HỎI %1$d/%2$d</string>
+    <string name="take_quiz_help_cd">Trợ giúp</string>
+    <string name="take_quiz_back_button">← QUAY LẠI</string>
+    <string name="take_quiz_continue_button">TIẾP TỤC</string>
+    <string name="take_quiz_submit_button">NỘP BÀI</string>
 
     <!-- Media -->
     <string name="image_load_error">Không thể tải ảnh</string>
@@ -129,6 +135,11 @@
     <string name="home_trending_quizzes">Bài kiểm tra thịnh hành</string>
     <string name="home_trending_empty">Chưa có bài kiểm tra thịnh hành</string>
     <string name="home_see_all">Xem tất cả →</string>
+    <string name="home_welcome_overline">CHÀO MỪNG TRỞ LẠI</string>
+    <string name="home_welcome_display">Xin chào, %1$s</string>
+    <string name="home_welcome_progress">Tiến bộ tuyệt vời</string>
+    <string name="home_join_session_label">THAM GIA PHIÊN</string>
+    <string name="home_join_button">THAM GIA</string>
 
     <!-- Dialogs -->
     <string name="loading_processing">Đang xử lý…</string>
@@ -161,6 +172,13 @@
     <string name="quiz_result_try_again">Thử lại</string>
     <string name="quiz_result_review_answers">Xem lại đáp án</string>
     <string name="quiz_result_empty">Chưa có kết quả để hiển thị</string>
+    <string name="quiz_result_performance_overline">HIỆU SUẤT</string>
+    <string name="quiz_result_feedback_high">Xuất sắc lắm!</string>
+    <string name="quiz_result_feedback_medium">Khá tốt!</string>
+    <string name="quiz_result_feedback_low">Cần cố gắng thêm.</string>
+    <string name="quiz_result_feedback_min">Hãy ôn luyện thêm nhé.</string>
+    <string name="quiz_result_watermark">QUIZCODE</string>
+    <string name="quiz_result_score_slash">/</string>
 
     <!-- Edit Quiz -->
     <string name="edit_quiz_title">Chỉnh sửa bài kiểm tra</string>
