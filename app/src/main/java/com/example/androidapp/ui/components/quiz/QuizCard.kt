@@ -1,133 +1,124 @@
 package com.example.androidapp.ui.components.quiz
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
 import com.example.androidapp.domain.model.Quiz
-import com.example.androidapp.ui.components.common.TagChip
+import com.example.androidapp.ui.theme.InterFamily
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Quiz card component with Editorial Minimalist design.
+ * Flat design with no elevation, using dual-font typography system.
+ *
+ * @param quiz The quiz data to display.
+ * @param onClick Callback when card is clicked.
+ * @param modifier Modifier for styling.
+ */
 @Composable
 fun QuizCard(
     quiz: Quiz,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 12.dp, horizontal = 24.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. THUMBNAIL (ẢNH BÊN TRÁI)
-            AsyncImage(
-                model = quiz.thumbnailUrl,
-                contentDescription = null,
+            // Thumbnail
+            Box(
                 modifier = Modifier
-                    .width(100.dp)
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop
-            )
-
-            // 2. NỘI DUNG (Ở GIỮA)
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(12.dp)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .size(70.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                // Tiêu đề + Tác giả
-                Column {
-                    Text(
-                        text = quiz.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = stringResource(R.string.quiz_by_author, quiz.authorName),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                // Tags (Sử dụng TagChip đã tạo ở Bước 2)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    // Chỉ hiển thị tối đa 2 tags để không bị tràn
-                    quiz.tags.take(2).forEach { tag ->
-                        TagChip(text = tag)
-                    }
-                    if (quiz.tags.size > 2) {
-                        Text(
-                            text = stringResource(R.string.quiz_more_tags, quiz.tags.size - 2),
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.align(Alignment.CenterVertically),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                AsyncImage(
+                    model = quiz.thumbnailUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
             }
 
-            // 3. THỐNG KÊ (BÊN PHẢI)
+            // Content
             Column(
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .fillMaxHeight(),
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Số câu hỏi
+                Text(
+                    text = quiz.title,
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = stringResource(R.string.quiz_by_author, quiz.authorName),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Metadata
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
                 Text(
                     text = stringResource(R.string.quiz_questions, quiz.questionCount),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Số lượt chơi
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "${quiz.attemptCount}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.quiz_attempts, quiz.attemptCount),
+                    fontFamily = InterFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+
+            // Chevron
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outlineVariant,
+                modifier = Modifier.size(18.dp)
+            )
         }
+
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            thickness = 1.dp,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
     }
 }

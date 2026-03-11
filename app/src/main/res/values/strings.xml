@@ -190,4 +190,36 @@
     <string name="create_quiz_public">Công khai</string>
     <string name="create_question_content_hint">Nhập nội dung câu hỏi</string>
     <string name="create_choice_hint">Lựa chọn %1$d</string>
+
+    <!-- Editorial Minimalist Design - New Resources -->
+    <!-- Search -->
+    <string name="search_category_label">DANH MỤC</string>
+    <string name="search_results_header">Kết quả tìm kiếm</string>
+
+    <!-- Profile -->
+    <string name="profile_section_label">CÀI ĐẶT</string>
+    <string name="profile_logout_button">ĐĂNG XUẤT</string>
+
+    <!-- Quiz Detail -->
+    <string name="quiz_detail_overline">CHI TIẾT BÀI KIỂM TRA</string>
+    <string name="quiz_detail_preview_label">XEM TRƯỚC CÂU HỎI</string>
+    <string name="quiz_start_button">BẮT ĐẦU LÀM BÀI</string>
+
+    <!-- Create/Edit Quiz -->
+    <string name="create_quiz_header">TẠO BÀI KIỂM TRA MỚI</string>
+    <string name="create_questions_overline">CÂU HỎI</string>
+    <string name="create_save_button">LƯU</string>
+    <string name="edit_quiz_header">CHỈNH SỬA BÀI KIỂM TRA</string>
+
+    <!-- History -->
+    <string name="history_overline">LỊCH SỬ LÀM BÀI</string>
+    <string name="history_completed_on">Hoàn thành lúc</string>
+
+    <!-- Settings -->
+    <string name="settings_overline">CÀI ĐẶT</string>
+
+    <!-- Trash -->
+    <string name="trash_overline">THÙNG RÁC</string>
+    <string name="trash_info_text">Các mục sẽ tự động xóa sau 30 ngày</string>
+    <string name="trash_deleted_on">Đã xóa</string>
 </resources>
