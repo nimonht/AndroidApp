@@ -1,7 +1,6 @@
 package com.example.androidapp.ui.screens.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -71,7 +70,7 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState())
     ) {
         // ── Header ──────────────────────────────────────────────────────────
-        HomeHeader(displayName = uiState.displayName)
+        HomeHeader()
 
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
@@ -175,7 +174,6 @@ fun HomeScreen(
 
 @Composable
 private fun HomeHeader(
-    displayName: String,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -217,7 +215,7 @@ private fun HomeHeader(
         IconButton(onClick = { /* TODO: open notifications */ }) {
             Icon(
                 imageVector = Icons.Default.Notifications,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.home_notifications_cd),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

@@ -35,9 +35,6 @@ coreKtxVersion = "1.17.0"
 # Coil (Image loading)
 coil = "2.5.0"
 
-# Google Fonts for Compose
-googleFonts = "1.7.8"
-
 # Kotlinx Serialization (for Room schema export toolchain)
 kotlinxSerialization = "1.7.1"
 
@@ -99,7 +96,7 @@ core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxV
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 
 # Google Fonts for Compose
-compose-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "googleFonts" }
+compose-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts" }
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }

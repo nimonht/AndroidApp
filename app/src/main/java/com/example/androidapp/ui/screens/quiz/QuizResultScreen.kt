@@ -39,7 +39,6 @@ import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
-import com.example.androidapp.ui.theme.Success
 import java.util.concurrent.TimeUnit
 
 /**
@@ -139,7 +138,7 @@ private fun ResultContent(
             withStyle(
                 SpanStyle(
                     fontFamily = PlayfairDisplayFamily,
-                    fontWeight = FontWeight.Light,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 72.sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -149,7 +148,7 @@ private fun ResultContent(
             withStyle(
                 SpanStyle(
                     fontFamily = PlayfairDisplayFamily,
-                    fontWeight = FontWeight.Light,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 60.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -159,7 +158,7 @@ private fun ResultContent(
             withStyle(
                 SpanStyle(
                     fontFamily = PlayfairDisplayFamily,
-                    fontWeight = FontWeight.Light,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 72.sp,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -242,7 +241,7 @@ private fun ResultContent(
                 Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.quiz_result_go_home).uppercase(),
+                    text = stringResource(R.string.quiz_result_go_home),
                     fontFamily = InterFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
@@ -260,7 +259,7 @@ private fun ResultContent(
                 Icon(Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.quiz_result_try_again).uppercase(),
+                    text = stringResource(R.string.quiz_result_try_again),
                     fontFamily = InterFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
@@ -274,7 +273,7 @@ private fun ResultContent(
                 contentPadding = PaddingValues(vertical = 10.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.quiz_result_review_answers).uppercase(),
+                    text = stringResource(R.string.quiz_result_review_answers),
                     fontFamily = InterFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
@@ -314,7 +313,7 @@ private fun ResultStatsGrid(
         ResultStatColumn(
             icon = Icons.Default.Check,
             value = correctCount.toString(),
-            label = stringResource(R.string.correct_label),
+            label = stringResource(R.string.quiz_result_stat_correct),
             modifier = Modifier.weight(1f)
         )
 
@@ -326,7 +325,7 @@ private fun ResultStatsGrid(
         ResultStatColumn(
             icon = Icons.Default.Close,
             value = wrongCount.toString(),
-            label = stringResource(R.string.wrong_label),
+            label = stringResource(R.string.quiz_result_stat_wrong),
             modifier = Modifier.weight(1f)
         )
 
@@ -338,7 +337,7 @@ private fun ResultStatsGrid(
         ResultStatColumn(
             icon = Icons.Default.Timer,
             value = timeTaken,
-            label = stringResource(R.string.time_label),
+            label = stringResource(R.string.quiz_result_stat_time),
             modifier = Modifier.weight(1f)
         )
     }
@@ -371,7 +370,7 @@ private fun ResultStatColumn(
             textAlign = TextAlign.Center
         )
         Text(
-            text = label.uppercase(),
+            text = label,
             fontFamily = InterFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 10.sp,

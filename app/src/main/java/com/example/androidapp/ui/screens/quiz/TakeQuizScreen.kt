@@ -30,7 +30,6 @@ import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Choice
-import com.example.androidapp.domain.model.Question
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.theme.InterFamily
