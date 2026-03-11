@@ -192,7 +192,8 @@ fun QuizCodeNavHost(
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
-                    onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
+                    onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
@@ -203,7 +204,8 @@ fun QuizCodeNavHost(
                             popUpTo(Routes.REGISTER) { inclusive = true }
                         }
                     },
-                    onNavigateToLogin = { navController.popBackStack() }
+                    onNavigateToLogin = { navController.popBackStack() },
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

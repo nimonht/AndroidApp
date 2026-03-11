@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -180,7 +179,7 @@ private fun HomeHeader(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Avatar + App title
@@ -208,15 +207,6 @@ private fun HomeHeader(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onBackground
-            )
-        }
-
-        // Notification bell
-        IconButton(onClick = { /* TODO: open notifications */ }) {
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = stringResource(R.string.home_notifications_cd),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

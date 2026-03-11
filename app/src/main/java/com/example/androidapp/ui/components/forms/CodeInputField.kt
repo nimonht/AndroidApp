@@ -38,7 +38,7 @@ fun CodeInputField(
     }
 
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         // 1. TRƯỜNG NHẬP LIỆU ẨN (Logic xử lý nhập)

@@ -23,6 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.ui.components.navigation.AppTopBar
 
 /**
  * Login screen with email/password fields.
@@ -30,12 +31,14 @@ import com.example.androidapp.di.LocalAppContainer
  *
  * @param onLoginSuccess Callback when login is successful.
  * @param onNavigateToRegister Callback to navigate to registration screen.
+ * @param onNavigateBack Callback to navigate back.
  * @param modifier Modifier for styling.
  */
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -66,6 +69,13 @@ fun LoginScreen(
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            AppTopBar(
+                title = stringResource(R.string.login),
+                canNavigateBack = true,
+                navigateUp = onNavigateBack
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
