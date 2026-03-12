@@ -77,6 +77,8 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.runtime.livedata)
     implementation(libs.core.ktx)
+    implementation(libs.androidx.leanback)
+    implementation(libs.glide)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 
