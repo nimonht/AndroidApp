@@ -38,7 +38,7 @@ fun DropdownSelector(
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    placeholder: String = "Chọn một tùy chọn",
+    placeholder: String = stringResource(R.string.dropdown_placeholder),
     errorMessage: String? = null,
     helperText: String? = null
 ) {
@@ -132,7 +132,7 @@ fun MultiSelectDropdown(
     onSelectionChanged: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    placeholder: String = "Chọn các tùy chọn",
+    placeholder: String = stringResource(R.string.dropdown_multi_placeholder),
     maxDisplayItems: Int = 3
 ) {
     var expanded by remember { mutableStateOf(false) }

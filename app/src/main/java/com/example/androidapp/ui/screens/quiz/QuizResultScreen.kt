@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -37,6 +36,7 @@ import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
+import com.example.androidapp.ui.theme.FullShape
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 import java.util.concurrent.TimeUnit
@@ -231,7 +231,7 @@ private fun ResultContent(
             Button(
                 onClick = onNavigateHome,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(4.dp),
+                shape = FullShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.onBackground
                 ),
@@ -252,7 +252,7 @@ private fun ResultContent(
             OutlinedButton(
                 onClick = onRetryQuiz,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(4.dp),
+                shape = FullShape,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 contentPadding = PaddingValues(vertical = 14.dp)
             ) {

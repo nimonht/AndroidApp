@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -35,6 +34,7 @@ import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.forms.CodeInputField
+import com.example.androidapp.ui.theme.FullShape
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 
@@ -279,7 +279,7 @@ private fun JoinSessionSection(
             Button(
                 onClick = onJoin,
                 enabled = code.length == 6,
-                shape = RoundedCornerShape(4.dp),
+                shape = FullShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
@@ -363,7 +363,7 @@ private fun RecentlyPlayedCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(110.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(MaterialTheme.shapes.small)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
         ) {
             AsyncImage(

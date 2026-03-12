@@ -3,7 +3,6 @@ package com.example.androidapp.ui.screens.create
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -98,7 +97,7 @@ fun CreateQuizScreen(
                     onValueChange = { viewModel.onEvent(CreateQuizEvent.TitleChanged(it)) },
                     label = { Text(stringResource(R.string.create_quiz_title_label)) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.small,
                     singleLine = true
                 )
             }
@@ -110,7 +109,7 @@ fun CreateQuizScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.small,
                     maxLines = 5
                 )
             }
@@ -184,7 +183,7 @@ internal fun QuestionEditorCard(
                 onValueChange = { onQuestionChange(question.copy(content = it)) },
                 label = { Text(stringResource(R.string.create_question_content_hint)) },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp)
+                shape = MaterialTheme.shapes.small
             )
             Spacer(modifier = Modifier.height(8.dp))
             question.choices.forEachIndexed { cIdx, choice ->
@@ -212,7 +211,7 @@ internal fun QuestionEditorCard(
                         },
                         placeholder = { Text(stringResource(R.string.create_choice_hint, cIdx + 1)) },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.small,
                         singleLine = true
                     )
                 }

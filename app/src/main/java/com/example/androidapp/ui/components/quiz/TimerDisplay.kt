@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Icon
@@ -21,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
+import com.example.androidapp.ui.theme.FullShape
 import java.util.Locale
 
 @Composable
@@ -34,7 +34,7 @@ fun TimerDisplay(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(50))
+            .clip(FullShape)
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically

@@ -3,7 +3,6 @@ package com.example.androidapp.ui.screens.quiz
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -24,6 +23,7 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.navigation.AppTopBar
+import com.example.androidapp.ui.theme.FullShape
 
 /**
  * Quiz detail screen showing quiz information before starting.
@@ -69,7 +69,7 @@ fun QuizDetailScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                         .height(56.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = FullShape
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))

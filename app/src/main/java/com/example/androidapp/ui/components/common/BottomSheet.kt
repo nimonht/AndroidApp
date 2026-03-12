@@ -3,7 +3,6 @@ package com.example.androidapp.ui.components.common
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -49,7 +48,7 @@ fun AppBottomSheet(
             onDismissRequest = onDismiss,
             sheetState = sheetState,
             modifier = modifier,
-            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            shape = MaterialTheme.shapes.large,
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface,
             tonalElevation = 2.dp,
@@ -199,7 +198,7 @@ fun ShareBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             )

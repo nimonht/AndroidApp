@@ -2,7 +2,6 @@ package com.example.androidapp.ui.components.feedback
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -50,7 +49,7 @@ fun ScoreCard(
 
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -167,7 +166,7 @@ private fun StatsRow(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

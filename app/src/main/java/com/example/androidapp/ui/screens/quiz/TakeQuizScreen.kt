@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Help
@@ -32,6 +31,7 @@ import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Choice
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
+import com.example.androidapp.ui.theme.FullShape
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 
@@ -148,7 +148,7 @@ private fun ActiveQuizContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(16f / 9f)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentScale = ContentScale.Crop
                     )
@@ -265,9 +265,9 @@ private fun EditorialChoiceCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(4.dp))
+            .border(1.dp, borderColor, MaterialTheme.shapes.small)
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -277,7 +277,7 @@ private fun EditorialChoiceCard(
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .clip(MaterialTheme.shapes.extraSmall)
                 .background(
                     if (isSelected) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.surfaceVariant
@@ -344,7 +344,7 @@ private fun QuizFooter(
         Button(
             onClick = if (isLast) onSubmit else onNext,
             enabled = !isSubmitting,
-            shape = RoundedCornerShape(4.dp),
+            shape = FullShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
             ),

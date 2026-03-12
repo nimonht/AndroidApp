@@ -3,7 +3,6 @@ package com.example.androidapp.ui.components.quiz
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
@@ -49,7 +48,7 @@ fun QuizCard(
             Box(
                 modifier = Modifier
                     .size(70.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 AsyncImage(

@@ -3,7 +3,6 @@ package com.example.androidapp.ui.components.forms
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,7 +36,7 @@ fun SwitchToggle(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .clickable(
                 enabled = enabled,
                 role = Role.Switch,
@@ -123,7 +122,7 @@ fun SwitchToggleCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )

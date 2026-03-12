@@ -23,6 +23,8 @@
     <string name="previous">Trước</string>
     <string name="back">Quay lại</string>
     <string name="close">Đóng</string>
+    <string name="dropdown_placeholder">Chọn một tùy chọn</string>
+    <string name="dropdown_multi_placeholder">Chọn các tùy chọn</string>
     <string name="warning_title">Cảnh báo</string>
     <string name="continue_action">Tiếp tục</string>
     <string name="delete_confirm_title">Xác nhận xóa</string>
@@ -30,7 +32,7 @@
     <!-- Quiz -->
     <string name="quiz_create">Tạo bài kiểm tra</string>
     <string name="quiz_join">Tham gia bài kiểm tra</string>
-    <string name="quiz_code_hint">Nhập mã 6 chữ số</string>
+    <string name="quiz_code_hint">Nhập mã 6 ký tự</string>
     <string name="quiz_questions">%1$d câu hỏi</string>
     <string name="quiz_attempts">%1$d lượt làm</string>
     <string name="quiz_choice_count">%1$d trên %2$d lựa chọn</string>
@@ -140,6 +142,7 @@
     <string name="home_welcome_progress">Tiến bộ tuyệt vời</string>
     <string name="home_join_session_label">THAM GIA PHIÊN</string>
     <string name="home_join_button">THAM GIA</string>
+    <string name="home_code_placeholder">VD: ABC123</string>
     <string name="home_notifications_cd">Thông báo</string>
 
     <!-- Dialogs -->

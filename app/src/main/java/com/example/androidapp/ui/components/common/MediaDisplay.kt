@@ -3,7 +3,6 @@ package com.example.androidapp.ui.components.common
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.PlayArrow
@@ -53,7 +52,7 @@ fun MediaDisplay(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
@@ -168,7 +167,7 @@ private fun VideoThumbnail(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(8.dp),
-            shape = RoundedCornerShape(4.dp),
+            shape = MaterialTheme.shapes.extraSmall,
             color = Color.Black.copy(alpha = 0.7f)
         ) {
             Text(

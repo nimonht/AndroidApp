@@ -3,16 +3,18 @@ package com.example.androidapp.ui.components.feedback
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-// 1. Công cụ tạo hiệu ứng nhấp nháy (Modifier Extension)
+/**
+ * Modifier extension that applies a shimmer loading animation.
+ * Uses theme-aware surface colors for light/dark mode compatibility.
+ */
 @Composable
 fun Modifier.shimmerEffect(): Modifier {
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -27,9 +29,9 @@ fun Modifier.shimmerEffect(): Modifier {
     )
 
     val shimmerColors = listOf(
-        Color.LightGray.copy(alpha = 0.6f),
-        Color.LightGray.copy(alpha = 0.2f),
-        Color.LightGray.copy(alpha = 0.6f)
+        MaterialTheme.colorScheme.surfaceContainerHighest,
+        MaterialTheme.colorScheme.surfaceContainerLow,
+        MaterialTheme.colorScheme.surfaceContainerHighest
     )
 
     val brush = Brush.linearGradient(
@@ -41,7 +43,11 @@ fun Modifier.shimmerEffect(): Modifier {
     return this.background(brush)
 }
 
-// 2. Component hiển thị khung xương (Giả lập 1 cái thẻ QuizCard đang tải)
+/**
+ * Skeleton placeholder simulating a [QuizCard] while data loads.
+ *
+ * @param modifier Modifier for styling and layout customization.
+ */
 @Composable
 fun QuizCardSkeleton(modifier: Modifier = Modifier) {
     Row(
@@ -50,32 +56,30 @@ fun QuizCardSkeleton(modifier: Modifier = Modifier) {
             .height(100.dp)
             .padding(8.dp)
     ) {
-        // Giả lập ảnh thumbnail
         Box(
             modifier = Modifier
                 .width(100.dp)
                 .fillMaxHeight()
-                .clip(RoundedCornerShape(12.dp))
+                .clip(MaterialTheme.shapes.medium)
                 .shimmerEffect()
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Giả lập các dòng chữ
         Column(modifier = Modifier.weight(1f)) {
-            Box( // Giả lập tiêu đề
+            Box(
                 modifier = Modifier
                     .fillMaxWidth(0.7f)
                     .height(20.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .shimmerEffect()
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Box( // Giả lập tên tác giả
+            Box(
                 modifier = Modifier
                     .fillMaxWidth(0.5f)
                     .height(16.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(MaterialTheme.shapes.extraSmall)
                     .shimmerEffect()
             )
         }
