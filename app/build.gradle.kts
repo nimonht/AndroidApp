@@ -7,9 +7,15 @@ plugins {
 }
 
 android {
-    val useFirebaseEmulator = (project.findProperty("useFirebaseEmulator") as String?)
+    // Whether to point at the local Firebase emulator suite.
+    // Defaults to true for debug builds, false for release.
+    // Override via: ./gradlew assembleDebug -PuseFirebaseEmulator=false
+    val useEmulatorDebug = (project.findProperty("useFirebaseEmulator") as String?)
         ?.toBoolean()
         ?: true
+    val useEmulatorRelease = (project.findProperty("useFirebaseEmulator") as String?)
+        ?.toBoolean()
+        ?: false
     val firebaseEmulatorHost = project.findProperty("firebaseEmulatorHost") as String?
         ?: "10.0.2.2"
 
@@ -23,14 +29,17 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useFirebaseEmulator.toString())
-        buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useEmulatorDebug.toString())
+            buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
+        }
         release {
+            buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useEmulatorRelease.toString())
+            buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"$firebaseEmulatorHost\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

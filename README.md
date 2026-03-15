@@ -189,7 +189,23 @@ Types: feat, fix, docs, style, refactor, test, chore
 # Run instrumented tests
 ./gradlew connectedAndroidTest
 ```
-## Roadmap 
+# Run options
+
+```bash
+Debug → emulator (default)
+./gradlew assembleDebug
+
+Debug → real Firebase
+./gradlew assembleDebug -PuseFirebaseEmulator=false
+
+Release → real Firebase (default)
+./gradlew assembleRelease
+
+Release → emulator (rare)
+./gradlew assembleRelease -PuseFirebaseEmulator=true
+```
+
+## Roadmap
 
 See development plan at [Roadmap](Roadmap.md).
 
