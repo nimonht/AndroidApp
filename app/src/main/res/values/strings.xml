@@ -225,4 +225,51 @@
     <string name="trash_overline">THÙNG RÁC</string>
     <string name="trash_info_text">Các mục sẽ tự động xóa sau 30 ngày</string>
     <string name="trash_deleted_on">Đã xóa</string>
+
+    <!-- Answer Review -->
+    <string name="review_title">Xem lại đáp án</string>
+    <string name="review_overline">XEM LẠI ĐÁP ÁN</string>
+    <string name="review_correct_label">Đúng</string>
+    <string name="review_wrong_label">Sai</string>
+    <string name="review_your_answer">Đáp án của bạn</string>
+    <string name="review_correct_answer">Đáp án đúng</string>
+    <string name="review_question_number">Câu %1$d</string>
+    <string name="review_summary">Bạn trả lời đúng %1$d/%2$d câu hỏi</string>
+    <string name="review_explanation">Giải thích</string>
+
+    <!-- Attempt Detail -->
+    <string name="attempt_detail_title">Chi tiết lượt làm</string>
+    <string name="attempt_detail_overline">CHI TIẾT LƯỢT LÀM</string>
+    <string name="attempt_detail_quiz_label">Bài kiểm tra</string>
+    <string name="attempt_detail_score_label">Điểm số</string>
+    <string name="attempt_detail_time_label">Thời gian</string>
+    <string name="attempt_detail_date_label">Ngày làm</string>
+    <string name="attempt_detail_review_button">XEM LẠI ĐÁP ÁN</string>
+    <string name="attempt_detail_retry_button">LÀM LẠI</string>
+    <string name="attempt_detail_not_found">Không tìm thấy lượt làm</string>
+
+    <!-- Quiz Exit Confirmation -->
+    <string name="quiz_exit_title">Thoát bài kiểm tra?</string>
+    <string name="quiz_exit_message">Tiến trình của bạn sẽ bị mất nếu thoát bây giờ.</string>
+    <string name="quiz_exit_confirm">Thoát</string>
+    <string name="quiz_exit_cancel">Tiếp tục làm bài</string>
+
+    <!-- Quiz Timer -->
+    <string name="quiz_timer_warning">Sắp hết thời gian!</string>
+    <string name="quiz_timer_format">%1$d:%2$02d</string>
+
+    <!-- Pull to Refresh -->
+    <string name="home_refreshing">Đang cập nhật…</string>
+
+    <!-- Offline Banner -->
+    <string name="offline_banner">Không có kết nối mạng</string>
+
+    <!-- Join Quiz Validation -->
+    <string name="join_code_invalid">Mã không hợp lệ. Vui lòng nhập mã 6 ký tự.</string>
+    <string name="join_code_not_found">Không tìm thấy bài kiểm tra với mã này.</string>
+    <string name="join_code_loading">Đang tìm bài kiểm tra…</string>
+
+    <!-- Progress Persistence -->
+    <string name="quiz_progress_saved">Đã lưu tiến trình</string>
+    <string name="quiz_progress_resumed">Đã khôi phục tiến trình</string>
 </resources>
