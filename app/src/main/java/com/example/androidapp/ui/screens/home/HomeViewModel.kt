@@ -89,7 +89,7 @@ class HomeViewModel(
     private fun onJoinQuiz(code: String) {
         val trimmedCode = code.trim().uppercase()
         if (trimmedCode.length != 6 || !trimmedCode.all { it.isLetterOrDigit() }) {
-            _uiState.update { it.copy(joinCodeError = "Ma khong hop le") }
+            _uiState.update { it.copy(joinCodeError = "Mã không hợp lệ") }
             return
         }
         viewModelScope.launch {
@@ -102,7 +102,7 @@ class HomeViewModel(
                     _uiState.update {
                         it.copy(
                             isJoining = false,
-                            joinCodeError = "Khong tim thay bai kiem tra voi ma nay"
+                            joinCodeError = "Không tìm thấy bài kiểm tra với mã này"
                         )
                     }
                 }

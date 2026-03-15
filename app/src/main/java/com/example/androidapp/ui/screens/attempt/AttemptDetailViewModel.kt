@@ -58,12 +58,12 @@ class AttemptDetailViewModel(
             _uiState.value = AttemptDetailUiState.Loading
             val attempt = attemptRepository.getAttemptById(attemptId)
             if (attempt == null) {
-                _uiState.value = AttemptDetailUiState.Error("Khong tim thay luot lam")
+                _uiState.value = AttemptDetailUiState.Error("Không tìm thấy lượt làm")
                 return@launch
             }
             val quiz = quizRepository.getQuizById(attempt.quizId)
             if (quiz == null) {
-                _uiState.value = AttemptDetailUiState.Error("Khong tim thay bai kiem tra")
+                _uiState.value = AttemptDetailUiState.Error("Không tìm thấy bài kiểm tra")
                 return@launch
             }
             val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.totalQuestions)

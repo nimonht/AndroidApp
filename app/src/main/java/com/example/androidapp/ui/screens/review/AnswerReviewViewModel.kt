@@ -69,7 +69,7 @@ class AnswerReviewViewModel(
             val quiz = quizRepository.getQuizById(quizId)
             val attempt = attemptRepository.getAttemptById(attemptId)
             if (quiz == null || attempt == null) {
-                _uiState.value = AnswerReviewUiState.Error("Khong tim thay ket qua")
+                _uiState.value = AnswerReviewUiState.Error("Không tìm thấy kết quả")
                 return@launch
             }
             val questions = quizRepository.getQuestionsForQuizOnce(quizId)
