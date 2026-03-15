@@ -198,6 +198,26 @@ class QuizRepositoryImpl(
         }
     }
 
+    override suspend fun incrementAttemptCount(quizId: String): Result<Unit> {
+        return try {
+            quizDao.incrementAttemptCount(quizId)
+            ioScope.launch {
+                try {
+                    remoteDataSource.incrementAttemptCount(quizId)
+                } catch (_: Exception) { }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun getTrendingQuizzes(): Flow<List<Quiz>> {
+        return quizDao.getPublicQuizzes().map { entities ->
+            entities.map { it.toDomain() }.sortedByDescending { it.attemptCount }.take(20)
+        }.onStart { refreshPublicQuizzes() }
+    }
+
     // ==================== Background refresh helpers ====================
 
     private fun refreshFromFirestore(userId: String) {

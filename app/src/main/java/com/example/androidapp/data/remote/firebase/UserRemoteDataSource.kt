@@ -29,5 +29,15 @@ class UserRemoteDataSource(private val firestore: FirebaseFirestore) {
             .set(userDto)
             .await()
     }
+
+    /**
+     * Deletes a user profile document by user ID.
+     */
+    suspend fun deleteUser(userId: String) {
+        firestore.collection(FirestoreCollections.USERS)
+            .document(userId)
+            .delete()
+            .await()
+    }
 }
 

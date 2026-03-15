@@ -142,5 +142,18 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
             .delete()
             .await()
     }
+
+    /**
+     * Atomically increments the attempt count for a quiz.
+     */
+    suspend fun incrementAttemptCount(quizId: String) {
+        firestore.collection(FirestoreCollections.QUIZZES)
+            .document(quizId)
+            .update(
+                FirestoreCollections.Fields.ATTEMPT_COUNT,
+                com.google.firebase.firestore.FieldValue.increment(1)
+            )
+            .await()
+    }
 }
 

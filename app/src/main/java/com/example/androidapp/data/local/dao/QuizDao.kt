@@ -125,4 +125,10 @@ interface QuizDao {
         ORDER BY updated_at DESC
     """)
     fun searchQuizzes(query: String): Flow<List<QuizEntity>>
+
+    /**
+     * Atomically increment the attempt count for a quiz.
+     */
+    @Query("UPDATE quizzes SET attempt_count = attempt_count + 1 WHERE id = :quizId")
+    suspend fun incrementAttemptCount(quizId: String)
 }

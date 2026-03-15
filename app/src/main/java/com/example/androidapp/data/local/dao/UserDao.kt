@@ -63,4 +63,10 @@ interface UserDao {
      */
     @Query("UPDATE users SET deleted_at = :deletedAt WHERE id = :userId")
     suspend fun softDeleteUser(userId: String, deletedAt: Long = System.currentTimeMillis())
+
+    /**
+     * Permanently delete a user by ID.
+     */
+    @Query("DELETE FROM users WHERE id = :userId")
+    suspend fun deleteUserById(userId: String)
 }
