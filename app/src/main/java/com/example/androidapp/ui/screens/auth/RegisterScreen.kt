@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.screens.auth
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -21,10 +23,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.androidapp.BuildConfig
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.domain.util.GoogleSignInHelper
+import com.example.androidapp.ui.components.forms.GoogleSignInButton
 import com.example.androidapp.ui.components.navigation.AppTopBar
 import com.example.androidapp.ui.theme.FullShape
+import kotlinx.coroutines.launch
 
 /**
  * Registration/Sign up screen.
@@ -52,11 +58,15 @@ fun RegisterScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var isGoogleSignInLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Authenticated) onRegisterSuccess()
@@ -194,7 +204,7 @@ fun RegisterScreen(
                         password.length >= 6 && password == confirmPassword &&
                         uiState !is AuthUiState.Loading
             ) {
-                if (uiState is AuthUiState.Loading) {
+                if (uiState is AuthUiState.Loading && !isGoogleSignInLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
                 } else {
                     Text(
@@ -203,6 +213,40 @@ fun RegisterScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Divider with "OR"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(modifier = Modifier.weight(1f))
+                Text(
+                    text = stringResource(R.string.auth_or_divider),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                HorizontalDivider(modifier = Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Google Sign-In button
+            GoogleSignInButton(
+                onClick = {
+                    coroutineScope.launch {
+                        handleGoogleSignIn(
+                            context = context,
+                            viewModel = viewModel,
+                            onLoadingChange = { isGoogleSignInLoading = it }
+                        )
+                    }
+                },
+                isLoading = isGoogleSignInLoading,
+                enabled = uiState !is AuthUiState.Loading
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -219,4 +263,40 @@ fun RegisterScreen(
             }
         }
     }
+}
+
+/**
+ * Handles Google Sign-In flow using Credential Manager.
+ *
+ * @param context Android context.
+ * @param viewModel AuthViewModel to dispatch GoogleSignIn event.
+ * @param onLoadingChange Callback to update loading state.
+ */
+private suspend fun handleGoogleSignIn(
+    context: Context,
+    viewModel: AuthViewModel,
+    onLoadingChange: (Boolean) -> Unit
+) {
+    // TODO: Replace with your actual Google Web Client ID from Google Cloud Console
+    // Get it from: https://console.cloud.google.com/apis/credentials
+    // Format: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+    val serverClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID.ifEmpty {
+        // Fallback for development - this should be configured in build.gradle.kts
+        "YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com"
+    }
+
+    onLoadingChange(true)
+    val result = GoogleSignInHelper.signIn(context, serverClientId)
+    onLoadingChange(false)
+
+    result.fold(
+        onSuccess = { idToken ->
+            viewModel.onEvent(AuthEvent.GoogleSignIn(idToken))
+        },
+        onFailure = { error ->
+            // Error is already handled in GoogleSignInHelper with Vietnamese messages
+            viewModel.onEvent(AuthEvent.ClearError)
+            // The error will be shown via SnackbarHost from AuthUiState.Error
+        }
+    )
 }

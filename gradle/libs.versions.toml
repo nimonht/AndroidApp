@@ -38,6 +38,10 @@ coil = "2.5.0"
 # Kotlinx Serialization (for Room schema export toolchain)
 kotlinxSerialization = "1.7.1"
 
+# Google Credential Manager & Play Services Auth
+credentialManager = "1.3.0"
+playServicesAuth = "21.2.0"
+
 [libraries]
 # AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -100,6 +104,12 @@ compose-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-
 
 # Kotlinx Serialization
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# Google Credential Manager & Play Services Auth
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentialManager" }
+androidx-credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentialManager" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version = "1.1.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -159,6 +159,10 @@
     <string name="auth_register_subtitle">Đăng ký để bắt đầu tạo Quizz</string>
     <string name="auth_confirm_password">Xác nhận mật khẩu</string>
     <string name="auth_have_account">Đã có tài khoản? </string>
+    <string name="auth_google_sign_in">Đăng nhập bằng Google</string>
+    <string name="auth_or_divider">HOẶC</string>
+    <string name="auth_google_sign_in_failed">Đăng nhập Google thất bại</string>
+    <string name="auth_google_sign_in_cancelled">Đã hủy đăng nhập Google</string>
 
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết Quizz</string>
