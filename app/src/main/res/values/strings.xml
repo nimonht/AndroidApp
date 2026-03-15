@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Ứng dụng</string>
+    <string name="app_name">Quizzez</string>
 
     <!-- Navigation -->
     <string name="nav_home">Trang chủ</string>
@@ -30,8 +30,8 @@
     <string name="delete_confirm_title">Xác nhận xóa</string>
 
     <!-- Quiz -->
-    <string name="quiz_create">Tạo bài kiểm tra</string>
-    <string name="quiz_join">Tham gia bài kiểm tra</string>
+    <string name="quiz_create">Tạo Quizz</string>
+    <string name="quiz_join">Tham gia Quizz</string>
     <string name="quiz_code_hint">Nhập mã 6 ký tự</string>
     <string name="quiz_questions">%1$d câu hỏi</string>
     <string name="quiz_attempts">%1$d lượt làm</string>
@@ -39,9 +39,9 @@
     <string name="quiz_by_author">bởi %1$s</string>
     <string name="quiz_more_tags">+%1$d</string>
     <string name="question_progress">Câu hỏi %1$d/%2$d</string>
-    <string name="timer_content_description">Bộ đếm thời gian bài kiểm tra</string>
+    <string name="timer_content_description">Bộ đếm thời gian Quizz</string>
     <!-- Take Quiz -->
-    <string name="take_quiz_title">Làm bài kiểm tra</string>
+    <string name="take_quiz_title">Làm Quizz</string>
     <string name="take_quiz_empty">Chưa có dữ liệu câu hỏi để hiển thị</string>
     <string name="take_quiz_step_indicator">CÂU HỎI %1$d/%2$d</string>
     <string name="take_quiz_help_cd">Trợ giúp</string>
@@ -55,7 +55,7 @@
     <string name="video_label">VIDEO</string>
 
     <!-- Bottom sheets -->
-    <string name="share_quiz_title">Chia sẻ bài kiểm tra</string>
+    <string name="share_quiz_title">Chia sẻ Quizz</string>
     <string name="share_code_label">Chia sẻ mã</string>
     <string name="copy_code">Sao chép mã</string>
     <string name="share_link">Chia sẻ liên kết</string>
@@ -88,7 +88,7 @@
 
     <!-- Create Quiz -->
     <string name="create_add_question_cd">Thêm câu hỏi</string>
-    <string name="create_quiz_title_label">Tiêu đề bài kiểm tra</string>
+    <string name="create_quiz_title_label">Tiêu đề Quizz</string>
     <string name="create_quiz_description_label">Mô tả</string>
     <string name="create_questions_header">Câu hỏi (%1$d)</string>
     <string name="create_question_title">Câu hỏi %1$d</string>
@@ -113,36 +113,30 @@
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
-    <string name="settings_section_notifications">Thông báo</string>
-    <string name="settings_section_appearance">Giao diện</string>
     <string name="settings_section_data_sync">Dữ liệu &amp; đồng bộ</string>
-    <string name="settings_push_notifications">Thông báo đẩy</string>
-    <string name="settings_push_notifications_desc">Nhận cập nhật về kết quả bài kiểm tra và tính năng mới</string>
-    <string name="settings_dark_mode">Chế độ tối</string>
-    <string name="settings_dark_mode_desc">Sử dụng giao diện tối trong toàn bộ ứng dụng</string>
     <string name="settings_auto_sync">Tự động đồng bộ</string>
-    <string name="settings_auto_sync_desc">Tự động đồng bộ bài kiểm tra lên đám mây khi có kết nối</string>
+    <string name="settings_auto_sync_desc">Tự động đồng bộ Quizz lên đám mây khi có kết nối</string>
 
     <!-- Search -->
     <string name="search_top_results">Kết quả nổi bật</string>
-    <string name="search_placeholder">Tìm bài kiểm tra...</string>
+    <string name="search_placeholder">Tìm Quizz...</string>
     <string name="search_empty">Chưa có kết quả phù hợp</string>
 
     <!-- Home -->
     <string name="home_greeting">Xin chào! 👋</string>
     <string name="home_recently_played">Đã chơi gần đây</string>
-    <string name="home_recently_played_empty">Chưa có bài kiểm tra đã chơi</string>
-    <string name="home_my_quizzes">Bài kiểm tra của tôi</string>
-    <string name="home_my_quizzes_empty">Bạn chưa tạo bài kiểm tra nào</string>
-    <string name="home_trending_quizzes">Bài kiểm tra thịnh hành</string>
-    <string name="home_trending_empty">Chưa có bài kiểm tra thịnh hành</string>
+    <string name="home_recently_played_empty">Chưa có Quizz đã chơi</string>
+    <string name="home_my_quizzes">Quizz của tôi</string>
+    <string name="home_my_quizzes_empty">Bạn chưa tạo Quizz nào</string>
+    <string name="home_trending_quizzes">Quizz thịnh hành</string>
+    <string name="home_trending_empty">Chưa có Quizz thịnh hành</string>
     <string name="home_see_all">Xem tất cả →</string>
     <string name="home_welcome_overline">CHÀO MỪNG TRỞ LẠI</string>
     <string name="home_welcome_display">Xin chào, %1$s</string>
-    <string name="home_welcome_progress">Tiến bộ tuyệt vời</string>
-    <string name="home_join_session_label">THAM GIA PHIÊN</string>
+    <string name="home_welcome_progress"></string> 
+    <string name="home_join_session_label">THAM GIA</string>
     <string name="home_join_button">THAM GIA</string>
-    <string name="home_code_placeholder">VD: ABC123</string>
+    <string name="home_code_placeholder">e.g. ABC123</string>
     <string name="home_notifications_cd">Thông báo</string>
 
     <!-- Dialogs -->
@@ -152,24 +146,24 @@
     <!-- History -->
     <string name="history_title">Lịch sử làm bài</string>
     <string name="history_empty">Chưa có lượt làm bài</string>
-    <string name="history_action_explore">Khám phá bài kiểm tra</string>
+    <string name="history_action_explore">Khám phá Quizz</string>
     <string name="history_time_hours_ago">%1$d giờ trước</string>
     <string name="history_time_yesterday">Hôm qua</string>
     <string name="history_time_days_ago">%1$d ngày trước</string>
 
     <!-- Auth -->
     <string name="auth_welcome_back">Chào mừng trở lại!</string>
-    <string name="auth_login_subtitle">Đăng nhập để tiếp tục quản lý bài kiểm tra</string>
+    <string name="auth_login_subtitle">Đăng nhập để tiếp tục quản lý Quizz</string>
     <string name="auth_no_account">Chưa có tài khoản? </string>
     <string name="auth_create_account">Tạo tài khoản</string>
-    <string name="auth_register_subtitle">Đăng ký để bắt đầu tạo bài kiểm tra</string>
+    <string name="auth_register_subtitle">Đăng ký để bắt đầu tạo Quizz</string>
     <string name="auth_confirm_password">Xác nhận mật khẩu</string>
     <string name="auth_have_account">Đã có tài khoản? </string>
 
     <!-- Quiz Detail -->
-    <string name="quiz_detail_title">Chi tiết bài kiểm tra</string>
+    <string name="quiz_detail_title">Chi tiết Quizz</string>
     <string name="quiz_start_now">Bắt đầu làm bài</string>
-    <string name="quiz_detail_empty">Chưa có dữ liệu bài kiểm tra</string>
+    <string name="quiz_detail_empty">Chưa có dữ liệu Quizz</string>
 
     <!-- Quiz Result -->
     <string name="quiz_result_go_home">VỀ TRANG CHỦ</string>
@@ -181,13 +175,13 @@
     <string name="quiz_result_feedback_medium">Khá tốt!</string>
     <string name="quiz_result_feedback_low">Cần cố gắng thêm.</string>
     <string name="quiz_result_feedback_min">Hãy ôn luyện thêm nhé.</string>
-    <string name="quiz_result_watermark">QUIZCODE</string>
+    <string name="quiz_result_watermark">Quizzez</string>
     <string name="quiz_result_stat_correct">ĐÚNG</string>
     <string name="quiz_result_stat_wrong">SAI</string>
     <string name="quiz_result_stat_time">THỜI GIAN</string>
 
     <!-- Edit Quiz -->
-    <string name="edit_quiz_title">Chỉnh sửa bài kiểm tra</string>
+    <string name="edit_quiz_title">Chỉnh sửa Quizz</string>
 
     <!-- Create Quiz additional -->
     <string name="create_quiz_public">Công khai</string>
@@ -204,15 +198,15 @@
     <string name="profile_logout_button">ĐĂNG XUẤT</string>
 
     <!-- Quiz Detail -->
-    <string name="quiz_detail_overline">CHI TIẾT BÀI KIỂM TRA</string>
+    <string name="quiz_detail_overline">CHI TIẾT Quizz</string>
     <string name="quiz_detail_preview_label">XEM TRƯỚC CÂU HỎI</string>
     <string name="quiz_start_button">BẮT ĐẦU LÀM BÀI</string>
 
     <!-- Create/Edit Quiz -->
-    <string name="create_quiz_header">TẠO BÀI KIỂM TRA MỚI</string>
+    <string name="create_quiz_header">TẠO Quizz MỚI</string>
     <string name="create_questions_overline">CÂU HỎI</string>
     <string name="create_save_button">LƯU</string>
-    <string name="edit_quiz_header">CHỈNH SỬA BÀI KIỂM TRA</string>
+    <string name="edit_quiz_header">CHỈNH SỬA Quizz</string>
 
     <!-- History -->
     <string name="history_overline">LỊCH SỬ LÀM BÀI</string>
@@ -240,7 +234,7 @@
     <!-- Attempt Detail -->
     <string name="attempt_detail_title">Chi tiết lượt làm</string>
     <string name="attempt_detail_overline">CHI TIẾT LƯỢT LÀM</string>
-    <string name="attempt_detail_quiz_label">Bài kiểm tra</string>
+    <string name="attempt_detail_quiz_label">Quizz</string>
     <string name="attempt_detail_score_label">Điểm số</string>
     <string name="attempt_detail_time_label">Thời gian</string>
     <string name="attempt_detail_date_label">Ngày làm</string>
@@ -249,7 +243,7 @@
     <string name="attempt_detail_not_found">Không tìm thấy lượt làm</string>
 
     <!-- Quiz Exit Confirmation -->
-    <string name="quiz_exit_title">Thoát bài kiểm tra?</string>
+    <string name="quiz_exit_title">Thoát Quizz?</string>
     <string name="quiz_exit_message">Tiến trình của bạn sẽ bị mất nếu thoát bây giờ.</string>
     <string name="quiz_exit_confirm">Thoát</string>
     <string name="quiz_exit_cancel">Tiếp tục làm bài</string>
@@ -266,8 +260,8 @@
 
     <!-- Join Quiz Validation -->
     <string name="join_code_invalid">Mã không hợp lệ. Vui lòng nhập mã 6 ký tự.</string>
-    <string name="join_code_not_found">Không tìm thấy bài kiểm tra với mã này.</string>
-    <string name="join_code_loading">Đang tìm bài kiểm tra…</string>
+    <string name="join_code_not_found">Không tìm thấy Quizz với mã này.</string>
+    <string name="join_code_loading">Đang tìm Quizz…</string>
 
     <!-- Progress Persistence -->
     <string name="quiz_progress_saved">Đã lưu tiến trình</string>

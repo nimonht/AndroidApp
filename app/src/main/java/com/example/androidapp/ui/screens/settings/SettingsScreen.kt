@@ -45,27 +45,6 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Notifications Section
-            SettingsSection(title = stringResource(R.string.settings_section_notifications)) {
-                SwitchToggle(
-                    checked = uiState.notificationsEnabled,
-                    onCheckedChange = {
-                        viewModel.onEvent(SettingsEvent.NotificationsToggled(it))
-                    },
-                    label = stringResource(R.string.settings_push_notifications),
-                    description = stringResource(R.string.settings_push_notifications_desc)
-                )
-            }
-
-            // Appearance Section
-            SettingsSection(title = stringResource(R.string.settings_section_appearance)) {
-                SwitchToggle(
-                    checked = uiState.darkModeEnabled,
-                    onCheckedChange = { viewModel.onEvent(SettingsEvent.DarkModeToggled(it)) },
-                    label = stringResource(R.string.settings_dark_mode),
-                    description = stringResource(R.string.settings_dark_mode_desc)
-                )
-            }
 
             // Data Section
             SettingsSection(title = stringResource(R.string.settings_section_data_sync)) {

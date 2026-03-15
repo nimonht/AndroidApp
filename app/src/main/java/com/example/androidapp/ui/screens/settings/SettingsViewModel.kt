@@ -10,15 +10,11 @@ import kotlinx.coroutines.flow.update
  * UI state for the Settings screen.
  */
 data class SettingsUiState(
-    val notificationsEnabled: Boolean = true,
-    val darkModeEnabled: Boolean = false,
     val autoSyncEnabled: Boolean = true
 )
 
 /** Events that can be dispatched to [SettingsViewModel]. */
 sealed class SettingsEvent {
-    data class NotificationsToggled(val enabled: Boolean) : SettingsEvent()
-    data class DarkModeToggled(val enabled: Boolean) : SettingsEvent()
     data class AutoSyncToggled(val enabled: Boolean) : SettingsEvent()
 }
 
@@ -38,10 +34,6 @@ class SettingsViewModel : ViewModel() {
      */
     fun onEvent(event: SettingsEvent) {
         when (event) {
-            is SettingsEvent.NotificationsToggled ->
-                _uiState.update { it.copy(notificationsEnabled = event.enabled) }
-            is SettingsEvent.DarkModeToggled ->
-                _uiState.update { it.copy(darkModeEnabled = event.enabled) }
             is SettingsEvent.AutoSyncToggled ->
                 _uiState.update { it.copy(autoSyncEnabled = event.enabled) }
         }
