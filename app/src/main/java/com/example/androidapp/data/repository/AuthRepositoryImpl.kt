@@ -197,7 +197,7 @@ class AuthRepositoryImpl(
             )
             // Cache locally
             userDao.insertUser(user.toEntity())
-            // Persist to Firestore in background
+            // Persist to Firestore (sync failure is non-fatal)
             try {
                 userRemoteDataSource.saveUser(user.toDto())
             } catch (_: Exception) {

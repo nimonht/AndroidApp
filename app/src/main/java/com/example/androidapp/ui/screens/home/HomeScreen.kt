@@ -86,11 +86,6 @@ fun HomeScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
         ) {
-            // ── Offline Banner ──────────────────────────────────────────────
-            if (uiState.isOffline) {
-                OfflineBanner()
-            }
-
             // ── Header ──────────────────────────────────────────────────────
             HomeHeader()
 
@@ -341,34 +336,6 @@ private fun JoinSessionSection(
                 color = MaterialTheme.colorScheme.error
             )
         }
-    }
-}
-
-@Composable
-private fun OfflineBanner(
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.errorContainer)
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Default.WifiOff,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.size(16.dp)
-        )
-        Text(
-            text = stringResource(R.string.offline_banner),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onErrorContainer
-        )
     }
 }
 

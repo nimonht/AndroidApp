@@ -27,8 +27,7 @@ data class HomeUiState(
     val error: String? = null,
     val isLoggedIn: Boolean = false,
     val displayName: String = "",
-    val userId: String = "",
-    val isOffline: Boolean = false
+    val userId: String = ""
 )
 
 /** Events that can be dispatched to [HomeViewModel]. */
@@ -89,7 +88,7 @@ class HomeViewModel(
     private fun onJoinQuiz(code: String) {
         val trimmedCode = code.trim().uppercase()
         if (trimmedCode.length != 6 || !trimmedCode.all { it.isLetterOrDigit() }) {
-            _uiState.update { it.copy(joinCodeError = "Mã không hợp lệ") }
+            _uiState.update { it.copy(joinCodeError = "Mã không hợp lệ. Vui lòng nhập 6 ký tự chữ hoặc số.") }
             return
         }
         viewModelScope.launch {
@@ -102,13 +101,16 @@ class HomeViewModel(
                     _uiState.update {
                         it.copy(
                             isJoining = false,
-                            joinCodeError = "Không tìm thấy bài kiểm tra với mã này"
+                            joinCodeError = "Không tìm thấy bài kiểm tra với mã này. Vui lòng kiểm tra lại mã."
                         )
                     }
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(isJoining = false, joinCodeError = e.message)
+                    it.copy(
+                        isJoining = false,
+                        joinCodeError = "Không thể tìm kiếm bài kiểm tra. Vui lòng thử lại."
+                    )
                 }
             }
         }

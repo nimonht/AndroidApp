@@ -32,7 +32,8 @@ sealed class TakeQuizUiState {
         val isSubmitting: Boolean,
         val isMultiSelect: Boolean,
         val showExitDialog: Boolean = false,
-        val allAnswers: Map<String, Set<String>> = emptyMap()
+        val allAnswers: Map<String, Set<String>> = emptyMap(),
+        val shouldNavigateBack: Boolean = false
     ) : TakeQuizUiState()
     data class Finished(val attemptId: String) : TakeQuizUiState()
     data class Error(val message: String) : TakeQuizUiState()
@@ -168,12 +169,10 @@ class TakeQuizViewModel(
 
     private fun onConfirmExit() {
         timerJob?.cancel()
-        // Exit is handled by the screen via onNavigateBack after state update
         val current = _uiState.value
         if (current is TakeQuizUiState.Active) {
-            _uiState.value = current.copy(showExitDialog = false)
+            _uiState.value = current.copy(showExitDialog = false, shouldNavigateBack = true)
         }
-        exitConfirmed = true
     }
 
     private fun onDismissExitDialog() {
@@ -205,7 +204,8 @@ class TakeQuizViewModel(
                 totalQuestions = questions.size,
                 answers = answerMap,
                 startTimeMillis = startTimeMillis,
-                endTimeMillis = System.currentTimeMillis()
+                endTimeMillis = System.currentTimeMillis(),
+                questionOrder = questions.map { it.id }
             )
 
             val result = attemptRepository.saveAttempt(attempt)
@@ -235,7 +235,8 @@ class TakeQuizViewModel(
             elapsedSeconds = elapsedSeconds,
             isSubmitting = false,
             isMultiSelect = question.isMultiSelect,
-            allAnswers = answers.toMap()
+            allAnswers = answers.toMap(),
+            shouldNavigateBack = false
         )
     }
 

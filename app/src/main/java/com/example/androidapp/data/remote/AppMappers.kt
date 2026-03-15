@@ -78,7 +78,8 @@ fun AttemptDto.toDomain() = Attempt(
     totalQuestions = totalQuestions,
     answers = answers,
     startTimeMillis = startTime?.toDate()?.time ?: System.currentTimeMillis(),
-    endTimeMillis = endTime?.toDate()?.time
+    endTimeMillis = endTime?.toDate()?.time,
+    questionOrder = questionOrder
 )
 
 fun Attempt.toDto() = AttemptDto(
@@ -89,7 +90,8 @@ fun Attempt.toDto() = AttemptDto(
     totalQuestions = totalQuestions,
     answers = answers,
     startTime = Timestamp(Date(startTimeMillis)),
-    endTime = endTimeMillis?.let { Timestamp(Date(it)) }
+    endTime = endTimeMillis?.let { Timestamp(Date(it)) },
+    questionOrder = questionOrder
 )
 
 // --- QUESTION POOL ---

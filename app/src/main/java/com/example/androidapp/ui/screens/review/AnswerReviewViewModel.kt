@@ -72,7 +72,14 @@ class AnswerReviewViewModel(
                 _uiState.value = AnswerReviewUiState.Error("Không tìm thấy kết quả")
                 return@launch
             }
-            val questions = quizRepository.getQuestionsForQuizOnce(quizId)
+            val allQuestions = quizRepository.getQuestionsForQuizOnce(quizId)
+            // Use the persisted question order from the attempt, or fall back to repository order
+            val questions = if (attempt.questionOrder.isNotEmpty()) {
+                val questionMap = allQuestions.associateBy { it.id }
+                attempt.questionOrder.mapNotNull { questionMap[it] }
+            } else {
+                allQuestions
+            }
             val reviews = questions.map { question ->
                 val selectedIds = attempt.answers[question.id] ?: emptyList()
                 val correctIds = question.choices.filter { it.isCorrect }.map { it.id }.toSet()

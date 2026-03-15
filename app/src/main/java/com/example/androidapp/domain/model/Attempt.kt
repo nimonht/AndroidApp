@@ -9,5 +9,7 @@ data class Attempt(
     // Map lưu đáp án: Key là ID câu hỏi, Value là danh sách ID đáp án (hỗ trợ multi-select)
     val answers: Map<String, List<String>>,
     val startTimeMillis: Long,
-    val endTimeMillis: Long?
+    val endTimeMillis: Long?,
+    // Ordered list of question IDs as they were presented during the quiz attempt
+    val questionOrder: List<String> = emptyList()
 )

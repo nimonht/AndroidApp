@@ -68,15 +68,16 @@ fun TakeQuizScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState) {
-        if (uiState is TakeQuizUiState.Finished) {
-            onQuizComplete((uiState as TakeQuizUiState.Finished).attemptId)
-        }
-    }
-
-    // Handle confirmed exit
-    LaunchedEffect(viewModel.exitConfirmed) {
-        if (viewModel.exitConfirmed) {
-            onNavigateBack()
+        when (val state = uiState) {
+            is TakeQuizUiState.Finished -> {
+                onQuizComplete(state.attemptId)
+            }
+            is TakeQuizUiState.Active -> {
+                if (state.shouldNavigateBack) {
+                    onNavigateBack()
+                }
+            }
+            else -> {} // No action for Loading or Error
         }
     }
 

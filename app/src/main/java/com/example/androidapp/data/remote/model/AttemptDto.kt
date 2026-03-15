@@ -11,5 +11,6 @@ data class AttemptDto(
     val totalQuestions: Int = 0,
     val answers: Map<String, List<String>> = emptyMap(), // Firebase hỗ trợ Map<String, List> tự động
     val startTime: Timestamp? = null,
-    val endTime: Timestamp? = null
+    val endTime: Timestamp? = null,
+    val questionOrder: List<String> = emptyList()
 )

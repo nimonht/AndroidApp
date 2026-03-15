@@ -68,9 +68,11 @@ class AttemptDetailViewModel(
             }
             val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.totalQuestions)
             val starRating = ScoreUtil.calculateStarRating(percentage)
-            val timeTakenMs = if (attempt.endTimeMillis != null)
-                attempt.endTimeMillis - attempt.startTimeMillis
-            else 0L
+            val timeTakenMs = if (attempt.endTimeMillis != null) {
+                maxOf(0L, attempt.endTimeMillis - attempt.startTimeMillis)
+            } else {
+                0L
+            }
 
             _uiState.value = AttemptDetailUiState.Success(
                 attempt = attempt,

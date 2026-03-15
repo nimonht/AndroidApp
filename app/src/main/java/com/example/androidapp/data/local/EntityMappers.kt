@@ -112,6 +112,8 @@ fun AttemptEntity.toDomain(): Attempt {
         }
     } else emptyMap()
 
+    val questionOrder: List<String> = questionOrder.split(",").filter { it.isNotBlank() }
+
     return Attempt(
         id = id,
         userId = userId,
@@ -120,7 +122,8 @@ fun AttemptEntity.toDomain(): Attempt {
         totalQuestions = maxScore,
         answers = answers,
         startTimeMillis = startedAt,
-        endTimeMillis = finishedAt
+        endTimeMillis = finishedAt,
+        questionOrder = questionOrder
     )
 }
 
@@ -133,7 +136,8 @@ fun Attempt.toEntity(): AttemptEntity = AttemptEntity(
     maxScore = totalQuestions,
     multiAnswers = gson.toJson(answers),
     startedAt = startTimeMillis,
-    finishedAt = endTimeMillis
+    finishedAt = endTimeMillis,
+    questionOrder = questionOrder.joinToString(",")
 )
 
 // --- USER ---

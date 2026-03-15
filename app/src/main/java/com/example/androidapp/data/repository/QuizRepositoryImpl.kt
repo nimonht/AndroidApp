@@ -214,7 +214,7 @@ class QuizRepositoryImpl(
 
     override fun getTrendingQuizzes(): Flow<List<Quiz>> {
         return quizDao.getPublicQuizzes().map { entities ->
-            entities.map { it.toDomain() }.sortedByDescending { it.attemptCount }.take(20)
+            entities.take(20).map { it.toDomain() }
         }.onStart { refreshPublicQuizzes() }
     }
 
