@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.androidapp.ui.navigation.QuizCodeNavHost
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.navigation.QuizzezNavHost
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
- * Main Activity for the QuizCode application.
+ * Main Activity for the Quizzez application.
  * Uses Jetpack Compose for UI.
  */
 class MainActivity : ComponentActivity() {
@@ -20,12 +20,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            QuizCodeTheme {
+            QuizzezTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    QuizCodeNavHost()
+                    QuizzezNavHost()
                 }
             }
         }

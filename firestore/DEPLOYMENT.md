@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides step-by-step instructions for setting up and deploying the Firebase backend for the QuizCode Android application.
+This document provides step-by-step instructions for setting up and deploying the Firebase backend for the Quizzez Android application.
 
 ## Prerequisites
 

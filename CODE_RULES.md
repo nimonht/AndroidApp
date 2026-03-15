@@ -1,4 +1,4 @@
-# QuizCode - Code Style & Project Rules
+# Quizzez - Code Style & Project Rules
 
 ## 1. Project Structure
 
@@ -89,7 +89,7 @@ app/src/main/java/com/example/androidapp/
     │   └── navigation/          # Navigation components
     │       ├── BottomNavBar.kt
     │       ├── TopAppBar.kt
-    │       └── QuizCodeNavHost.kt
+    │       └── QuizzezNavHost.kt
     │
     └── screens/                 # Screen composables + ViewModels
         ├── home/
@@ -356,7 +356,7 @@ fun CodeInputField(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun QuizCardPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         QuizCard(
             quiz = Quiz(title = "Sample Quiz", questionCount = 10),
             onClick = {}

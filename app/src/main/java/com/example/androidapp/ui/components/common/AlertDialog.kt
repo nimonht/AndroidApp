@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 import com.example.androidapp.ui.theme.Warning as WarningColor
 
 /**
@@ -286,7 +286,7 @@ fun LoadingDialog(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun AppAlertDialogPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         AppAlertDialog(
             title = "Lưu thay đổi?",
             message = "Bạn có muốn lưu các thay đổi trước khi thoát không?",
@@ -300,7 +300,7 @@ private fun AppAlertDialogPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun DeleteConfirmDialogPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         DeleteConfirmDialog(
             title = "Xóa bài kiểm tra?",
             message = "Bạn có chắc chắn muốn xóa bài kiểm tra này? Hành động này không thể hoàn tác.",
@@ -313,7 +313,7 @@ private fun DeleteConfirmDialogPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun InfoDialogPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         InfoDialog(
             title = "Thông tin",
             message = "Bài kiểm tra này có 10 câu hỏi và thời gian làm bài là 15 phút.",
@@ -325,7 +325,7 @@ private fun InfoDialogPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun WarningDialogPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         WarningDialog(
             title = "Cảnh báo",
             message = "Bạn sẽ mất tiến trình hiện tại nếu thoát khỏi bài kiểm tra.",
@@ -338,7 +338,7 @@ private fun WarningDialogPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun LoadingDialogPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         LoadingDialog(
             message = "Đang tải bài kiểm tra..."
         )

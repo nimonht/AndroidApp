@@ -1,7 +1,7 @@
 package com.example.androidapp.ui.navigation
 
 /**
- * Defines all navigation routes for the QuizCode application.
+ * Defines all navigation routes for the Quizzez application.
  * Routes follow the pattern defined in the frontend design document.
  */
 object Routes {

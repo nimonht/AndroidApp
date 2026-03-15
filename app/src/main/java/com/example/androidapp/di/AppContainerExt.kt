@@ -2,7 +2,7 @@ package com.example.androidapp.di
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.example.androidapp.QuizCodeApplication
+import com.example.androidapp.QuizzezApplication
 
 /**
  * Extension function to access the AppContainer from composables.
@@ -10,4 +10,4 @@ import com.example.androidapp.QuizCodeApplication
  */
 val LocalAppContainer: AppContainer
     @Composable
-    get() = (LocalContext.current.applicationContext as QuizCodeApplication).appContainer
+    get() = (LocalContext.current.applicationContext as QuizzezApplication).appContainer

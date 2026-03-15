@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the complete Firestore database schema definitions, security rules, and deployment configuration for the QuizCode Android application.
+This directory contains the complete Firestore database schema definitions, security rules, and deployment configuration for the Quizzez Android application.
 
 ## Directory Structure
 

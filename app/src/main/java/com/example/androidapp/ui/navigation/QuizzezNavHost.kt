@@ -31,14 +31,14 @@ import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.trash.TrashScreen
 
 /**
- * Main navigation host for the QuizCode application.
+ * Main navigation host for the Quizzez application.
  * Sets up all navigation routes and handles navigation between screens.
  *
  * @param navController The NavHostController for managing navigation state.
  * @param startDestination The initial route to display (default: Home).
  */
 @Composable
-fun QuizCodeNavHost(
+fun QuizzezNavHost(
     navController: NavHostController = rememberNavController(),
     startDestination: String = Routes.HOME
 ) {

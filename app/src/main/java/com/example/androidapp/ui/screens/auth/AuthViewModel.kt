@@ -30,7 +30,6 @@ sealed class AuthUiState {
 sealed class AuthEvent {
     data class Login(val email: String, val password: String) : AuthEvent()
     data class Register(val email: String, val password: String, val username: String) : AuthEvent()
-    data class GoogleSignIn(val idToken: String) : AuthEvent()
     data object Logout : AuthEvent()
     data object ClearError : AuthEvent()
 }
@@ -64,7 +63,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         when (event) {
             is AuthEvent.Login -> onLogin(event.email, event.password)
             is AuthEvent.Register -> onRegister(event.email, event.password, event.username)
-            is AuthEvent.GoogleSignIn -> onGoogleSignIn(event.idToken)
             is AuthEvent.Logout -> onLogout()
             is AuthEvent.ClearError -> _uiState.value = AuthUiState.Idle
         }
@@ -88,17 +86,6 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _uiState.value = result.fold(
                 onSuccess = { user -> AuthUiState.Authenticated(user) },
                 onFailure = { e -> AuthUiState.Error(e.message ?: "Đăng ký thất bại") }
-            )
-        }
-    }
-
-    private fun onGoogleSignIn(idToken: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            val result = authRepository.signInWithGoogleToken(idToken)
-            _uiState.value = result.fold(
-                onSuccess = { user -> AuthUiState.Authenticated(user) },
-                onFailure = { e -> AuthUiState.Error(e.message ?: "Đăng nhập Google thất bại") }
             )
         }
     }

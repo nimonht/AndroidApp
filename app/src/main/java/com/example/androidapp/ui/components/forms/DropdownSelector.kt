@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Reusable dropdown selector component for selecting a single option from a list.
@@ -224,7 +224,7 @@ fun MultiSelectDropdown(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun DropdownSelectorPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         var selected by remember { mutableStateOf<String?>(null) }
         DropdownSelector(
             label = "Danh mục",
@@ -239,7 +239,7 @@ private fun DropdownSelectorPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun DropdownSelectorWithSelectionPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         DropdownSelector(
             label = "Độ khó",
             options = listOf("Dễ", "Trung bình", "Khó", "Rất khó"),
@@ -253,7 +253,7 @@ private fun DropdownSelectorWithSelectionPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun DropdownSelectorWithErrorPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         DropdownSelector(
             label = "Chủ đề",
             options = listOf("Tùy chọn 1", "Tùy chọn 2"),
@@ -268,7 +268,7 @@ private fun DropdownSelectorWithErrorPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun MultiSelectDropdownPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         var selected by remember { mutableStateOf(listOf("Toán học", "Khoa học")) }
         MultiSelectDropdown(
             label = "Thẻ",

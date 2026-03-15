@@ -5,7 +5,7 @@
 The DI system consists of:
 - `AppContainer`: Interface defining all dependencies
 - `AppContainerImpl`: Implementation that lazily initializes all dependencies
-- `QuizCodeApplication`: Holds the singleton `appContainer` instance
+- `QuizzezApplication`: Holds the singleton `appContainer` instance
 - `AppContainerExt.kt`: Provides composable helper for accessing the container
 
 ## Accessing Dependencies
@@ -32,7 +32,7 @@ Access the container from the application:
 class MyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val container = (application as QuizCodeApplication).appContainer
+        val container = (application as QuizzezApplication).appContainer
         val firebaseAuth = container.firebaseAuth
         // ... use dependencies
     }

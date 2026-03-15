@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.androidapp.R
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Modal bottom sheet wrapper with common functionality.
@@ -354,7 +354,7 @@ fun FilterBottomSheet(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun BottomSheetItemPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         Column {
             BottomSheetItem(
                 text = stringResource(R.string.edit),
@@ -385,7 +385,7 @@ private fun BottomSheetItemPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun OptionsBottomSheetContentPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.options_title),

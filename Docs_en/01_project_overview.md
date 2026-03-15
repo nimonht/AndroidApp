@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-**QuizCode** is an Android mobile application that enables users to create, share, and take multiple-choice quizzes. The app supports both online (cloud-synced) and offline (local-first) modes.
+**Quizzez** is an Android mobile application that enables users to create, share, and take multiple-choice quizzes. The app supports both online (cloud-synced) and offline (local-first) modes.
 
 ### Key Features
 
@@ -36,7 +36,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     QuizCode Mobile App                         │
+│                     Quizzez Mobile App                         │
 │                         (Kotlin)                                │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │

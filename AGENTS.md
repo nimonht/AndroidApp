@@ -1,8 +1,8 @@
-# AGENTS.md — QuizCode Android App
+# AGENTS.md — Quizzez Android App
 
 ## Project Overview
 
-Android quiz app (Kotlin + Jetpack Compose + Firebase) named **QuizCode**. Users create, share, and take multiple-choice quizzes. Package: `com.example.androidapp`.
+Android quiz app (Kotlin + Jetpack Compose + Firebase) named **Quizzez**. Users create, share, and take multiple-choice quizzes. Package: `com.example.androidapp`.
 
 ## Architecture
 
@@ -42,7 +42,7 @@ Repositories do **not** touch Firestore directly — they delegate to `*RemoteDa
 **Manual DI — no Hilt/Dagger.** The container chain is:
 1. `AppContainer` interface (`di/AppModule.kt`) — declares all singletons
 2. `AppContainerImpl` (`di/FirebaseModule.kt`) — lazy `by lazy` implementations
-3. `QuizCodeApplication.appContainer` — single instance created at startup
+3. `QuizzezApplication.appContainer` — single instance created at startup
 4. Access in Composables via `LocalAppContainer` (`di/AppContainerExt.kt`)
 5. Pass to ViewModels via an anonymous `ViewModelProvider.Factory`
 
@@ -85,9 +85,9 @@ Use **Coil** (`AsyncImage` from `coil.compose`) for all network image loading.
 
 ## Theming
 
-`design-tokens.json` (repo root) is the single source of truth for colors, typography, spacing, radius, and elevation. When changing a visual value, update the token file first, then mirror into `ui/theme/`. Theme class is `QuizCodeTheme`.
+`design-tokens.json` (repo root) is the single source of truth for colors, typography, spacing, radius, and elevation. When changing a visual value, update the token file first, then mirror into `ui/theme/`. Theme class is `QuizzezTheme`.
 
-`QuizCodeTheme` supports dynamic color on Android 12+, but it is **disabled by default** (`dynamicColor = false`). An extra `FullShape = RoundedCornerShape(50.dp)` value (pill/capsule) is exported from `ui/theme/Shape.kt` alongside the standard `Shapes` object.
+`QuizzezTheme` supports dynamic color on Android 12+, but it is **disabled by default** (`dynamicColor = false`). An extra `FullShape = RoundedCornerShape(50.dp)` value (pill/capsule) is exported from `ui/theme/Shape.kt` alongside the standard `Shapes` object.
 
 ## Firebase & Emulator
 
@@ -103,7 +103,7 @@ Firestore operations: use batch writes for multi-document mutations; use `callba
 
 ## Navigation
 
-Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations live in the `NavigationDestination` sealed class. The single `NavHost` entry point is `QuizCodeNavHost` (rendered from `MainActivity`). Bottom nav shows only on `HOME`, `SEARCH`, `PROFILE` routes.
+Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations live in the `NavigationDestination` sealed class. The single `NavHost` entry point is `QuizzezNavHost` (rendered from `MainActivity`). Bottom nav shows only on `HOME`, `SEARCH`, `PROFILE` routes.
 
 ## Build & Test Commands
 
@@ -137,7 +137,7 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `di/AppModule.kt` | DI container interface |
 | `di/FirebaseModule.kt` | DI container implementation + Firebase/Room init |
 | `ui/navigation/Routes.kt` | All route strings + helper builders |
-| `ui/navigation/QuizCodeNavHost.kt` | Full app navigation graph |
+| `ui/navigation/QuizzezNavHost.kt` | Full app navigation graph |
 | `design-tokens.json` | Source of truth for all design values |
 | `CODE_RULES.md` | Full coding standards with examples |
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |

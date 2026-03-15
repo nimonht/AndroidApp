@@ -5,10 +5,10 @@ import com.example.androidapp.di.AppContainer
 import com.example.androidapp.di.AppContainerImpl
 
 /**
- * Main Application class for QuizCode.
+ * Main Application class for Quizzez.
  * Manages the application-wide dependency injection container.
  */
-class QuizCodeApplication : Application() {
+class QuizzezApplication : Application() {
 
     /**
      * Application-wide dependency injection container.

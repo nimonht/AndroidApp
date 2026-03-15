@@ -89,7 +89,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 /**
- * QuizCode theme composable.
+ * Quizzez theme composable.
  * Supports dynamic colors on Android 12+ and dark/light mode.
  *
  * @param darkTheme Whether to use dark theme. Defaults to system setting.
@@ -97,7 +97,7 @@ private val DarkColorScheme = darkColorScheme(
  * @param content The composable content to apply the theme to.
  */
 @Composable
-fun QuizCodeTheme(
+fun QuizzezTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,

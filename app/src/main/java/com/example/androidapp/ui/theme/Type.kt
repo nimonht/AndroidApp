@@ -33,7 +33,7 @@ val InterFamily: FontFamily = FontFamily(
 )
 
 /**
- * Typography system for QuizCode app.
+ * Typography system for Quizzez app.
  * Uses a dual-font system:
  * - [PlayfairDisplayFamily] (Serif) for large display / editorial headings.
  * - [InterFamily] (Sans-Serif) for labels, buttons, body copy.

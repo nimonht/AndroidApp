@@ -30,15 +30,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Google Web Client ID for OAuth 2.0
-        // Get from: https://console.cloud.google.com/apis/credentials
-        // Use the "Web application" type client ID (NOT Android client ID)
-        buildConfigField(
-            "String",
-            "GOOGLE_WEB_CLIENT_ID",
-            "\"${project.findProperty("googleWebClientId") ?: ""}\""
-        )
     }
 
     buildTypes {
@@ -125,12 +116,6 @@ dependencies {
 
     // Gson (for Room type converters)
     implementation(libs.gson)
-
-    // Google Credential Manager & Play Services Auth for Google Sign-In
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services)
-    implementation(libs.play.services.auth)
-    implementation(libs.googleid)
 
     // Testing
     testImplementation(libs.junit)

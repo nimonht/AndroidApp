@@ -22,7 +22,7 @@ import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
 import com.example.androidapp.domain.util.ScoreUtil
 import com.example.androidapp.ui.theme.GoldStar
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 import com.example.androidapp.ui.theme.Success
 
 /**
@@ -271,7 +271,7 @@ private fun StatItem(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun ScoreCardPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         ScoreCard(
             score = 8,
             maxScore = 10,
@@ -286,7 +286,7 @@ private fun ScoreCardPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun ScoreCardLowScorePreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         ScoreCard(
             score = 3,
             maxScore = 10,

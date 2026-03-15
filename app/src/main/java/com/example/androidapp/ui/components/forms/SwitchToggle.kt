@@ -12,7 +12,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Styled toggle switch for boolean settings with optional label and description.
@@ -189,7 +189,7 @@ fun SwitchToggleCard(
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SwitchTogglePreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         var checked by remember { mutableStateOf(true) }
         Column(modifier = Modifier.padding(16.dp)) {
             SwitchToggle(
@@ -205,7 +205,7 @@ private fun SwitchTogglePreview() {
 @Preview(showBackground = true)
 @Composable
 private fun SwitchToggleUncheckedPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             SwitchToggle(
                 checked = false,
@@ -220,7 +220,7 @@ private fun SwitchToggleUncheckedPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun SwitchToggleDisabledPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             SwitchToggle(
                 checked = true,
@@ -236,7 +236,7 @@ private fun SwitchToggleDisabledPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun SwitchToggleCardPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         var checked by remember { mutableStateOf(true) }
         Column(modifier = Modifier.padding(16.dp)) {
             SwitchToggleCard(
@@ -252,7 +252,7 @@ private fun SwitchToggleCardPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun SwitchToggleSimplePreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         var checked by remember { mutableStateOf(false) }
         Row(
             modifier = Modifier.padding(16.dp),

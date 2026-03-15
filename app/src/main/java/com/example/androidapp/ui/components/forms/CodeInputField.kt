@@ -15,7 +15,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.androidapp.R
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Single-field code input for joining a quiz session via share code.
@@ -69,7 +69,7 @@ fun CodeInputField(
 @Preview(showBackground = true)
 @Composable
 private fun CodeInputFieldEmptyPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         CodeInputField(
             value = "",
             onValueChange = { }
@@ -80,7 +80,7 @@ private fun CodeInputFieldEmptyPreview() {
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun CodeInputFieldDarkPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         CodeInputField(
             value = "ABC1",
             onValueChange = { }
@@ -91,7 +91,7 @@ private fun CodeInputFieldDarkPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun CodeInputFieldFilledPreview() {
-    QuizCodeTheme {
+    QuizzezTheme {
         CodeInputField(
             value = "XY9Z3K",
             onValueChange = { }

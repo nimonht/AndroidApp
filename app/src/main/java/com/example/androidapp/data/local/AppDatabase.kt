@@ -20,7 +20,7 @@ import com.example.androidapp.data.local.entity.QuizEntity
 import com.example.androidapp.data.local.entity.UserEntity
 
 /**
- * Room Database for QuizCode application.
+ * Room Database for Quizzez application.
  * Provides local SQLite storage for offline-first functionality.
  *
  * Entities:

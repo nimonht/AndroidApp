@@ -5,7 +5,7 @@ import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
 /**
- * Shape system for QuizCode app.
+ * Shape system for Quizzez app.
  * Follows Material Design 3 shape scale:
  *   None  -> 0 dp
  *   Extra-Small -> 4 dp

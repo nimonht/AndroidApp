@@ -5,14 +5,12 @@ import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
 import com.example.androidapp.data.remote.model.UserDto
-import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
-import com.google.firebase.auth.GoogleAuthProvider
 import java.util.UUID
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -137,24 +135,6 @@ class AuthRepositoryImpl(
     }
 
     /**
-     * Sends a verification email to the currently authenticated user.
-     * @return [Result.success] on success, or [Result.failure] with the error.
-     */
-    override suspend fun sendEmailVerification(): Result<Unit> {
-        return try {
-            firebaseAuth.currentUser?.sendEmailVerification()?.await()
-                ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(Exception("Gửi email xác minh thất bại", e))
-        }
-    }
-
-    /** Returns true if the current user's email is verified. */
-    override val isEmailVerified: Boolean
-        get() = firebaseAuth.currentUser?.isEmailVerified ?: false
-
-    /**
      * Deletes the current user's account from Firestore, Room, and Firebase Auth.
      * @return [Result.success] on success, or [Result.failure] with the error.
      */
@@ -176,36 +156,6 @@ class AuthRepositoryImpl(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(Exception("Xóa tài khoản thất bại", e))
-        }
-    }
-
-    /**
-     * Signs in using a Google [idToken] credential.
-     * @return [Result.success] with the [User] on success, or [Result.failure] with the error.
-     */
-    override suspend fun signInWithGoogleToken(idToken: String): Result<User> {
-        return try {
-            val credential = GoogleAuthProvider.getCredential(idToken, null)
-            val result = firebaseAuth.signInWithCredential(credential).await()
-            val firebaseUser = result.user
-                ?: return Result.failure(Exception("Đăng nhập bằng Google thất bại"))
-            val user = User(
-                id = firebaseUser.uid,
-                email = firebaseUser.email ?: "",
-                displayName = firebaseUser.displayName ?: "",
-                photoUrl = firebaseUser.photoUrl?.toString()
-            )
-            // Cache locally
-            userDao.insertUser(user.toEntity())
-            // Persist to Firestore (sync failure is non-fatal)
-            try {
-                userRemoteDataSource.saveUser(user.toDto())
-            } catch (_: Exception) {
-                // Firestore sync failure is non-fatal
-            }
-            Result.success(user)
-        } catch (e: Exception) {
-            Result.failure(Exception("Đăng nhập bằng Google thất bại", e))
         }
     }
 

@@ -59,7 +59,7 @@ private val bottomNavItems = listOf(
 )
 
 /**
- * Bottom navigation bar for the QuizCode app — Editorial Minimalist style.
+ * Bottom navigation bar for the Quizzez app — Editorial Minimalist style.
  * Flat white background, thin-line icons, tiny sans-serif labels.
  *
  * @param currentRoute The current navigation route to determine selected state.

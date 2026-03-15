@@ -1,6 +1,6 @@
 # UI Theme Guide
 
-This document is the authoritative reference for the QuizCode visual design system.
+This document is the authoritative reference for the Quizzez visual design system.
 All colors, spacing values, corner radii, typography, and elevation levels are defined
 in `design-tokens.json` at the repository root and mirrored into both the Compose theme
 package and the Android resource files.
@@ -138,16 +138,16 @@ Spacer(modifier = Modifier.height(8.dp))  // spacing_2
 
 ## 6. Using the Theme in Compose
 
-Wrap your root composable with `QuizCodeTheme`:
+Wrap your root composable with `QuizzezTheme`:
 
 ```kotlin
-import com.example.androidapp.ui.theme.QuizCodeTheme
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            QuizCodeTheme {
+            QuizzezTheme {
                 // Your app content
             }
         }

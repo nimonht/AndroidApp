@@ -300,7 +300,7 @@ fun ChoiceButton(
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [←]              QuizCode                           [👤]   │
+│  [←]              Quizzez                           [👤]   │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  Hello, Thanh! 👋                                           │
@@ -692,7 +692,7 @@ class QuizRepository(
 
 ```kotlin
 // Enable in Application class
-class QuizCodeApp : Application() {
+class QuizzezApp : Application() {
     override fun onCreate() {
         super.onCreate()
         

@@ -44,25 +44,10 @@ interface AuthRepository {
     suspend fun sendPasswordResetEmail(email: String): Result<Unit>
 
     /**
-     * Sends a verification email to the currently authenticated user.
-     * @return [Result.success] on success, or [Result.failure] with the error.
-     */
-    suspend fun sendEmailVerification(): Result<Unit>
-
-    /** Returns true if the current user's email is verified. */
-    val isEmailVerified: Boolean
-
-    /**
      * Deletes the current user's Firebase account and performs local cleanup.
      * @return [Result.success] on success, or [Result.failure] with the error.
      */
     suspend fun deleteAccount(): Result<Unit>
-
-    /**
-     * Signs in using a Google ID token credential.
-     * @return [Result.success] with the [User] on success, or [Result.failure] with the error.
-     */
-    suspend fun signInWithGoogleToken(idToken: String): Result<User>
 
     /**
      * Generates and returns a unique guest identifier (UUID).
@@ -76,4 +61,3 @@ interface AuthRepository {
      */
     suspend fun refreshSession(): Result<Unit>
 }
-
