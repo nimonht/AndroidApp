@@ -16,6 +16,7 @@ import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
+import com.example.androidapp.ui.screens.attempt.AttemptDetailScreen
 import com.example.androidapp.ui.screens.create.CreateQuizScreen
 import com.example.androidapp.ui.screens.create.EditQuizScreen
 import com.example.androidapp.ui.screens.history.HistoryScreen
@@ -24,6 +25,7 @@ import com.example.androidapp.ui.screens.profile.ProfileScreen
 import com.example.androidapp.ui.screens.quiz.QuizDetailScreen
 import com.example.androidapp.ui.screens.quiz.QuizResultScreen
 import com.example.androidapp.ui.screens.quiz.TakeQuizScreen
+import com.example.androidapp.ui.screens.review.AnswerReviewScreen
 import com.example.androidapp.ui.screens.search.SearchScreen
 import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.trash.TrashScreen
@@ -145,7 +147,9 @@ fun QuizCodeNavHost(
                             popUpTo(Routes.QUIZ_DETAIL) { inclusive = false }
                         }
                     },
-                    onReviewAnswers = { /* TODO: Navigate to review screen */ }
+                    onReviewAnswers = {
+                        navController.navigate(Routes.answerReview(quizId, attemptId))
+                    }
                 )
             }
 
@@ -176,12 +180,48 @@ fun QuizCodeNavHost(
             composable(Routes.HISTORY) {
                 HistoryScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onAttemptClick = { /* TODO: Navigate to attempt detail/review */ }
+                    onAttemptClick = { attemptId ->
+                        navController.navigate(Routes.attemptDetail(attemptId))
+                    }
                 )
             }
 
             composable(Routes.TRASH) {
                 TrashScreen(onNavigateBack = { navController.popBackStack() })
+            }
+
+            // ==================== Review & Detail Screens ====================
+            composable(
+                route = Routes.ANSWER_REVIEW,
+                arguments = listOf(
+                    navArgument(Args.QUIZ_ID) { type = NavType.StringType },
+                    navArgument(Args.ATTEMPT_ID) { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val quizId = backStackEntry.arguments?.getString(Args.QUIZ_ID) ?: return@composable
+                val attemptId = backStackEntry.arguments?.getString(Args.ATTEMPT_ID) ?: return@composable
+                AnswerReviewScreen(
+                    quizId = quizId,
+                    attemptId = attemptId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Routes.ATTEMPT_DETAIL,
+                arguments = listOf(navArgument(Args.ATTEMPT_ID) { type = NavType.StringType })
+            ) { backStackEntry ->
+                val attemptId = backStackEntry.arguments?.getString(Args.ATTEMPT_ID) ?: return@composable
+                AttemptDetailScreen(
+                    attemptId = attemptId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onReviewAnswers = { quizId, aId ->
+                        navController.navigate(Routes.answerReview(quizId, aId))
+                    },
+                    onRetryQuiz = { quizId ->
+                        navController.navigate(Routes.quizPlay(quizId))
+                    }
+                )
             }
 
             // ==================== Auth Screens ====================

@@ -10,9 +10,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +49,7 @@ import com.example.androidapp.ui.theme.PlayfairDisplayFamily
  * @param onNavigateToSearch Callback to navigate to search screen.
  * @param modifier Modifier for styling.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToQuiz: (String) -> Unit,
@@ -62,110 +66,132 @@ fun HomeScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState())
+    // Navigate when join quiz succeeds
+    LaunchedEffect(uiState.joinedQuizId) {
+        val quizId = uiState.joinedQuizId
+        if (quizId != null) {
+            onNavigateToQuiz(quizId)
+            viewModel.onEvent(HomeEvent.ClearJoinResult)
+        }
+    }
+
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = { viewModel.onEvent(HomeEvent.Refresh) },
+        modifier = modifier.fillMaxSize()
     ) {
-        // ── Header ──────────────────────────────────────────────────────────
-        HomeHeader()
-
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 1.dp
-        )
-
         Column(
-            modifier = Modifier.padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState())
         ) {
-            Spacer(modifier = Modifier.height(28.dp))
+            // ── Offline Banner ──────────────────────────────────────────────
+            if (uiState.isOffline) {
+                OfflineBanner()
+            }
 
-            // ── Welcome Section ─────────────────────────────────────────────
-            WelcomeSection(displayName = uiState.displayName)
+            // ── Header ──────────────────────────────────────────────────────
+            HomeHeader()
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ── Join Session ────────────────────────────────────────────────
-            JoinSessionSection(
-                code = uiState.joinCode,
-                onCodeChange = { viewModel.onEvent(HomeEvent.JoinCodeChanged(it)) },
-                onJoin = { if (uiState.joinCode.length == 6) onNavigateToQuiz(uiState.joinCode) }
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant,
+                thickness = 1.dp
             )
-        }
 
-        Spacer(modifier = Modifier.height(40.dp))
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                Spacer(modifier = Modifier.height(28.dp))
 
-        // ── Recently Played ──────────────────────────────────────────────────
-        SectionHeader(
-            title = stringResource(R.string.home_recently_played),
-            onSeeAllClick = onNavigateToSearch,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+                // ── Welcome Section ─────────────────────────────────────────
+                WelcomeSection(displayName = uiState.displayName)
 
-        if (uiState.recentQuizzes.isEmpty()) {
-            EmptyState(
-                message = stringResource(R.string.home_recently_played_empty),
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
-        } else {
-            RecentlyPlayedRow(
-                quizzes = uiState.recentQuizzes,
-                onQuizClick = onNavigateToQuiz
-            )
-        }
+                Spacer(modifier = Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // ── My Quizzes ────────────────────────────────────────────────────────
-        SectionHeader(
-            title = stringResource(R.string.home_my_quizzes),
-            onSeeAllClick = onNavigateToSearch,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (uiState.myQuizzes.isEmpty()) {
-            EmptyState(
-                message = stringResource(R.string.home_my_quizzes_empty),
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
-        } else {
-            uiState.myQuizzes.forEachIndexed { index, quiz ->
-                MyQuizListItem(
-                    quiz = quiz,
-                    onClick = { onNavigateToQuiz(quiz.id) },
-                    showDivider = index < uiState.myQuizzes.size - 1,
-                    modifier = Modifier.padding(horizontal = 24.dp)
+                // ── Join Session ────────────────────────────────────────────
+                JoinSessionSection(
+                    code = uiState.joinCode,
+                    onCodeChange = { viewModel.onEvent(HomeEvent.JoinCodeChanged(it)) },
+                    onJoin = { viewModel.onEvent(HomeEvent.JoinQuiz(uiState.joinCode)) },
+                    isJoining = uiState.isJoining,
+                    errorMessage = uiState.joinCodeError
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-        // ── Trending ────────────────────────────────────────────────────────
-        SectionHeader(
-            title = stringResource(R.string.home_trending_quizzes),
-            onSeeAllClick = onNavigateToSearch,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (uiState.trendingQuizzes.isEmpty()) {
-            EmptyState(
-                message = stringResource(R.string.home_trending_empty),
+            // ── Recently Played ──────────────────────────────────────────────
+            SectionHeader(
+                title = stringResource(R.string.home_recently_played),
+                onSeeAllClick = onNavigateToSearch,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
-        } else {
-            RecentlyPlayedRow(
-                quizzes = uiState.trendingQuizzes,
-                onQuizClick = onNavigateToQuiz
-            )
-        }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
+            if (uiState.recentQuizzes.isEmpty()) {
+                EmptyState(
+                    message = stringResource(R.string.home_recently_played_empty),
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            } else {
+                RecentlyPlayedRow(
+                    quizzes = uiState.recentQuizzes,
+                    onQuizClick = onNavigateToQuiz
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // ── My Quizzes ────────────────────────────────────────────────────
+            SectionHeader(
+                title = stringResource(R.string.home_my_quizzes),
+                onSeeAllClick = onNavigateToSearch,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (uiState.myQuizzes.isEmpty()) {
+                EmptyState(
+                    message = stringResource(R.string.home_my_quizzes_empty),
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            } else {
+                uiState.myQuizzes.forEachIndexed { index, quiz ->
+                    MyQuizListItem(
+                        quiz = quiz,
+                        onClick = { onNavigateToQuiz(quiz.id) },
+                        showDivider = index < uiState.myQuizzes.size - 1,
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // ── Trending ────────────────────────────────────────────────────
+            SectionHeader(
+                title = stringResource(R.string.home_trending_quizzes),
+                onSeeAllClick = onNavigateToSearch,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (uiState.trendingQuizzes.isEmpty()) {
+                EmptyState(
+                    message = stringResource(R.string.home_trending_empty),
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            } else {
+                RecentlyPlayedRow(
+                    quizzes = uiState.trendingQuizzes,
+                    onQuizClick = onNavigateToQuiz
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
     }
 }
 
@@ -255,6 +281,8 @@ private fun JoinSessionSection(
     code: String,
     onCodeChange: (String) -> Unit,
     onJoin: () -> Unit,
+    isJoining: Boolean = false,
+    errorMessage: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -278,7 +306,7 @@ private fun JoinSessionSection(
             )
             Button(
                 onClick = onJoin,
-                enabled = code.length == 6,
+                enabled = code.length == 6 && !isJoining,
                 shape = FullShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
@@ -286,15 +314,61 @@ private fun JoinSessionSection(
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
                 elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp, 0.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.home_join_button),
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    letterSpacing = 1.sp
-                )
+                if (isJoining) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.home_join_button),
+                        fontFamily = InterFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
         }
+        if (errorMessage != null) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = errorMessage,
+                fontFamily = InterFamily,
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun OfflineBanner(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Default.WifiOff,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = stringResource(R.string.offline_banner),
+            fontFamily = InterFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onErrorContainer
+        )
     }
 }
 

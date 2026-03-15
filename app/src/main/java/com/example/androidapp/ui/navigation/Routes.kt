@@ -22,6 +22,10 @@ object Routes {
     const val HISTORY = "history"
     const val TRASH = "trash"
 
+    // Review & Detail Routes
+    const val ANSWER_REVIEW = "quiz/{quizId}/review/{attemptId}"
+    const val ATTEMPT_DETAIL = "attempt/{attemptId}"
+
     // Auth Routes
     const val LOGIN = "login"
     const val REGISTER = "register"
@@ -51,6 +55,16 @@ object Routes {
      * Build the quiz edit route with a specific quiz ID.
      */
     fun quizEdit(quizId: String): String = "quiz/$quizId/edit"
+
+    /**
+     * Build the answer review route with quiz and attempt IDs.
+     */
+    fun answerReview(quizId: String, attemptId: String): String = "quiz/$quizId/review/$attemptId"
+
+    /**
+     * Build the attempt detail route with an attempt ID.
+     */
+    fun attemptDetail(attemptId: String): String = "attempt/$attemptId"
 }
 
 /**
@@ -75,6 +89,12 @@ sealed class NavigationDestination(val route: String) {
     data object Settings : NavigationDestination(Routes.SETTINGS)
     data object History : NavigationDestination(Routes.HISTORY)
     data object Trash : NavigationDestination(Routes.TRASH)
+
+    // Review & Detail Destinations
+    data class AnswerReview(val quizId: String, val attemptId: String) :
+        NavigationDestination(Routes.answerReview(quizId, attemptId))
+    data class AttemptDetail(val attemptId: String) :
+        NavigationDestination(Routes.attemptDetail(attemptId))
 
     // Auth Destinations
     data object Login : NavigationDestination(Routes.LOGIN)
