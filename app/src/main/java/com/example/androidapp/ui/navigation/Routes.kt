@@ -26,11 +26,22 @@ object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
 
+    // thêm cau hoi
+    const val ADD_QUESTION = "add_question"
+
+    // CSV
+    const val IMPORT_CSV = "import_csv"
+
+    // preview
+    const val QUIZ_PREVIEW = "quiz_preview"
+
     // Helper functions to build routes with arguments
     object Args {
         const val QUIZ_ID = "quizId"
         const val ATTEMPT_ID = "attemptId"
     }
+    //
+    const val EDIT_PROFILE = "edit_profile"
 
     /**
      * Build the quiz detail route with a specific quiz ID.

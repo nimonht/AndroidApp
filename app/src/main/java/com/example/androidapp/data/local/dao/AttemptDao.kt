@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.example.androidapp.data.local.entity.AttemptEntity
 import kotlinx.coroutines.flow.Flow
 
+
 /**
  * Data Access Object for Attempt entities.
  * Provides methods to query, insert, update, and delete quiz attempts in the local database.
@@ -90,4 +91,6 @@ interface AttemptDao {
      */
     @Query("DELETE FROM attempts WHERE quiz_id = :quizId")
     suspend fun deleteAttemptsByQuizId(quizId: String)
+
+
 }

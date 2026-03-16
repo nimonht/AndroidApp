@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
 
 /**
  * Local-first implementation of [AttemptRepository].
@@ -76,6 +77,20 @@ class AttemptRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+    override suspend fun updateUserProfile(
+        displayName: String,
+        avatarUrl: String?
+    ) {
+
+        userRemoteDataSource.updateUserProfile(
+            displayName = displayName,
+            avatarUrl = avatarUrl
+        )
+    }
+    override fun getAttemptsByUser(userId: String): Flow<List<Attempt>> {
+        return attemptDao.getAttemptsByUser(userId)
+            .map { list -> list.map { it.toDomain() } }
     }
 }
 

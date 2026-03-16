@@ -7,6 +7,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.example.androidapp.data.remote.firebase.FirestoreCollections
+
+import com.example.androidapp.domain.model.Quiz
+
+
+
 
 /**
  * Remote data source for quiz and question Firestore operations.
@@ -142,5 +148,33 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
             .delete()
             .await()
     }
+    suspend fun publishQuiz(
+        quizId: String,
+        quizDto: QuizDto,
+        questionDtos: List<QuestionDto>
+    ) {
+
+        val batch = firestore.batch()
+
+        val quizRef = firestore
+            .collection(FirestoreCollections.QUIZZES)
+            .document(quizId)
+
+        // quiz document
+        batch.set(quizRef, quizDto)
+
+        // questions subcollection
+        questionDtos.forEach { question ->
+
+            val questionRef = quizRef
+                .collection(FirestoreCollections.QUESTIONS)
+                .document(question.id)
+
+            batch.set(questionRef, question)
+        }
+
+        batch.commit().await()
+    }
+
 }
 

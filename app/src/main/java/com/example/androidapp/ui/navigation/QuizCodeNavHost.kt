@@ -27,6 +27,11 @@ import com.example.androidapp.ui.screens.quiz.TakeQuizScreen
 import com.example.androidapp.ui.screens.search.SearchScreen
 import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.trash.TrashScreen
+import com.example.androidapp.ui.screens.create.AddQuestionScreen
+import com.example.androidapp.ui.screens.importt.ImportCsvScreen
+import com.example.androidapp.ui.screens.preview.QuizPreviewScreen
+import com.example.androidapp.ui.screens.profile.EditProfileScreen
+
 
 /**
  * Main navigation host for the QuizCode application.
@@ -152,7 +157,8 @@ fun QuizCodeNavHost(
             composable(Routes.QUIZ_CREATE) {
                 CreateQuizScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onSaveComplete = { navController.popBackStack() }
+                    onSaveComplete = { navController.popBackStack() },
+                    onPreviewQuiz = { navController.navigate(Routes.QUIZ_PREVIEW) }
                 )
             }
 
@@ -208,6 +214,34 @@ fun QuizCodeNavHost(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
+            composable(Routes.ADD_QUESTION) {
+
+                AddQuestionScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(Routes.IMPORT_CSV) {
+                ImportCsvScreen()
+            }
+            composable(Routes.QUIZ_PREVIEW) {
+
+                QuizPreviewScreen(
+                    title = "Xem trước Quiz",
+                    questions = listOf(),
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.EDIT_PROFILE) {
+
+                EditProfileScreen(
+                    viewModel = editProfileViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+
+
         }
     }
 }

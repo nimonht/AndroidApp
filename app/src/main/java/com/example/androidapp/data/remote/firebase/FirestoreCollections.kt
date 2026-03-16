@@ -21,6 +21,17 @@ object FirestoreCollections {
         const val SHARE_CODE = "shareCode"
         const val ATTEMPT_COUNT = "attemptCount"
         const val UPDATED_AT = "updatedAt"
+
+        const val QUIZZES = "quizzes"
+        const val QUESTIONS = "questions"
+        const val CHOICES = "choices"
+
+        object Fields {
+            const val OWNER_ID = "ownerId"
+            const val IS_PUBLIC = "isPublic"
+            const val SHARE_CODE = "shareCode"
+            const val DELETED_AT = "deletedAt"
+        }
     }
 }
 

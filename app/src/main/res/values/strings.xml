@@ -225,4 +225,23 @@
     <string name="trash_overline">THÙNG RÁC</string>
     <string name="trash_info_text">Các mục sẽ tự động xóa sau 30 ngày</string>
     <string name="trash_deleted_on">Đã xóa</string>
+
+    <string name="quiz_title">Tiêu đề quiz</string>
+    <string name="quiz_description">Mô tả</string>
+    <string name="quiz_tags">Tags</string>
+    <string name="quiz_public">Công khai</string>
+
+    <!-- Them cau hoi  -->
+    <string name="question_content">Nội dung câu hỏi</string>
+    <string name="question_media">Media</string>
+    <string name="question_points">Điểm</string>
+    <string name="question_explanation">Giải thích</string>
+    <string name="add_question">Thêm câu hỏi</string>
+
+    <string name="share_to_pool">Chia sẻ câu hỏi vào kho cộng đồng</string>
+
+    <string name="profile_stat_quiz">Quiz</string>
+    <string name="profile_stat_attempts">Attempts</string>
+    <string name="profile_stat_score">Score</string>
+
 </resources>

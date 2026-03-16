@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.UUID
 
+
 /**
  * Local-first implementation of [QuizRepository].
  * Room is the single source of truth; Firestore syncs happen in the background.
@@ -32,7 +33,8 @@ class QuizRepositoryImpl(
     private val quizDao: QuizDao,
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
-    private val remoteDataSource: QuizRemoteDataSource
+    private val remoteDataSource: QuizRemoteDataSource,
+
 ) : QuizRepository {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -196,6 +198,23 @@ class QuizRepositoryImpl(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+    override suspend fun publishQuiz(
+        quiz: Quiz,
+        questions: List<Question>
+    ) {
+
+        val quizDto = quiz.toDto()
+
+        val questionDtos = questions.map { question ->
+            question.toDto()
+        }
+
+        remoteDataSource.saveQuiz(
+            quiz.id,
+            quizDto,
+            questionDtos
+        )
     }
 
     // ==================== Background refresh helpers ====================

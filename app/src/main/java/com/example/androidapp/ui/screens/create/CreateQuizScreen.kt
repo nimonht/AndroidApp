@@ -21,6 +21,19 @@ import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.AppTopBar
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import com.example.androidapp.ui.components.forms.SwitchToggle
+import com.example.androidapp.ui.components.quiz.ChoiceEditor
+import com.example.androidapp.ui.components.quiz.DraggableQuestionList
+import com.example.androidapp.ui.navigation.Routes
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+
+
 /**
  * Create Quiz screen with multi-step form.
  * Stateless composable; all state is owned by [CreateQuizViewModel].
@@ -33,6 +46,7 @@ import com.example.androidapp.ui.components.navigation.AppTopBar
 fun CreateQuizScreen(
     onNavigateBack: () -> Unit,
     onSaveComplete: () -> Unit,
+    onPreviewQuiz: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -44,6 +58,7 @@ fun CreateQuizScreen(
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val draftSaved by viewModel.draftSaved.collectAsState()
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) onSaveComplete()
@@ -57,6 +72,19 @@ fun CreateQuizScreen(
         }
     }
 
+    //// choice editor ///
+    val choices by viewModel.choices.collectAsStateWithLifecycle()
+
+    ChoiceEditor(
+        choices = choices,
+        onChoiceChange = viewModel::updateChoice,
+        onAddChoice = viewModel::addChoice,
+        onRemoveChoice = viewModel::removeChoice,
+        onMarkCorrect = viewModel::markCorrect,
+        onMoveUp = viewModel::moveChoiceUp,
+        onMoveDown = viewModel::moveChoiceDown
+    )
+     //// choice editor ///
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -90,7 +118,8 @@ fun CreateQuizScreen(
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        )
+        {
             item {
                 OutlinedTextField(
                     value = uiState.title,
@@ -127,6 +156,21 @@ fun CreateQuizScreen(
                 }
             }
             item {
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                SwitchToggle(
+                    checked = uiState.shareToPool,
+                    onCheckedChange = {
+                        viewModel.onEvent(
+                            CreateQuizEvent.OnShareToPoolToggle(it)
+                        )
+                    },
+                    label = stringResource(R.string.share_to_pool),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
                     text = stringResource(R.string.create_questions_header, uiState.questions.size),
@@ -142,7 +186,38 @@ fun CreateQuizScreen(
                     }
                 )
             }
+            item {
+
+                Button(
+                    onClick = { viewModel.onSaveDraftClick() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Lưu bản nháp")
+                }
+
+                if (draftSaved) {
+                    Text(
+                        text = "Đã lưu bản nháp",
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+
+
+                Button(
+                    onClick = onPreviewQuiz,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Preview Quiz")
+                }
+            }
+
             item { Spacer(modifier = Modifier.height(80.dp)) }
+
+
         }
     }
 }
@@ -214,8 +289,13 @@ internal fun QuestionEditorCard(
                         shape = MaterialTheme.shapes.small,
                         singleLine = true
                     )
+
+
+
+
                 }
             }
         }
     }
 }
+

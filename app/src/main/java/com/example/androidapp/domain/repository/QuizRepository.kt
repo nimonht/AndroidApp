@@ -92,5 +92,13 @@ interface QuizRepository {
      * Permanently deletes a quiz from both Room and Firestore.
      */
     suspend fun permanentlyDeleteQuiz(quizId: String): Result<Unit>
+
+    /**
+     * Publish Quiz to cloud
+     */
+    suspend fun publishQuiz(
+        quiz: Quiz,
+        questions: List<Question>
+    )
 }
 

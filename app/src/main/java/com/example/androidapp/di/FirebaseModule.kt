@@ -26,6 +26,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storage
+import com.example.androidapp.domain.usecase.user.UpdateUserProfileUseCase
 
 /**
  * Implementation of the application-wide dependency injection container.
@@ -142,7 +143,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     private val userRemoteDataSource: UserRemoteDataSource by lazy {
-        UserRemoteDataSource(firebaseFirestore)
+        UserRemoteDataSource(firebaseFirestore, firebaseAuth)
     }
 
     // ==================== Repositories ====================
@@ -157,8 +158,14 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     /**
      * Provides the [QuizRepository] implementation.
      */
+
     override val quizRepository: QuizRepository by lazy {
-        QuizRepositoryImpl(quizDao, questionDao, choiceDao, quizRemoteDataSource)
+        QuizRepositoryImpl(
+            quizDao,
+            questionDao,
+            choiceDao,
+            quizRemoteDataSource
+        )
     }
 
     /**
@@ -167,4 +174,11 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     override val attemptRepository: AttemptRepository by lazy {
         AttemptRepositoryImpl(attemptDao, attemptRemoteDataSource)
     }
+    // ==================== UseCases ====================
+
+    override val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy {
+        UpdateUserProfileUseCase(authRepository)
+    }
+
 }
+
