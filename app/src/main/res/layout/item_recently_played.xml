@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="160dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="16dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <!-- Thumbnail Image -->
+    <ImageView
+        android:id="@+id/quizThumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:background="?attr/colorSurfaceVariant"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@tools:sample/backgrounds/scenic" />
+
+    <!-- Quiz Title -->
+    <TextView
+        android:id="@+id/quizTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textColor="?attr/colorOnBackground"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/quizThumbnail"
+        tools:text="Introduction to Kotlin Programming" />
+
+    <!-- Question Count -->
+    <TextView
+        android:id="@+id/quizQuestionCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/quizTitle"
+        tools:text="10 câu hỏi" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
