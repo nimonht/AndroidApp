@@ -9,7 +9,11 @@ Android quiz app (Kotlin + Jetpack Compose + Firebase) named **Quizzez**. Users 
 **Clean Architecture + MVVM** with three strict layers — never skip or cross-layer:
 
 ```
-domain/   ← Pure Kotlin. Models, use cases, utilities. No Android/Firebase imports.
+domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/Firebase imports.
+            model/      ← Domain models (Quiz, Question, Choice, Attempt, User, ShareCode, QuestionPoolItem)
+            repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository)
+            usecase/    ← (currently empty; business logic lives directly in ViewModels)
+            util/       ← ScoreUtil (star-rating + percentage helpers)
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.
 ui/       ← Compose screens + ViewModels. Screens are stateless; ViewModels own all state.
@@ -27,8 +31,9 @@ data/
   remote/
     AppMappers.kt           ← Extension fns: DTO ↔ Domain (toDomain / toDto)
     firebase/               ← Remote data sources (QuizRemoteDataSource, AttemptRemoteDataSource, UserRemoteDataSource)
-    model/                  ← Firestore DTOs (QuizDto, QuestionDto, ChoiceDto, AttemptDto, UserDto, ShareCodeDto)
-  repository/               ← Repository implementations delegating to DAOs + remote data sources
+    model/                  ← Firestore DTOs: `QuizDtoModels.kt` (QuizDto + QuestionDto + ChoiceDto),
+                              `AttemptDto.kt`, `UserDto.kt`, `ShareCodeDto.kt`, `QuestionPoolItemDto.kt`
+  repository/               ← Repository implementations: `QuizRepositoryImpl.kt`, `AttemptRepositoryImpl.kt`, `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao)
 ```
 
 Repositories do **not** touch Firestore directly — they delegate to `*RemoteDataSource` classes in `data/remote/firebase/`.
@@ -65,6 +70,8 @@ Use `sealed class` for states with distinct phases (e.g., `TakeQuizUiState`); us
 
 **Draft models**: Form-state data classes used only in the UI layer live alongside the ViewModel that owns them, not in `domain/`. Example: `QuestionDraft` and `ChoiceDraft` are defined in `ui/screens/create/CreateQuizViewModel.kt`.
 
+**UI-layer helper data classes**: Non-form helpers that combine or adapt domain data also live with the owning ViewModel. Examples: `AttemptWithQuiz` in `HistoryViewModel.kt` (pairs `Attempt` with its quiz title), `QuestionReview` in `AnswerReviewViewModel.kt` (pairs a question with the user's answer and correctness). Do not move these to `domain/`.
+
 ## Compose Rules
 
 - Every composable **must** accept `modifier: Modifier = Modifier` as a parameter.
@@ -89,6 +96,8 @@ Use **Coil** (`AsyncImage` from `coil.compose`) for all network image loading.
 
 `QuizzezTheme` supports dynamic color on Android 12+, but it is **disabled by default** (`dynamicColor = false`). An extra `FullShape = RoundedCornerShape(50.dp)` value (pill/capsule) is exported from `ui/theme/Shape.kt` alongside the standard `Shapes` object.
 
+Typography uses a dual-font system loaded via **Google Fonts** (`compose.ui.text.google.fonts`): **Playfair Display** (Serif) for display/headline text, and **Inter** (Sans-Serif) for labels, buttons, and body copy. Font families are `PlayfairDisplayFamily` and `InterFamily` declared in `ui/theme/Type.kt`.
+
 ## Firebase & Emulator
 
 Firebase is **enabled by default in debug builds with the local emulator** (`useFirebaseEmulator = true`, host `10.0.2.2`). Override via Gradle property:
@@ -104,6 +113,19 @@ Firestore operations: use batch writes for multi-document mutations; use `callba
 ## Navigation
 
 Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations live in the `NavigationDestination` sealed class. The single `NavHost` entry point is `QuizzezNavHost` (rendered from `MainActivity`). Bottom nav shows only on `HOME`, `SEARCH`, `PROFILE` routes.
+
+Existing screen directories under `ui/screens/`:
+- `auth/` — `LoginScreen`, `RegisterScreen`, `AuthViewModel` (shared auth state)
+- `home/` — `HomeScreen`, `HomeViewModel`
+- `search/` — `SearchScreen`, `SearchViewModel`
+- `profile/` — `ProfileScreen`, `ProfileViewModel`
+- `quiz/` — `QuizDetailScreen`/`ViewModel`, `TakeQuizScreen`/`ViewModel`, `QuizResultScreen`/`ViewModel`
+- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `SharedQuizViewModel`
+- `history/` — `HistoryScreen`, `HistoryViewModel`
+- `review/` — `AnswerReviewScreen`, `AnswerReviewViewModel`
+- `attempt/` — `AttemptDetailScreen`, `AttemptDetailViewModel`
+- `trash/` — `TrashScreen`, `RecycleBinViewModel`
+- `settings/` — `SettingsScreen`, `SettingsViewModel`
 
 ## Build & Test Commands
 
@@ -123,6 +145,7 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 - **No emojis** anywhere in source code, comments, scripts, or configs.
 - Naming: `{Name}ViewModel`, `{Name}RepositoryImpl`, `{Name}Entity`, `{Name}Dao`, `{Name}Dto`, `{Action}{Entity}UseCase`.
 - Exception: the Trash screen ViewModel is named `RecycleBinViewModel` (not `TrashViewModel`) — match this when editing that file.
+- `domain/usecase/` is currently empty — no use-case classes are implemented. Business logic lives directly in ViewModels.
 - Private `MutableStateFlow` prefixed with `_`; event handlers prefixed with `on`.
 - KDoc required for all public APIs (see `CODE_RULES.md` §10.1 for format).
 - Branch pattern: `feature/{task-id}-{description}` / `bugfix/{task-id}-{description}`.
@@ -145,4 +168,6 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |
 | `data/remote/AppMappers.kt` | DTO ↔ Domain extension functions (`toDomain` / `toDto`) |
 | `data/remote/firebase/FirestoreCollections.kt` | Firestore collection/field name constants |
+| `data/remote/model/QuizDtoModels.kt` | QuizDto, QuestionDto, and ChoiceDto all in one file |
+| `domain/repository/AuthRepository.kt` | Auth interface: `currentUser: Flow<User?>`, login, register, logout |
 
