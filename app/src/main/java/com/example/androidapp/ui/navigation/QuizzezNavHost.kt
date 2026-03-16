@@ -36,11 +36,13 @@ import com.example.androidapp.ui.screens.trash.TrashScreen
  *
  * @param navController The NavHostController for managing navigation state.
  * @param startDestination The initial route to display (default: Home).
+ * @param onNavigateToHome Optional callback to navigate back to Fragment-based home (for hybrid navigation).
  */
 @Composable
 fun QuizzezNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Routes.HOME
+    startDestination: String = Routes.HOME,
+    onNavigateToHome: (() -> Unit)? = null
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -52,10 +54,15 @@ fun QuizzezNavHost(
                 BottomNavBar(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo(Routes.HOME) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                        if (route == Routes.HOME && onNavigateToHome != null) {
+                            // In hybrid mode, navigate back to Fragment-based home
+                            onNavigateToHome()
+                        } else {
+                            navController.navigate(route) {
+                                popUpTo(Routes.HOME) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 )
@@ -69,14 +76,23 @@ fun QuizzezNavHost(
         ) {
             // ==================== Bottom Navigation Screens ====================
             composable(Routes.HOME) {
-                HomeScreen(
-                    onNavigateToQuiz = { quizId ->
-                        navController.navigate(Routes.quizDetail(quizId))
-                    },
-                    onNavigateToSearch = {
-                        navController.navigate(Routes.SEARCH)
+                // If onNavigateToHome callback exists, we're in hybrid mode - don't show Compose HomeScreen
+                if (onNavigateToHome != null) {
+                    // Navigate back to XML Fragment-based HomeScreen
+                    androidx.compose.runtime.LaunchedEffect(Unit) {
+                        onNavigateToHome()
                     }
-                )
+                } else {
+                    // Show Compose HomeScreen (legacy/fallback)
+                    HomeScreen(
+                        onNavigateToQuiz = { quizId ->
+                            navController.navigate(Routes.quizDetail(quizId))
+                        },
+                        onNavigateToSearch = {
+                            navController.navigate(Routes.SEARCH)
+                        }
+                    )
+                }
             }
 
             composable(Routes.SEARCH) {
@@ -138,8 +154,14 @@ fun QuizzezNavHost(
                     quizId = quizId,
                     attemptId = attemptId,
                     onNavigateHome = {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.HOME) { inclusive = true }
+                        if (onNavigateToHome != null) {
+                            // In hybrid mode, navigate back to Fragment-based home
+                            onNavigateToHome()
+                        } else {
+                            // In full Compose mode, navigate to Compose home
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.HOME) { inclusive = true }
+                            }
                         }
                     },
                     onRetryQuiz = {
