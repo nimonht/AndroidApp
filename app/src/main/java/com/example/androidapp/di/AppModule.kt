@@ -13,7 +13,6 @@ import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 
 /**
  * Application-wide dependency injection container interface.
@@ -25,7 +24,6 @@ interface AppContainer {
     // Firebase
     val firebaseAuth: FirebaseAuth
     val firebaseFirestore: FirebaseFirestore
-    val firebaseStorage: FirebaseStorage
 
     // Database
     val appDatabase: AppDatabase

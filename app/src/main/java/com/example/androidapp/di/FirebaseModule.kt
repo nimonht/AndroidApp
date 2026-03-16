@@ -24,8 +24,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
 
 /**
  * Implementation of the application-wide dependency injection container.
@@ -57,18 +55,6 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         Firebase.firestore.also { firestore ->
             if (BuildConfig.USE_FIREBASE_EMULATOR) {
                 firestore.useEmulator(emulatorHost, 8080)
-            }
-        }
-    }
-
-    /**
-     * Provides the singleton instance of FirebaseStorage.
-     * Used for media file uploads (images, videos).
-     */
-    override val firebaseStorage: FirebaseStorage by lazy {
-        Firebase.storage.also { storage ->
-            if (BuildConfig.USE_FIREBASE_EMULATOR) {
-                storage.useEmulator(emulatorHost, 9199)
             }
         }
     }
