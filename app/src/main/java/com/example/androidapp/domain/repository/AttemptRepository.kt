@@ -38,5 +38,7 @@ interface AttemptRepository {
      * Updates an existing attempt (e.g., when finishing).
      */
     suspend fun updateAttempt(attempt: Attempt): Result<Unit>
+
+
 }
 

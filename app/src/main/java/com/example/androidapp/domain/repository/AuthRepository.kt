@@ -36,5 +36,11 @@ interface AuthRepository {
      * Returns the currently authenticated user synchronously, or null.
      */
     suspend fun getCurrentUser(): User?
+
+    ///
+    suspend fun updateUserProfile(
+        displayName: String,
+        avatarUrl: String?
+    )
 }
 
