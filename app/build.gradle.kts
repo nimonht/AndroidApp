@@ -60,6 +60,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        viewBinding = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -105,6 +106,14 @@ dependencies {
 
     // Navigation Compose
     implementation(libs.navigation.compose)
+    implementation(libs.navigation.fragment.ktx)
+    implementation(libs.navigation.ui.ktx)
+
+    // RecyclerView
+    implementation(libs.androidx.recyclerview)
+
+    // Fragment
+    implementation(libs.androidx.fragment.ktx)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.play.services)

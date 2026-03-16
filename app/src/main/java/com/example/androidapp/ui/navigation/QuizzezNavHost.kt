@@ -1,10 +1,17 @@
 package com.example.androidapp.ui.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentContainerView
+import androidx.fragment.app.commit
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,7 +27,7 @@ import com.example.androidapp.ui.screens.attempt.AttemptDetailScreen
 import com.example.androidapp.ui.screens.create.CreateQuizScreen
 import com.example.androidapp.ui.screens.create.EditQuizScreen
 import com.example.androidapp.ui.screens.history.HistoryScreen
-import com.example.androidapp.ui.screens.home.HomeScreen
+import com.example.androidapp.ui.screens.home.HomeFragment
 import com.example.androidapp.ui.screens.profile.ProfileScreen
 import com.example.androidapp.ui.screens.quiz.QuizDetailScreen
 import com.example.androidapp.ui.screens.quiz.QuizResultScreen
@@ -69,7 +76,8 @@ fun QuizzezNavHost(
         ) {
             // ==================== Bottom Navigation Screens ====================
             composable(Routes.HOME) {
-                HomeScreen(
+                // HomeScreen using XML Fragment (hybrid architecture demonstration)
+                HomeFragmentWrapper(
                     onNavigateToQuiz = { quizId ->
                         navController.navigate(Routes.quizDetail(quizId))
                     },
@@ -247,6 +255,61 @@ fun QuizzezNavHost(
                     onNavigateToLogin = { navController.popBackStack() },
                     onNavigateBack = { navController.popBackStack() }
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Wrapper composable that embeds HomeFragment in Compose navigation.
+ * Demonstrates hybrid Compose/XML architecture.
+ *
+ * @param onNavigateToQuiz Callback for navigating to quiz detail.
+ * @param onNavigateToSearch Callback for navigating to search screen.
+ */
+@Composable
+private fun HomeFragmentWrapper(
+    onNavigateToQuiz: (String) -> Unit,
+    onNavigateToSearch: () -> Unit
+) {
+    val context = LocalContext.current
+    val fragmentActivity = context as FragmentActivity
+    val fragmentManager = fragmentActivity.supportFragmentManager
+    val fragmentTag = "home_fragment"
+
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { ctx ->
+            FragmentContainerView(ctx).apply {
+                id = android.view.View.generateViewId()
+            }
+        },
+        update = { containerView ->
+            // Find or create fragment
+            val existingFragment = fragmentManager.findFragmentByTag(fragmentTag) as? HomeFragment
+            val fragment = existingFragment ?: HomeFragment.newInstance()
+
+            // Set navigation callbacks
+            fragment.onNavigateToQuiz = onNavigateToQuiz
+            fragment.onNavigateToSearch = onNavigateToSearch
+
+            // Add fragment if not already added
+            if (existingFragment == null) {
+                fragmentManager.commit {
+                    replace(containerView.id, fragment, fragmentTag)
+                }
+            }
+        }
+    )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            // Clean up fragment when composable leaves composition
+            val fragment = fragmentManager.findFragmentByTag(fragmentTag)
+            if (fragment != null) {
+                fragmentManager.commit {
+                    remove(fragment)
+                }
             }
         }
     }
