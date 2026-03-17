@@ -60,7 +60,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-        viewBinding = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -70,18 +69,12 @@ android {
 dependencies {
     // AndroidX Core
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-
-    // Fragment + RecyclerView (for XML-based screens)
-    implementation(libs.androidx.fragment.ktx)
-    implementation(libs.androidx.recyclerview)
 
     // Compose (using BoM)
     implementation(platform(libs.compose.bom))

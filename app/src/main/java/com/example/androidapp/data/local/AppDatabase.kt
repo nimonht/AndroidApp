@@ -3,8 +3,6 @@ package com.example.androidapp.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.androidapp.data.local.converter.Converters
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
@@ -78,58 +76,5 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "quizcode_database"
-
-        /**
-         * Migration from version 1 to 2.
-         * Adds the pending_sync_operations table for offline sync queue.
-         */
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    CREATE TABLE IF NOT EXISTS `pending_sync_operations` (
-                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        `entity_type` TEXT NOT NULL,
-                        `entity_id` TEXT NOT NULL,
-                        `operation` TEXT NOT NULL,
-                        `payload` TEXT NOT NULL DEFAULT '',
-                        `status` TEXT NOT NULL DEFAULT 'PENDING',
-                        `retry_count` INTEGER NOT NULL DEFAULT 0,
-                        `max_retries` INTEGER NOT NULL DEFAULT 3,
-                        `error_message` TEXT,
-                        `created_at` INTEGER NOT NULL,
-                        `last_attempt_at` INTEGER
-                    )
-                """.trimIndent()
-                )
-            }
-        }
-
-        /**
-         * Migration from version 2 to 3.
-         * Adds the `photo_url` column to the `users` table so that avatar URLs
-         * can be persisted locally for offline profile display.
-         */
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    "ALTER TABLE `users` ADD COLUMN `photo_url` TEXT"
-                )
-            }
-        }
-
-        /**
-         * Migration from version 3 to 4.
-         * Adds the `thumbnail_url` column to the `quizzes` table so that cover
-         * image URLs entered by the user are persisted locally and survive
-         * read-back from Room without being silently dropped.
-         */
-        val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    "ALTER TABLE `quizzes` ADD COLUMN `thumbnail_url` TEXT"
-                )
-            }
-        }
     }
 }
