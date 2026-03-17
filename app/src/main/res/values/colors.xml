@@ -23,47 +23,20 @@
     <!-- Background / Surface (light) -->
     <color name="background_light">#F5F7FA</color>
     <color name="surface_light">#FFFFFF</color>
-    <color name="surface_dim_light">#ECEFF4</color>
-    <color name="surface_bright_light">#FFFFFF</color>
-    <color name="surface_container_lowest_light">#FFFFFF</color>
-    <color name="surface_container_low_light">#F8FAFD</color>
-    <color name="surface_container_light">#F2F5F9</color>
-    <color name="surface_container_high_light">#EDF1F6</color>
-    <color name="surface_container_highest_light">#E7ECF3</color>
-    <color name="surface_variant_light">#EAF0F6</color>
-    <color name="on_background_light">#1A2233</color>
     <color name="on_surface_light">#1A2233</color>
     <color name="on_surface_variant_light">#5A6478</color>
-    <color name="inverse_surface_light">#1E2126</color>
-    <color name="inverse_on_surface_light">#E8ECF2</color>
+    <color name="surface_variant_light">#EAF0F6</color>
 
     <!-- Background / Surface (dark) -->
     <color name="background_dark">#121416</color>
     <color name="surface_dark">#1E2126</color>
-    <color name="surface_dim_dark">#16191D</color>
-    <color name="surface_bright_dark">#363B43</color>
-    <color name="surface_container_lowest_dark">#0E1013</color>
-    <color name="surface_container_low_dark">#181B20</color>
-    <color name="surface_container_dark">#1E2126</color>
-    <color name="surface_container_high_dark">#252A31</color>
-    <color name="surface_container_highest_dark">#2D333C</color>
-    <color name="surface_variant_dark">#2A2F38</color>
-    <color name="on_background_dark">#E8ECF2</color>
     <color name="on_surface_dark">#E8ECF2</color>
     <color name="on_surface_variant_dark">#9BA5B4</color>
-    <color name="inverse_surface_dark">#E8ECF2</color>
-    <color name="inverse_on_surface_dark">#1A2233</color>
+    <color name="surface_variant_dark">#2A2F38</color>
 
     <!-- Outline -->
     <color name="outline_light">#CBD0DA</color>
     <color name="outline_dark">#3A404D</color>
-    <color name="outline_variant_light">#DCE1E8</color>
-    <color name="outline_variant_dark">#4A5160</color>
-    <color name="scrim">#66000000</color>
-
-    <!-- Semantic: success -->
-    <color name="success">#27AE60</color>
-    <color name="success_container">#D4EDDA</color>
 
     <!-- Semantic: error -->
     <color name="error">#E74C3C</color>
@@ -72,25 +45,4 @@
     <color name="on_error_container">#8A1C10</color>
     <color name="error_container_dark">#8F362B</color>
     <color name="on_error_container_dark">#FFDAD6</color>
-
-    <!-- Semantic: warning -->
-    <color name="warning">#F5A623</color>
-    <color name="warning_container">#FFF3CD</color>
-
-    <!-- Semantic: info -->
-    <color name="info">#4A90E2</color>
-    <color name="info_container">#D6E8FC</color>
-
-    <!-- Inverse / tint -->
-    <color name="inverse_primary_light">#7AB4F0</color>
-    <color name="inverse_primary_dark">#4A90E2</color>
-    <color name="surface_tint_light">#4A90E2</color>
-    <color name="surface_tint_dark">#7AB4F0</color>
-
-    <!-- Score / Gamification -->
-    <color name="gold_star">#FFD700</color>
-
-    <!-- Backward-compat aliases -->
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
 </resources>

@@ -9,7 +9,6 @@
     <!-- Common -->
     <string name="loading">Đang tải…</string>
     <string name="error">Lỗi</string>
-    <string name="error_generic">Đã có lỗi xảy ra</string>
     <string name="retry">Thử lại</string>
     <string name="confirm">Xác nhận</string>
     <string name="cancel">Hủy</string>
@@ -18,9 +17,6 @@
     <string name="delete">Xóa</string>
     <string name="edit">Chỉnh sửa</string>
     <string name="share">Chia sẻ</string>
-    <string name="submit">Gửi</string>
-    <string name="next">Tiếp</string>
-    <string name="previous">Trước</string>
     <string name="back">Quay lại</string>
     <string name="close">Đóng</string>
     <string name="dropdown_placeholder">Chọn một tùy chọn</string>
@@ -31,20 +27,14 @@
 
     <!-- Quiz -->
     <string name="quiz_create">Tạo Quizz</string>
-    <string name="quiz_join">Tham gia Quizz</string>
-    <string name="quiz_code_hint">Nhập mã 6 ký tự</string>
     <string name="quiz_questions">%1$d câu hỏi</string>
     <string name="quiz_attempts">%1$d lượt làm</string>
     <string name="quiz_choice_count">%1$d trên %2$d lựa chọn</string>
     <string name="quiz_by_author">bởi %1$s</string>
-    <string name="quiz_more_tags">+%1$d</string>
     <string name="question_progress">Câu hỏi %1$d/%2$d</string>
     <string name="timer_content_description">Bộ đếm thời gian Quizz</string>
     <!-- Take Quiz -->
-    <string name="take_quiz_title">Làm Quizz</string>
-    <string name="take_quiz_empty">Chưa có dữ liệu câu hỏi để hiển thị</string>
     <string name="take_quiz_step_indicator">CÂU HỎI %1$d/%2$d</string>
-    <string name="take_quiz_help_cd">Trợ giúp</string>
     <string name="take_quiz_back_button">← QUAY LẠI</string>
     <string name="take_quiz_continue_button">TIẾP TỤC</string>
     <string name="take_quiz_submit_button">NỘP BÀI</string>
@@ -92,7 +82,6 @@
     <string name="create_quiz_description_label">Mô tả</string>
     <string name="create_questions_header">Câu hỏi (%1$d)</string>
     <string name="create_question_title">Câu hỏi %1$d</string>
-    <string name="create_question_tap_to_edit">Nhấn để chỉnh sửa câu hỏi...</string>
 
     <!-- Profile -->
     <string name="profile_section_general">Chung</string>
@@ -113,12 +102,8 @@
     <!-- Trash -->
     <string name="trash_title">Thùng rác</string>
     <string name="trash_empty">Thùng rác trống</string>
-    <string name="trash_info_30_days">Mục sẽ bị xóa vĩnh viễn sau 30 ngày</string>
-    <string name="trash_delete_permanently_title">Xóa vĩnh viễn?</string>
-    <string name="trash_delete_permanently_message">"%1$s" sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.</string>
     <string name="trash_action_restore_cd">Khôi phục</string>
     <string name="trash_action_delete_permanently_cd">Xóa vĩnh viễn</string>
-    <string name="trash_deleted_days_ago">Đã xóa %1$d ngày trước</string>
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
@@ -127,9 +112,7 @@
     <string name="settings_auto_sync_desc">Tự động đồng bộ Quizz lên đám mây khi có kết nối</string>
 
     <!-- Search -->
-    <string name="search_top_results">Kết quả nổi bật</string>
     <string name="search_placeholder">Tìm Quizz...</string>
-    <string name="search_empty">Chưa có kết quả phù hợp</string>
 
     <!-- Home -->
     <string name="home_greeting">Xin chào! 👋</string>
@@ -146,7 +129,6 @@
     <string name="home_join_session_label">THAM GIA</string>
     <string name="home_join_button">THAM GIA</string>
     <string name="home_code_placeholder">e.g. ABC123</string>
-    <string name="home_notifications_cd">Thông báo</string>
 
     <!-- Dialogs -->
     <string name="loading_processing">Đang xử lý…</string>
@@ -156,9 +138,6 @@
     <string name="history_title">Lịch sử làm bài</string>
     <string name="history_empty">Chưa có lượt làm bài</string>
     <string name="history_action_explore">Khám phá Quizz</string>
-    <string name="history_time_hours_ago">%1$d giờ trước</string>
-    <string name="history_time_yesterday">Hôm qua</string>
-    <string name="history_time_days_ago">%1$d ngày trước</string>
 
     <!-- Auth -->
     <string name="auth_welcome_back">Chào mừng trở lại!</string>
@@ -180,13 +159,11 @@
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết Quizz</string>
     <string name="quiz_start_now">Bắt đầu làm bài</string>
-    <string name="quiz_detail_empty">Chưa có dữ liệu Quizz</string>
 
     <!-- Quiz Result -->
     <string name="quiz_result_go_home">VỀ TRANG CHỦ</string>
     <string name="quiz_result_try_again">THỬ LẠI</string>
     <string name="quiz_result_review_answers">XEM LẠI ĐÁP ÁN</string>
-    <string name="quiz_result_empty">Chưa có kết quả để hiển thị</string>
     <string name="quiz_result_performance_overline">HIỆU SUẤT</string>
     <string name="quiz_result_feedback_high">Xuất sắc lắm!</string>
     <string name="quiz_result_feedback_medium">Khá tốt!</string>
@@ -207,8 +184,6 @@
 
     <!-- Editorial Minimalist Design - New Resources -->
     <!-- Search -->
-    <string name="search_category_label">DANH MỤC</string>
-    <string name="search_results_header">Kết quả tìm kiếm</string>
     <string name="search_icon_cd">Tìm kiếm</string>
     <string name="search_clear_cd">Xóa nội dung tìm kiếm</string>
     <string name="search_recent_title">Tìm kiếm gần đây</string>
@@ -220,42 +195,22 @@
     <string name="sort_relevance">Liên quan nhất</string>
     <string name="toggle_view_cd">Chuyển đổi chế độ xem</string>
     <string name="search_no_results_title">Không tìm thấy kết quả</string>
-    <string name="search_no_results_message">Hãy thử tìm kiếm với từ khóa khác</string>
 
     <!-- Profile -->
-    <string name="profile_section_label">CÀI ĐẶT</string>
-    <string name="profile_logout_button">ĐĂNG XUẤT</string>
 
     <!-- Quiz Detail -->
-    <string name="quiz_detail_overline">CHI TIẾT Quizz</string>
-    <string name="quiz_detail_preview_label">XEM TRƯỚC CÂU HỎI</string>
-    <string name="quiz_start_button">BẮT ĐẦU LÀM BÀI</string>
 
     <!-- Create/Edit Quiz -->
-    <string name="create_quiz_header">TẠO Quizz MỚI</string>
-    <string name="create_questions_overline">CÂU HỎI</string>
-    <string name="create_save_button">LƯU</string>
-    <string name="edit_quiz_header">CHỈNH SỬA Quizz</string>
 
     <!-- History -->
-    <string name="history_overline">LỊCH SỬ LÀM BÀI</string>
-    <string name="history_completed_on">Hoàn thành lúc</string>
 
     <!-- Settings -->
-    <string name="settings_overline">CÀI ĐẶT</string>
 
     <!-- Trash -->
-    <string name="trash_overline">THÙNG RÁC</string>
-    <string name="trash_info_text">Các mục sẽ tự động xóa sau 30 ngày</string>
-    <string name="trash_deleted_on">Đã xóa</string>
 
     <!-- Answer Review -->
     <string name="review_title">Xem lại đáp án</string>
     <string name="review_overline">XEM LẠI ĐÁP ÁN</string>
-    <string name="review_correct_label">Đúng</string>
-    <string name="review_wrong_label">Sai</string>
-    <string name="review_your_answer">Đáp án của bạn</string>
-    <string name="review_correct_answer">Đáp án đúng</string>
     <string name="review_question_number">Câu %1$d</string>
     <string name="review_summary">Bạn trả lời đúng %1$d/%2$d câu hỏi</string>
     <string name="review_explanation">Giải thích</string>
@@ -263,13 +218,8 @@
     <!-- Attempt Detail -->
     <string name="attempt_detail_title">Chi tiết lượt làm</string>
     <string name="attempt_detail_overline">CHI TIẾT LƯỢT LÀM</string>
-    <string name="attempt_detail_quiz_label">Quizz</string>
-    <string name="attempt_detail_score_label">Điểm số</string>
-    <string name="attempt_detail_time_label">Thời gian</string>
-    <string name="attempt_detail_date_label">Ngày làm</string>
     <string name="attempt_detail_review_button">XEM LẠI ĐÁP ÁN</string>
     <string name="attempt_detail_retry_button">LÀM LẠI</string>
-    <string name="attempt_detail_not_found">Không tìm thấy lượt làm</string>
 
     <!-- Quiz Exit Confirmation -->
     <string name="quiz_exit_title">Thoát Quizz?</string>
@@ -278,23 +228,14 @@
     <string name="quiz_exit_cancel">Tiếp tục làm bài</string>
 
     <!-- Quiz Timer -->
-    <string name="quiz_timer_warning">Sắp hết thời gian!</string>
-    <string name="quiz_timer_format">%1$d:%2$02d</string>
 
     <!-- Pull to Refresh -->
-    <string name="home_refreshing">Đang cập nhật…</string>
 
     <!-- Offline Banner -->
-    <string name="offline_banner">Không có kết nối mạng</string>
 
     <!-- Join Quiz Validation -->
-    <string name="join_code_invalid">Mã không hợp lệ. Vui lòng nhập mã 6 ký tự.</string>
-    <string name="join_code_not_found">Không tìm thấy Quizz với mã này.</string>
-    <string name="join_code_loading">Đang tìm Quizz…</string>
 
     <!-- Progress Persistence -->
-    <string name="quiz_progress_saved">Đã lưu tiến trình</string>
-    <string name="quiz_progress_resumed">Đã khôi phục tiến trình</string>
 
     <!-- Create/Edit Quiz - Overhaul -->
     <string name="create_quiz_tags_label">Từ khóa (phân cách bằng dấu phẩy)</string>
@@ -311,7 +252,6 @@
     <string name="create_question_move_down">Di chuyển xuống</string>
     <string name="create_question_remove">Xóa câu hỏi</string>
     <string name="create_question_points_label">Điểm: %1$d</string>
-    <string name="create_choice_correct_hint">Đánh dấu đúng</string>
     <string name="create_last_saved">Lưu lúc %1$s</string>
 
     <!-- Share to Pool -->
@@ -339,7 +279,6 @@
     <string name="csv_import_success">Đã nhập %1$d câu hỏi thành công</string>
     <string name="csv_import_row_number">Hàng %1$d</string>
     <string name="csv_import_column_question">Câu hỏi</string>
-    <string name="csv_import_column_choices">Lựa chọn</string>
     <string name="csv_import_column_correct">Đúng</string>
     <string name="csv_import_no_data">Không có dữ liệu hợp lệ</string>
     <string name="csv_import_template_format">Định dạng mẫu: question, choice_a, choice_b, choice_c, choice_d, correct</string>

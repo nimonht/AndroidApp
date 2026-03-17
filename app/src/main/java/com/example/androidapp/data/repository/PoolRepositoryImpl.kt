@@ -19,37 +19,6 @@ class PoolRepositoryImpl(
         }
     }
 
-    override suspend fun getPoolQuestionsByTags(
-        tags: List<String>
-    ): Result<List<QuestionPoolItem>> {
-        return try {
-            val items = remoteDataSource.getPoolItemsByTags(tags)
-                .map { it.toDomain() }
-            Result.success(items)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun getMyContributions(userId: String): Result<List<QuestionPoolItem>> {
-        return try {
-            val items = remoteDataSource.getContributionsByUser(userId)
-                .map { it.toDomain() }
-            Result.success(items)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun revokeContribution(poolItemId: String): Result<Unit> {
-        return try {
-            remoteDataSource.deletePoolItem(poolItemId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     override suspend fun incrementUsageCount(poolItemId: String): Result<Unit> {
         return try {
             remoteDataSource.incrementUsageCount(poolItemId)

@@ -69,9 +69,6 @@ val Scrim = Color(0x66000000)
 
 // ---- Semantic / Status --------------------------------------------------
 val Success = Color(0xFF27AE60)
-val SuccessContainer = Color(0xFFD4EDDA)
-val SuccessContainerDark = Color(0xFF1E5E38)
-val OnSuccess = Color(0xFFFFFFFF)
 
 val Error = Color(0xFFE74C3C)
 val ErrorContainer = Color(0xFFFDECEC)
@@ -81,15 +78,8 @@ val OnErrorContainer = Color(0xFF8A1C10)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
 val Warning = Color(0xFFF5A623)
-val WarningContainer = Color(0xFFFFF3CD)
-val OnWarning = Color(0xFFFFFFFF)
 
 val Info = Color(0xFF4A90E2)
-val InfoContainer = Color(0xFFD6E8FC)
-val OnInfo = Color(0xFFFFFFFF)
 
 // ---- Score / Gamification -----------------------------------------------
 val GoldStar = Color(0xFFFFD700)
-
-// ---- Legacy aliases kept for backward compatibility ---------------------
-val SurfaceLight = Surface
