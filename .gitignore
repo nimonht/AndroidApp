@@ -169,4 +169,3 @@ devenv.local.nix
 .direnv/
 result
 result-*
-google-services.json
