@@ -75,6 +75,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun pendingSyncDao(): PendingSyncDao
 
     companion object {
-        const val DATABASE_NAME = "quizcode_database"
+        const val DATABASE_NAME = "app_database"
     }
 }
