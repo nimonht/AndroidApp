@@ -5,8 +5,6 @@ import com.example.androidapp.data.local.entity.SyncEntityType
 import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
-import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
-import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.repository.AttemptRepository
@@ -23,7 +21,6 @@ import java.util.UUID
  */
 class AttemptRepositoryImpl(
     private val attemptDao: AttemptDao,
-    private val remoteDataSource: AttemptRemoteDataSource,
     private val syncManager: SyncManager
 ) : AttemptRepository {
 

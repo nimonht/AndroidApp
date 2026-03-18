@@ -113,22 +113,24 @@ class QuestionRepositoryImpl(
 
     override suspend fun deleteQuestion(quizId: String, questionId: String): Result<Unit> {
         return try {
-            // Fetch directly by ID rather than loading all questions for the quiz
+            // Fetch entity to verify it exists and belongs to this quiz
             val entity = questionDao.getQuestionById(questionId)
             if (entity != null && entity.quizId == quizId) {
+                // Delete from local database first
                 questionDao.deleteQuestion(entity)
-            }
 
-            // Enqueue sync operation
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.QUESTION,
-                        questionId,
-                        SyncOperation.DELETE
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
+                // Enqueue sync operation with quizId in payload
+                ioScope.launch {
+                    try {
+                        syncManager.enqueueSync(
+                            SyncEntityType.QUESTION,
+                            questionId,
+                            SyncOperation.DELETE,
+                            payload = quizId  // Store quizId in payload for later sync
+                        )
+                    } catch (_: Exception) {
+                        // Sync will retry automatically when online
+                    }
                 }
             }
 

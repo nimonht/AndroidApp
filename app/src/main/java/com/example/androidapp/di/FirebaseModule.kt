@@ -136,7 +136,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     override val attemptRepository: AttemptRepository by lazy {
-        AttemptRepositoryImpl(attemptDao, attemptRemoteDataSource, syncManager)
+        AttemptRepositoryImpl(attemptDao, syncManager)
     }
 
     override val questionRepository: QuestionRepository by lazy {

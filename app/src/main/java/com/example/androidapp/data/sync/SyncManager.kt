@@ -170,23 +170,27 @@ class SyncManager(
                     ?: throw IllegalStateException(
                         "Question '${operation.entityId}' not found locally; cannot sync."
                     )
-                val question = questionEntity.toDomain(emptyList())
 
-                // Load choices for this question
+                // Load choices for this question before converting to domain
                 val choices = choiceDao.getChoicesByQuestionIdOnce(operation.entityId)
-                val choiceDtos = choices.map { it.toDomain().toDto() }
+                val question = questionEntity.toDomain(choices.map { it.toDomain() })
 
                 questionRemoteDataSource.saveQuestion(
                     question.quizId,
                     question.toDto(),
-                    choiceDtos
+                    question.choices.map { it.toDto() }
                 )
             }
             SyncOperation.DELETE.name -> {
-                // Need to extract quizId from payload or fetch it before deletion
-                val questionEntity = questionDao.getQuestionById(operation.entityId)
-                if (questionEntity != null) {
-                    questionRemoteDataSource.deleteQuestion(questionEntity.quizId, operation.entityId)
+                // Extract quizId from payload, or fallback to fetching from DB
+                val quizId = if (operation.payload.isNotBlank()) {
+                    operation.payload
+                } else {
+                    questionDao.getQuestionById(operation.entityId)?.quizId
+                }
+
+                if (quizId != null) {
+                    questionRemoteDataSource.deleteQuestion(quizId, operation.entityId)
                 }
             }
         }
@@ -202,14 +206,14 @@ class SyncManager(
                 if (choiceEntity != null) {
                     val questionEntity = questionDao.getQuestionById(choiceEntity.questionId)
                     if (questionEntity != null) {
-                        val question = questionEntity.toDomain(emptyList())
+                        // Load all choices for the question before converting to domain
                         val choices = choiceDao.getChoicesByQuestionIdOnce(choiceEntity.questionId)
-                        val choiceDtos = choices.map { it.toDomain().toDto() }
+                        val question = questionEntity.toDomain(choices.map { it.toDomain() })
 
                         questionRemoteDataSource.saveQuestion(
                             question.quizId,
                             question.toDto(),
-                            choiceDtos
+                            question.choices.map { it.toDto() }
                         )
                     }
                 }
@@ -264,11 +268,16 @@ class SyncManager(
                     // Also download associated questions and choices
                     val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quiz.id)
                     questionDtos.forEach { questionDto ->
-                        val question = questionDto.toDomain()
+                        // Fetch choices from subcollection for this question
+                        val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quiz.id, questionDto.id)
+
+                        // Convert to domain with proper quizId and choices
+                        val question = questionDto.toDomain().copy(quizId = quiz.id)
                         questionDao.insertQuestion(question.toEntity())
 
-                        // Choices are already embedded in the QuestionDto
-                        question.choices.forEach { choice ->
+                        // Insert choices
+                        choiceDtos.forEach { choiceDto ->
+                            val choice = choiceDto.toDomain()
                             choiceDao.insertChoice(choice.toEntity(question.id))
                         }
                     }
@@ -322,14 +331,18 @@ class SyncManager(
 
     /**
      * Full bi-directional sync - upload pending changes then download updates.
+     * Only downloads if uploads succeed or have no pending operations.
      */
     suspend fun performFullSync(userId: String) {
         // First, upload any pending local changes
         processPendingOperations()
 
-        // Then, download updates from Firebase
-        downloadQuizzes(userId)
-        downloadAttempts(userId)
-        downloadPublicQuizzes()
+        // Only download if sync state is not ERROR (i.e., uploads succeeded or no pending ops)
+        if (_syncState.value != SyncState.ERROR) {
+            // Then, download updates from Firebase
+            downloadQuizzes(userId)
+            downloadAttempts(userId)
+            downloadPublicQuizzes()
+        }
     }
 }
