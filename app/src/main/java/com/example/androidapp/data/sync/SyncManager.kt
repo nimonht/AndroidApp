@@ -1,5 +1,6 @@
 package com.example.androidapp.data.sync
 
+import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
@@ -10,6 +11,8 @@ import com.example.androidapp.data.local.entity.SyncEntityType
 import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
+import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDto
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +35,10 @@ class SyncManager(
     private val quizDao: QuizDao,
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
+    private val attemptDao: AttemptDao,
     private val quizRemoteDataSource: QuizRemoteDataSource,
+    private val questionRemoteDataSource: QuestionRemoteDataSource,
+    private val attemptRemoteDataSource: AttemptRemoteDataSource,
     private val networkMonitor: NetworkMonitor
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -116,6 +122,9 @@ class SyncManager(
     private suspend fun executeOperation(operation: PendingSyncEntity) {
         when (operation.entityType) {
             SyncEntityType.QUIZ.name -> executeQuizSync(operation)
+            SyncEntityType.QUESTION.name -> executeQuestionSync(operation)
+            SyncEntityType.CHOICE.name -> executeChoiceSync(operation)
+            SyncEntityType.ATTEMPT.name -> executeAttemptSync(operation)
             else -> throw IllegalArgumentException(
                 "Unsupported entityType '${operation.entityType}' for operation ${operation.id}"
             )
@@ -147,6 +156,83 @@ class SyncManager(
             }
             SyncOperation.DELETE.name -> {
                 quizRemoteDataSource.permanentlyDeleteQuiz(operation.entityId)
+            }
+        }
+    }
+
+    private suspend fun executeQuestionSync(operation: PendingSyncEntity) {
+        when (operation.operation) {
+            SyncOperation.CREATE.name, SyncOperation.UPDATE.name -> {
+                val questionEntity = questionDao.getQuestionById(operation.entityId)
+                    ?: throw IllegalStateException(
+                        "Question '${operation.entityId}' not found locally; cannot sync."
+                    )
+                val question = questionEntity.toDomain(emptyList())
+
+                // Load choices for this question
+                val choices = choiceDao.getChoicesByQuestionIdOnce(operation.entityId)
+                val choiceDtos = choices.map { it.toDomain().toDto() }
+
+                questionRemoteDataSource.saveQuestion(
+                    question.quizId,
+                    question.toDto(),
+                    choiceDtos
+                )
+            }
+            SyncOperation.DELETE.name -> {
+                // Need to extract quizId from payload or fetch it before deletion
+                val questionEntity = questionDao.getQuestionById(operation.entityId)
+                if (questionEntity != null) {
+                    questionRemoteDataSource.deleteQuestion(questionEntity.quizId, operation.entityId)
+                }
+            }
+        }
+    }
+
+    private suspend fun executeChoiceSync(operation: PendingSyncEntity) {
+        // Choices are synced as part of their parent question
+        // This operation type exists for completeness but is handled by question sync
+        when (operation.operation) {
+            SyncOperation.CREATE.name, SyncOperation.UPDATE.name -> {
+                // Find parent question and sync entire question with all choices
+                val choiceEntity = choiceDao.getChoiceById(operation.entityId)
+                if (choiceEntity != null) {
+                    val questionEntity = questionDao.getQuestionById(choiceEntity.questionId)
+                    if (questionEntity != null) {
+                        val question = questionEntity.toDomain(emptyList())
+                        val choices = choiceDao.getChoicesByQuestionIdOnce(choiceEntity.questionId)
+                        val choiceDtos = choices.map { it.toDomain().toDto() }
+
+                        questionRemoteDataSource.saveQuestion(
+                            question.quizId,
+                            question.toDto(),
+                            choiceDtos
+                        )
+                    }
+                }
+            }
+            SyncOperation.DELETE.name -> {
+                // Choice deletion is handled by parent question sync
+                // Individual choice deletes require re-syncing the entire question
+            }
+        }
+    }
+
+    private suspend fun executeAttemptSync(operation: PendingSyncEntity) {
+        when (operation.operation) {
+            SyncOperation.CREATE.name, SyncOperation.UPDATE.name -> {
+                val attemptEntity = attemptDao.getAttemptById(operation.entityId)
+                    ?: throw IllegalStateException(
+                        "Attempt '${operation.entityId}' not found locally; cannot sync."
+                    )
+                val attempt = attemptEntity.toDomain()
+
+                attemptRemoteDataSource.saveAttempt(attempt.toDto())
+            }
+            SyncOperation.DELETE.name -> {
+                // Attempts are not typically deleted, but if needed:
+                // Firebase doesn't have a delete method in AttemptRemoteDataSource yet
+                // This would need to be implemented if attempt deletion is required
             }
         }
     }

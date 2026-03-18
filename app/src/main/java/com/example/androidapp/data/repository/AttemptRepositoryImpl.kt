@@ -1,10 +1,13 @@
 package com.example.androidapp.data.repository
 
 import com.example.androidapp.data.local.dao.AttemptDao
+import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.toDto
+import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.repository.AttemptRepository
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +23,8 @@ import java.util.UUID
  */
 class AttemptRepositoryImpl(
     private val attemptDao: AttemptDao,
-    private val remoteDataSource: AttemptRemoteDataSource
+    private val remoteDataSource: AttemptRemoteDataSource,
+    private val syncManager: SyncManager
 ) : AttemptRepository {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -49,13 +53,21 @@ class AttemptRepositoryImpl(
         return try {
             val attemptId = attempt.id.ifBlank { UUID.randomUUID().toString() }
             val finalAttempt = attempt.copy(id = attemptId)
+
+            // Write to Room first
             attemptDao.insertAttempt(finalAttempt.toEntity())
 
-            // Sync to Firestore in background
+            // Enqueue sync operation
             ioScope.launch {
                 try {
-                    remoteDataSource.saveAttempt(finalAttempt.toDto())
-                } catch (_: Exception) { }
+                    syncManager.enqueueSync(
+                        SyncEntityType.ATTEMPT,
+                        attemptId,
+                        SyncOperation.CREATE
+                    )
+                } catch (_: Exception) {
+                    // Sync will retry automatically when online
+                }
             }
 
             Result.success(attemptId)
@@ -66,12 +78,22 @@ class AttemptRepositoryImpl(
 
     override suspend fun updateAttempt(attempt: Attempt): Result<Unit> {
         return try {
+            // Write to Room first
             attemptDao.updateAttempt(attempt.toEntity())
+
+            // Enqueue sync operation
             ioScope.launch {
                 try {
-                    remoteDataSource.updateAttempt(attempt.toDto())
-                } catch (_: Exception) { }
+                    syncManager.enqueueSync(
+                        SyncEntityType.ATTEMPT,
+                        attempt.id,
+                        SyncOperation.UPDATE
+                    )
+                } catch (_: Exception) {
+                    // Sync will retry automatically when online
+                }
             }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

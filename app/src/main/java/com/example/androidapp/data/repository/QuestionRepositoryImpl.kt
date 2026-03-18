@@ -2,10 +2,13 @@ package com.example.androidapp.data.repository
 
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
+import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.remote.toDto
+import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.repository.QuestionRepository
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +21,8 @@ import java.util.UUID
 class QuestionRepositoryImpl(
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
-    private val remoteDataSource: QuestionRemoteDataSource
+    private val remoteDataSource: QuestionRemoteDataSource,
+    private val syncManager: SyncManager
 ) : QuestionRepository {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -48,16 +52,23 @@ class QuestionRepositoryImpl(
             }
             val finalQuestion = question.copy(id = questionId, quizId = quizId, choices = normalizedChoices)
 
+            // Write to Room first
             questionDao.insertQuestion(finalQuestion.toEntity())
             normalizedChoices.forEach { choice ->
                 choiceDao.insertChoice(choice.toEntity(questionId))
             }
 
+            // Enqueue sync operation instead of direct async call
             ioScope.launch {
                 try {
-                    val choiceDtos = normalizedChoices.map { it.toDto() }
-                    remoteDataSource.saveQuestion(quizId, finalQuestion.toDto(), choiceDtos)
-                } catch (_: Exception) { }
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUESTION,
+                        questionId,
+                        SyncOperation.CREATE
+                    )
+                } catch (_: Exception) {
+                    // Sync will retry automatically when online
+                }
             }
 
             Result.success(questionId)
@@ -74,17 +85,24 @@ class QuestionRepositoryImpl(
             }
             val normalizedQuestion = question.copy(choices = normalizedChoices)
 
+            // Write to Room first
             questionDao.insertQuestion(normalizedQuestion.toEntity())
             choiceDao.deleteChoicesByQuestionId(question.id)
             normalizedChoices.forEach { choice ->
                 choiceDao.insertChoice(choice.toEntity(question.id))
             }
 
+            // Enqueue sync operation
             ioScope.launch {
                 try {
-                    val choiceDtos = normalizedChoices.map { it.toDto() }
-                    remoteDataSource.saveQuestion(normalizedQuestion.quizId, normalizedQuestion.toDto(), choiceDtos)
-                } catch (_: Exception) { }
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUESTION,
+                        question.id,
+                        SyncOperation.UPDATE
+                    )
+                } catch (_: Exception) {
+                    // Sync will retry automatically when online
+                }
             }
 
             Result.success(Unit)
@@ -101,10 +119,17 @@ class QuestionRepositoryImpl(
                 questionDao.deleteQuestion(entity)
             }
 
+            // Enqueue sync operation
             ioScope.launch {
                 try {
-                    remoteDataSource.deleteQuestion(quizId, questionId)
-                } catch (_: Exception) { }
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUESTION,
+                        questionId,
+                        SyncOperation.DELETE
+                    )
+                } catch (_: Exception) {
+                    // Sync will retry automatically when online
+                }
             }
 
             Result.success(Unit)

@@ -90,7 +90,17 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     override val networkMonitor: NetworkMonitor by lazy { NetworkMonitor(context) }
 
     override val syncManager: SyncManager by lazy {
-        SyncManager(pendingSyncDao, quizDao, questionDao, choiceDao, quizRemoteDataSource, networkMonitor)
+        SyncManager(
+            pendingSyncDao,
+            quizDao,
+            questionDao,
+            choiceDao,
+            attemptDao,
+            quizRemoteDataSource,
+            questionRemoteDataSource,
+            attemptRemoteDataSource,
+            networkMonitor
+        )
     }
 
     private val quizRemoteDataSource: QuizRemoteDataSource by lazy {
@@ -126,11 +136,11 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     override val attemptRepository: AttemptRepository by lazy {
-        AttemptRepositoryImpl(attemptDao, attemptRemoteDataSource)
+        AttemptRepositoryImpl(attemptDao, attemptRemoteDataSource, syncManager)
     }
 
     override val questionRepository: QuestionRepository by lazy {
-        QuestionRepositoryImpl(questionDao, choiceDao, questionRemoteDataSource)
+        QuestionRepositoryImpl(questionDao, choiceDao, questionRemoteDataSource, syncManager)
     }
 
     override val shareCodeRepository: ShareCodeRepository by lazy {
