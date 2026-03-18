@@ -10,10 +10,12 @@ import com.example.androidapp.data.local.entity.PendingSyncStatus
 import com.example.androidapp.data.local.entity.SyncEntityType
 import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
+import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
+import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +23,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 enum class SyncState {
@@ -235,5 +238,98 @@ class SyncManager(
                 // This would need to be implemented if attempt deletion is required
             }
         }
+    }
+
+    /**
+     * Download (pull) quizzes from Firebase and save to Room.
+     * This implements the Firebase → Room sync direction.
+     */
+    suspend fun downloadQuizzes(userId: String) {
+        try {
+            _syncState.value = SyncState.SYNCING
+
+            // Fetch user's quizzes from Firebase
+            val quizDtos = quizRemoteDataSource.getQuizzesByOwner(userId).first()
+
+            quizDtos.forEach { quizDto ->
+                val quiz = quizDto.toDomain()
+
+                // Check if local version exists and compare timestamps
+                val localQuiz = quizDao.getQuizById(quiz.id)
+
+                if (localQuiz == null || localQuiz.updatedAt < quiz.updatedAt) {
+                    // Firebase version is newer or doesn't exist locally - download it
+                    quizDao.insertQuiz(quiz.toEntity())
+
+                    // Also download associated questions and choices
+                    val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quiz.id)
+                    questionDtos.forEach { questionDto ->
+                        val question = questionDto.toDomain()
+                        questionDao.insertQuestion(question.toEntity())
+
+                        // Choices are already embedded in the QuestionDto
+                        question.choices.forEach { choice ->
+                            choiceDao.insertChoice(choice.toEntity(question.id))
+                        }
+                    }
+                }
+            }
+
+            _syncState.value = SyncState.IDLE
+        } catch (e: Exception) {
+            _syncState.value = SyncState.ERROR
+        }
+    }
+
+    /**
+     * Download (pull) public quizzes from Firebase and save to Room cache.
+     */
+    suspend fun downloadPublicQuizzes() {
+        try {
+            val quizDtos = quizRemoteDataSource.getPublicQuizzes().first()
+
+            quizDtos.forEach { quizDto ->
+                val quiz = quizDto.toDomain()
+                quizDao.insertQuiz(quiz.toEntity())
+            }
+        } catch (_: Exception) {
+            // Silently fail for public quiz refresh
+        }
+    }
+
+    /**
+     * Download (pull) attempts from Firebase and save to Room.
+     */
+    suspend fun downloadAttempts(userId: String) {
+        try {
+            val attemptDtos = attemptRemoteDataSource.getAttemptsByUser(userId)
+
+            attemptDtos.forEach { attemptDto ->
+                val attempt = attemptDto.toDomain()
+
+                // Check if local version exists
+                val localAttempt = attemptDao.getAttemptById(attempt.id)
+
+                if (localAttempt == null || localAttempt.finishedAt == null) {
+                    // Download new or incomplete attempts
+                    attemptDao.insertAttempt(attempt.toEntity())
+                }
+            }
+        } catch (_: Exception) {
+            // Silently fail
+        }
+    }
+
+    /**
+     * Full bi-directional sync - upload pending changes then download updates.
+     */
+    suspend fun performFullSync(userId: String) {
+        // First, upload any pending local changes
+        processPendingOperations()
+
+        // Then, download updates from Firebase
+        downloadQuizzes(userId)
+        downloadAttempts(userId)
+        downloadPublicQuizzes()
     }
 }
