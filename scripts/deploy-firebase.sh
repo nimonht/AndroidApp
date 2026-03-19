@@ -149,15 +149,46 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Convert Windows paths to Docker-compatible format
+# ---------------------------------------------------------------------------
+# On Windows (Git Bash, MSYS, MINGW), Docker requires Unix-style paths.
+# This function converts Windows paths (C:\...) to /c/... format if needed.
+convert_path_for_docker() {
+    local path="$1"
+
+    # If we're on Windows and the path looks like a Windows path
+    if [ "$OS_NAME" = "Windows" ]; then
+        # Convert backslashes to forward slashes
+        path="${path//\\//}"
+
+        # Convert drive letter format: C: -> /c
+        if [[ "$path" =~ ^([A-Za-z]): ]]; then
+            local drive="${BASH_REMATCH[1]}"
+            drive="${drive,,}"  # Convert to lowercase
+            path="/${drive}${path:2}"
+        fi
+
+        # If path starts with /cygdrive/X or similar, convert to /X
+        if [[ "$path" =~ ^/cygdrive/([a-z]) ]]; then
+            path="/${BASH_REMATCH[1]}${path:11}"
+        fi
+    fi
+
+    printf '%s' "$path"
+}
+
+# ---------------------------------------------------------------------------
 # Build the Docker image (only once per session if Docker mode is on)
 # ---------------------------------------------------------------------------
 build_docker_image() {
     if ! "$DOCKER_CMD" image inspect "$FIREBASE_DOCKER_IMAGE" &> /dev/null; then
         echo -e "${YELLOW}Building Firebase Docker image (first-time only)...${NC}"
+        local docker_project_root
+        docker_project_root="$(convert_path_for_docker "$PROJECT_ROOT")"
         "$DOCKER_CMD" build \
             -t "$FIREBASE_DOCKER_IMAGE" \
             -f "$SCRIPT_DIR/firebase.Dockerfile" \
-            "$PROJECT_ROOT"
+            "$docker_project_root"
         echo -e "${GREEN}✓ Docker image built${NC}"
     else
         echo -e "${GREEN}✓ Firebase Docker image already exists${NC}"
@@ -170,7 +201,13 @@ docker_run_firebase_raw() {
 
 docker_firebase_auth_mount() {
     local mount_mode="${1:-ro}"
-    local mount_path="$FIREBASE_CONFIG_DIR:/root/.config/configstore"
+    local host_path
+    local container_path="/root/.config/configstore"
+
+    # Convert Windows paths to Docker-compatible format
+    host_path="$(convert_path_for_docker "$FIREBASE_CONFIG_DIR")"
+
+    local mount_path="${host_path}:${container_path}"
 
     if [ "$mount_mode" = "rw" ]; then
         printf '%s' "$mount_path"
@@ -180,8 +217,11 @@ docker_firebase_auth_mount() {
 }
 
 docker_has_firebase_auth() {
+    local docker_project_root
+    docker_project_root="$(convert_path_for_docker "$PROJECT_ROOT")"
+
     docker_run_firebase_raw \
-        -v "$PROJECT_ROOT:/workspace" \
+        -v "${docker_project_root}:/workspace" \
         -v "$(docker_firebase_auth_mount rw)" \
         "$FIREBASE_DOCKER_IMAGE" "$FIREBASE_AUTH_CHECK_COMMAND" &> /dev/null
 }
@@ -209,9 +249,13 @@ run_firebase() {
             FIREBASE_ARGS+=(--config "$DOCKER_FIREBASE_EMULATOR_CONFIG_CONTAINER_PATH")
         fi
 
+        # Convert PROJECT_ROOT to Docker-compatible path for Windows
+        local docker_project_root
+        docker_project_root="$(convert_path_for_docker "$PROJECT_ROOT")"
+
         # Mount the project root, forward Firebase credentials, and (if needed) emulator ports
         docker_run_firebase_raw -it \
-            -v "$PROJECT_ROOT:/workspace" \
+            -v "${docker_project_root}:/workspace" \
             -v "$(docker_firebase_auth_mount rw)" \
             "${DOCKER_PORT_ARGS[@]}" \
             "$FIREBASE_DOCKER_IMAGE" "${FIREBASE_ARGS[@]}"
