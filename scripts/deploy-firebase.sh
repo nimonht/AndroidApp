@@ -151,26 +151,29 @@ fi
 # ---------------------------------------------------------------------------
 # Convert Windows paths to Docker-compatible format
 # ---------------------------------------------------------------------------
-# On Windows (Git Bash, MSYS, MINGW), Docker requires Unix-style paths.
-# This function converts Windows paths (C:\...) to /c/... format if needed.
+# On Windows (Git Bash, MSYS, MINGW), Docker requires paths in //c/... format.
+# The double-slash prefix prevents MSYS/Git Bash from auto-converting paths
+# when the argument is passed to docker.exe.  Without it, MSYS converts
+# /c/Users/... -> C:\Users\... which corrupts the host:container colon
+# separator in Docker volume mount strings.
 convert_path_for_docker() {
     local path="$1"
 
-    # If we're on Windows and the path looks like a Windows path
     if [ "$OS_NAME" = "Windows" ]; then
         # Convert backslashes to forward slashes
         path="${path//\\//}"
 
-        # Convert drive letter format: C: -> /c
         if [[ "$path" =~ ^([A-Za-z]): ]]; then
+            # Windows native path C:/... -> //c/...
             local drive="${BASH_REMATCH[1]}"
             drive="${drive,,}"  # Convert to lowercase
-            path="/${drive}${path:2}"
-        fi
-
-        # If path starts with /cygdrive/X or similar, convert to /X
-        if [[ "$path" =~ ^/cygdrive/([a-z]) ]]; then
-            path="/${BASH_REMATCH[1]}${path:11}"
+            path="//${drive}${path:2}"
+        elif [[ "$path" =~ ^/([a-zA-Z])/ ]]; then
+            # MSYS-style /c/... -> //c/... (prevents MSYS auto path conversion)
+            path="//${BASH_REMATCH[1]}${path:2}"
+        elif [[ "$path" =~ ^/cygdrive/([a-z]) ]]; then
+            # Cygwin /cygdrive/c/... -> //c/...
+            path="//${BASH_REMATCH[1]}${path:11}"
         fi
     fi
 
