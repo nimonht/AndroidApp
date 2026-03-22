@@ -151,11 +151,11 @@ fi
 # ---------------------------------------------------------------------------
 # Convert Windows paths to Docker-compatible format
 # ---------------------------------------------------------------------------
-# On Windows (Git Bash, MSYS, MINGW), Docker requires paths in //c/... format.
-# The double-slash prefix prevents MSYS/Git Bash from auto-converting paths
-# when the argument is passed to docker.exe.  Without it, MSYS converts
-# /c/Users/... -> C:\Users\... which corrupts the host:container colon
-# separator in Docker volume mount strings.
+# On Windows (Git Bash, MSYS, MINGW), Docker requires paths in //c/... format
+# FOR VOLUME MOUNTS. The double-slash prefix prevents MSYS/Git Bash from
+# auto-converting paths when the argument is passed to docker.exe. Without it,
+# MSYS converts /c/Users/... -> C:\Users\... which corrupts the host:container
+# colon separator in Docker volume mount strings (-v host:container).
 convert_path_for_docker() {
     local path="$1"
 
@@ -180,6 +180,32 @@ convert_path_for_docker() {
     printf '%s' "$path"
 }
 
+# Convert Windows paths for Docker build context (simpler format needed)
+# Docker build context is NOT a volume mount, so it doesn't have the colon
+# separator issue. Docker on Windows expects standard MSYS-style paths like
+# /c/Users/... which it can resolve directly.
+convert_path_for_docker_build() {
+    local path="$1"
+
+    if [ "$OS_NAME" = "Windows" ]; then
+        # Convert backslashes to forward slashes
+        path="${path//\\//}"
+
+        if [[ "$path" =~ ^([A-Za-z]): ]]; then
+            # Windows native path C:/... -> /c/...
+            local drive="${BASH_REMATCH[1]}"
+            drive="${drive,,}"  # Convert to lowercase
+            path="/${drive}${path:2}"
+        elif [[ "$path" =~ ^/cygdrive/([a-z]) ]]; then
+            # Cygwin /cygdrive/c/... -> /c/...
+            path="/${BASH_REMATCH[1]}${path:11}"
+        fi
+        # MSYS-style /c/... is already correct, leave as-is
+    fi
+
+    printf '%s' "$path"
+}
+
 # ---------------------------------------------------------------------------
 # Build the Docker image (only once per session if Docker mode is on)
 # ---------------------------------------------------------------------------
@@ -187,7 +213,8 @@ build_docker_image() {
     if ! "$DOCKER_CMD" image inspect "$FIREBASE_DOCKER_IMAGE" &> /dev/null; then
         echo -e "${YELLOW}Building Firebase Docker image (first-time only)...${NC}"
         local docker_project_root
-        docker_project_root="$(convert_path_for_docker "$PROJECT_ROOT")"
+        # Use convert_path_for_docker_build for build context (not volume mount)
+        docker_project_root="$(convert_path_for_docker_build "$PROJECT_ROOT")"
         "$DOCKER_CMD" build \
             -t "$FIREBASE_DOCKER_IMAGE" \
             -f "$SCRIPT_DIR/firebase.Dockerfile" \
