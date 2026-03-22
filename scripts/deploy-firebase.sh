@@ -126,7 +126,9 @@ fi
 
 FIREBASE_CONFIG_DIR="$FIREBASE_CONFIG_BASE_DIR/configstore"
 FIREBASE_AUTH_CHECK_COMMAND="projects:list"
-DOCKER_FIREBASE_EMULATOR_CONFIG_CONTAINER_PATH="/workspace/firebase.docker.json"
+# Use relative path to prevent MSYS/Git Bash auto-conversion on Windows
+# The Docker container WORKDIR is /workspace, so firebase.docker.json resolves correctly
+DOCKER_FIREBASE_EMULATOR_CONFIG_CONTAINER_PATH="firebase.docker.json"
 
 if [ "$DOCKER_AVAILABLE" = true ]; then
     echo -e "${GREEN}✓ Docker detected (${DOCKER_CMD})${NC}"
