@@ -100,7 +100,8 @@ fun QuestionPoolItemDto.toDomain() = QuestionPoolItem(
     question = question.toDomain(),
     authorId = authorId,
     tags = tags,
-    usageCount = usageCount
+    usageCount = usageCount,
+    isActive = isActive
 )
 
 fun QuestionPoolItem.toDto() = QuestionPoolItemDto(
@@ -108,7 +109,8 @@ fun QuestionPoolItem.toDto() = QuestionPoolItemDto(
     question = question.toDto(),
     authorId = authorId,
     tags = tags,
-    usageCount = usageCount
+    usageCount = usageCount,
+    isActive = isActive
 )
 
 // --- SHARE CODE ---

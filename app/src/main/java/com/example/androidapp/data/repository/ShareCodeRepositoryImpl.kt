@@ -4,10 +4,19 @@ import com.example.androidapp.data.remote.firebase.ShareCodeRemoteDataSource
 import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.util.ShareCodeUtil
 
+/**
+ * Remote-only implementation of [ShareCodeRepository].
+ *
+ * Share codes are lightweight lookup entries stored only in Firestore (no Room caching).
+ * Code generation uses [ShareCodeUtil] with a retry loop to guarantee uniqueness.
+ *
+ * @property remoteDataSource Firestore data source for share code CRUD operations.
+ */
 class ShareCodeRepositoryImpl(
     private val remoteDataSource: ShareCodeRemoteDataSource
 ) : ShareCodeRepository {
 
+    /** {@inheritDoc} */
     override suspend fun lookupQuizId(shareCode: String): Result<String?> {
         return try {
             val dto = remoteDataSource.lookupShareCode(shareCode)
@@ -17,6 +26,7 @@ class ShareCodeRepositoryImpl(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun generateShareCode(quizId: String): Result<String> {
         return try {
             var code: String
@@ -42,6 +52,7 @@ class ShareCodeRepositoryImpl(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun deleteShareCode(shareCode: String): Result<Unit> {
         return try {
             remoteDataSource.deleteShareCode(shareCode)
@@ -51,6 +62,7 @@ class ShareCodeRepositoryImpl(
         }
     }
 
+    /** {@inheritDoc} */
     override suspend fun regenerateShareCode(
         quizId: String,
         oldShareCode: String
@@ -67,5 +79,20 @@ class ShareCodeRepositoryImpl(
         }
     }
 
-
+    /** {@inheritDoc} */
+    override suspend fun validateShareCode(shareCode: String): Result<String> {
+        return try {
+            val dto = remoteDataSource.lookupShareCode(shareCode)
+            if (dto != null && dto.quizId.isNotBlank()) {
+                Result.success(dto.quizId)
+            } else {
+                Result.failure(
+                    IllegalArgumentException("Share code does not exist or is not associated with a quiz")
+                )
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+
