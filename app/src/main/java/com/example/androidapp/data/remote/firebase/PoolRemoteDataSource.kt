@@ -71,12 +71,12 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
     /**
      * Queries all pool items contributed by a specific user.
      *
-     * @param userId The author's user ID.
-     * @return A list of [QuestionPoolItemDto] objects authored by the user.
+     * @param userId The contributor's user ID.
+     * @return A list of [QuestionPoolItemDto] objects contributed by the user.
      */
     suspend fun getContributionsByUser(userId: String): List<QuestionPoolItemDto> {
         return firestore.collection(FirestoreCollections.QUESTION_POOL)
-            .whereEqualTo(FirestoreCollections.Fields.AUTHOR_ID, userId)
+            .whereEqualTo(FirestoreCollections.Fields.CONTRIBUTOR_ID, userId)
             .get()
             .await()
             .documents

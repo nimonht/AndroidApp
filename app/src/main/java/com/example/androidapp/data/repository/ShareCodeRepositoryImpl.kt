@@ -29,24 +29,21 @@ class ShareCodeRepositoryImpl(
     /** {@inheritDoc} */
     override suspend fun generateShareCode(quizId: String): Result<String> {
         return try {
-            var code: String
-            var attempts = 0
             val maxAttempts = 10
-            do {
-                code = ShareCodeUtil.generateCode()
-                val exists = remoteDataSource.shareCodeExists(code)
-                attempts++
-                if (!exists) break
-            } while (attempts < maxAttempts)
 
-            if (attempts >= maxAttempts) {
-                return Result.failure(
-                    IllegalStateException("Failed to generate unique share code after $maxAttempts attempts")
-                )
+            repeat(maxAttempts) { attempt ->
+                val code = ShareCodeUtil.generateCode()
+                val exists = remoteDataSource.shareCodeExists(code)
+                if (!exists) {
+                    remoteDataSource.createShareCode(code, quizId)
+                    return Result.success(code)
+                }
             }
 
-            remoteDataSource.createShareCode(code, quizId)
-            Result.success(code)
+            // All attempts exhausted without finding unique code
+            Result.failure(
+                IllegalStateException("Failed to generate unique share code after $maxAttempts attempts")
+            )
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -82,7 +79,17 @@ class ShareCodeRepositoryImpl(
     /** {@inheritDoc} */
     override suspend fun validateShareCode(shareCode: String): Result<String> {
         return try {
-            val dto = remoteDataSource.lookupShareCode(shareCode)
+            // Validate format locally first to avoid unnecessary network calls
+            val normalizedCode = shareCode.trim().uppercase()
+            val pattern = Regex("^[A-Z0-9]{6}$")
+
+            if (!pattern.matches(normalizedCode)) {
+                return Result.failure(
+                    IllegalArgumentException("Invalid share code format: must be 6 alphanumeric characters")
+                )
+            }
+
+            val dto = remoteDataSource.lookupShareCode(normalizedCode)
             if (dto != null && dto.quizId.isNotBlank()) {
                 Result.success(dto.quizId)
             } else {

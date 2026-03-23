@@ -6,6 +6,9 @@ import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.QuestionPoolItem
 import com.example.androidapp.domain.repository.PoolRepository
+import com.google.firebase.firestore.WriteBatch
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 /**
@@ -15,9 +18,11 @@ import java.util.UUID
  * are not cached locally in Room.
  *
  * @property remoteDataSource Firestore data source for question pool CRUD operations.
+ * @property firestore Firestore instance for batch operations.
  */
 class PoolRepositoryImpl(
-    private val remoteDataSource: PoolRemoteDataSource
+    private val remoteDataSource: PoolRemoteDataSource,
+    private val firestore: FirebaseFirestore
 ) : PoolRepository {
 
     /** {@inheritDoc} */
@@ -38,18 +43,31 @@ class PoolRepositoryImpl(
         anonymize: Boolean
     ): Result<Unit> {
         return try {
-            val effectiveAuthorId = if (anonymize) "" else authorId
+            val effectiveContributorId = if (anonymize) null else authorId
+
+            // Use WriteBatch for atomic multi-document writes
+            val batch: WriteBatch = firestore.batch()
+            val collectionRef = firestore.collection("questionPool")
+
             questions.forEach { question ->
                 val poolItem = QuestionPoolItem(
                     id = UUID.randomUUID().toString(),
                     question = question,
-                    authorId = effectiveAuthorId,
+                    contributorId = effectiveContributorId,
+                    sourceQuizId = "",  // Will be set by caller if needed
                     tags = tags,
                     usageCount = 0,
                     isActive = true
                 )
-                remoteDataSource.addPoolItem(poolItem.toDto())
+                val docRef = collectionRef.document(poolItem.id)
+                batch.set(docRef, poolItem.toDto())
             }
+
+            // Commit the batch atomically
+            batch.commit().addOnFailureListener { exception ->
+                throw exception
+            }.await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -109,6 +127,13 @@ class PoolRepositoryImpl(
         count: Int
     ): Result<List<QuestionPoolItem>> {
         return try {
+            // Validate count parameter up front
+            if (count < 0) {
+                return Result.failure(
+                    IllegalArgumentException("Count must be non-negative, got: $count")
+                )
+            }
+
             val dtos = remoteDataSource.getActivePoolItemsByTags(tags)
             val selected = dtos
                 .shuffled()

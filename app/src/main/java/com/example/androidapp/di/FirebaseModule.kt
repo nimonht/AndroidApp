@@ -148,7 +148,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     override val poolRepository: PoolRepository by lazy {
-        PoolRepositoryImpl(poolRemoteDataSource)
+        PoolRepositoryImpl(poolRemoteDataSource, firebaseFirestore)
     }
 
     override val storageRepository: StorageRepository by lazy {
