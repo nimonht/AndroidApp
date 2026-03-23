@@ -147,6 +147,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "tags",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "questionPool",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "contributorId",
           "order": "ASCENDING"
         },

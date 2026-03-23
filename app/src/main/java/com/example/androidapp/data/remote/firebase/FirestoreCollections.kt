@@ -22,7 +22,7 @@ object FirestoreCollections {
         const val ATTEMPT_COUNT = "attemptCount"
         const val UPDATED_AT = "updatedAt"
         const val IS_ACTIVE = "isActive"
-        const val AUTHOR_ID = "authorId"
+        const val CONTRIBUTOR_ID = "contributorId"
     }
 }
 

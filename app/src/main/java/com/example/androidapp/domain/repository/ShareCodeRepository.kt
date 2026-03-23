@@ -1,6 +1,6 @@
 package com.example.androidapp.domain.repository
 
-import com.example.androidapp.domain.model.ShareCode
+import com.example.androidapp.domain.util.ShareCodeUtil
 
 /**
  * Repository interface for managing quiz share codes.
