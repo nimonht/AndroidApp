@@ -1,5 +1,6 @@
 package com.example.androidapp.data.repository
 
+import com.example.androidapp.data.remote.firebase.FirestoreCollections
 import com.example.androidapp.data.remote.firebase.PoolRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
