@@ -97,18 +97,51 @@ fun Attempt.toDto() = AttemptDto(
 // --- QUESTION POOL ---
 fun QuestionPoolItemDto.toDomain() = QuestionPoolItem(
     id = id,
-    question = question.toDomain(),
-    authorId = authorId,
+    question = Question(
+        id = "",  // Pool questions don't have a separate question ID
+        content = content,
+        choices = choices.mapIndexed { index, choice ->
+            Choice(
+                id = "",
+                content = choice.content,
+                isCorrect = choice.isCorrect,
+                position = index
+            )
+        },
+        isMultiSelect = allowMultipleCorrect,
+        explanation = null,
+        mediaUrl = mediaUrl,
+        points = points,
+        position = 0
+    ),
+    contributorId = contributorId,
+    sourceQuizId = sourceQuizId,
     tags = tags,
-    usageCount = usageCount
+    usageCount = usageCount,
+    isActive = isActive,
+    createdAtMillis = createdAt?.toDate()?.time ?: System.currentTimeMillis()
 )
 
 fun QuestionPoolItem.toDto() = QuestionPoolItemDto(
     id = id,
-    question = question.toDto(),
-    authorId = authorId,
+    content = question.content,
+    choices = question.choices.map { choice ->
+        PoolChoiceDto(
+            content = choice.content,
+            isCorrect = choice.isCorrect
+        )
+    },
+    correctIndices = question.choices
+        .mapIndexedNotNull { index, choice -> if (choice.isCorrect) index else null },
     tags = tags,
-    usageCount = usageCount
+    mediaUrl = question.mediaUrl,
+    points = question.points,
+    allowMultipleCorrect = question.isMultiSelect,
+    contributorId = contributorId,
+    sourceQuizId = sourceQuizId,
+    isActive = isActive,
+    usageCount = usageCount,
+    createdAt = Timestamp(Date(createdAtMillis))
 )
 
 // --- SHARE CODE ---

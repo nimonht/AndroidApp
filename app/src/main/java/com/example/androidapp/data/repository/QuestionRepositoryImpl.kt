@@ -18,6 +18,18 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+/**
+ * Room-backed implementation of [QuestionRepository] with Firestore sync.
+ *
+ * Follows the local-first pattern: all writes are persisted to Room immediately,
+ * then [SyncManager.enqueueSync] is called to schedule background Firestore sync.
+ * Reads always return Room data; Firestore refresh happens externally.
+ *
+ * @property questionDao Room DAO for question CRUD operations.
+ * @property choiceDao Room DAO for choice CRUD operations.
+ * @property remoteDataSource Firestore data source for question operations.
+ * @property syncManager Coordinator for background sync scheduling.
+ */
 class QuestionRepositoryImpl(
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,

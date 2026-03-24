@@ -21,6 +21,8 @@ object FirestoreCollections {
         const val SHARE_CODE = "shareCode"
         const val ATTEMPT_COUNT = "attemptCount"
         const val UPDATED_AT = "updatedAt"
+        const val IS_ACTIVE = "isActive"
+        const val CONTRIBUTOR_ID = "contributorId"
     }
 }
 
