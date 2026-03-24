@@ -355,7 +355,7 @@ class EditQuizViewModel(
                                     QuestionPoolItem(
                                         id = question.id,
                                         question = question,
-                                        contributorId = user?.id ?: "",
+                                        contributorId = user?.id,
                                         sourceQuizId = quizId,
                                         tags = tags,
                                         usageCount = 0
