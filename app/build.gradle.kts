@@ -140,12 +140,10 @@ tasks.dokkaHtml {
             )
         )
 
-        includes.from("Module.md")
-
         sourceLink {
             localDirectory.set(file("src/main/java"))
             remoteUrl.set(
-                java.net.URL("https://github.com/nimonht/AndroidApp/tree/main/app/src/main/java")
+                uri("https://github.com/nimonht/AndroidApp/tree/main/app/src/main/java").toURL()
             )
             remoteLineSuffix.set("#L")
         }
