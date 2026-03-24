@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.dokka)
 }
 
 android {
@@ -126,4 +127,25 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
+}
+
+tasks.dokkaHtml {
+    outputDirectory.set(layout.buildDirectory.dir("dokka/html"))
+
+    dokkaSourceSets.configureEach {
+        documentedVisibilities.set(
+            setOf(
+                org.jetbrains.dokka.DokkaConfiguration.Visibility.PUBLIC,
+                org.jetbrains.dokka.DokkaConfiguration.Visibility.PROTECTED
+            )
+        )
+
+        sourceLink {
+            localDirectory.set(file("src/main/java"))
+            remoteUrl.set(
+                uri("https://github.com/nimonht/AndroidApp/tree/master/app/src/main/java").toURL()
+            )
+            remoteLineSuffix.set("#L")
+        }
+    }
 }
