@@ -4,7 +4,7 @@ This document describes the Dokka documentation generation and deployment setup 
 
 ## Overview
 
-The project uses [Dokka 2.0.0](https://github.com/Kotlin/dokka), the official documentation engine for Kotlin, to automatically generate API documentation from KDoc comments in the source code. The documentation is automatically built and deployed to GitHub Pages on every push to the main branch.
+The project uses [Dokka 2.0.0](https://github.com/Kotlin/dokka), the official documentation engine for Kotlin, to automatically generate API documentation from KDoc comments in the source code. The documentation is automatically built and deployed to GitHub Pages on every push to the master branch.
 
 ## Configuration
 
@@ -41,7 +41,7 @@ tasks.dokkaHtml {
         sourceLink {
             localDirectory.set(file("src/main/java"))
             remoteUrl.set(
-                uri("https://github.com/nimonht/AndroidApp/tree/main/app/src/main/java").toURL()
+                uri("https://github.com/nimonht/AndroidApp/tree/master/app/src/main/java").toURL()
             )
             remoteLineSuffix.set("#L")
         }
@@ -60,7 +60,7 @@ tasks.dokkaHtml {
 
 The project includes an automated workflow (`.github/workflows/dokka-docs.yml`) that:
 
-1. Triggers on pushes to the `main` branch or manual dispatch
+1. Triggers on pushes to the `master` branch or manual dispatch
 2. Sets up JDK 17 and Android SDK
 3. Generates Dokka HTML documentation
 4. Deploys to the `gh-pages` branch using JamesIves/github-pages-deploy-action@v4
@@ -74,7 +74,7 @@ The workflow requires `contents: write` permission to push to the `gh-pages` bra
 To generate documentation locally:
 
 ```bash
-./gradlew dokkaHtml
+./gradlew :app:dokkaHtml
 ```
 
 The generated documentation will be available at `app/build/dokka/html/index.html`.
@@ -124,18 +124,7 @@ fun calculateScore(answers: List<String>, correctAnswers: List<String>): Int {
 
 ## Migration Notes
 
-The project currently uses Dokka Gradle Plugin V1, which is deprecated. A warning will appear during build:
-
-```
-warning: Dokka Gradle plugin V1 is deprecated
-```
-
-To migrate to V2 in the future, add to `gradle.properties`:
-```properties
-org.jetbrains.dokka.experimental.gradle.pluginMode=V2EnabledWithHelpers
-```
-
-See the [migration guide](https://kotl.in/dokka-gradle-migration) for details.
+This project is already configured to use Dokka Gradle Plugin V2 via Dokka version `2.0.0`. The legacy `org.jetbrains.dokka.experimental.gradle.pluginMode` property is only needed when migrating older projects from Dokka Gradle Plugin V1 and is **not required** here. For migrating other codebases that still use V1, refer to the [migration guide](https://kotl.in/dokka-gradle-migration).
 
 ## Troubleshooting
 
