@@ -342,7 +342,8 @@ class CreateQuizViewModel(
                                     QuestionPoolItem(
                                         id = question.id,
                                         question = question,
-                                        authorId = user?.id ?: "",
+                                        contributorId = user?.id ?: "",
+                                        sourceQuizId = quizId,
                                         tags = tags,
                                         usageCount = 0
                                     )
