@@ -43,7 +43,7 @@ data/
     model/                  ← Firestore DTOs: `QuizDtoModels.kt` (QuizDto + QuestionDto + ChoiceDto),
                               `AttemptDto.kt`, `UserDto.kt`, `ShareCodeDto.kt`, `QuestionPoolItemDto.kt`
   repository/               ← Repository implementations: `QuizRepositoryImpl.kt`, `AttemptRepositoryImpl.kt`,
-                              `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao),
+                              `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao + UserRemoteDataSource),
                               `QuestionRepositoryImpl.kt`, `ShareCodeRepositoryImpl.kt`,
                               `PoolRepositoryImpl.kt`, `StorageRepositoryImpl.kt` (wraps Firebase Storage),
                               `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
@@ -54,9 +54,9 @@ data/
                               `enqueueSync()`, `processPendingOperations()`, `retryFailedOperations()`
 ```
 
-Repositories do **not** touch Firestore directly — they delegate to `*RemoteDataSource` classes in `data/remote/firebase/`.
+Repositories generally delegate Firestore access to `*RemoteDataSource` classes in `data/remote/firebase/`. Current exception: `PoolRepositoryImpl.kt` also receives `FirebaseFirestore` for batch writes in `contributeQuestions()`.
 
-**Local-first with cloud sync**: Every write saves to Room first (`syncStatus = PENDING`), then syncs to Firestore in the background. Reads emit Room data immediately and refresh from Firestore when online. See `data/repository/` for the pattern.
+**Local-first with cloud sync**: Room-backed flows (notably quiz/question/attempt) write to Room first (`syncStatus = PENDING` or queued via `PendingSyncEntity`), then sync to Firestore in the background. Reads emit Room data immediately and refresh from Firestore when online. Some repositories are intentionally remote-only (`ShareCodeRepositoryImpl`, `PoolRepositoryImpl`, `StorageRepositoryImpl`).
 
 `PendingSyncEntity` (`data/local/entity/PendingSyncEntity.kt`) provides a separate retry queue (`pending_sync_operations` table) with `retryCount`, `maxRetries`, and `PendingSyncStatus` (PENDING / IN_PROGRESS / FAILED / COMPLETED). `PendingSyncDao` exposes `observePendingCount(): Flow<Int>` for UI sync indicators.
 
@@ -152,6 +152,7 @@ Existing screen directories under `ui/screens/`:
 ./gradlew test                   # Unit tests
 ./gradlew connectedAndroidTest   # Instrumented tests
 ./gradlew lint                   # Lint checks
+./gradlew :app:dokkaHtml         # Generate API docs (Dokka)
 ./gradlew clean                  # Clean build
 
 # Nix/devenv users (equivalent shortcuts)
@@ -181,6 +182,7 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `ui/navigation/QuizzezNavHost.kt` | Full app navigation graph |
 | `design-tokens.json` | Source of truth for all design values |
 | `CODE_RULES.md` | Full coding standards with examples |
+| `DOKKA_SETUP.md` | Dokka generation setup (`./gradlew :app:dokkaHtml`) |
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
 | `data/local/AppDatabase.kt` | Room DB v4 definition; `fallbackToDestructiveMigration` — no explicit migrations |
 | `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |

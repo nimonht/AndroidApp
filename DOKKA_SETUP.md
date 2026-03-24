@@ -122,10 +122,6 @@ fun calculateScore(answers: List<String>, correctAnswers: List<String>): Int {
 - `@sample` - Code sample
 - `@since` - Version information
 
-## Migration Notes
-
-This project is already configured to use Dokka Gradle Plugin V2 via Dokka version `2.0.0`. The legacy `org.jetbrains.dokka.experimental.gradle.pluginMode` property is only needed when migrating older projects from Dokka Gradle Plugin V1 and is **not required** here. For migrating other codebases that still use V1, refer to the [migration guide](https://kotl.in/dokka-gradle-migration).
-
 ## Troubleshooting
 
 ### Build Fails with "google-services.json is missing"
