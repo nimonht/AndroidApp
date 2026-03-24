@@ -31,11 +31,10 @@ class ShareCodeRepositoryImpl(
         return try {
             val maxAttempts = 10
 
-            repeat(maxAttempts) { attempt ->
+            repeat(maxAttempts) {
                 val code = ShareCodeUtil.generateCode()
-                val exists = remoteDataSource.shareCodeExists(code)
-                if (!exists) {
-                    remoteDataSource.createShareCode(code, quizId)
+                val created = remoteDataSource.createShareCodeIfNotExists(code, quizId)
+                if (created) {
                     return Result.success(code)
                 }
             }

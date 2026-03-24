@@ -38,23 +38,24 @@ class PoolRepositoryImpl(
     /** {@inheritDoc} */
     override suspend fun contributeQuestions(
         questions: List<Question>,
-        authorId: String,
+        contributorId: String,
+        sourceQuizId: String,
         tags: List<String>,
         anonymize: Boolean
     ): Result<Unit> {
         return try {
-            val effectiveContributorId = if (anonymize) null else authorId
+            val effectiveContributorId = if (anonymize) null else contributorId
 
             // Use WriteBatch for atomic multi-document writes
             val batch: WriteBatch = firestore.batch()
-            val collectionRef = firestore.collection("questionPool")
+            val collectionRef = firestore.collection(FirestoreCollections.QUESTION_POOL)
 
             questions.forEach { question ->
                 val poolItem = QuestionPoolItem(
                     id = UUID.randomUUID().toString(),
                     question = question,
                     contributorId = effectiveContributorId,
-                    sourceQuizId = "",  // Will be set by caller if needed
+                    sourceQuizId = sourceQuizId,
                     tags = tags,
                     usageCount = 0,
                     isActive = true
@@ -63,10 +64,8 @@ class PoolRepositoryImpl(
                 batch.set(docRef, poolItem.toDto())
             }
 
-            // Commit the batch atomically
-            batch.commit().addOnFailureListener { exception ->
-                throw exception
-            }.await()
+            // Commit the batch atomically; await() will throw on failure
+            batch.commit().await()
 
             Result.success(Unit)
         } catch (e: Exception) {

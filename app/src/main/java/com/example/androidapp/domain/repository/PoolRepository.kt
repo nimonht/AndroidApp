@@ -23,17 +23,19 @@ interface PoolRepository {
      * Contributes multiple questions from a quiz to the pool.
      *
      * Each question is wrapped into a [QuestionPoolItem] with the given tags.
-     * If [anonymize] is true, the author ID is set to blank.
+     * If [anonymize] is true, the contributor ID is treated as anonymized (stored as `null`).
      *
      * @param questions The list of [Question] objects to contribute.
-     * @param authorId The user ID of the contributor.
+     * @param contributorId The user ID of the contributor; mapped to a nullable contributor ID in the model.
+     * @param sourceQuizId The ID of the quiz from which these questions originated.
      * @param tags The tags to assign to each pool item.
-     * @param anonymize If true, the author ID is cleared for privacy.
+     * @param anonymize If true, the contributor ID is cleared (set to `null` in the underlying model) for privacy.
      * @return [Result] indicating success or failure.
      */
     suspend fun contributeQuestions(
         questions: List<Question>,
-        authorId: String,
+        contributorId: String,
+        sourceQuizId: String,
         tags: List<String>,
         anonymize: Boolean = false
     ): Result<Unit>

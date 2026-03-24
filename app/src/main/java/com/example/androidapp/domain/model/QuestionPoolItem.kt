@@ -5,7 +5,7 @@ package com.example.androidapp.domain.model
  *
  * @property id Unique identifier for this pool item.
  * @property question The question data reused from the [Question] model.
- * @property contributorId The user ID of the contributor (may be blank/null if anonymized).
+ * @property contributorId The user ID of the contributor (null if anonymized).
  * @property sourceQuizId The original quiz ID this question was contributed from.
  * @property tags Tags for categorization and filtered queries.
  * @property usageCount Number of times this question has been used in auto-generated quizzes.
