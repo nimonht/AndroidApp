@@ -226,6 +226,30 @@ class QuizRepositoryImpl(
         }.onStart { refreshPublicQuizzes() }
     }
 
+    override suspend fun emptyTrash(userId: String): Result<Unit> {
+        return try {
+            // Get all deleted quizzes for the user locally
+            val deletedQuizzes = quizDao.getDeletedQuizzes(userId).first()
+            
+            // Delete them from local Room DB
+            deletedQuizzes.forEach { entity ->
+                quizDao.deleteQuiz(entity)
+            }
+
+            // Sync deletion to Firestore in background
+            ioScope.launch {
+                try {
+                    remoteDataSource.emptyTrash(userId)
+                } catch (_: Exception) {
+                    // Failures here are swallowed as this is background sync
+                }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ==================== Background refresh helpers ====================
 
     private fun refreshFromFirestore(userId: String) {

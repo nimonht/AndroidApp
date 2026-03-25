@@ -5,12 +5,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -21,9 +25,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.ui.components.common.AppAlertDialog
+import com.example.androidapp.ui.components.common.DeleteConfirmDialog
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.navigation.AppTopBar
+import kotlin.math.max
 
 /**
  * Trash/Recycle Bin screen showing soft-deleted quizzes.
@@ -47,6 +54,8 @@ fun TrashScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showEmptyTrashDialog by remember { mutableStateOf(false) }
+    var quizToDeletePermanently by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { msg ->
@@ -68,7 +77,17 @@ fun TrashScreen(
             AppTopBar(
                 title = stringResource(R.string.trash_title),
                 canNavigateBack = true,
-                navigateUp = onNavigateBack
+                navigateUp = onNavigateBack,
+                actions = {
+                    if (uiState.deletedQuizzes.isNotEmpty()) {
+                        IconButton(onClick = { showEmptyTrashDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteSweep,
+                                contentDescription = stringResource(R.string.trash_empty_action_cd)
+                            )
+                        }
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -90,10 +109,38 @@ fun TrashScreen(
                     TrashQuizCard(
                         quiz = quiz,
                         onRestore = { viewModel.onEvent(RecycleBinEvent.RestoreQuiz(quiz.id)) },
-                        onDeletePermanently = { viewModel.onEvent(RecycleBinEvent.DeletePermanently(quiz.id)) }
+                        onDeletePermanently = { quizToDeletePermanently = quiz.id }
                     )
                 }
             }
+        }
+
+        if (showEmptyTrashDialog) {
+            AppAlertDialog(
+                title = stringResource(R.string.trash_empty_confirm_title),
+                message = stringResource(R.string.trash_empty_confirm_message),
+                confirmText = stringResource(R.string.delete),
+                dismissText = stringResource(R.string.cancel),
+                onConfirm = {
+                    showEmptyTrashDialog = false
+                    viewModel.onEvent(RecycleBinEvent.EmptyTrash)
+                },
+                onDismiss = { showEmptyTrashDialog = false }
+            )
+        }
+
+        quizToDeletePermanently?.let { quizId ->
+            AppAlertDialog(
+                title = stringResource(R.string.delete_confirm_title),
+                message = "Bạn có chắc chắn muốn xóa vĩnh viễn bài kiểm tra này không? Hành động này không thể hoàn tác.",
+                confirmText = stringResource(R.string.delete),
+                dismissText = stringResource(R.string.cancel),
+                onConfirm = {
+                    viewModel.onEvent(RecycleBinEvent.DeletePermanently(quizId))
+                    quizToDeletePermanently = null
+                },
+                onDismiss = { quizToDeletePermanently = null }
+            )
         }
     }
 }
@@ -105,10 +152,17 @@ private fun TrashQuizCard(
     onDeletePermanently: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Retention period: 30 days
+    val millisInDay = 1000L * 60 * 60 * 24
+    val deletedAt = quiz.deletedAt ?: System.currentTimeMillis()
+    val elapsedDays = (System.currentTimeMillis() - deletedAt) / millisInDay
+    val daysLeft = max(0, 30 - elapsedDays).toInt()
+
     Card(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = quiz.title, style = MaterialTheme.typography.titleMedium)
@@ -116,6 +170,12 @@ private fun TrashQuizCard(
                     text = stringResource(R.string.quiz_questions, quiz.questionCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.trash_days_remaining, daysLeft),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
             Row {

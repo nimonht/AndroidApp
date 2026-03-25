@@ -25,6 +25,7 @@ data class RecycleBinUiState(
 sealed class RecycleBinEvent {
     data class RestoreQuiz(val quizId: String) : RecycleBinEvent()
     data class DeletePermanently(val quizId: String) : RecycleBinEvent()
+    data object EmptyTrash : RecycleBinEvent()
     data object ClearMessage : RecycleBinEvent()
     data object ClearError : RecycleBinEvent()
 }
@@ -54,6 +55,7 @@ class RecycleBinViewModel(
         when (event) {
             is RecycleBinEvent.RestoreQuiz -> onRestoreQuiz(event.quizId)
             is RecycleBinEvent.DeletePermanently -> onDeletePermanently(event.quizId)
+            is RecycleBinEvent.EmptyTrash -> onEmptyTrash()
             is RecycleBinEvent.ClearMessage -> _uiState.update { it.copy(successMessage = null) }
             is RecycleBinEvent.ClearError -> _uiState.update { it.copy(error = null) }
         }
@@ -89,6 +91,22 @@ class RecycleBinViewModel(
             result.fold(
                 onSuccess = { _uiState.update { it.copy(successMessage = "Đã xóa vĩnh viễn") } },
                 onFailure = { e -> _uiState.update { it.copy(error = e.message) } }
+            )
+        }
+    }
+
+    private fun onEmptyTrash() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val user = authRepository.getCurrentUser()
+            if (user == null) {
+                _uiState.update { it.copy(isLoading = false, error = "Người dùng chưa đăng nhập") }
+                return@launch
+            }
+            val result = quizRepository.emptyTrash(user.id)
+            result.fold(
+                onSuccess = { _uiState.update { it.copy(isLoading = false, successMessage = "Đã dọn sạch thùng rác") } },
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
             )
         }
     }

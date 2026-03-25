@@ -152,7 +152,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     override val storageRepository: StorageRepository by lazy {
-        StorageRepositoryImpl(firebaseStorage)
+        StorageRepositoryImpl(context, firebaseStorage)
     }
 
     override val searchRepository: SearchRepository by lazy {

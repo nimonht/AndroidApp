@@ -102,5 +102,10 @@ interface QuizRepository {
      * Emits public quizzes sorted by attempt count descending (trending).
      */
     fun getTrendingQuizzes(): Flow<List<Quiz>>
+
+    /**
+     * Permanently deletes all soft-deleted quizzes for the user.
+     */
+    suspend fun emptyTrash(userId: String): Result<Unit>
 }
 

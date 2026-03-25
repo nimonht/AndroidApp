@@ -155,5 +155,29 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
             )
             .await()
     }
+
+    /**
+     * Deletes all soft-deleted quizzes owned by the user permanently from Firestore.
+     * Uses batch writes for efficiency.
+     */
+    suspend fun emptyTrash(userId: String) {
+        val deletedQuizzesQuery = firestore.collection(FirestoreCollections.QUIZZES)
+            .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
+            .whereNotEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
+            .get()
+            .await()
+
+        if (deletedQuizzesQuery.isEmpty) return
+
+        // Firestore batches can hold up to 500 operations
+        val batches = deletedQuizzesQuery.documents.chunked(500)
+        for (chunk in batches) {
+            val batch = firestore.batch()
+            for (doc in chunk) {
+                batch.delete(doc.reference)
+            }
+            batch.commit().await()
+        }
+    }
 }
 
