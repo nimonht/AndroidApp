@@ -138,18 +138,12 @@ class QuizRepositoryImpl(
                 }
             }
 
-            // Enqueue sync operation instead of direct async call
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.QUIZ,
-                        quizId,
-                        SyncOperation.CREATE
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.CREATE
+            )
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -165,17 +159,12 @@ class QuizRepositoryImpl(
         return try {
             val deletedAt = System.currentTimeMillis()
             quizDao.softDeleteQuiz(quizId, deletedAt)
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.QUIZ,
-                        quizId,
-                        SyncOperation.UPDATE  // Soft delete is an update operation
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.UPDATE  // Soft delete is an update operation
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -185,17 +174,12 @@ class QuizRepositoryImpl(
     override suspend fun restoreQuiz(quizId: String): Result<Unit> {
         return try {
             quizDao.restoreQuiz(quizId)
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.QUIZ,
-                        quizId,
-                        SyncOperation.UPDATE  // Restore is an update operation
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.UPDATE  // Restore is an update operation
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -206,17 +190,12 @@ class QuizRepositoryImpl(
         return try {
             val entity = quizDao.getQuizById(quizId)
             if (entity != null) quizDao.deleteQuiz(entity)
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.QUIZ,
-                        quizId,
-                        SyncOperation.DELETE
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.DELETE
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -231,7 +210,7 @@ class QuizRepositoryImpl(
                     // Direct call for increment - this is a simple atomic operation
                     remoteDataSource.incrementAttemptCount(quizId)
                 } catch (_: Exception) {
-                    // Can be retried on next sync
+                    // Failure is ignored; this bypasses SyncManager so there is no queued retry
                 }
             }
             Result.success(Unit)
