@@ -107,7 +107,15 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
 
         questionDtos.forEach { q ->
             val questionRef = quizRef.collection(FirestoreCollections.QUESTIONS).document(q.id)
-            batch.set(questionRef, q)
+            // Save question without embedded choices (choices will be in subcollection)
+            val questionWithoutChoices = q.copy(choices = emptyList())
+            batch.set(questionRef, questionWithoutChoices)
+
+            // Save each choice in the choices subcollection
+            q.choices.forEach { choice ->
+                val choiceRef = questionRef.collection(FirestoreCollections.CHOICES).document(choice.id)
+                batch.set(choiceRef, choice)
+            }
         }
 
         batch.commit().await()

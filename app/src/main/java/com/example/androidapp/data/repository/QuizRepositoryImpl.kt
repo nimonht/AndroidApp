@@ -3,11 +3,14 @@ package com.example.androidapp.data.repository
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
+import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
+import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.util.ChecksumUtil
@@ -33,7 +36,8 @@ class QuizRepositoryImpl(
     private val quizDao: QuizDao,
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
-    private val remoteDataSource: QuizRemoteDataSource
+    private val remoteDataSource: QuizRemoteDataSource,
+    private val syncManager: SyncManager
 ) : QuizRepository {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -134,17 +138,16 @@ class QuizRepositoryImpl(
                 }
             }
 
-            // Sync to Firestore in background
+            // Enqueue sync operation instead of direct async call
             ioScope.launch {
                 try {
-                    val questionDtos = questions.mapIndexed { idx, q ->
-                        val qId = q.id.ifBlank { quizId + "_q$idx" }
-                        q.copy(id = qId, quizId = quizId, position = idx).toDto()
-                    }
-                    remoteDataSource.saveQuiz(quizId, finalQuiz.toDto(), questionDtos)
-                    quizDao.updateSyncStatus(quizId, "SYNCED")
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUIZ,
+                        quizId,
+                        SyncOperation.CREATE
+                    )
                 } catch (_: Exception) {
-                    quizDao.updateSyncStatus(quizId, "FAILED")
+                    // Sync will retry automatically when online
                 }
             }
 
@@ -164,8 +167,13 @@ class QuizRepositoryImpl(
             quizDao.softDeleteQuiz(quizId, deletedAt)
             ioScope.launch {
                 try {
-                    remoteDataSource.softDeleteQuiz(quizId, Timestamp(Date(deletedAt)))
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUIZ,
+                        quizId,
+                        SyncOperation.UPDATE  // Soft delete is an update operation
+                    )
                 } catch (_: Exception) {
+                    // Sync will retry automatically when online
                 }
             }
             Result.success(Unit)
@@ -179,8 +187,13 @@ class QuizRepositoryImpl(
             quizDao.restoreQuiz(quizId)
             ioScope.launch {
                 try {
-                    remoteDataSource.restoreQuiz(quizId)
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUIZ,
+                        quizId,
+                        SyncOperation.UPDATE  // Restore is an update operation
+                    )
                 } catch (_: Exception) {
+                    // Sync will retry automatically when online
                 }
             }
             Result.success(Unit)
@@ -195,8 +208,13 @@ class QuizRepositoryImpl(
             if (entity != null) quizDao.deleteQuiz(entity)
             ioScope.launch {
                 try {
-                    remoteDataSource.permanentlyDeleteQuiz(quizId)
+                    syncManager.enqueueSync(
+                        SyncEntityType.QUIZ,
+                        quizId,
+                        SyncOperation.DELETE
+                    )
                 } catch (_: Exception) {
+                    // Sync will retry automatically when online
                 }
             }
             Result.success(Unit)
@@ -210,8 +228,10 @@ class QuizRepositoryImpl(
             quizDao.incrementAttemptCount(quizId)
             ioScope.launch {
                 try {
+                    // Direct call for increment - this is a simple atomic operation
                     remoteDataSource.incrementAttemptCount(quizId)
                 } catch (_: Exception) {
+                    // Can be retried on next sync
                 }
             }
             Result.success(Unit)
