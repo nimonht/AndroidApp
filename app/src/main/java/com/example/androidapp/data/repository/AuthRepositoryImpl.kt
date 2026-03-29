@@ -5,6 +5,7 @@ import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
 import com.example.androidapp.data.remote.model.UserDto
+import com.google.firebase.Timestamp
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -92,7 +93,14 @@ class AuthRepositoryImpl(
             // Persist to Firestore in background
             try {
                 userRemoteDataSource.saveUser(
-                    UserDto(id = user.id, email = email, displayName = username, username = username)
+                    UserDto(
+                        id = user.id,
+                        email = email,
+                        displayName = username,
+                        username = username,
+                        createdAt = Timestamp.now(),
+                        updatedAt = Timestamp.now()
+                    )
                 )
             } catch (_: Exception) {
                 // Firestore sync failure is non-fatal
@@ -224,7 +232,9 @@ class AuthRepositoryImpl(
                         email = currentDto?.email ?: firebaseUser.email ?: "",
                         displayName = displayName,
                         username = currentDto?.username ?: "",
-                        photoUrl = photoUrl ?: currentDto?.photoUrl
+                        photoUrl = photoUrl ?: currentDto?.photoUrl,
+                        createdAt = currentDto?.createdAt ?: Timestamp.now(),
+                        updatedAt = Timestamp.now()
                     )
                 )
             } catch (_: Exception) {

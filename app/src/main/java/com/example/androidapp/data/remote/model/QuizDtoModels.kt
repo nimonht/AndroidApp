@@ -10,17 +10,31 @@ data class ChoiceDto(
     val position: Int = 0
 )
 
+/**
+ * Firestore DTO for a question document.
+ *
+ * Field names align with the Firestore `questions` schema:
+ * - [allowMultipleCorrect] instead of `isMultiSelect`
+ * - [choiceCount] denormalized count of choices
+ * - [choices] embedded list (set to empty when choices are stored in subcollection)
+ */
 data class QuestionDto(
     val id: String = "",
     val content: String = "",
     val choices: List<ChoiceDto> = emptyList(),
-    val isMultiSelect: Boolean = false,
+    val allowMultipleCorrect: Boolean = false,
+    val choiceCount: Int = 0,
     val explanation: String? = null,
     val mediaUrl: String? = null,
     val points: Int = 1,
     val position: Int = 0
 )
 
+/**
+ * Firestore DTO for a quiz document.
+ *
+ * Includes [checksum] for SHA-256 integrity verification during cloud sync.
+ */
 data class QuizDto(
     @DocumentId val id: String = "",
     val ownerId: String = "",
@@ -33,6 +47,7 @@ data class QuizDto(
     val attemptCount: Int = 0,
     val isPublic: Boolean = false,
     val shareCode: String? = null,
+    val checksum: String? = null,
     val createdAt: Timestamp? = null,
     val updatedAt: Timestamp? = null,
     val deletedAt: Timestamp? = null
