@@ -10,6 +10,7 @@ import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.QuizValidator
+import com.example.androidapp.domain.util.UserInputSanitizer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -94,56 +95,20 @@ data class CreateQuizUiState(
  * Events that can be dispatched to [CreateQuizViewModel].
  */
 sealed class CreateQuizEvent {
-    /** Updates the quiz title. */
     data class TitleChanged(val title: String) : CreateQuizEvent()
-
-    /** Updates the quiz description. */
     data class DescriptionChanged(val description: String) : CreateQuizEvent()
-
-    /** Updates the quiz cover image URL. */
     data class ThumbnailUrlChanged(val thumbnailUrl: String) : CreateQuizEvent()
-
-    /** Toggles the public visibility of the quiz. */
     data class IsPublicChanged(val isPublic: Boolean) : CreateQuizEvent()
-
-    /** Updates the raw comma-separated tags string. */
     data class TagsChanged(val tags: String) : CreateQuizEvent()
-
-    /** Appends a blank question to the end of the question list. */
     data object AddQuestion : CreateQuizEvent()
-
-    /** Replaces the question at [index] with [draft]. */
     data class UpdateQuestion(val index: Int, val draft: QuestionDraft) : CreateQuizEvent()
-
-    /** Removes the question at [index] if more than one question exists. */
     data class RemoveQuestion(val index: Int) : CreateQuizEvent()
-
-    /** Moves the question at [index] one position up in the list. */
     data class MoveQuestionUp(val index: Int) : CreateQuizEvent()
-
-    /** Moves the question at [index] one position down in the list. */
     data class MoveQuestionDown(val index: Int) : CreateQuizEvent()
-
-    /**
-     * Saves the current form as a draft without publishing.
-     * Sets [CreateQuizUiState.isDraft] to true and records [CreateQuizUiState.lastSavedAt].
-     * The quiz is saved with whatever [CreateQuizUiState.isPublic] the user has set.
-     */
     data object SaveDraft : CreateQuizEvent()
-
-    /**
-     * Validates the quiz and saves it as a published quiz.
-     * Sets [CreateQuizUiState.isPublished] to true and triggers [CreateQuizUiState.isSaved].
-     */
     data object PublishQuiz : CreateQuizEvent()
-
-    /** Legacy save alias — behaves identically to [PublishQuiz]. */
     data object SaveQuiz : CreateQuizEvent()
-
-    /** Toggles whether each question will be contributed to the community pool after publishing. */
     data class ShareToPoolChanged(val shareToPool: Boolean) : CreateQuizEvent()
-
-    /** Clears the current error message from the UI state. */
     data object ClearError : CreateQuizEvent()
 }
 
@@ -162,114 +127,123 @@ class CreateQuizViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateQuizUiState())
-
-    /** Current UI state for the Create Quiz screen. */
     val uiState: StateFlow<CreateQuizUiState> = _uiState.asStateFlow()
 
-    /**
-     * Dispatches a [CreateQuizEvent] to update state or trigger a side effect.
-     */
     fun onEvent(event: CreateQuizEvent) {
         when (event) {
-            is CreateQuizEvent.TitleChanged ->
-                _uiState.update { it.copy(title = event.title) }
-
-            is CreateQuizEvent.DescriptionChanged ->
-                _uiState.update { it.copy(description = event.description) }
-
-            is CreateQuizEvent.ThumbnailUrlChanged ->
-                _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
-
-            is CreateQuizEvent.IsPublicChanged ->
-                _uiState.update { it.copy(isPublic = event.isPublic) }
-
-            is CreateQuizEvent.TagsChanged ->
-                _uiState.update { it.copy(tags = event.tags) }
-
-            is CreateQuizEvent.AddQuestion ->
-                _uiState.update { it.copy(questions = it.questions + QuestionDraft()) }
-
-            is CreateQuizEvent.UpdateQuestion ->
-                _uiState.update { state ->
-                    state.copy(questions = state.questions.toMutableList().apply {
-                        this[event.index] = event.draft
-                    })
-                }
-
-            is CreateQuizEvent.RemoveQuestion ->
-                _uiState.update { state ->
-                    if (state.questions.size > 1) {
-                        state.copy(
-                            questions = state.questions.toMutableList().apply {
-                                removeAt(event.index)
-                            }
-                        )
-                    } else state
-                }
-
-            is CreateQuizEvent.MoveQuestionUp ->
-                _uiState.update { state ->
-                    val idx = event.index
-                    if (idx <= 0 || idx >= state.questions.size) return@update state
-                    val list = state.questions.toMutableList()
-                    val temp = list[idx - 1]
-                    list[idx - 1] = list[idx]
-                    list[idx] = temp
-                    state.copy(questions = list)
-                }
-
-            is CreateQuizEvent.MoveQuestionDown ->
-                _uiState.update { state ->
-                    val idx = event.index
-                    if (idx < 0 || idx >= state.questions.size - 1) return@update state
-                    val list = state.questions.toMutableList()
-                    val temp = list[idx + 1]
-                    list[idx + 1] = list[idx]
-                    list[idx] = temp
-                    state.copy(questions = list)
-                }
-
-            is CreateQuizEvent.SaveDraft ->
-                onSaveQuiz(publishAfterSave = false)
-
-            is CreateQuizEvent.PublishQuiz ->
-                onSaveQuiz(publishAfterSave = true)
-
-            is CreateQuizEvent.SaveQuiz ->
-                onSaveQuiz(publishAfterSave = true)
-
-            is CreateQuizEvent.ShareToPoolChanged ->
-                _uiState.update { it.copy(shareToPool = event.shareToPool) }
-
-            is CreateQuizEvent.ClearError ->
-                _uiState.update { it.copy(error = null) }
+            is CreateQuizEvent.TitleChanged -> _uiState.update { it.copy(title = event.title) }
+            is CreateQuizEvent.DescriptionChanged -> _uiState.update { it.copy(description = event.description) }
+            is CreateQuizEvent.ThumbnailUrlChanged -> _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
+            is CreateQuizEvent.IsPublicChanged -> _uiState.update { it.copy(isPublic = event.isPublic) }
+            is CreateQuizEvent.TagsChanged -> _uiState.update { it.copy(tags = event.tags) }
+            is CreateQuizEvent.AddQuestion -> _uiState.update { it.copy(questions = it.questions + QuestionDraft()) }
+            is CreateQuizEvent.UpdateQuestion -> _uiState.update { state ->
+                state.copy(questions = state.questions.toMutableList().apply { this[event.index] = event.draft })
+            }
+            is CreateQuizEvent.RemoveQuestion -> _uiState.update { state ->
+                if (state.questions.size > 1) {
+                    state.copy(questions = state.questions.toMutableList().apply { removeAt(event.index) })
+                } else state
+            }
+            is CreateQuizEvent.MoveQuestionUp -> _uiState.update { state ->
+                val idx = event.index
+                if (idx <= 0 || idx >= state.questions.size) return@update state
+                val list = state.questions.toMutableList()
+                val temp = list[idx - 1]
+                list[idx - 1] = list[idx]
+                list[idx] = temp
+                state.copy(questions = list)
+            }
+            is CreateQuizEvent.MoveQuestionDown -> _uiState.update { state ->
+                val idx = event.index
+                if (idx < 0 || idx >= state.questions.size - 1) return@update state
+                val list = state.questions.toMutableList()
+                val temp = list[idx + 1]
+                list[idx + 1] = list[idx]
+                list[idx] = temp
+                state.copy(questions = list)
+            }
+            is CreateQuizEvent.SaveDraft -> onSaveQuiz(publishAfterSave = false)
+            is CreateQuizEvent.PublishQuiz -> onSaveQuiz(publishAfterSave = true)
+            is CreateQuizEvent.SaveQuiz -> onSaveQuiz(publishAfterSave = true)
+            is CreateQuizEvent.ShareToPoolChanged -> _uiState.update { it.copy(shareToPool = event.shareToPool) }
+            is CreateQuizEvent.ClearError -> _uiState.update { it.copy(error = null) }
         }
     }
 
     /**
-     * Validates and persists the quiz.
-     *
-     * When [publishAfterSave] is `true` the quiz is marked as published and
-     * [CreateQuizUiState.isSaved] is set to `true` to trigger back navigation.
-     * Pool contribution only runs on the publish path.
-     *
-     * When [publishAfterSave] is `false` the quiz is saved as a draft using whatever
-     * [CreateQuizUiState.isPublic] value the user has set, and
-     * [CreateQuizUiState.lastSavedAt] is updated.
-     *
-     * @param publishAfterSave `true` to publish, `false` to save as draft.
+     * Tích hợp Nhiệm vụ 45: Validates and normalizes the raw tags string.
+     * Rules: Max 5 tags, max 20 characters per tag, lowercase, no duplicates.
+     * * @return A Pair where the first element is the valid list of tags,
+     * and the second element is the error message (if any).
      */
+    private fun validateAndNormalizeTags(rawTags: String): Pair<List<String>, String?> {
+        if (rawTags.isBlank()) return Pair(emptyList(), null)
+
+        val parsedTags = rawTags.split(",")
+            .map { it.trim().lowercase() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+
+        if (parsedTags.size > 5) {
+            return Pair(emptyList(), "Chỉ được nhập tối đa 5 thẻ (tags).")
+        }
+
+        val invalidTag = parsedTags.find { it.length > 20 }
+        if (invalidTag != null) {
+            return Pair(emptyList(), "Thẻ '$invalidTag' vượt quá 20 ký tự.")
+        }
+
+        return Pair(parsedTags, null)
+    }
+
     private fun onSaveQuiz(publishAfterSave: Boolean) {
         viewModelScope.launch {
-            val state = _uiState.value
+            val currentState = _uiState.value
 
-            if (state.title.isBlank()) {
+            // 1. Sanitize inputs (Nhiệm vụ 44)
+            val sanitizedTitle = UserInputSanitizer.sanitize(currentState.title)
+            val sanitizedDescription = UserInputSanitizer.sanitize(currentState.description)
+            val sanitizedThumbnailUrl = UserInputSanitizer.sanitize(currentState.thumbnailUrl)
+            val sanitizedTags = UserInputSanitizer.sanitize(currentState.tags)
+
+            val sanitizedQuestions = currentState.questions.map { questionDraft ->
+                questionDraft.copy(
+                    content = UserInputSanitizer.sanitize(questionDraft.content),
+                    explanation = UserInputSanitizer.sanitize(questionDraft.explanation),
+                    mediaUrl = UserInputSanitizer.sanitize(questionDraft.mediaUrl),
+                    choices = questionDraft.choices.map { choiceDraft ->
+                        choiceDraft.copy(content = UserInputSanitizer.sanitize(choiceDraft.content))
+                    }
+                )
+            }
+
+            // Cập nhật lại UI state để form hiển thị dữ liệu đã được làm sạch
+            _uiState.update {
+                it.copy(
+                    title = sanitizedTitle,
+                    description = sanitizedDescription,
+                    thumbnailUrl = sanitizedThumbnailUrl,
+                    tags = sanitizedTags,
+                    questions = sanitizedQuestions
+                )
+            }
+
+            // 2. Validate & Normalize Tags (Nhiệm vụ 45)
+            val (parsedTags, tagError) = validateAndNormalizeTags(sanitizedTags)
+            if (tagError != null) {
+                _uiState.update { it.copy(error = tagError) }
+                return@launch
+            }
+
+            // 3. Tiến hành kiểm tra tính hợp lệ tiêu đề và câu hỏi (Nhiệm vụ 42, 43)
+            if (sanitizedTitle.isBlank()) {
                 _uiState.update { it.copy(error = "Vui lòng nhập tiêu đề bài kiểm tra") }
                 return@launch
             }
 
             val validationResult = QuizValidator.validate(
-                questions = state.questions,
+                questions = sanitizedQuestions,
                 getChoices = { draft ->
                     draft.choices.mapIndexed { idx, choice ->
                         Pair(choice, idx in draft.correctIndices)
@@ -277,6 +251,7 @@ class CreateQuizViewModel(
                 },
                 isCorrect = { (_, correct) -> correct }
             )
+
             if (!validationResult.isValid) {
                 _uiState.update { it.copy(error = validationResult.errorMessage) }
                 return@launch
@@ -286,28 +261,21 @@ class CreateQuizViewModel(
 
             val user = authRepository.getCurrentUser()
             val quizId = UUID.randomUUID().toString()
-            val tags = state.tags
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-
-            // On publish, force isPublic = true regardless of the toggle.
-            // On draft save, respect whatever the user has set on the isPublic toggle.
-            val effectiveIsPublic = if (publishAfterSave) true else state.isPublic
+            val effectiveIsPublic = if (publishAfterSave) true else currentState.isPublic
 
             val quiz = Quiz(
                 id = quizId,
                 ownerId = user?.id ?: "",
-                title = state.title,
-                description = state.description.takeIf { it.isNotBlank() },
-                thumbnailUrl = state.thumbnailUrl.takeIf { it.isNotBlank() },
+                title = sanitizedTitle,
+                description = sanitizedDescription.takeIf { it.isNotBlank() },
+                thumbnailUrl = sanitizedThumbnailUrl.takeIf { it.isNotBlank() },
                 authorName = user?.displayName ?: "",
-                tags = tags,
+                tags = parsedTags, // Sử dụng tags đã được chuẩn hóa và kiểm tra hợp lệ
                 isPublic = effectiveIsPublic,
-                questionCount = state.questions.size
+                questionCount = sanitizedQuestions.size
             )
 
-            val questions = state.questions.mapIndexed { idx, draft ->
+            val domainQuestions = sanitizedQuestions.mapIndexed { idx, draft ->
                 Question(
                     id = draft.id,
                     quizId = quizId,
@@ -328,23 +296,21 @@ class CreateQuizViewModel(
                 )
             }
 
-            val result = quizRepository.saveQuiz(quiz, questions)
+            val result = quizRepository.saveQuiz(quiz, domainQuestions)
             _uiState.update { it.copy(isLoading = false) }
 
             result.fold(
                 onSuccess = {
                     if (publishAfterSave) {
-                        // Contribute each question to the community pool if opted in.
-                        // Pool contribution only runs on publish, never on draft saves.
-                        if (state.shareToPool) {
-                            questions.forEach { question ->
+                        if (currentState.shareToPool) {
+                            domainQuestions.forEach { question ->
                                 poolRepository.contributeQuestion(
                                     QuestionPoolItem(
                                         id = question.id,
                                         question = question,
                                         contributorId = user?.id,
                                         sourceQuizId = quizId,
-                                        tags = tags,
+                                        tags = parsedTags,
                                         usageCount = 0
                                     )
                                 )

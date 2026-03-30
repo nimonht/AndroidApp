@@ -106,11 +106,24 @@ class TakeQuizViewModel(
                 return@launch
             }
             quizTitle = quiz.title
+
+            // --- ĐOẠN SỬA LẠI CHO ĐÚNG THAM SỐ CỦA HÀM GENERIC SHUFFLE ---
+            val rawQuestions = quizRepository.getQuestionsForQuizOnce(quizId)
             questions = QuestionShuffler.shuffle(
-                questions = quizRepository.getQuestionsForQuizOnce(quizId),
-                getChoices = { it.choices },
-                copyWithNewChoices = { q, newChoices -> q.copy(choices = newChoices) }
+                questions = rawQuestions,
+                getChoices = { question -> question.choices },
+                copyChoice = { choice, newPosition ->
+                    choice.copy(position = newPosition)
+                },
+                copyQuestion = { question, newChoices, newPosition ->
+                    question.copy(
+                        choices = newChoices,
+                        position = newPosition
+                    )
+                }
             )
+
+
             if (questions.isEmpty()) {
                 _uiState.value = TakeQuizUiState.Error("Bài kiểm tra chưa có câu hỏi")
                 return@launch
