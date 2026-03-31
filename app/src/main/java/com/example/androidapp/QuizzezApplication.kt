@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.androidapp.data.worker.BackendMaintenanceWorker
+import com.example.androidapp.data.worker.BackgroundSyncWorker
 import com.example.androidapp.di.AppContainer
 import com.example.androidapp.di.AppContainerImpl
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +41,7 @@ class QuizzezApplication : Application() {
         appContainer = AppContainerImpl(this)
 
         scheduleBackendMaintenance()
+        scheduleBackgroundSync()
     }
 
     /**
@@ -100,6 +102,38 @@ class QuizzezApplication : Application() {
                     Log.d(TAG, "Debug: enqueued maintenance one-shot")
                 }
             }
+        }
+    }
+
+    /**
+     * Schedules the [BackgroundSyncWorker] to run every 15 minutes with a
+     * network constraint that respects the user's Wi-Fi-only preference.
+     */
+    private fun scheduleBackgroundSync() {
+        applicationScope.launch {
+            val wifiOnly = try {
+                appContainer.settingsPreferences.wifiOnlySync.first()
+            } catch (_: Exception) {
+                false
+            }
+
+            val networkType = if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
+
+            val syncConstraints = Constraints.Builder()
+                .setRequiredNetworkType(networkType)
+                .build()
+
+            val syncRequest = PeriodicWorkRequestBuilder<BackgroundSyncWorker>(
+                15, TimeUnit.MINUTES
+            )
+                .setConstraints(syncConstraints)
+                .build()
+
+            WorkManager.getInstance(this@QuizzezApplication).enqueueUniquePeriodicWork(
+                BackgroundSyncWorker.WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP,
+                syncRequest
+            )
         }
     }
 
