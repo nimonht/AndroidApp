@@ -157,6 +157,7 @@ class SyncManager(
                 )
                 quizDao.updateSyncStatus(operation.entityId, "SYNCED")
             }
+
             SyncOperation.DELETE.name -> {
                 quizRemoteDataSource.permanentlyDeleteQuiz(operation.entityId)
             }
@@ -181,6 +182,7 @@ class SyncManager(
                     question.choices.map { it.toDto() }
                 )
             }
+
             SyncOperation.DELETE.name -> {
                 // Extract quizId from payload, or fallback to fetching from DB
                 val quizId = if (operation.payload.isNotBlank()) {
@@ -218,6 +220,7 @@ class SyncManager(
                     }
                 }
             }
+
             SyncOperation.DELETE.name -> {
                 // Choice deletion is handled by parent question sync
                 // Individual choice deletes require re-syncing the entire question
@@ -236,6 +239,7 @@ class SyncManager(
 
                 attemptRemoteDataSource.saveAttempt(attempt.toDto())
             }
+
             SyncOperation.DELETE.name -> {
                 // Attempts are not typically deleted, but if needed:
                 // Firebase doesn't have a delete method in AttemptRemoteDataSource yet
@@ -261,7 +265,14 @@ class SyncManager(
                 // Check if local version exists and compare timestamps
                 val localQuiz = quizDao.getQuizById(quiz.id)
 
-                if (localQuiz == null || localQuiz.updatedAt < quiz.updatedAt) {
+                // Also check if local questions are missing (recovery mechanism)
+                val localQuestionCount = if (localQuiz != null) {
+                    questionDao.getQuestionCount(quiz.id)
+                } else {
+                    0
+                }
+
+                if (localQuiz == null || localQuiz.updatedAt < quiz.updatedAt || localQuestionCount < quiz.questionCount) {
                     // Firebase version is newer or doesn't exist locally - download it
                     quizDao.insertQuiz(quiz.toEntity())
 

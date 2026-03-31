@@ -132,7 +132,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     override val quizRepository: QuizRepository by lazy {
-        QuizRepositoryImpl(quizDao, questionDao, choiceDao, quizRemoteDataSource, syncManager)
+        QuizRepositoryImpl(quizDao, questionDao, choiceDao, quizRemoteDataSource, questionRemoteDataSource, syncManager)
     }
 
     override val attemptRepository: AttemptRepository by lazy {

@@ -2,8 +2,7 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import androidx.room.Query
 import androidx.room.Update
 import com.example.androidapp.data.local.entity.AttemptEntity
@@ -37,12 +36,14 @@ interface AttemptDao {
     /**
      * Get the most recent attempt for a user on a specific quiz.
      */
-    @Query("""
-        SELECT * FROM attempts 
-        WHERE user_id = :userId AND quiz_id = :quizId 
-        ORDER BY started_at DESC 
+    @Query(
+        """
+        SELECT * FROM attempts
+        WHERE user_id = :userId AND quiz_id = :quizId
+        ORDER BY started_at DESC
         LIMIT 1
-    """)
+    """
+    )
     suspend fun getLatestAttempt(userId: String, quizId: String): AttemptEntity?
 
     /**
@@ -60,17 +61,19 @@ interface AttemptDao {
     /**
      * Get the average score for a quiz.
      */
-    @Query("""
-        SELECT AVG(CAST(score AS FLOAT) / max_score * 100) 
-        FROM attempts 
+    @Query(
+        """
+        SELECT AVG(CAST(score AS FLOAT) / max_score * 100)
+        FROM attempts
         WHERE quiz_id = :quizId AND finished_at IS NOT NULL AND max_score > 0
-    """)
+    """
+    )
     suspend fun getAverageScore(quizId: String): Float?
 
     /**
-     * Insert an attempt, replacing if it already exists.
+     * Insert an attempt, or update it if it already exists.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAttempt(attempt: AttemptEntity)
 
     /**

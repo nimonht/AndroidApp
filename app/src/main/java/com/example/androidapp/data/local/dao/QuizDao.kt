@@ -2,9 +2,8 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import androidx.room.Update
 import com.example.androidapp.data.local.entity.QuizEntity
 import kotlinx.coroutines.flow.Flow
@@ -20,11 +19,13 @@ interface QuizDao {
      * Get all quizzes for a specific user that are not deleted.
      * Results are ordered by updated date (most recent first).
      */
-    @Query("""
-        SELECT * FROM quizzes 
-        WHERE owner_id = :userId AND deleted_at IS NULL 
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE owner_id = :userId AND deleted_at IS NULL
         ORDER BY updated_at DESC
-    """)
+    """
+    )
     fun getQuizzesByOwner(userId: String): Flow<List<QuizEntity>>
 
     /**
@@ -60,23 +61,25 @@ interface QuizDao {
     /**
      * Get deleted quizzes (recycle bin) for a user.
      */
-    @Query("""
-        SELECT * FROM quizzes 
-        WHERE owner_id = :userId AND deleted_at IS NOT NULL 
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE owner_id = :userId AND deleted_at IS NOT NULL
         ORDER BY deleted_at DESC
-    """)
+    """
+    )
     fun getDeletedQuizzes(userId: String): Flow<List<QuizEntity>>
 
     /**
      * Insert a quiz, replacing if it already exists.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertQuiz(quiz: QuizEntity)
 
     /**
      * Insert multiple quizzes.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertQuizzes(quizzes: List<QuizEntity>)
 
     /**
@@ -118,12 +121,14 @@ interface QuizDao {
     /**
      * Search quizzes by title or tags.
      */
-    @Query("""
-        SELECT * FROM quizzes 
-        WHERE deleted_at IS NULL 
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE deleted_at IS NULL
         AND (title LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%')
         ORDER BY updated_at DESC
-    """)
+    """
+    )
     fun searchQuizzes(query: String): Flow<List<QuizEntity>>
 
     /**

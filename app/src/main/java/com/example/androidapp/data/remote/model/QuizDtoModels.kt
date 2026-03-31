@@ -2,11 +2,12 @@ package com.example.androidapp.data.remote.model
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.PropertyName
 
 data class ChoiceDto(
-    val id: String = "",
+    @DocumentId val id: String = "",
     val content: String = "",
-    val isCorrect: Boolean = false,
+    @get:PropertyName("isCorrect") @set:PropertyName("isCorrect") var isCorrect: Boolean = false,
     val position: Int = 0
 )
 
@@ -19,10 +20,10 @@ data class ChoiceDto(
  * - [choices] embedded list (set to empty when choices are stored in subcollection)
  */
 data class QuestionDto(
-    val id: String = "",
+    @DocumentId val id: String = "",
     val content: String = "",
     val choices: List<ChoiceDto> = emptyList(),
-    val allowMultipleCorrect: Boolean = false,
+    @get:PropertyName("allowMultipleCorrect") @set:PropertyName("allowMultipleCorrect") var allowMultipleCorrect: Boolean = false,
     val choiceCount: Int = 0,
     val explanation: String? = null,
     val mediaUrl: String? = null,
@@ -45,7 +46,7 @@ data class QuizDto(
     val tags: List<String> = emptyList(),
     val questionCount: Int = 0,
     val attemptCount: Int = 0,
-    val isPublic: Boolean = false,
+    @get:PropertyName("isPublic") @set:PropertyName("isPublic") var isPublic: Boolean = false,
     val shareCode: String? = null,
     val checksum: String? = null,
     val createdAt: Timestamp? = null,

@@ -4,6 +4,7 @@ import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
@@ -37,6 +38,7 @@ class QuizRepositoryImpl(
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
     private val remoteDataSource: QuizRemoteDataSource,
+    private val questionRemoteDataSource: QuestionRemoteDataSource,
     private val syncManager: SyncManager
 ) : QuizRepository {
 
@@ -229,7 +231,7 @@ class QuizRepositoryImpl(
         return try {
             // Get all deleted quizzes for the user locally
             val deletedQuizzes = quizDao.getDeletedQuizzes(userId).first()
-            
+
             // Delete them from local Room DB
             deletedQuizzes.forEach { entity ->
                 quizDao.deleteQuiz(entity)
@@ -249,6 +251,21 @@ class QuizRepositoryImpl(
         }
     }
 
+    override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {
+        return try {
+            val quizDto = remoteDataSource.getQuizById(quizId)
+                ?: return Result.failure(Exception("Quiz not found on remote"))
+
+            val quiz = quizDto.toDomain()
+            quizDao.insertQuiz(quiz.toEntity())
+            refreshQuestionsAndChoices(quizId)
+
+            Result.success(quiz)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ==================== Background refresh helpers ====================
 
     private fun refreshFromFirestore(userId: String) {
@@ -262,7 +279,9 @@ class QuizRepositoryImpl(
         try {
             val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
             dtos.forEach { dto ->
-                quizDao.insertQuiz(dto.toDomain().toEntity())
+                val quiz = dto.toDomain()
+                quizDao.insertQuiz(quiz.toEntity())
+                refreshQuestionsAndChoices(quiz.id)
             }
         } catch (_: Exception) {
         }
@@ -272,9 +291,32 @@ class QuizRepositoryImpl(
         try {
             val dtos = remoteDataSource.getPublicQuizzes().first()
             dtos.forEach { dto ->
-                quizDao.insertQuiz(dto.toDomain().toEntity())
+                val quiz = dto.toDomain()
+                quizDao.insertQuiz(quiz.toEntity())
+                refreshQuestionsAndChoices(quiz.id)
             }
         } catch (_: Exception) {
+        }
+    }
+
+    /**
+     * Fetches questions and their choices from Firestore subcollections
+     * and inserts them into the local Room database.
+     */
+    private suspend fun refreshQuestionsAndChoices(quizId: String) {
+        try {
+            val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quizId)
+            questionDtos.forEach { questionDto ->
+                val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quizId, questionDto.id)
+                val question = questionDto.toDomain().copy(quizId = quizId)
+                questionDao.insertQuestion(question.toEntity())
+                choiceDtos.forEach { choiceDto ->
+                    val choice = choiceDto.toDomain()
+                    choiceDao.insertChoice(choice.toEntity(question.id))
+                }
+            }
+        } catch (_: Exception) {
+            // Failure to refresh questions should not block quiz metadata refresh
         }
     }
 }

@@ -2,10 +2,9 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.example.androidapp.data.local.entity.ChoiceEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -41,15 +40,15 @@ interface ChoiceDao {
     suspend fun getCorrectChoices(questionId: String): List<ChoiceEntity>
 
     /**
-     * Insert a choice, replacing if it already exists.
+     * Insert a choice, or update it if it already exists.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertChoice(choice: ChoiceEntity)
 
     /**
-     * Insert multiple choices.
+     * Insert multiple choices, or update those that already exist.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertChoices(choices: List<ChoiceEntity>)
 
     /**
