@@ -2,9 +2,8 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import androidx.room.Update
 import com.example.androidapp.data.local.entity.QuizEntity
 import kotlinx.coroutines.flow.Flow
@@ -20,12 +19,29 @@ interface QuizDao {
      * Get all quizzes for a specific user that are not deleted.
      * Results are ordered by updated date (most recent first).
      */
-    @Query("""
-        SELECT * FROM quizzes 
-        WHERE owner_id = :userId AND deleted_at IS NULL 
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE owner_id = :userId AND deleted_at IS NULL
         ORDER BY updated_at DESC
-    """)
+    """
+    )
     fun getQuizzesByOwner(userId: String): Flow<List<QuizEntity>>
+
+    /**
+     * Get quizzes recently attempted by the user.
+     */
+    @Query(
+        """
+        SELECT q.* FROM quizzes q
+        INNER JOIN attempts a ON q.id = a.quiz_id
+        WHERE a.user_id = :userId AND q.deleted_at IS NULL
+        GROUP BY q.id
+        ORDER BY MAX(a.started_at) DESC
+        LIMIT 10
+    """
+    )
+    fun getRecentAttemptQuizzes(userId: String): Flow<List<QuizEntity>>
 
     /**
      * Get all non-deleted quizzes ordered by updated date.
@@ -60,23 +76,25 @@ interface QuizDao {
     /**
      * Get deleted quizzes (recycle bin) for a user.
      */
-    @Query("""
-        SELECT * FROM quizzes 
-        WHERE owner_id = :userId AND deleted_at IS NOT NULL 
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE owner_id = :userId AND deleted_at IS NOT NULL
         ORDER BY deleted_at DESC
-    """)
+    """
+    )
     fun getDeletedQuizzes(userId: String): Flow<List<QuizEntity>>
 
     /**
      * Insert a quiz, replacing if it already exists.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertQuiz(quiz: QuizEntity)
 
     /**
      * Insert multiple quizzes.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertQuizzes(quizzes: List<QuizEntity>)
 
     /**
@@ -90,6 +108,12 @@ interface QuizDao {
      */
     @Query("UPDATE quizzes SET sync_status = :status WHERE id = :quizId")
     suspend fun updateSyncStatus(quizId: String, status: String)
+
+    /**
+     * Update the content checksum of a quiz.
+     */
+    @Query("UPDATE quizzes SET checksum = :checksum WHERE id = :quizId")
+    suspend fun updateChecksum(quizId: String, checksum: String)
 
     /**
      * Soft delete a quiz by setting deletedAt timestamp.
@@ -115,15 +139,18 @@ interface QuizDao {
     @Query("DELETE FROM quizzes WHERE deleted_at IS NOT NULL AND deleted_at < :threshold")
     suspend fun deleteOldQuizzes(threshold: Long)
 
+
     /**
      * Search quizzes by title or tags.
      */
-    @Query("""
-        SELECT * FROM quizzes 
-        WHERE deleted_at IS NULL 
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE deleted_at IS NULL
         AND (title LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%')
         ORDER BY updated_at DESC
-    """)
+    """
+    )
     fun searchQuizzes(query: String): Flow<List<QuizEntity>>
 
     /**

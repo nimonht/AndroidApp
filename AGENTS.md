@@ -14,6 +14,8 @@ domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/
             repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository,
                           QuestionRepository, ShareCodeRepository, PoolRepository,
                           StorageRepository, SearchRepository)
+                          NOTE: StorageRepository is no longer used by EditProfileViewModel;
+                          profile avatars are now URL-based (user-pasted or Wallhaven API fetch).
             usecase/    ← (currently empty; business logic lives directly in ViewModels)
             util/       ← ScoreUtil (star-rating + percentage helpers), ChecksumUtil (SHA-256 quiz
                           integrity), CsvParser + CsvValidator (CSV bulk import), QuizValidator
@@ -136,9 +138,18 @@ Existing screen directories under `ui/screens/`:
 - `auth/` — `LoginScreen`, `RegisterScreen`, `AuthViewModel` (shared auth state), `AuthFragment` (XML Fragment with TabLayout; wraps Login/Register tabs and "Continue as Guest")
 - `home/` — `HomeScreen`, `HomeViewModel`
 - `search/` — `SearchScreen`, `SearchViewModel`; state and events are split into standalone files (`SearchUiState.kt`, `SearchEvent.kt`); display model `QuizCardDraft` and sub-composables (`SearchControlsRow`, `TagFilterRow`, `SearchResultsGrid`, `SearchResultsList`, `DiscoverSection`) also live in this package; `SortOption` enum (DATE / POPULARITY / RELEVANCE) is defined in `SearchUiState.kt`
-- `profile/` — `ProfileScreen`, `ProfileViewModel`, `EditProfileScreen`, `EditProfileViewModel`
+- `profile/` — `ProfileScreen`, `ProfileViewModel`, `EditProfileScreen`, `EditProfileViewModel`.
+  `EditProfileViewModel` depends only on `AuthRepository` (no `StorageRepository`). Profile avatars
+  are URL-based: users paste a URL manually or fetch a random avatar from the Wallhaven API.
+  Events: `AvatarUrlChanged(url: String)`, `FetchRandomAvatar` (replaced the old `AvatarSelected(uri: Uri)`).
+  `EditProfileUiState` includes `isLoadingAvatar: Boolean` for tracking Wallhaven fetch progress.
 - `quiz/` — `QuizDetailScreen`/`ViewModel`, `TakeQuizScreen`/`ViewModel`, `QuizResultScreen`/`ViewModel`
-- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`
+- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`.
+  Quiz lifecycle uses a 3-state model:
+    - **Draft**: `isDraft=true`, `isPublic=false` (forced) — work-in-progress, not visible to others.
+    - **Published (Private)**: `isDraft=false`, `isPublic=false` (toggle off) — finalized but only accessible via share code.
+    - **Public**: `isDraft=false`, `isPublic=true` (toggle on, explicit user choice) — discoverable in search.
+  Publishing a draft sets `isDraft=false` but does **not** force `isPublic=true`; visibility is a separate, explicit toggle.
 - `history/` — `HistoryScreen`, `HistoryViewModel`
 - `review/` — `AnswerReviewScreen`, `AnswerReviewViewModel`
 - `attempt/` — `AttemptDetailScreen`, `AttemptDetailViewModel`
@@ -165,6 +176,7 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 - Naming: `{Name}ViewModel`, `{Name}RepositoryImpl`, `{Name}Entity`, `{Name}Dao`, `{Name}Dto`, `{Action}{Entity}UseCase`.
 - Exception: the Trash screen ViewModel is named `RecycleBinViewModel` (not `TrashViewModel`) — match this when editing that file.
 - `domain/usecase/` is currently empty — no use-case classes are implemented. Business logic lives directly in ViewModels.
+- **Profile avatars** are served via URL (user-pasted or randomly fetched from the Wallhaven API), **not** uploaded to Firebase Storage. `EditProfileViewModel` does not depend on `StorageRepository`.
 - Private `MutableStateFlow` prefixed with `_`; event handlers prefixed with `on`.
 - KDoc required for all public APIs (see `CODE_RULES.md` §10.1 for format).
 - Branch pattern: `feature/{task-id}-{description}` / `bugfix/{task-id}-{description}`.

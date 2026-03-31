@@ -2,24 +2,20 @@ package com.example.androidapp
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.ui.navigation.QuizzezNavHost
 import com.example.androidapp.ui.screens.auth.AuthFragment
-import com.example.androidapp.ui.screens.auth.AuthUiState
-import com.example.androidapp.ui.screens.auth.AuthViewModel
 import com.example.androidapp.ui.theme.QuizzezTheme
-import kotlinx.coroutines.launch
 
 /**
  * Main Activity for the Quizzez application.
@@ -50,8 +46,19 @@ class MainActivity : FragmentActivity() {
         fragmentContainer = findViewById(R.id.fragmentContainer)
 
         // Set up the Compose content once (it stays ready but hidden until needed).
+        val settingsPreferences = (application as QuizzezApplication).appContainer.settingsPreferences
+
         composeView.setContent {
-            QuizzezTheme {
+            val themeMode by settingsPreferences.darkThemeMode.collectAsStateWithLifecycle(
+                initialValue = SettingsPreferences.THEME_MODE_SYSTEM
+            )
+            val darkTheme = when (themeMode) {
+                SettingsPreferences.THEME_MODE_LIGHT -> false
+                SettingsPreferences.THEME_MODE_DARK -> true
+                else -> isSystemInDarkTheme()
+            }
+
+            QuizzezTheme(darkTheme = darkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

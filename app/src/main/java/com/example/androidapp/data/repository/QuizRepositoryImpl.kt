@@ -3,11 +3,15 @@ package com.example.androidapp.data.repository
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
+import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
+import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
+import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.util.ChecksumUtil
@@ -33,12 +37,17 @@ class QuizRepositoryImpl(
     private val quizDao: QuizDao,
     private val questionDao: QuestionDao,
     private val choiceDao: ChoiceDao,
-    private val remoteDataSource: QuizRemoteDataSource
+    private val remoteDataSource: QuizRemoteDataSource,
+    private val questionRemoteDataSource: QuestionRemoteDataSource,
+    private val syncManager: SyncManager
 ) : QuizRepository {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     override fun getHomeQuizzes(userId: String): Flow<HomeQuizzes> {
+        val recentQuizzesFlow = quizDao.getRecentAttemptQuizzes(userId).map { entities ->
+            entities.map { it.toDomain() }
+        }
         val myQuizzesFlow = quizDao.getQuizzesByOwner(userId).map { entities ->
             entities.map { it.toDomain() }
         }
@@ -46,9 +55,9 @@ class QuizRepositoryImpl(
             entities.map { it.toDomain() }
         }
         // Refresh from Firestore in background when flow starts
-        return combine(myQuizzesFlow, publicQuizzesFlow) { mine, public ->
+        return combine(recentQuizzesFlow, myQuizzesFlow, publicQuizzesFlow) { recent, mine, public ->
             HomeQuizzes(
-                recentAttemptQuizzes = emptyList(),
+                recentAttemptQuizzes = recent,
                 myQuizzes = mine,
                 trendingQuizzes = public.sortedByDescending { it.attemptCount }.take(10)
             )
@@ -134,19 +143,12 @@ class QuizRepositoryImpl(
                 }
             }
 
-            // Sync to Firestore in background
-            ioScope.launch {
-                try {
-                    val questionDtos = questions.mapIndexed { idx, q ->
-                        val qId = q.id.ifBlank { quizId + "_q$idx" }
-                        q.copy(id = qId, quizId = quizId, position = idx).toDto()
-                    }
-                    remoteDataSource.saveQuiz(quizId, finalQuiz.toDto(), questionDtos)
-                    quizDao.updateSyncStatus(quizId, "SYNCED")
-                } catch (_: Exception) {
-                    quizDao.updateSyncStatus(quizId, "FAILED")
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.CREATE
+            )
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -162,12 +164,12 @@ class QuizRepositoryImpl(
         return try {
             val deletedAt = System.currentTimeMillis()
             quizDao.softDeleteQuiz(quizId, deletedAt)
-            ioScope.launch {
-                try {
-                    remoteDataSource.softDeleteQuiz(quizId, Timestamp(Date(deletedAt)))
-                } catch (_: Exception) {
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.UPDATE  // Soft delete is an update operation
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -177,12 +179,12 @@ class QuizRepositoryImpl(
     override suspend fun restoreQuiz(quizId: String): Result<Unit> {
         return try {
             quizDao.restoreQuiz(quizId)
-            ioScope.launch {
-                try {
-                    remoteDataSource.restoreQuiz(quizId)
-                } catch (_: Exception) {
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.UPDATE  // Restore is an update operation
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -193,12 +195,12 @@ class QuizRepositoryImpl(
         return try {
             val entity = quizDao.getQuizById(quizId)
             if (entity != null) quizDao.deleteQuiz(entity)
-            ioScope.launch {
-                try {
-                    remoteDataSource.permanentlyDeleteQuiz(quizId)
-                } catch (_: Exception) {
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.DELETE
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -210,8 +212,10 @@ class QuizRepositoryImpl(
             quizDao.incrementAttemptCount(quizId)
             ioScope.launch {
                 try {
+                    // Direct call for increment - this is a simple atomic operation
                     remoteDataSource.incrementAttemptCount(quizId)
                 } catch (_: Exception) {
+                    // Failure is ignored; this bypasses SyncManager so there is no queued retry
                 }
             }
             Result.success(Unit)
@@ -226,11 +230,19 @@ class QuizRepositoryImpl(
         }.onStart { refreshPublicQuizzes() }
     }
 
+    override suspend fun getAllTags(): List<String> {
+        return try {
+            quizDao.getAllQuizzes().first().map { it.toDomain() }.flatMap { it.tags }.distinct()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     override suspend fun emptyTrash(userId: String): Result<Unit> {
         return try {
             // Get all deleted quizzes for the user locally
             val deletedQuizzes = quizDao.getDeletedQuizzes(userId).first()
-            
+
             // Delete them from local Room DB
             deletedQuizzes.forEach { entity ->
                 quizDao.deleteQuiz(entity)
@@ -250,32 +262,84 @@ class QuizRepositoryImpl(
         }
     }
 
+    override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {
+        return try {
+            val quizDto = remoteDataSource.getQuizById(quizId)
+                ?: return Result.failure(Exception("Quiz not found on remote"))
+
+            val quiz = quizDto.toDomain()
+            quizDao.insertQuiz(quiz.toEntity())
+            refreshQuestionsAndChoices(quizId)
+
+            Result.success(quiz)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     // ==================== Background refresh helpers ====================
 
     private fun refreshFromFirestore(userId: String) {
         ioScope.launch {
+            if (!syncManager.isSyncAllowed()) return@launch
             refreshMyQuizzes(userId)
             refreshPublicQuizzes()
         }
     }
 
     private suspend fun refreshMyQuizzes(userId: String) {
+        if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
             dtos.forEach { dto ->
-                quizDao.insertQuiz(dto.toDomain().toEntity())
+                val quiz = dto.toDomain()
+                quizDao.insertQuiz(quiz.toEntity())
+                refreshQuestionsAndChoices(quiz.id)
             }
         } catch (_: Exception) {
         }
     }
 
     private suspend fun refreshPublicQuizzes() {
+        if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getPublicQuizzes().first()
             dtos.forEach { dto ->
-                quizDao.insertQuiz(dto.toDomain().toEntity())
+                val quiz = dto.toDomain()
+                quizDao.insertQuiz(quiz.toEntity())
+                refreshQuestionsAndChoices(quiz.id)
             }
         } catch (_: Exception) {
+        }
+    }
+
+    /**
+     * Fetches questions and their choices from Firestore subcollections
+     * and inserts them into the local Room database.
+     * Deletes existing local questions/choices for the quiz first to remove stale data.
+     */
+    private suspend fun refreshQuestionsAndChoices(quizId: String) {
+        if (!syncManager.isSyncAllowed()) return
+        try {
+            // Delete existing local questions (and their choices via cascade) to remove stale data
+            val existingQuestions = questionDao.getQuestionsByQuizIdOnce(quizId)
+            existingQuestions.forEach { questionEntity ->
+                questionDao.deleteQuestion(questionEntity)
+            }
+
+            // Fetch and insert fresh questions and choices from Firestore
+            val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quizId)
+            questionDtos.forEach { questionDto ->
+                val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quizId, questionDto.id)
+                val question = questionDto.toDomain().copy(quizId = quizId)
+                questionDao.insertQuestion(question.toEntity())
+                choiceDtos.forEach { choiceDto ->
+                    val choice = choiceDto.toDomain()
+                    choiceDao.insertChoice(choice.toEntity(question.id))
+                }
+            }
+        } catch (_: Exception) {
+            // Failure to refresh questions should not block quiz metadata refresh
         }
     }
 }

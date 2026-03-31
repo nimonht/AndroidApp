@@ -47,6 +47,12 @@ class SearchViewModel(
      */
     private var allResults: List<Quiz> = emptyList()
 
+    /**
+     * Danh sach tat ca quiz cong khai, giu lai de loc tag kham pha
+     * ma khong can truy van lai Firestore.
+     */
+    private var allPublicQuizzes: List<Quiz> = emptyList()
+
     /** Flow noi bo de debounce thay doi truy van. */
     private val _queryFlow = MutableStateFlow("")
 
@@ -67,6 +73,7 @@ class SearchViewModel(
             is SearchEvent.OnRecentSearchClicked -> handleRecentSearchClicked(event.query)
             is SearchEvent.OnClearRecentSearches -> handleClearRecentSearches()
             is SearchEvent.OnTagToggle -> handleTagToggle(event.tag)
+            is SearchEvent.OnDiscoverTagToggle -> handleDiscoverTagToggle(event.tag)
             is SearchEvent.OnToggleViewMode -> handleToggleViewMode()
             is SearchEvent.OnSortOptionSelected -> handleSortOptionSelected(event.option)
         }
@@ -131,6 +138,8 @@ class SearchViewModel(
 
         viewModelScope.launch {
             quizRepository.getPublicQuizzes().collectLatest { quizzes ->
+                allPublicQuizzes = quizzes
+
                 // --- Tag cloud: dem tan suat, sap xep giam dan ---
                 val tagFrequency: Map<String, Int> = quizzes
                     .flatMap { it.tags }
@@ -141,38 +150,16 @@ class SearchViewModel(
                     .sortedByDescending { it.value }
                     .map { it.key }
 
-                // --- Top hom nay: 10 quiz moi nhat theo createdAt ---
-                val todayTopQuizzes: List<QuizCardDraft> = quizzes
-                    .sortedByDescending { it.createdAt }
-                    .take(10)
-                    .map { it.toCardDraft() }
-
-                // --- Noi bat: top 8 quiz cong khai theo attemptCount ---
-                val featuredQuizzes: List<QuizCardDraft> = quizzes
-                    .filter { it.isPublic }
-                    .sortedByDescending { it.attemptCount }
-                    .take(8)
-                    .map { it.toCardDraft() }
-
-                // --- Trending: top 10 quiz theo attemptCount ---
-                val trendingQuizzes: List<QuizCardDraft> = quizzes
-                    .sortedByDescending { it.attemptCount }
-                    .take(10)
-                    .map { it.toCardDraft() }
-
-                // --- Top toan thoi gian: top 10 quiz theo attemptCount tren toan bo ---
-                val allTimeTopQuizzes: List<QuizCardDraft> = quizzes
-                    .sortedByDescending { it.attemptCount }
-                    .take(10)
-                    .map { it.toCardDraft() }
+                val discoverData = deriveDiscoverData(quizzes, emptyList())
 
                 _uiState.update { state ->
                     state.copy(
                         discoverTags = discoverTags,
-                        todayTopQuizzes = todayTopQuizzes,
-                        featuredQuizzes = featuredQuizzes,
-                        trendingQuizzes = trendingQuizzes,
-                        allTimeTopQuizzes = allTimeTopQuizzes,
+                        todayTopQuizzes = discoverData.todayTop,
+                        featuredQuizzes = discoverData.featured,
+                        trendingQuizzes = discoverData.trending,
+                        allTimeTopQuizzes = discoverData.allTimeTop,
+                        selectedDiscoverTags = emptyList(),
                         isLoadingDiscover = false
                     )
                 }
@@ -261,6 +248,28 @@ class SearchViewModel(
                     updatedTags,
                     state.sortOption
                 )
+            )
+        }
+    }
+
+    /**
+     * Bat/tat mot tag trong danh sach [SearchUiState.selectedDiscoverTags]
+     * va cap nhat cac section kham pha da loc.
+     */
+    private fun handleDiscoverTagToggle(tag: String) {
+        _uiState.update { state ->
+            val updatedTags = if (tag in state.selectedDiscoverTags) {
+                state.selectedDiscoverTags - tag
+            } else {
+                state.selectedDiscoverTags + tag
+            }
+            val discoverData = deriveDiscoverData(allPublicQuizzes, updatedTags)
+            state.copy(
+                selectedDiscoverTags = updatedTags,
+                todayTopQuizzes = discoverData.todayTop,
+                featuredQuizzes = discoverData.featured,
+                trendingQuizzes = discoverData.trending,
+                allTimeTopQuizzes = discoverData.allTimeTop
             )
         }
     }
@@ -374,6 +383,58 @@ class SearchViewModel(
         authorName = authorName,
         questionCount = questionCount,
         attemptCount = attemptCount,
-        coverImageUrl = thumbnailUrl
+        coverImageUrl = thumbnailUrl,
+        tags = tags
     )
+
+    // ---------------------------------------------------------------------------
+    // Discover data helper
+    // ---------------------------------------------------------------------------
+
+    /**
+     * Ket qua du lieu kham pha da loc.
+     */
+    private data class DiscoverData(
+        val todayTop: List<QuizCardDraft>,
+        val featured: List<QuizCardDraft>,
+        val trending: List<QuizCardDraft>,
+        val allTimeTop: List<QuizCardDraft>
+    )
+
+    /**
+     * Loc danh sach quiz cong khai theo [selectedTags] (AND logic) va tao
+     * cac section kham pha. Neu [selectedTags] rong, tra ve toan bo.
+     */
+    private fun deriveDiscoverData(
+        quizzes: List<Quiz>,
+        selectedTags: List<String>
+    ): DiscoverData {
+        val filtered = if (selectedTags.isEmpty()) {
+            quizzes
+        } else {
+            quizzes.filter { quiz ->
+                selectedTags.all { tag -> tag in quiz.tags }
+            }
+        }
+
+        return DiscoverData(
+            todayTop = filtered
+                .sortedByDescending { it.createdAt }
+                .take(10)
+                .map { it.toCardDraft() },
+            featured = filtered
+                .filter { it.isPublic }
+                .sortedByDescending { it.attemptCount }
+                .take(8)
+                .map { it.toCardDraft() },
+            trending = filtered
+                .sortedByDescending { it.attemptCount }
+                .take(10)
+                .map { it.toCardDraft() },
+            allTimeTop = filtered
+                .sortedByDescending { it.attemptCount }
+                .take(10)
+                .map { it.toCardDraft() }
+        )
+    }
 }

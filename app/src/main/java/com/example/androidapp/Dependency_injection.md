@@ -124,3 +124,18 @@ Access it through the container as shown in the examples above.
 ### Context
 - `context: Context` - Application context
 
+### Repositories
+- `authRepository: AuthRepository` - Authentication and user profile operations
+- `quizRepository: QuizRepository` - Quiz CRUD operations
+- `attemptRepository: AttemptRepository` - Quiz attempt tracking
+- `questionRepository: QuestionRepository` - Question operations
+- `shareCodeRepository: ShareCodeRepository` - Share code management
+- `poolRepository: PoolRepository` - Community question pool
+- `storageRepository: StorageRepository` - Media file storage (quiz media only; profile avatars use external URLs)
+- `searchRepository: SearchRepository` - Search history and recent searches
+
+### Network & Sync
+- `networkMonitor: NetworkMonitor` - Network connectivity state
+- `syncManager: SyncManager` - Background sync coordinator
+- `pendingSyncDao: PendingSyncDao` - Pending sync operations tracking
+

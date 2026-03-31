@@ -95,22 +95,45 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Saves a quiz and its questions using a batch write.
+     * Saves a quiz and its questions using per-question batch writes.
+     * Deletes existing choices before saving to avoid stale data.
+     * Processes each question individually to ensure choice cleanup and avoid batch size limits.
      * @param quizId The document ID for the quiz.
      * @param quizDto The quiz data to save.
      * @param questionDtos The question list to save in the subcollection.
      */
     suspend fun saveQuiz(quizId: String, quizDto: QuizDto, questionDtos: List<QuestionDto>) {
-        val batch = firestore.batch()
         val quizRef = firestore.collection(FirestoreCollections.QUIZZES).document(quizId)
-        batch.set(quizRef, quizDto)
 
+        // First, save the quiz document itself
+        quizRef.set(quizDto).await()
+
+        // Process each question individually to handle choice deletion
+        // This approach avoids batch size limits and ensures stale choices are removed
         questionDtos.forEach { q ->
             val questionRef = quizRef.collection(FirestoreCollections.QUESTIONS).document(q.id)
-            batch.set(questionRef, q)
-        }
 
-        batch.commit().await()
+            // Delete existing choices first to avoid leaving stale documents
+            val existingChoices = questionRef
+                .collection(FirestoreCollections.CHOICES)
+                .get()
+                .await()
+
+            val batch = firestore.batch()
+            existingChoices.documents.forEach { batch.delete(it.reference) }
+
+            // Save question without embedded choices
+            val questionWithoutChoices = q.copy(choices = emptyList())
+            batch.set(questionRef, questionWithoutChoices)
+
+            // Save each choice in the choices subcollection
+            q.choices.forEach { choice ->
+                val choiceRef = questionRef.collection(FirestoreCollections.CHOICES).document(choice.id)
+                batch.set(choiceRef, choice)
+            }
+
+            batch.commit().await()
+        }
     }
 
     /**
@@ -180,4 +203,3 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
         }
     }
 }
-

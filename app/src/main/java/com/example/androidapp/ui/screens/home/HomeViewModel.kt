@@ -27,6 +27,7 @@ data class HomeUiState(
     val error: String? = null,
     val isLoggedIn: Boolean = false,
     val displayName: String = "",
+    val photoUrl: String? = null,
     val userId: String = ""
 )
 
@@ -60,6 +61,7 @@ class HomeViewModel(
                     it.copy(
                         isLoggedIn = user != null,
                         displayName = user?.displayName ?: "",
+                        photoUrl = user?.photoUrl,
                         userId = user?.id ?: ""
                     )
                 }
@@ -78,6 +80,7 @@ class HomeViewModel(
             is HomeEvent.JoinCodeChanged -> _uiState.update {
                 it.copy(joinCode = event.code, joinCodeError = null)
             }
+
             is HomeEvent.JoinQuiz -> onJoinQuiz(event.code)
             is HomeEvent.Refresh -> onRefresh()
             is HomeEvent.ClearError -> _uiState.update { it.copy(error = null) }
@@ -143,4 +146,3 @@ class HomeViewModel(
         }
     }
 }
-

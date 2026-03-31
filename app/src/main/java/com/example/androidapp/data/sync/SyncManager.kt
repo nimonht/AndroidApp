@@ -12,8 +12,10 @@ import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
+import com.example.androidapp.domain.util.ChecksumUtil
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
@@ -42,7 +44,8 @@ class SyncManager(
     private val quizRemoteDataSource: QuizRemoteDataSource,
     private val questionRemoteDataSource: QuestionRemoteDataSource,
     private val attemptRemoteDataSource: AttemptRemoteDataSource,
-    private val networkMonitor: NetworkMonitor
+    private val networkMonitor: NetworkMonitor,
+    private val settingsPreferences: SettingsPreferences
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -52,11 +55,27 @@ class SyncManager(
     init {
         scope.launch {
             networkMonitor.isOnline.collect { isOnline ->
-                if (isOnline) {
+                if (isOnline && isSyncAllowed()) {
                     processPendingOperations()
                 }
             }
         }
+    }
+
+    /**
+     * Returns true if sync operations are currently permitted by the user's
+     * settings and the current network state.
+     * - Returns false if auto-sync is disabled.
+     * - Returns false if the device is offline.
+     * - Returns false if WiFi-only mode is on but the connection is not WiFi.
+     */
+    suspend fun isSyncAllowed(): Boolean {
+        val autoSync = settingsPreferences.autoSyncEnabled.first()
+        if (!autoSync) return false
+        if (!networkMonitor.isOnline.value) return false
+        val wifiOnly = settingsPreferences.wifiOnlySync.first()
+        if (wifiOnly && !networkMonitor.isWifi.value) return false
+        return true
     }
 
     suspend fun processPendingOperations() {
@@ -106,7 +125,7 @@ class SyncManager(
         )
         _syncState.value = SyncState.PENDING
 
-        if (networkMonitor.isOnline.value) {
+        if (isSyncAllowed()) {
             scope.launch { processPendingOperations() }
         }
     }
@@ -117,7 +136,7 @@ class SyncManager(
 
     suspend fun retryFailedOperations() {
         pendingSyncDao.resetFailedToPending()
-        if (networkMonitor.isOnline.value) {
+        if (isSyncAllowed()) {
             scope.launch { processPendingOperations() }
         }
     }
@@ -157,6 +176,7 @@ class SyncManager(
                 )
                 quizDao.updateSyncStatus(operation.entityId, "SYNCED")
             }
+
             SyncOperation.DELETE.name -> {
                 quizRemoteDataSource.permanentlyDeleteQuiz(operation.entityId)
             }
@@ -181,6 +201,7 @@ class SyncManager(
                     question.choices.map { it.toDto() }
                 )
             }
+
             SyncOperation.DELETE.name -> {
                 // Extract quizId from payload, or fallback to fetching from DB
                 val quizId = if (operation.payload.isNotBlank()) {
@@ -218,6 +239,7 @@ class SyncManager(
                     }
                 }
             }
+
             SyncOperation.DELETE.name -> {
                 // Choice deletion is handled by parent question sync
                 // Individual choice deletes require re-syncing the entire question
@@ -236,6 +258,7 @@ class SyncManager(
 
                 attemptRemoteDataSource.saveAttempt(attempt.toDto())
             }
+
             SyncOperation.DELETE.name -> {
                 // Attempts are not typically deleted, but if needed:
                 // Firebase doesn't have a delete method in AttemptRemoteDataSource yet
@@ -246,9 +269,13 @@ class SyncManager(
 
     /**
      * Download (pull) quizzes from Firebase and save to Room.
-     * This implements the Firebase → Room sync direction.
+     * This implements the Firebase -> Room sync direction.
+     * Uses SHA-256 checksums for efficient change detection: if both
+     * local and remote have a checksum and they match, the quiz content
+     * is identical and the download is skipped even when timestamps differ.
      */
     suspend fun downloadQuizzes(userId: String) {
+        if (!isSyncAllowed()) return
         try {
             _syncState.value = SyncState.SYNCING
 
@@ -261,13 +288,33 @@ class SyncManager(
                 // Check if local version exists and compare timestamps
                 val localQuiz = quizDao.getQuizById(quiz.id)
 
-                if (localQuiz == null || localQuiz.updatedAt < quiz.updatedAt) {
+                // Also check if local questions are missing (recovery mechanism)
+                val localQuestionCount = if (localQuiz != null) {
+                    questionDao.getQuestionCount(quiz.id)
+                } else {
+                    0
+                }
+
+                // Checksum-based change detection: skip download when checksums match
+                val localChecksum = localQuiz?.checksum
+                val remoteChecksum = quiz.checksum
+                if (localQuiz != null
+                    && !localChecksum.isNullOrBlank()
+                    && !remoteChecksum.isNullOrBlank()
+                    && localChecksum == remoteChecksum
+                    && localQuestionCount >= quiz.questionCount
+                ) {
+                    // Content is identical -- skip expensive question/choice download
+                    return@forEach
+                }
+
+                if (localQuiz == null || localQuiz.updatedAt < quiz.updatedAt || localQuestionCount < quiz.questionCount) {
                     // Firebase version is newer or doesn't exist locally - download it
                     quizDao.insertQuiz(quiz.toEntity())
 
                     // Also download associated questions and choices
                     val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quiz.id)
-                    questionDtos.forEach { questionDto ->
+                    val downloadedQuestions = questionDtos.map { questionDto ->
                         // Fetch choices from subcollection for this question
                         val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quiz.id, questionDto.id)
 
@@ -276,11 +323,19 @@ class SyncManager(
                         questionDao.insertQuestion(question.toEntity())
 
                         // Insert choices
-                        choiceDtos.forEach { choiceDto ->
+                        val choices = choiceDtos.map { choiceDto ->
                             val choice = choiceDto.toDomain()
                             choiceDao.insertChoice(choice.toEntity(question.id))
+                            choice
                         }
+
+                        question.copy(choices = choices)
                     }
+
+                    // Recompute and persist the local checksum so future syncs
+                    // can skip this quiz when content has not changed.
+                    val computedChecksum = ChecksumUtil.computeQuizChecksum(quiz, downloadedQuestions)
+                    quizDao.updateChecksum(quiz.id, computedChecksum)
                 }
             }
 
@@ -294,6 +349,7 @@ class SyncManager(
      * Download (pull) public quizzes from Firebase and save to Room cache.
      */
     suspend fun downloadPublicQuizzes() {
+        if (!isSyncAllowed()) return
         try {
             val quizDtos = quizRemoteDataSource.getPublicQuizzes().first()
 
@@ -310,6 +366,7 @@ class SyncManager(
      * Download (pull) attempts from Firebase and save to Room.
      */
     suspend fun downloadAttempts(userId: String) {
+        if (!isSyncAllowed()) return
         try {
             val attemptDtos = attemptRemoteDataSource.getAttemptsByUser(userId)
 
@@ -334,6 +391,7 @@ class SyncManager(
      * Only downloads if uploads succeed or have no pending operations.
      */
     suspend fun performFullSync(userId: String) {
+        if (!isSyncAllowed()) return
         // First, upload any pending local changes
         processPendingOperations()
 

@@ -18,6 +18,7 @@ Android mobile application that enables users to create, share, and take multipl
 - **Guest Mode** - Take quizzes without account registration
 - **Question Pool** - Contribute questions for auto-generated quizzes
 - **Cloud Sync** - Automatic backup with integrity verification
+- **URL-based Avatars** - Random anime images from Wallhaven or custom URL
 
 ## Architecture
 
@@ -50,7 +51,8 @@ app/src/main/java/com/example/androidapp/
 | Backend | Firebase (Serverless) |
 | Cloud Database | Cloud Firestore |
 | Authentication | Firebase Auth |
-| Storage | Firebase Storage |
+| Storage | Firebase Storage (quiz media) |
+| Profile Avatars | URL-based (Wallhaven API / user URL) |
 | DI | Manual DI |
 | Async | Kotlin Coroutines + Flow |
 

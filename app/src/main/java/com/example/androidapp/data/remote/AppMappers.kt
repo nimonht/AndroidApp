@@ -7,7 +7,30 @@ import java.util.Date
 
 // --- USER ---
 fun UserDto.toDomain() = User(id, email, displayName, username, photoUrl)
-fun User.toDto() = UserDto(id, email, displayName, username, photoUrl)
+
+fun User.toDto() = UserDto(
+    id = id,
+    email = email,
+    displayName = displayName,
+    username = username,
+    photoUrl = photoUrl,
+    createdAt = Timestamp.now(),
+    updatedAt = Timestamp.now()
+)
+
+/**
+ * Converts a [User] to a [UserDto] for an update operation,
+ * preserving the original [createdAt] timestamp from the existing DTO.
+ */
+fun User.toDto(existingDto: UserDto?): UserDto = UserDto(
+    id = id,
+    email = email,
+    displayName = displayName,
+    username = username,
+    photoUrl = photoUrl,
+    createdAt = existingDto?.createdAt ?: Timestamp.now(),
+    updatedAt = Timestamp.now()
+)
 
 // --- QUIZ & QUESTIONS ---
 fun ChoiceDto.toDomain() = Choice(id, content, isCorrect, position)
@@ -17,7 +40,7 @@ fun QuestionDto.toDomain() = Question(
     id = id,
     content = content,
     choices = choices.map { it.toDomain() },
-    isMultiSelect = isMultiSelect,
+    isMultiSelect = allowMultipleCorrect,
     explanation = explanation,
     mediaUrl = mediaUrl,
     points = points,
@@ -28,7 +51,8 @@ fun Question.toDto() = QuestionDto(
     id = id,
     content = content,
     choices = choices.map { it.toDto() },
-    isMultiSelect = isMultiSelect,
+    allowMultipleCorrect = isMultiSelect,
+    choiceCount = choices.size,
     explanation = explanation,
     mediaUrl = mediaUrl,
     points = points,
@@ -47,6 +71,7 @@ fun QuizDto.toDomain() = Quiz(
     attemptCount = attemptCount,
     isPublic = isPublic,
     shareCode = shareCode,
+    checksum = checksum,
     createdAt = createdAt?.toDate()?.time ?: System.currentTimeMillis(),
     updatedAt = updatedAt?.toDate()?.time ?: System.currentTimeMillis(),
     deletedAt = deletedAt?.toDate()?.time
@@ -64,6 +89,7 @@ fun Quiz.toDto() = QuizDto(
     attemptCount = attemptCount,
     isPublic = isPublic,
     shareCode = shareCode,
+    checksum = checksum,
     createdAt = Timestamp(Date(createdAt)),
     updatedAt = Timestamp(Date(updatedAt)),
     deletedAt = deletedAt?.let { Timestamp(Date(it)) }
@@ -75,10 +101,10 @@ fun AttemptDto.toDomain() = Attempt(
     userId = userId,
     quizId = quizId,
     score = score,
-    totalQuestions = totalQuestions,
-    answers = answers,
-    startTimeMillis = startTime?.toDate()?.time ?: System.currentTimeMillis(),
-    endTimeMillis = endTime?.toDate()?.time,
+    totalQuestions = maxScore,
+    answers = multiAnswers.ifEmpty { answers.mapValues { (_, v) -> listOf(v) } },
+    startTimeMillis = startedAt?.toDate()?.time ?: System.currentTimeMillis(),
+    endTimeMillis = finishedAt?.toDate()?.time,
     questionOrder = questionOrder
 )
 
@@ -86,12 +112,14 @@ fun Attempt.toDto() = AttemptDto(
     id = id,
     userId = userId,
     quizId = quizId,
+    questionOrder = questionOrder,
+    choiceOrders = emptyMap(),
+    answers = answers.mapValues { (_, v) -> v.firstOrNull() ?: "" },
+    multiAnswers = answers,
     score = score,
-    totalQuestions = totalQuestions,
-    answers = answers,
-    startTime = Timestamp(Date(startTimeMillis)),
-    endTime = endTimeMillis?.let { Timestamp(Date(it)) },
-    questionOrder = questionOrder
+    maxScore = totalQuestions,
+    startedAt = Timestamp(Date(startTimeMillis)),
+    finishedAt = endTimeMillis?.let { Timestamp(Date(it)) }
 )
 
 // --- QUESTION POOL ---

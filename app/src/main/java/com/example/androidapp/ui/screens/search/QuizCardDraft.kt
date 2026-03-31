@@ -11,5 +11,6 @@ data class QuizCardDraft(
     val authorName: String,
     val questionCount: Int,
     val attemptCount: Int,
-    val coverImageUrl: String? = null
+    val coverImageUrl: String? = null,
+    val tags: List<String> = emptyList()
 )

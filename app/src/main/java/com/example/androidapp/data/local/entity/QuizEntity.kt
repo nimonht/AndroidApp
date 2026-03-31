@@ -20,6 +20,9 @@ data class QuizEntity(
 
     val description: String? = null,
 
+    @ColumnInfo(name = "author_name")
+    val authorName: String = "",
+
     @ColumnInfo(name = "is_public")
     val isPublic: Boolean = false,
 

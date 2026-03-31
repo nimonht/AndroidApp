@@ -2,8 +2,7 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import androidx.room.Query
 import androidx.room.Update
 import com.example.androidapp.data.local.entity.QuestionEntity
@@ -41,15 +40,15 @@ interface QuestionDao {
     suspend fun getQuestionCount(quizId: String): Int
 
     /**
-     * Insert a question, replacing if it already exists.
+     * Insert a question, or update it if it already exists.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertQuestion(question: QuestionEntity)
 
     /**
-     * Insert multiple questions.
+     * Insert multiple questions, or update those that already exist.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertQuestions(questions: List<QuestionEntity>)
 
     /**

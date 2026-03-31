@@ -2,6 +2,8 @@ package com.example.androidapp.domain.model
 
 /**
  * Domain model representing a quiz.
+ *
+ * @property checksum SHA-256 digest of quiz content for cloud sync integrity verification.
  */
 data class Quiz(
     val id: String,
@@ -15,6 +17,7 @@ data class Quiz(
     val attemptCount: Int = 0,
     val isPublic: Boolean = false,
     val shareCode: String? = null,
+    val checksum: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val deletedAt: Long? = null

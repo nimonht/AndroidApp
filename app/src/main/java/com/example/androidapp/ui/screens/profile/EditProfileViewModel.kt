@@ -1,15 +1,18 @@
 package com.example.androidapp.ui.screens.profile
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.repository.AuthRepository
-import com.example.androidapp.domain.repository.StorageRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * UI state for the Edit Profile screen.
@@ -17,7 +20,8 @@ import kotlinx.coroutines.launch
  * @property displayName The current value of the display-name text field.
  * @property email The user's email address (read-only; shown but not editable).
  * @property photoUrl The URL of the user's current avatar image, or null if none is set.
- * @property isLoading Whether a background operation (upload or save) is in progress.
+ * @property isLoading Whether a save operation is in progress.
+ * @property isLoadingAvatar Whether a random avatar fetch is in progress.
  * @property isSaved Whether the profile was saved successfully; used to trigger navigation back.
  * @property error An error message to display, or null when there is no error.
  */
@@ -26,6 +30,7 @@ data class EditProfileUiState(
     val email: String = "",
     val photoUrl: String? = null,
     val isLoading: Boolean = false,
+    val isLoadingAvatar: Boolean = false,
     val isSaved: Boolean = false,
     val error: String? = null
 )
@@ -41,15 +46,19 @@ sealed class EditProfileEvent {
     data class DisplayNameChanged(val name: String) : EditProfileEvent()
 
     /**
-     * Fired when the user selects a new avatar image from the system picker.
-     * Triggers an upload via [StorageRepository] and updates [EditProfileUiState.photoUrl]
-     * with the resulting download URL.
-     * @property uri The content URI of the selected image.
+     * Fired when the user manually enters or pastes an avatar image URL.
+     * @property url The image URL string.
      */
-    data class AvatarSelected(val uri: Uri) : EditProfileEvent()
+    data class AvatarUrlChanged(val url: String) : EditProfileEvent()
 
     /**
-     * Fired when the user taps the "Lưu" (Save) button.
+     * Fired when the user taps the "Random Avatar" button.
+     * Fetches a random anime image from the Wallhaven API.
+     */
+    data object FetchRandomAvatar : EditProfileEvent()
+
+    /**
+     * Fired when the user taps the "Save" button.
      * Persists the display name and photo URL via [AuthRepository.updateProfile].
      */
     data object SaveProfile : EditProfileEvent()
@@ -63,15 +72,14 @@ sealed class EditProfileEvent {
 /**
  * ViewModel for the Edit Profile screen.
  *
- * Loads the current user on init, handles avatar upload via [StorageRepository],
- * and persists display-name / photo-URL changes via [AuthRepository.updateProfile].
+ * Loads the current user on init, allows manual URL entry or random avatar
+ * fetching via the Wallhaven API, and persists display-name / photo-URL
+ * changes via [AuthRepository.updateProfile].
  *
  * @param authRepository Repository for authentication and user-profile operations.
- * @param storageRepository Repository for uploading avatar images to Firebase Storage.
  */
 class EditProfileViewModel(
-    private val authRepository: AuthRepository,
-    private val storageRepository: StorageRepository
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditProfileUiState())
@@ -89,7 +97,8 @@ class EditProfileViewModel(
     fun onEvent(event: EditProfileEvent) {
         when (event) {
             is EditProfileEvent.DisplayNameChanged -> onDisplayNameChanged(event.name)
-            is EditProfileEvent.AvatarSelected -> onAvatarSelected(event.uri)
+            is EditProfileEvent.AvatarUrlChanged -> onAvatarUrlChanged(event.url)
+            is EditProfileEvent.FetchRandomAvatar -> onFetchRandomAvatar()
             is EditProfileEvent.SaveProfile -> onSaveProfile()
             is EditProfileEvent.ClearError -> clearError()
         }
@@ -118,28 +127,64 @@ class EditProfileViewModel(
         _uiState.update { it.copy(displayName = name) }
     }
 
-    private fun onAvatarSelected(uri: Uri) {
+    private fun onAvatarUrlChanged(url: String) {
+        _uiState.update { it.copy(photoUrl = url.ifBlank { null }) }
+    }
+
+    /**
+     * Fetches a random anime/artwork image from the Wallhaven API and sets it
+     * as the avatar URL.
+     *
+     * API: https://wallhaven.cc/api/v1/search?categories=010&purity=100&sorting=random&atleast=400x400&ratios=1x1
+     * Parses the JSON response and picks the first result's small thumbnail.
+     */
+    private fun onFetchRandomAvatar() {
         viewModelScope.launch {
-            val userId = authRepository.getCurrentUser()?.id
-                ?: run {
-                    _uiState.update { it.copy(error = "Không tìm thấy người dùng") }
-                    return@launch
-                }
+            _uiState.update { it.copy(isLoadingAvatar = true) }
 
-            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val imageUrl = withContext(Dispatchers.IO) {
+                    val url = URL(
+                        "https://wallhaven.cc/api/v1/search?categories=010&purity=100&sorting=random&atleast=400x400&ratios=1x1"
+                    )
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.connectTimeout = 10_000
+                    connection.readTimeout = 10_000
 
-            storageRepository.uploadImage(userId, uri)
-                .onSuccess { downloadUrl ->
-                    _uiState.update { it.copy(photoUrl = downloadUrl, isLoading = false) }
-                }
-                .onFailure { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = throwable.localizedMessage ?: "Tải ảnh lên thất bại"
-                        )
+                    try {
+                        val responseCode = connection.responseCode
+                        if (responseCode != HttpURLConnection.HTTP_OK) {
+                            throw Exception("Wallhaven API returned HTTP $responseCode")
+                        }
+
+                        val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+                        val json = JSONObject(responseBody)
+                        val dataArray = json.getJSONArray("data")
+
+                        if (dataArray.length() == 0) {
+                            throw Exception("No images found from Wallhaven")
+                        }
+
+                        val firstItem = dataArray.getJSONObject(0)
+                        val thumbs = firstItem.getJSONObject("thumbs")
+                        thumbs.getString("small")
+                    } finally {
+                        connection.disconnect()
                     }
                 }
+
+                _uiState.update {
+                    it.copy(photoUrl = imageUrl, isLoadingAvatar = false)
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoadingAvatar = false,
+                        error = e.localizedMessage ?: "Failed to fetch random avatar"
+                    )
+                }
+            }
         }
     }
 

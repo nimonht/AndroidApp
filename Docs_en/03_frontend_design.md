@@ -470,6 +470,8 @@ data class CreateQuizUiState(
 )
 ```
 
+> **Note:** The actual implementation includes additional state fields (`isDraft`, `isPublished`, `lastSavedAt`, `shareToPool`, `isPublic`) supporting a 3-state quiz lifecycle: Draft (editable), Published/Private (accessible via share code), and Public (searchable by everyone). Publishing does **not** automatically set the quiz to public — `isPublic` only changes when the user explicitly toggles it.
+
 ### 4.2 Take Quiz ViewModel
 
 ```kotlin

@@ -107,5 +107,20 @@ interface QuizRepository {
      * Permanently deletes all soft-deleted quizzes for the user.
      */
     suspend fun emptyTrash(userId: String): Result<Unit>
-}
 
+    /**
+     * Retrieves all distinct tags from all non-deleted quizzes.
+     */
+    suspend fun getAllTags(): List<String>
+
+    /**
+     * Refreshes a single quiz and its questions/choices from Firestore into Room.
+     * Used as a fallback when local data is missing or incomplete (e.g., after
+     * a CASCADE delete removes questions/choices from Room).
+     *
+     * @param quizId The ID of the quiz to refresh.
+     * @return [Result.success] with the refreshed [Quiz] if found on remote,
+     *         or [Result.failure] if the quiz does not exist remotely or the fetch fails.
+     */
+    suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz>
+}

@@ -28,7 +28,7 @@
 | Backend | Firebase (serverless) |
 | Cloud Database | Cloud Firestore |
 | Authentication | Firebase Auth |
-| Storage | Firebase Storage (media files) |
+| Storage | Firebase Storage (quiz media); profile avatars are URL-based |
 
 ---
 
@@ -36,7 +36,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Quizzez Mobile App                         │
+│                     Quizzez Mobile App                          │
 │                         (Kotlin)                                │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
@@ -207,5 +207,5 @@ graph TD
 |---------|-------|
 | **Firebase Auth** | Email/password login, Google Sign-In |
 | **Cloud Firestore** | Quiz, questions, attempts, user data |
-| **Firebase Storage** | Image/video uploads for questions |
+| **Firebase Storage** | Image/video uploads for quiz questions (profile avatars use external URLs) |
 | **Cloud Functions** (optional) | Share code generation, 30-day cleanup job |
