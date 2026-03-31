@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +38,7 @@ import com.example.androidapp.ui.components.quiz.QuizCard
 import com.example.androidapp.ui.theme.FullShape
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
+import coil.compose.AsyncImage
 
 /**
  * Home dashboard screen — Editorial Minimalist design.
@@ -86,7 +88,10 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // ── Header ──────────────────────────────────────────────────────
-            HomeHeader()
+            HomeHeader(
+                photoUrl = uiState.photoUrl,
+                displayName = uiState.displayName
+            )
 
             HorizontalDivider(
                 color = MaterialTheme.colorScheme.outlineVariant,
@@ -213,6 +218,8 @@ fun HomeScreen(
 
 @Composable
 private fun HomeHeader(
+    photoUrl: String?,
+    displayName: String,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -234,12 +241,32 @@ private fun HomeHeader(
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.AccountCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(22.dp)
-                )
+                if (!photoUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = photoUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    val initial = displayName.firstOrNull()?.uppercase() ?: ""
+                    if (initial.isNotEmpty()) {
+                        Text(
+                            text = initial,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.AccountCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
             }
             Text(
                 text = stringResource(R.string.app_name),
@@ -408,5 +435,3 @@ private fun RecentlyPlayedRow(
         }
     }
 }
-
-

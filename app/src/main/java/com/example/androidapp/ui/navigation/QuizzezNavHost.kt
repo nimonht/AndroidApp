@@ -294,7 +294,7 @@ fun QuizzezNavHost(
                 LoginScreen(
                     onLoginSuccess = {
                         navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
+                            popUpTo(Routes.HOME) { inclusive = true }
                         }
                     },
                     onNavigateToRegister = { navController.navigate(Routes.REGISTER) },
@@ -306,7 +306,7 @@ fun QuizzezNavHost(
                 RegisterScreen(
                     onRegisterSuccess = {
                         navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.REGISTER) { inclusive = true }
+                            popUpTo(Routes.HOME) { inclusive = true }
                         }
                     },
                     onNavigateToLogin = { navController.popBackStack() },
