@@ -95,9 +95,9 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Saves a quiz and its questions using batch writes.
-     * Deletes existing choices before saving to avoid stale data, and chunks
-     * operations to respect Firestore's 500-operations-per-batch limit.
+     * Saves a quiz and its questions using per-question batch writes.
+     * Deletes existing choices before saving to avoid stale data.
+     * Processes each question individually to ensure choice cleanup and avoid batch size limits.
      * @param quizId The document ID for the quiz.
      * @param quizDto The quiz data to save.
      * @param questionDtos The question list to save in the subcollection.

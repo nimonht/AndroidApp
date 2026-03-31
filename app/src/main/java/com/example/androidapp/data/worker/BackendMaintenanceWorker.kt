@@ -315,10 +315,9 @@ class BackendMaintenanceWorker(
         const val WORK_NAME = "BackendMaintenanceWorker"
         /**
          * How long a soft-deleted quiz must remain in the recycle bin before
-         * permanent removal. Set to 10 seconds for testing; change to
-         * `30L * 24 * 60 * 60 * 1000` (30 days) for production.
+         * permanent removal. Set to 30 days for production.
          */
-        private const val DELETION_THRESHOLD_MS = 10L * 1000 // 10 seconds for testing
+        private const val DELETION_THRESHOLD_MS = 30L * 24 * 60 * 60 * 1000 // 30 days
         private const val BATCH_LIMIT = 500
     }
 }

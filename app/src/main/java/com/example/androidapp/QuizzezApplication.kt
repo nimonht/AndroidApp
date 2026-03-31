@@ -88,8 +88,8 @@ class QuizzezApplication : Application() {
             )
 
             // Testing loop: re-trigger every 30 seconds for rapid iteration.
-            // Set DEBUG_REPEAT_INTERVAL_MS to 0 to disable this loop in production.
-            if (DEBUG_REPEAT_INTERVAL_MS > 0) {
+            // Gated by BuildConfig.DEBUG to prevent battery drain in release builds.
+            if (BuildConfig.DEBUG && DEBUG_REPEAT_INTERVAL_MS > 0) {
                 Log.d(TAG, "Debug maintenance loop active (${DEBUG_REPEAT_INTERVAL_MS}ms interval)")
                 while (true) {
                     delay(DEBUG_REPEAT_INTERVAL_MS)
@@ -108,9 +108,8 @@ class QuizzezApplication : Application() {
 
         /**
          * Interval in milliseconds between debug maintenance runs.
-         * Set to 30_000 (30 s) for testing; set to 0 to disable the debug loop
-         * and rely solely on the periodic WorkManager schedule.
+         * Set to 0 in release builds (gated by BuildConfig.DEBUG check).
          */
-        private const val DEBUG_REPEAT_INTERVAL_MS = 30_000L
+        private const val DEBUG_REPEAT_INTERVAL_MS = 0L
     }
 }

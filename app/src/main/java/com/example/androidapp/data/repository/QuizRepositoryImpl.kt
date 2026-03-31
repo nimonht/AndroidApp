@@ -316,10 +316,18 @@ class QuizRepositoryImpl(
     /**
      * Fetches questions and their choices from Firestore subcollections
      * and inserts them into the local Room database.
+     * Deletes existing local questions/choices for the quiz first to remove stale data.
      */
     private suspend fun refreshQuestionsAndChoices(quizId: String) {
         if (!syncManager.isSyncAllowed()) return
         try {
+            // Delete existing local questions (and their choices via cascade) to remove stale data
+            val existingQuestions = questionDao.getQuestionsByQuizIdOnce(quizId)
+            existingQuestions.forEach { questionEntity ->
+                questionDao.deleteQuestion(questionEntity)
+            }
+
+            // Fetch and insert fresh questions and choices from Firestore
             val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quizId)
             questionDtos.forEach { questionDto ->
                 val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quizId, questionDto.id)
