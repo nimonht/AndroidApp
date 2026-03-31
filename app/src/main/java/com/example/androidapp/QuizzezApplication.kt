@@ -42,6 +42,7 @@ class QuizzezApplication : Application() {
 
         scheduleBackendMaintenance()
         scheduleBackgroundSync()
+        setupGlobalErrorHandler()
     }
 
     /**
@@ -134,6 +135,18 @@ class QuizzezApplication : Application() {
                 ExistingPeriodicWorkPolicy.KEEP,
                 syncRequest
             )
+        }
+    }
+
+    /**
+     * Installs a global uncaught exception handler that logs crashes
+     * before delegating to the default handler.
+     */
+    private fun setupGlobalErrorHandler() {
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            Log.e(TAG, "Uncaught exception on thread ${thread.name}", throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
         }
     }
 

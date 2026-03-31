@@ -326,4 +326,5 @@
     <!-- Create Quiz -->
     <string name="create_import_csv_cd">Nhập từ CSV/Excel</string>
     <string name="create_quiz_public_warning">Bật chế độ công khai sẽ khiến Quizz hiển thị với mọi người và không thể chỉnh sửa sau khi lưu, kể cả lưu nháp.</string>
+    <string name="session_expired_message">Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</string>
 </resources>
