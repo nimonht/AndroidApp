@@ -8,7 +8,7 @@ import com.example.androidapp.QuizzezApplication
 import kotlinx.coroutines.flow.first
 
 /**
- * Periodic background worker that synchronises local Room data with Firestore.
+ * Periodic background worker that synchronizes local Room data with Firestore.
  *
  * The worker is scheduled via WorkManager with a 15-minute repeat interval and
  * a network connectivity constraint. On each run it:
@@ -33,20 +33,19 @@ class BackgroundSyncWorker(
         return try {
             if (!syncManager.isSyncAllowed()) {
                 Log.d(TAG, "Sync not allowed at this time, skipping.")
-                return Result.success()
+                Result.success()
+            } else {
+                val user = authRepository.currentUser.first()
+                if (user == null) {
+                    Log.d(TAG, "No authenticated user, skipping sync.")
+                    Result.success()
+                } else {
+                    Log.d(TAG, "Starting full sync for user ${user.id}...")
+                    syncManager.performFullSync(user.id)
+                    Log.d(TAG, "Full sync completed successfully.")
+                    Result.success()
+                }
             }
-
-            val user = authRepository.currentUser.first()
-            if (user == null) {
-                Log.d(TAG, "No authenticated user, skipping sync.")
-                return Result.success()
-            }
-
-            Log.d(TAG, "Starting full sync for user ${user.id}...")
-            syncManager.performFullSync(user.id)
-            Log.d(TAG, "Full sync completed successfully.")
-
-            Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Sync failed, will retry.", e)
             Result.retry()
