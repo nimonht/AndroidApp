@@ -66,8 +66,12 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid;
 
       // Only the owner can update; ownerId is immutable
-      allow update: if isOwner(resource.data.ownerId)
-        && request.resource.data.ownerId == resource.data.ownerId;
+      // Or anyone can update IF they are ONLY incrementing the attemptCount by 1
+      allow update: if (isOwner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId)
+        || (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptCount'])
+          && request.resource.data.attemptCount == resource.data.attemptCount + 1
+        );
 
       // Only the owner can delete
       allow delete: if isOwner(resource.data.ownerId);

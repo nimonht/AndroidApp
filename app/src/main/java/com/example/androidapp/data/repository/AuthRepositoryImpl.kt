@@ -81,6 +81,15 @@ class AuthRepositoryImpl(
         return try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user ?: return Result.failure(Exception("Đăng ký thất bại"))
+
+            // Set displayName on the Firebase Auth profile so that
+            // AuthStateListener (currentUser Flow) emits the correct name
+            // immediately after registration.
+            val profileUpdates = UserProfileChangeRequest.Builder()
+                .setDisplayName(username)
+                .build()
+            firebaseUser.updateProfile(profileUpdates).await()
+
             val user = User(
                 id = firebaseUser.uid,
                 email = email,

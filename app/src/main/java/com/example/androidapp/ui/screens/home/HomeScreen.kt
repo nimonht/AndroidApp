@@ -9,9 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -21,23 +19,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.forms.CodeInputField
+import com.example.androidapp.ui.components.quiz.QuizCard
 import com.example.androidapp.ui.theme.FullShape
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
@@ -156,18 +152,33 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
             } else {
-                uiState.myQuizzes.forEachIndexed { index, quiz ->
-                    MyQuizListItem(
-                        quiz = quiz,
-                        onClick = { onNavigateToQuiz(quiz.id) },
-                        onEditClick = if (!quiz.isPublic) {
-                            { onNavigateToEditQuiz(quiz.id) }
-                        } else {
-                            null
-                        },
-                        showDivider = index < uiState.myQuizzes.size - 1,
+                uiState.myQuizzes.forEach { quiz ->
+                    Box(
                         modifier = Modifier.padding(horizontal = 24.dp)
-                    )
+                    ) {
+                        QuizCard(
+                            quiz = quiz,
+                            onClick = { onNavigateToQuiz(quiz.id) }
+                        )
+
+                        // Floating edit button for draft (non-public) quizzes
+                        if (!quiz.isPublic) {
+                            SmallFloatingActionButton(
+                                onClick = { onNavigateToEditQuiz(quiz.id) },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.home_quiz_edit_cd),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -386,151 +397,16 @@ private fun RecentlyPlayedRow(
     LazyRow(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         items(quizzes) { quiz ->
-            RecentlyPlayedCard(
+            QuizCard(
                 quiz = quiz,
-                onClick = { onQuizClick(quiz.id) }
+                onClick = { onQuizClick(quiz.id) },
+                modifier = Modifier.width(280.dp)
             )
         }
     }
 }
 
-@Composable
-private fun RecentlyPlayedCard(
-    quiz: Quiz,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .width(160.dp)
-            .clickable(onClick = onClick)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(110.dp)
-                .clip(MaterialTheme.shapes.small)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            AsyncImage(
-                model = quiz.thumbnailUrl,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = quiz.title,
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = stringResource(R.string.quiz_questions, quiz.questionCount),
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
 
-/**
- * A single row item representing one of the current user's quizzes in the Home screen.
- * Displays a 70dp thumbnail, quiz title, question count, and a trailing chevron icon,
- * consistent with the style used in [com.example.androidapp.ui.components.quiz.QuizCard].
- *
- * For draft quizzes ([Quiz.isPublic] == false) an additional edit [IconButton] is shown
- * so the user can navigate directly to the edit screen.
- *
- * @param quiz The [Quiz] data to display.
- * @param onClick Callback invoked when the row is tapped.
- * @param showDivider Whether to draw a divider below the row.
- * @param onEditClick Optional callback invoked when the edit button is tapped.
- *   Pass a non-null value only for draft quizzes.
- * @param modifier Modifier for styling.
- */
-@Composable
-private fun MyQuizListItem(
-    quiz: Quiz,
-    onClick: () -> Unit,
-    showDivider: Boolean,
-    onEditClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Thumbnail
-            Box(
-                modifier = Modifier
-                    .size(70.dp)
-                    .clip(MaterialTheme.shapes.extraSmall)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                AsyncImage(
-                    model = quiz.thumbnailUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = quiz.title,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = stringResource(R.string.quiz_questions, quiz.questionCount),
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if (onEditClick != null) {
-                IconButton(onClick = onEditClick) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.home_quiz_edit_cd),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outlineVariant,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        if (showDivider) {
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant,
-                thickness = 1.dp
-            )
-        }
-    }
-}

@@ -46,5 +46,6 @@ private fun QuizCardDraft.toQuiz() = Quiz(
     authorName = authorName,
     thumbnailUrl = coverImageUrl,
     questionCount = questionCount,
-    attemptCount = attemptCount
+    attemptCount = attemptCount,
+    tags = tags
 )

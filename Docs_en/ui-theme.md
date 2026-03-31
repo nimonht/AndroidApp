@@ -73,9 +73,7 @@ Layered surfaces used by Material 3 containers:
 
 ## 3. Typography
 
-The type scale follows Material Design 3. All styles use the system default font
-(Roboto on Android). Custom fonts can be introduced by replacing `FontFamily.Default`
-in `ui/theme/Type.kt`.
+The type scale uses a dual-font system loaded via Google Fonts: **Playfair Display** (Serif) for display/headline text, and **Inter** (Sans-Serif) for labels, buttons, and body copy. Font families are `PlayfairDisplayFamily` and `InterFamily` declared in `ui/theme/Type.kt`.
 
 | Role | Size | Weight | Usage |
 |------|------|--------|-------|

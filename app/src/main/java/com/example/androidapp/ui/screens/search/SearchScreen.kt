@@ -147,8 +147,7 @@ fun SearchScreen(
                 DiscoverContent(
                     uiState = uiState,
                     onTagClick = { tag ->
-                        viewModel.onEvent(SearchEvent.OnQueryChange(tag))
-                        viewModel.onEvent(SearchEvent.OnSearchClicked(tag))
+                        viewModel.onEvent(SearchEvent.OnDiscoverTagToggle(tag))
                     },
                     onQuizClick = onNavigateToQuiz,
                     modifier = Modifier
@@ -214,7 +213,7 @@ private fun DiscoverContent(
                         uiState.discoverTags.forEach { tag ->
                             TagChip(
                                 text = tag,
-                                isSelected = false,
+                                isSelected = tag in uiState.selectedDiscoverTags,
                                 onClick = { onTagClick(tag) }
                             )
                         }

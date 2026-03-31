@@ -93,6 +93,8 @@
     <string name="profile_edit_display_name">Tên hiển thị</string>
     <string name="profile_edit_email">Email</string>
     <string name="profile_edit_change_avatar">Đổi ảnh đại diện</string>
+    <string name="profile_edit_random_avatar">Ảnh đại diện ngẫu nhiên</string>
+    <string name="profile_edit_avatar_url">URL ảnh đại diện</string>
     <string name="profile_edit_saved">Đã lưu hồ sơ</string>
     <string name="profile_stat_quizzes">%1$d Quizz</string>
     <string name="profile_stat_attempts">%1$d lượt làm</string>

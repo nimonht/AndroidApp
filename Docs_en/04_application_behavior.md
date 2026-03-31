@@ -177,6 +177,13 @@ sequenceDiagram
 
 > **Note:** The flexible choice system allows quiz creators to design questions with varying complexity - from simple True/False (2 choices) to comprehensive questions with up to 10 options.
 
+6. Quiz lifecycle has three states:
+   - **Draft** (`isDraft = true`): Saved privately, fully editable
+   - **Published (Private)** (`isDraft = false`, `isPublic = false`): Accessible only via 6-digit share code
+   - **Public** (`isDraft = false`, `isPublic = true`): Searchable and accessible by anyone
+7. Publishing a quiz does NOT automatically make it public — the public toggle is an explicit user choice
+8. Profile avatars are served via URL (user-pasted or fetched from Wallhaven API), not uploaded to Firebase Storage
+
 ---
 
 ### 3.2 Quiz Sharing (Share Code)

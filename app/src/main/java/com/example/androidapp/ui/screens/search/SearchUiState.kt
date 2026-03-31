@@ -47,5 +47,8 @@ data class SearchUiState(
     val allTimeTopQuizzes: List<QuizCardDraft> = emptyList(),
 
     /** Đang tải dữ liệu khám phá. */
-    val isLoadingDiscover: Boolean = false
+    val isLoadingDiscover: Boolean = false,
+
+    /** Tag dang duoc chon de loc tren man hinh Kham pha (multi-select, AND logic). */
+    val selectedDiscoverTags: List<String> = emptyList()
 )

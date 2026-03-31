@@ -62,7 +62,7 @@ fun DiscoverSection(
         // Hang cuon ngang cac quiz card
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(quizzes, key = { it.id }) { quiz ->
@@ -109,5 +109,6 @@ private fun QuizCardDraft.toDiscoverQuiz() = Quiz(
     thumbnailUrl = coverImageUrl,
     questionCount = questionCount,
     attemptCount = attemptCount,
-    isPublic = true
+    isPublic = true,
+    tags = tags
 )

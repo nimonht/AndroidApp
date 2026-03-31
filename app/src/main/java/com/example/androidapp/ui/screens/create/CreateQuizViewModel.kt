@@ -251,11 +251,13 @@ class CreateQuizViewModel(
      *
      * When [publishAfterSave] is `true` the quiz is marked as published and
      * [CreateQuizUiState.isSaved] is set to `true` to trigger back navigation.
-     * Pool contribution only runs on the publish path.
+     * The [CreateQuizUiState.isPublic] toggle is respected so the user can
+     * publish a quiz as either **private** (share-code only) or **public**
+     * (searchable by anyone). Pool contribution only runs on the publish path.
      *
-     * When [publishAfterSave] is `false` the quiz is saved as a draft using whatever
-     * [CreateQuizUiState.isPublic] value the user has set, and
-     * [CreateQuizUiState.lastSavedAt] is updated.
+     * When [publishAfterSave] is `false` the quiz is saved as a draft —
+     * [CreateQuizUiState.isPublic] is forced to `false` (drafts must never be
+     * public) and [CreateQuizUiState.lastSavedAt] is updated.
      *
      * @param publishAfterSave `true` to publish, `false` to save as draft.
      */
@@ -291,9 +293,9 @@ class CreateQuizViewModel(
                 .map { it.trim() }
                 .filter { it.isNotBlank() }
 
-            // On publish, force isPublic = true regardless of the toggle.
-            // On draft save, respect whatever the user has set on the isPublic toggle.
-            val effectiveIsPublic = if (publishAfterSave) true else state.isPublic
+            // On publish, respect the user's explicit isPublic toggle choice.
+            // On draft save, force isPublic = false — drafts must never be public.
+            val effectiveIsPublic = if (publishAfterSave) state.isPublic else false
 
             val quiz = Quiz(
                 id = quizId,

@@ -279,6 +279,8 @@ data class Attempt(
 )
 ```
 
+> **Implementation Note:** The data models above represent the original design-phase schemas. The actual implementation uses Room entities (`data/local/entity/`) for local storage and Firestore DTOs (`data/remote/model/`) for cloud sync, both mapped to domain models (`domain/model/`) via extension functions in `EntityMappers.kt` and `AppMappers.kt`. Refer to the source code for the latest field definitions.
+
 ---
 
 ## 4. Repository Implementation
