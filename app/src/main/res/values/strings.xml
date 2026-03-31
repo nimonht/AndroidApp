@@ -51,6 +51,8 @@
     <string name="share_link">Chia sẻ liên kết</string>
     <string name="create_qr_code">Tạo mã QR</string>
     <string name="regenerate_code">Tạo lại mã</string>
+    <string name="share_code_copied">Đã sao chép mã chia sẻ</string>
+    <string name="share_code_qr_cd">Mã QR chia sẻ</string>
     <string name="options_title">Tùy chọn</string>
     <string name="duplicate">Nhân bản</string>
     <string name="filter_title">Bộ lọc</string>
@@ -116,6 +118,21 @@
     <string name="settings_section_data_sync">Dữ liệu &amp; đồng bộ</string>
     <string name="settings_auto_sync">Tự động đồng bộ</string>
     <string name="settings_auto_sync_desc">Tự động đồng bộ Quizz lên đám mây khi có kết nối</string>
+    <string name="settings_wifi_only_sync">Chỉ đồng bộ qua WiFi</string>
+    <string name="settings_wifi_only_sync_desc">Tiết kiệm dữ liệu di động bằng cách chỉ đồng bộ khi có WiFi</string>
+    <string name="settings_section_appearance">Giao diện</string>
+    <string name="settings_dark_theme">Chế độ tối</string>
+    <string name="settings_theme_system">Theo hệ thống</string>
+    <string name="settings_theme_light">Sáng</string>
+    <string name="settings_theme_dark">Tối</string>
+    <string name="settings_section_account">Tài khoản</string>
+    <string name="settings_delete_account">Xóa tài khoản</string>
+    <string name="settings_delete_account_desc">Xóa vĩnh viễn tài khoản và tất cả dữ liệu</string>
+    <string name="settings_delete_account_title">Xóa tài khoản?</string>
+    <string name="settings_delete_account_message">Hành động này sẽ xóa vĩnh viễn tài khoản, tất cả Quizz, lượt làm bài và dữ liệu liên quan. Không thể hoàn tác.</string>
+    <string name="settings_delete_account_confirm">Xóa tài khoản</string>
+    <string name="settings_deleting_account">Đang xóa tài khoản…</string>
+    <string name="settings_not_logged_in">Bạn cần đăng nhập để sử dụng tính năng này</string>
 
     <!-- Search -->
     <string name="search_placeholder">Tìm Quizz...</string>
@@ -250,6 +267,9 @@
 
     <!-- Create/Edit Quiz - Overhaul -->
     <string name="create_quiz_tags_label">Từ khóa (phân cách bằng dấu phẩy)</string>
+    <string name="create_quiz_pick_tags">Chọn từ khóa</string>
+    <string name="tag_suggestion_title">Chọn từ khóa gợi ý</string>
+    <string name="tag_suggestion_description">Chọn các từ khóa có sẵn để dễ dàng phân loại Quizz</string>
     <string name="create_save_draft">Lưu nháp</string>
     <string name="create_publish">Xuất bản</string>
     <string name="create_quiz_published">Đã xuất bản thành công</string>

@@ -109,6 +109,11 @@ interface QuizRepository {
     suspend fun emptyTrash(userId: String): Result<Unit>
 
     /**
+     * Retrieves all distinct tags from all non-deleted quizzes.
+     */
+    suspend fun getAllTags(): List<String>
+
+    /**
      * Refreshes a single quiz and its questions/choices from Firestore into Room.
      * Used as a fallback when local data is missing or incomplete (e.g., after
      * a CASCADE delete removes questions/choices from Room).

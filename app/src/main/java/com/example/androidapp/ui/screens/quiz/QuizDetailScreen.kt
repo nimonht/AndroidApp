@@ -28,6 +28,7 @@ import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.ui.components.ShareCodeSection
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.navigation.AppTopBar
@@ -213,8 +214,18 @@ private fun QuizDetailContent(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+
+        // Share Code Section (shown only when quiz has a share code)
+        if (!quiz.shareCode.isNullOrBlank()) {
+            item {
+                ShareCodeSection(
+                    shareCode = quiz.shareCode,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
             }
         }
 

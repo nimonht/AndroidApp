@@ -9,6 +9,7 @@ import com.example.androidapp.domain.model.QuestionPoolItem
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.util.QuizValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +47,7 @@ data class EditQuizUiState(
     val thumbnailUrl: String = "",
     val isPublic: Boolean = false,
     val tags: String = "",
+    val availableTags: List<String> = emptyList(),
     val questions: List<QuestionDraft> = emptyList(),
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
@@ -127,7 +129,8 @@ class EditQuizViewModel(
     private val quizId: String,
     private val quizRepository: QuizRepository,
     private val authRepository: AuthRepository,
-    private val poolRepository: PoolRepository
+    private val poolRepository: PoolRepository,
+    private val shareCodeRepository: ShareCodeRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditQuizUiState(quizId = quizId, isLoading = true))
@@ -136,6 +139,14 @@ class EditQuizViewModel(
     val uiState: StateFlow<EditQuizUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            try {
+                val tags = quizRepository.getAllTags()
+                _uiState.update { it.copy(availableTags = tags) }
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
         loadExistingQuiz()
     }
 
@@ -309,6 +320,15 @@ class EditQuizViewModel(
             // On draft save, force isPublic = false — drafts must never be public.
             val effectiveIsPublic = if (publishAfterSave) state.isPublic else false
 
+            val existingQuiz = quizRepository.getQuizById(quizId)
+            var shareCode = existingQuiz?.shareCode
+
+            if (publishAfterSave && shareCode == null) {
+                shareCodeRepository.generateShareCode(quizId).onSuccess { code ->
+                    shareCode = code
+                }
+            }
+
             val quiz = Quiz(
                 id = quizId,
                 ownerId = user?.id ?: "",
@@ -318,6 +338,7 @@ class EditQuizViewModel(
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,
+                shareCode = shareCode,
                 questionCount = state.questions.size,
                 updatedAt = System.currentTimeMillis()
             )

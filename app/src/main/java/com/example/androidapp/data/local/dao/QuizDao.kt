@@ -29,6 +29,21 @@ interface QuizDao {
     fun getQuizzesByOwner(userId: String): Flow<List<QuizEntity>>
 
     /**
+     * Get quizzes recently attempted by the user.
+     */
+    @Query(
+        """
+        SELECT q.* FROM quizzes q
+        INNER JOIN attempts a ON q.id = a.quiz_id
+        WHERE a.user_id = :userId AND q.deleted_at IS NULL
+        GROUP BY q.id
+        ORDER BY MAX(a.started_at) DESC
+        LIMIT 10
+    """
+    )
+    fun getRecentAttemptQuizzes(userId: String): Flow<List<QuizEntity>>
+
+    /**
      * Get all non-deleted quizzes ordered by updated date.
      */
     @Query("SELECT * FROM quizzes WHERE deleted_at IS NULL ORDER BY updated_at DESC")
@@ -95,6 +110,12 @@ interface QuizDao {
     suspend fun updateSyncStatus(quizId: String, status: String)
 
     /**
+     * Update the content checksum of a quiz.
+     */
+    @Query("UPDATE quizzes SET checksum = :checksum WHERE id = :quizId")
+    suspend fun updateChecksum(quizId: String, checksum: String)
+
+    /**
      * Soft delete a quiz by setting deletedAt timestamp.
      */
     @Query("UPDATE quizzes SET deleted_at = :deletedAt WHERE id = :quizId")
@@ -117,6 +138,7 @@ interface QuizDao {
      */
     @Query("DELETE FROM quizzes WHERE deleted_at IS NOT NULL AND deleted_at < :threshold")
     suspend fun deleteOldQuizzes(threshold: Long)
+
 
     /**
      * Search quizzes by title or tags.

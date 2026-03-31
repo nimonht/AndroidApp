@@ -23,6 +23,7 @@ import com.example.androidapp.data.repository.PoolRepositoryImpl
 import com.example.androidapp.data.repository.QuestionRepositoryImpl
 import com.example.androidapp.data.repository.QuizRepositoryImpl
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
+import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.repository.StorageRepositoryImpl
 import com.example.androidapp.data.sync.SyncManager
@@ -99,7 +100,8 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             quizRemoteDataSource,
             questionRemoteDataSource,
             attemptRemoteDataSource,
-            networkMonitor
+            networkMonitor,
+            settingsPreferences
         )
     }
 
@@ -157,5 +159,9 @@ class AppContainerImpl(override val context: Context) : AppContainer {
 
     override val searchRepository: SearchRepository by lazy {
         SearchRepositoryImpl(context)
+    }
+
+    override val settingsPreferences: SettingsPreferences by lazy {
+        SettingsPreferences(context)
     }
 }

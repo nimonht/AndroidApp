@@ -45,6 +45,9 @@ class QuizRepositoryImpl(
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
     override fun getHomeQuizzes(userId: String): Flow<HomeQuizzes> {
+        val recentQuizzesFlow = quizDao.getRecentAttemptQuizzes(userId).map { entities ->
+            entities.map { it.toDomain() }
+        }
         val myQuizzesFlow = quizDao.getQuizzesByOwner(userId).map { entities ->
             entities.map { it.toDomain() }
         }
@@ -52,9 +55,9 @@ class QuizRepositoryImpl(
             entities.map { it.toDomain() }
         }
         // Refresh from Firestore in background when flow starts
-        return combine(myQuizzesFlow, publicQuizzesFlow) { mine, public ->
+        return combine(recentQuizzesFlow, myQuizzesFlow, publicQuizzesFlow) { recent, mine, public ->
             HomeQuizzes(
-                recentAttemptQuizzes = emptyList(),
+                recentAttemptQuizzes = recent,
                 myQuizzes = mine,
                 trendingQuizzes = public.sortedByDescending { it.attemptCount }.take(10)
             )
@@ -227,6 +230,14 @@ class QuizRepositoryImpl(
         }.onStart { refreshPublicQuizzes() }
     }
 
+    override suspend fun getAllTags(): List<String> {
+        return try {
+            quizDao.getAllQuizzes().first().map { it.toDomain() }.flatMap { it.tags }.distinct()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     override suspend fun emptyTrash(userId: String): Result<Unit> {
         return try {
             // Get all deleted quizzes for the user locally
@@ -270,12 +281,14 @@ class QuizRepositoryImpl(
 
     private fun refreshFromFirestore(userId: String) {
         ioScope.launch {
+            if (!syncManager.isSyncAllowed()) return@launch
             refreshMyQuizzes(userId)
             refreshPublicQuizzes()
         }
     }
 
     private suspend fun refreshMyQuizzes(userId: String) {
+        if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
             dtos.forEach { dto ->
@@ -288,6 +301,7 @@ class QuizRepositoryImpl(
     }
 
     private suspend fun refreshPublicQuizzes() {
+        if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getPublicQuizzes().first()
             dtos.forEach { dto ->
@@ -304,6 +318,7 @@ class QuizRepositoryImpl(
      * and inserts them into the local Room database.
      */
     private suspend fun refreshQuestionsAndChoices(quizId: String) {
+        if (!syncManager.isSyncAllowed()) return
         try {
             val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quizId)
             questionDtos.forEach { questionDto ->

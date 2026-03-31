@@ -120,6 +120,11 @@ dependencies {
 
     // Gson (for Room type converters)
     implementation(libs.gson)
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+    // DataStore Preferences
+    implementation(libs.datastore.preferences)
+    implementation(libs.zxing.core)
 
     // Testing
     testImplementation(libs.junit)

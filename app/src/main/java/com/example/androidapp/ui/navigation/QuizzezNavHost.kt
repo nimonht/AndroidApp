@@ -34,6 +34,7 @@ import com.example.androidapp.ui.screens.quiz.TakeQuizScreen
 import com.example.androidapp.ui.screens.review.AnswerReviewScreen
 import com.example.androidapp.ui.screens.search.SearchScreen
 import com.example.androidapp.ui.screens.settings.SettingsScreen
+import com.example.androidapp.ui.screens.settings.SettingsViewModel
 import com.example.androidapp.ui.screens.trash.TrashScreen
 
 /**
@@ -198,10 +199,11 @@ fun QuizzezNavHost(
             composable(Routes.CSV_IMPORT) {
                 CsvImportScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onQuestionsImported = { _ ->
-                        // Questions are delivered via the callback.
-                        // Full cross-screen wiring requires a SharedViewModel;
-                        // navigate back so the caller can retrieve the result.
+                    onQuestionsImported = { questions ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "imported_questions_json",
+                            com.google.gson.Gson().toJson(questions)
+                        )
                         navController.popBackStack()
                     }
                 )
@@ -239,7 +241,28 @@ fun QuizzezNavHost(
 
             // ==================== User Screens ====================
             composable(Routes.SETTINGS) {
-                SettingsScreen(onNavigateBack = { navController.popBackStack() })
+                val container = LocalAppContainer
+                val settingsViewModel = androidx.lifecycle.viewmodel.compose.viewModel<SettingsViewModel>(
+                    factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                            return SettingsViewModel(
+                                settingsPreferences = container.settingsPreferences,
+                                authRepository = container.authRepository
+                            ) as T
+                        }
+                    }
+                )
+                SettingsScreen(
+                    viewModel = settingsViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onAccountDeleted = {
+                        // Navigate to Home and clear entire back stack after account deletion.
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(Routes.HISTORY) {

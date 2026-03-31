@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,7 +41,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -51,6 +55,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.ui.components.TagSuggestionDialog
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.forms.SwitchToggle
 import com.example.androidapp.ui.components.forms.TextInputField
@@ -88,11 +93,50 @@ fun CreateQuizScreen(
                 CreateQuizViewModel(
                     container.quizRepository,
                     container.authRepository,
-                    container.poolRepository
+                    container.poolRepository,
+                    container.shareCodeRepository
                 ) as T
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val owner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+    val savedStateHandle = (owner as? androidx.navigation.NavBackStackEntry)?.savedStateHandle
+    val importedJsonFlow = androidx.compose.runtime.remember(savedStateHandle) {
+        savedStateHandle?.getStateFlow<String?>("imported_questions_json", null)
+            ?: kotlinx.coroutines.flow.MutableStateFlow(null)
+    }
+    val importedJson by importedJsonFlow.collectAsStateWithLifecycle()
+
+    androidx.compose.runtime.LaunchedEffect(importedJson) {
+        if (!importedJson.isNullOrBlank()) {
+            try {
+                val questions = com.google.gson.Gson().fromJson(
+                    importedJson,
+                    Array<QuestionDraft>::class.java
+                ).toList()
+
+                viewModel.onEvent(CreateQuizEvent.ImportQuestions(questions))
+            } catch (e: Exception) {
+                // Ignore parse errors
+            } finally {
+                savedStateHandle?.remove<String>("imported_questions_json")
+            }
+        }
+    }
+
+    var showTagDialog by remember { mutableStateOf(false) }
+
+    if (showTagDialog) {
+        TagSuggestionDialog(
+            currentTags = uiState.tags,
+            availableTags = uiState.availableTags,
+            onTagsConfirmed = { newTags ->
+                viewModel.onEvent(CreateQuizEvent.TagsChanged(newTags))
+            },
+            onDismiss = { showTagDialog = false }
+        )
+    }
 
     // Navigate away after a successful publish.
     LaunchedEffect(uiState.isSaved) {
@@ -233,13 +277,27 @@ fun CreateQuizScreen(
 
             // Tags
             item {
-                TextInputField(
-                    value = uiState.tags,
-                    onValueChange = { viewModel.onEvent(CreateQuizEvent.TagsChanged(it)) },
-                    label = stringResource(R.string.create_quiz_tags_label),
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextInputField(
+                        value = uiState.tags,
+                        onValueChange = { viewModel.onEvent(CreateQuizEvent.TagsChanged(it)) },
+                        label = stringResource(R.string.create_quiz_tags_label),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    FilledTonalIconButton(
+                        onClick = { showTagDialog = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocalOffer,
+                            contentDescription = stringResource(R.string.create_quiz_pick_tags)
+                        )
+                    }
+                }
             }
 
             // Public toggle

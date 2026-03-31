@@ -73,7 +73,8 @@ fun EditQuizScreen(
                     quizId,
                     container.quizRepository,
                     container.authRepository,
-                    container.poolRepository
+                    container.poolRepository,
+                    container.shareCodeRepository
                 ) as T
         }
     )
@@ -219,13 +220,39 @@ fun EditQuizScreen(
 
                 // Tags
                 item {
-                    TextInputField(
-                        value = uiState.tags,
-                        onValueChange = { viewModel.onEvent(EditQuizEvent.TagsChanged(it)) },
-                        label = stringResource(R.string.create_quiz_tags_label),
+                    val showTagDialog = androidx.compose.runtime.remember {
+                        androidx.compose.runtime.mutableStateOf(false)
+                    }
+
+                    if (showTagDialog.value) {
+                        com.example.androidapp.ui.components.TagSuggestionDialog(
+                            currentTags = uiState.tags,
+                            availableTags = uiState.availableTags,
+                            onTagsConfirmed = { newTags ->
+                                viewModel.onEvent(EditQuizEvent.TagsChanged(newTags))
+                            },
+                            onDismiss = { showTagDialog.value = false }
+                        )
+                    }
+
+                    androidx.compose.foundation.layout.Row(
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                    ) {
+                        TextInputField(
+                            value = uiState.tags,
+                            onValueChange = { viewModel.onEvent(EditQuizEvent.TagsChanged(it)) },
+                            label = stringResource(R.string.create_quiz_tags_label),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        androidx.compose.material3.FilledTonalButton(
+                            onClick = { showTagDialog.value = true }
+                        ) {
+                            androidx.compose.material3.Text("Gợi ý")
+                        }
+                    }
                 }
 
                 // Public toggle
