@@ -145,6 +145,21 @@
               </div>
             </div>
           </div>
+<a data-name="1346553103%2FFunctions%2F492899073" anchor-label="getAllTags" id="1346553103%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-all-tags.html"><span>get</span><wbr></wbr><span>All</span><wbr></wbr><span><span>Tags</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1346553103%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-all-tags.html"><span class="token function">getAllTags</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Retrieves all distinct tags from all non-deleted quizzes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
 <a data-name="-673899987%2FFunctions%2F492899073" anchor-label="getDeletedQuizzes" id="-673899987%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
@@ -306,6 +321,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="permanently-delete-quiz.html"><span class="token function">permanentlyDeleteQuiz</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/index.html">Result</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Permanently deletes a quiz from both Room and Firestore.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1478759203%2FFunctions%2F492899073" anchor-label="refreshQuizFromRemote" id="-1478759203%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="refresh-quiz-from-remote.html"><span>refresh</span><wbr></wbr><span>Quiz</span><wbr></wbr><span>From</span><wbr></wbr><span><span>Remote</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1478759203%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="refresh-quiz-from-remote.html"><span class="token function">refreshQuizFromRemote</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/index.html">Result</a><span class="token operator">&lt;</span><a href="../../com.example.androidapp.domain.model/-quiz/index.html">Quiz</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Refreshes a single quiz and its questions/choices from Firestore into Room. Used as a fallback when local data is missing or incomplete (e.g., after a CASCADE delete removes questions/choices from Room).</p></div></div></div>
                 </div>
               </div>
             </div>

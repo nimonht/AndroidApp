@@ -108,7 +108,7 @@
   <div class="breadcrumbs"><a href="../../../index.html">app</a><span class="delimiter">/</span><a href="../index.html">com.example.androidapp.ui.screens.quiz</a><span class="delimiter">/</span><span class="current">QuizDetailViewModel</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Quiz</span><wbr></wbr><span>Detail</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">QuizDetailViewModel</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">quizRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-quiz-repository/index.html">QuizRepository</a></span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/androidx/lifecycle/ViewModel.html">ViewModel</a></div><p class="paragraph">ViewModel for the Quiz Detail screen. Loads quiz metadata and question list from the repository.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">QuizDetailViewModel</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">quizRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-quiz-repository/index.html">QuizRepository</a></span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/androidx/lifecycle/ViewModel.html">ViewModel</a></div><p class="paragraph">ViewModel for the Quiz Detail screen. Loads quiz metadata and question list from the repository.</p><p class="paragraph">Implements a remote refresh fallback: when questions loaded from Room are empty but the quiz advertises <a href="../../com.example.androidapp.domain.model/-quiz/question-count.html">Quiz.questionCount</a> 0, the ViewModel automatically fetches the full quiz (with questions and choices) from Firestore and re-populates Room. The user can also trigger a manual refresh via <a href="on-refresh.html">onRefresh</a>.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -198,6 +198,21 @@
               </div>
             </div>
           </div>
+<a data-name="-1341480682%2FFunctions%2F492899073" anchor-label="onRefresh" id="-1341480682%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-refresh.html"><span>on</span><wbr></wbr><span><span>Refresh</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1341480682%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="on-refresh.html"><span class="token function">onRefresh</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Explicitly refreshes quiz data from Firestore, re-populating Room. Useful when the user suspects local data is stale or incomplete.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
 <a data-name="1094739689%2FFunctions%2F492899073" anchor-label="onRetry" id="1094739689%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
@@ -208,7 +223,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="on-retry.html"><span class="token function">onRetry</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Reloads the quiz detail data.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="on-retry.html"><span class="token function">onRetry</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Reloads the quiz detail data from local storage. If local questions are still missing, triggers a remote refresh automatically.</p></div></div></div>
                 </div>
               </div>
             </div>
