@@ -25,6 +25,7 @@ import com.example.androidapp.data.repository.QuizRepositoryImpl
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.repository.StorageRepositoryImpl
+import com.example.androidapp.data.session.GuestSessionManager
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
@@ -102,6 +103,8 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             networkMonitor
         )
     }
+
+    override val guestSessionManager: GuestSessionManager by lazy { GuestSessionManager(context) }
 
     private val quizRemoteDataSource: QuizRemoteDataSource by lazy {
         QuizRemoteDataSource(firebaseFirestore)

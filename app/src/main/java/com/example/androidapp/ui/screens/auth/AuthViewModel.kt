@@ -3,7 +3,9 @@ package com.example.androidapp.ui.screens.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.data.session.GuestSessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +39,11 @@ sealed class AuthEvent {
 /**
  * ViewModel managing authentication state shared across Login, Register, and app-level auth checks.
  */
-class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class AuthViewModel(
+    private val authRepository: AuthRepository,
+    private val attemptRepository: AttemptRepository,
+    private val guestSessionManager: GuestSessionManager
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
 
@@ -73,7 +79,10 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _uiState.value = AuthUiState.Loading
             val result = authRepository.login(email, password)
             _uiState.value = result.fold(
-                onSuccess = { user -> AuthUiState.Authenticated(user) },
+                onSuccess = { user -> 
+                    handleGuestToUserMigration(user.id)
+                    AuthUiState.Authenticated(user) 
+                },
                 onFailure = { e -> AuthUiState.Error(e.message ?: "Đăng nhập thất bại") }
             )
         }
@@ -84,7 +93,10 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             _uiState.value = AuthUiState.Loading
             val result = authRepository.register(email, password, username)
             _uiState.value = result.fold(
-                onSuccess = { user -> AuthUiState.Authenticated(user) },
+                onSuccess = { user -> 
+                    handleGuestToUserMigration(user.id)
+                    AuthUiState.Authenticated(user) 
+                },
                 onFailure = { e -> AuthUiState.Error(e.message ?: "Đăng ký thất bại") }
             )
         }
@@ -94,6 +106,22 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         viewModelScope.launch {
             authRepository.logout()
             _uiState.value = AuthUiState.Idle
+        }
+    }
+
+    private fun handleGuestToUserMigration(userId: String) {
+        if (guestSessionManager.isGuest) {
+            val guestId = guestSessionManager.guestId
+            if (guestId != null) {
+                viewModelScope.launch {
+                    val result = attemptRepository.linkGuestAttempts(guestId, userId)
+                    if (result.isSuccess) {
+                        guestSessionManager.clearGuestSession()
+                    }
+                }
+            } else {
+                guestSessionManager.clearGuestSession()
+            }
         }
     }
 }

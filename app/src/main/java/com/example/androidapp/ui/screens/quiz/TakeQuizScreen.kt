@@ -64,7 +64,8 @@ fun TakeQuizScreen(
                     quizId,
                     container.quizRepository,
                     container.attemptRepository,
-                    container.authRepository
+                    container.authRepository,
+                    container.guestSessionManager
                 ) as T
         }
     )

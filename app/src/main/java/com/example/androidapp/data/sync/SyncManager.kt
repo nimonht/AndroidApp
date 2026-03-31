@@ -143,6 +143,22 @@ class SyncManager(
                     )
                 val quiz = quizEntity.toDomain()
 
+                // Sync Conflict Resolution: Server Wins
+                try {
+                    val remoteQuizDto = quizRemoteDataSource.getQuizById(operation.entityId)
+                    if (remoteQuizDto?.updatedAt != null) {
+                        val remoteTime = remoteQuizDto.updatedAt.toDate().time
+                        if (remoteTime > quiz.updatedAt) {
+                            // Remote is newer. Discard local pending edit and update local DB with remote data.
+                            val remoteQuizEntity = remoteQuizDto.toDomain().toEntity().copy(syncStatus = "SYNCED")
+                            quizDao.insertQuiz(remoteQuizEntity)
+                            return
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Ignore fetch failures, proceed to push
+                }
+
                 // Load questions (with choices) from Room to sync the full quiz graph.
                 val questionDtos = questionDao.getQuestionsByQuizIdOnce(operation.entityId)
                     .map { qEntity ->

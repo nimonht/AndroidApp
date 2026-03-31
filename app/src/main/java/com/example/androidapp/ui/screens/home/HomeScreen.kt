@@ -143,35 +143,66 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // ── My Quizzes ────────────────────────────────────────────────────
-            SectionHeader(
-                title = stringResource(R.string.home_my_quizzes),
-                onSeeAllClick = onNavigateToSearch,
-                modifier = Modifier.padding(horizontal = 24.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (uiState.myQuizzes.isEmpty()) {
-                EmptyState(
-                    message = stringResource(R.string.home_my_quizzes_empty),
+            if (uiState.isLoggedIn) {
+                SectionHeader(
+                    title = stringResource(R.string.home_my_quizzes),
+                    onSeeAllClick = onNavigateToSearch,
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
-            } else {
-                uiState.myQuizzes.forEachIndexed { index, quiz ->
-                    MyQuizListItem(
-                        quiz = quiz,
-                        onClick = { onNavigateToQuiz(quiz.id) },
-                        onEditClick = if (!quiz.isPublic) {
-                            { onNavigateToEditQuiz(quiz.id) }
-                        } else {
-                            null
-                        },
-                        showDivider = index < uiState.myQuizzes.size - 1,
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (uiState.myQuizzes.isEmpty()) {
+                    EmptyState(
+                        message = stringResource(R.string.home_my_quizzes_empty),
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
+                } else {
+                    uiState.myQuizzes.forEachIndexed { index, quiz ->
+                        MyQuizListItem(
+                            quiz = quiz,
+                            onClick = { onNavigateToQuiz(quiz.id) },
+                            onEditClick = if (!quiz.isPublic) {
+                                { onNavigateToEditQuiz(quiz.id) }
+                            } else {
+                                null
+                            },
+                            showDivider = index < uiState.myQuizzes.size - 1,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(40.dp))
+            } else {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.login_prompt_title),
+                            fontFamily = InterFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.login_prompt_message),
+                            fontFamily = InterFamily,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(40.dp))
+            }
 
             // ── Trending ────────────────────────────────────────────────────
             SectionHeader(

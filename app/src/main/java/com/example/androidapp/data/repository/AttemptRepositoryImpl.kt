@@ -96,5 +96,15 @@ class AttemptRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override suspend fun linkGuestAttempts(guestId: String, userId: String): Result<Int> {
+        return try {
+            val count = attemptDao.updateGuestAttempts(guestId, userId)
+            // They will be picked up during next sync or are already waiting
+            Result.success(count)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 

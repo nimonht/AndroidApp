@@ -4,7 +4,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -14,8 +21,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.R
+import com.example.androidapp.data.error.ErrorEvent
+import com.example.androidapp.ui.components.feedback.OfflineBanner
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.components.navigation.CreateQuizFAB
+import com.example.androidapp.ui.components.common.LoginPromptDialog
 import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
@@ -54,7 +65,47 @@ fun QuizzezNavHost(
     val currentUser by LocalAppContainer.authRepository.currentUser
         .collectAsStateWithLifecycle(initialValue = null)
 
+    val isOnline by LocalAppContainer.networkMonitor.isOnline
+        .collectAsStateWithLifecycle(initialValue = true)
+    val isOffline = !isOnline
+
+    val guestSessionManager = LocalAppContainer.guestSessionManager
+    val isGuest = currentUser == null && guestSessionManager.isGuest
+
+    var showLoginPrompt by remember { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+        if (prefs.getBoolean("crashed_previously", false)) {
+            prefs.edit().putBoolean("crashed_previously", false).apply()
+            ErrorEvent.post(context.getString(R.string.error_default_message))
+        }
+
+        ErrorEvent.errors.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    if (showLoginPrompt) {
+        LoginPromptDialog(
+            onDismiss = { showLoginPrompt = false },
+            onLoginClick = {
+                showLoginPrompt = false
+                navController.navigate(Routes.LOGIN)
+            },
+            onRegisterClick = {
+                showLoginPrompt = false
+                navController.navigate(Routes.REGISTER)
+            }
+        )
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { OfflineBanner(isOffline = isOffline) },
         bottomBar = {
             // Show bottom navigation bar only on main screens
             if (shouldShowBottomBar(currentRoute)) {
@@ -76,7 +127,9 @@ fun QuizzezNavHost(
             if (currentRoute == Routes.HOME) {
                 CreateQuizFAB(
                     onClick = {
-                        if (currentUser == null) {
+                        if (isGuest) {
+                            showLoginPrompt = true
+                        } else if (currentUser == null) {
                             navController.navigate(Routes.LOGIN)
                         } else {
                             navController.navigate(Routes.QUIZ_CREATE)
@@ -101,7 +154,7 @@ fun QuizzezNavHost(
                         navController.navigate(Routes.SEARCH)
                     },
                     onNavigateToEditQuiz = { quizId ->
-                        navController.navigate(Routes.quizEdit(quizId))
+                        if (isGuest) showLoginPrompt = true else navController.navigate(Routes.quizEdit(quizId))
                     }
                 )
             }
@@ -118,9 +171,9 @@ fun QuizzezNavHost(
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
-                    onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
-                    onNavigateToEditProfile = { navController.navigate(Routes.PROFILE_EDIT) }
+                    onNavigateToHistory = { if (isGuest) showLoginPrompt = true else navController.navigate(Routes.HISTORY) },
+                    onNavigateToTrash = { if (isGuest) showLoginPrompt = true else navController.navigate(Routes.TRASH) },
+                    onNavigateToEditProfile = { if (isGuest) showLoginPrompt = true else navController.navigate(Routes.PROFILE_EDIT) }
                 )
             }
 

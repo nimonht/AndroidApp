@@ -9,6 +9,7 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.session.GuestSessionManager
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
@@ -42,6 +43,7 @@ interface AppContainer {
 
     val networkMonitor: NetworkMonitor
     val syncManager: SyncManager
+    val guestSessionManager: GuestSessionManager
 
     val authRepository: AuthRepository
     val quizRepository: QuizRepository

@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.androidapp.QuizzezApplication
 import com.example.androidapp.databinding.FragmentAuthBinding
+import com.example.androidapp.domain.util.InputValidator
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
@@ -87,7 +88,11 @@ class AuthFragment : Fragment() {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T =
-                    AuthViewModel(appContainer.authRepository) as T
+                    AuthViewModel(
+                        appContainer.authRepository,
+                        appContainer.attemptRepository,
+                        appContainer.guestSessionManager
+                    ) as T
             }
         )[AuthViewModel::class.java]
     }
@@ -157,20 +162,21 @@ class AuthFragment : Fragment() {
     }
 
     private fun updateLoginButtonState() {
-        val email = binding.etLoginEmail.text?.toString().orEmpty().trim()
-        val password = binding.etLoginPassword.text?.toString().orEmpty()
-        binding.btnLogin.isEnabled =
-            email.isNotBlank()
-                    && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                    && password.isNotBlank()
+        binding.btnLogin.isEnabled = isLoginFormValid()
     }
 
     // ---- Register form ------------------------------------------------------
 
     private fun setupRegisterForm() {
         binding.etRegisterUsername.doAfterTextChanged { updateRegisterButtonState() }
-        binding.etRegisterEmail.doAfterTextChanged { updateRegisterButtonState() }
-        binding.etRegisterPassword.doAfterTextChanged { updateRegisterButtonState() }
+        binding.etRegisterEmail.doAfterTextChanged { 
+            validateRegisterEmail()
+            updateRegisterButtonState() 
+        }
+        binding.etRegisterPassword.doAfterTextChanged { 
+            validateRegisterPassword()
+            updateRegisterButtonState() 
+        }
         binding.etRegisterConfirmPassword.doAfterTextChanged {
             validateConfirmPassword()
             updateRegisterButtonState()
@@ -187,16 +193,25 @@ class AuthFragment : Fragment() {
     }
 
     private fun updateRegisterButtonState() {
-        val username = binding.etRegisterUsername.text?.toString().orEmpty().trim()
+        binding.btnRegister.isEnabled = isRegisterFormValid()
+    }
+
+    private fun validateRegisterEmail() {
         val email = binding.etRegisterEmail.text?.toString().orEmpty().trim()
+        if (email.isNotEmpty() && !InputValidator.isValidEmail(email)) {
+            binding.tilRegisterEmail.error = getString(com.example.androidapp.R.string.auth_email_invalid)
+        } else {
+            binding.tilRegisterEmail.error = null
+        }
+    }
+
+    private fun validateRegisterPassword() {
         val password = binding.etRegisterPassword.text?.toString().orEmpty()
-        val confirm = binding.etRegisterConfirmPassword.text?.toString().orEmpty()
-        binding.btnRegister.isEnabled =
-            username.isNotBlank()
-                    && email.isNotBlank()
-                    && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                    && password.length >= 6
-                    && password == confirm
+        if (password.isNotEmpty() && !InputValidator.isPasswordValid(password)) {
+            binding.tilRegisterPassword.error = getString(com.example.androidapp.R.string.auth_password_short)
+        } else {
+            binding.tilRegisterPassword.error = null
+        }
     }
 
     private fun validateConfirmPassword() {
@@ -282,9 +297,7 @@ class AuthFragment : Fragment() {
     private fun isLoginFormValid(): Boolean {
         val email = binding.etLoginEmail.text?.toString().orEmpty().trim()
         val password = binding.etLoginPassword.text?.toString().orEmpty()
-        return email.isNotBlank()
-                && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                && password.isNotBlank()
+        return InputValidator.isValidEmail(email) && password.isNotBlank()
     }
 
     private fun isRegisterFormValid(): Boolean {
@@ -293,9 +306,8 @@ class AuthFragment : Fragment() {
         val password = binding.etRegisterPassword.text?.toString().orEmpty()
         val confirm = binding.etRegisterConfirmPassword.text?.toString().orEmpty()
         return username.isNotBlank()
-                && email.isNotBlank()
-                && Patterns.EMAIL_ADDRESS.matcher(email).matches()
-                && password.length >= 6
+                && InputValidator.isValidEmail(email)
+                && InputValidator.isPasswordValid(password)
                 && password == confirm
     }
 }

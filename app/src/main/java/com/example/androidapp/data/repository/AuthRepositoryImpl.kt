@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import android.net.Uri
 import java.util.UUID
 import kotlinx.coroutines.channels.awaitClose
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.tasks.await
+import com.example.androidapp.data.network.retryWithBackoff
+import com.example.androidapp.data.error.ErrorEvent
 
 /**
  * Implementation of [AuthRepository] that wraps [FirebaseAuth].
@@ -30,6 +33,8 @@ class AuthRepositoryImpl(
     private val userRemoteDataSource: UserRemoteDataSource
 ) : AuthRepository {
 
+    private var isManualLogout = false
+
     /**
      * Emits the currently authenticated [User] by listening to [FirebaseAuth] state changes.
      */
@@ -37,6 +42,7 @@ class AuthRepositoryImpl(
         val listener = FirebaseAuth.AuthStateListener { auth ->
             val firebaseUser = auth.currentUser
             if (firebaseUser != null) {
+                isManualLogout = false // reset on login
                 val user = User(
                     id = firebaseUser.uid,
                     email = firebaseUser.email ?: "",
@@ -57,7 +63,12 @@ class AuthRepositoryImpl(
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
-            val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            val result = retryWithBackoff(
+                maxRetries = 2,
+                shouldRetry = { it !is FirebaseAuthInvalidCredentialsException }
+            ) {
+                firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            }
             val firebaseUser = result.user ?: return Result.failure(Exception("Đăng nhập thất bại"))
             val user = User(
                 id = firebaseUser.uid,
@@ -78,7 +89,12 @@ class AuthRepositoryImpl(
 
     override suspend fun register(email: String, password: String, username: String): Result<User> {
         return try {
-            val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            val result = retryWithBackoff(
+                maxRetries = 2,
+                shouldRetry = { it !is FirebaseAuthUserCollisionException && it !is FirebaseAuthWeakPasswordException }
+            ) {
+                firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            }
             val firebaseUser = result.user ?: return Result.failure(Exception("Đăng ký thất bại"))
             val user = User(
                 id = firebaseUser.uid,
@@ -108,7 +124,9 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun logout() {
+        isManualLogout = true
         firebaseAuth.signOut()
+        userDao.deleteAllUsers()
     }
 
     override suspend fun getCurrentUser(): User? {
@@ -178,6 +196,10 @@ class AuthRepositoryImpl(
             firebaseAuth.currentUser?.getIdToken(true)?.await()
                 ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
             Result.success(Unit)
+        } catch (e: FirebaseAuthInvalidUserException) {
+            logout()
+            ErrorEvent.post("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+            Result.failure(Exception("Phiên đăng nhập đã hết hạn", e))
         } catch (e: Exception) {
             Result.failure(Exception("Làm mới phiên đăng nhập thất bại", e))
         }

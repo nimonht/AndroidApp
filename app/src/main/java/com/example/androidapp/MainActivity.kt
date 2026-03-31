@@ -85,7 +85,10 @@ class MainActivity : FragmentActivity() {
         if (existingFragment == null) {
             val authFragment = AuthFragment().apply {
                 onAuthSuccess = { showComposeContent() }
-                onGuestContinue = { showComposeContent() }
+                onGuestContinue = {
+                    appContainer.guestSessionManager.startGuestSession()
+                    showComposeContent()
+                }
             }
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, authFragment)
@@ -93,7 +96,10 @@ class MainActivity : FragmentActivity() {
         } else if (existingFragment is AuthFragment) {
             // Re-attach callbacks after configuration change.
             existingFragment.onAuthSuccess = { showComposeContent() }
-            existingFragment.onGuestContinue = { showComposeContent() }
+            existingFragment.onGuestContinue = {
+                appContainer.guestSessionManager.startGuestSession()
+                showComposeContent()
+            }
         }
     }
 

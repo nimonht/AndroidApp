@@ -7,6 +7,7 @@ import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.data.session.GuestSessionManager
 import com.example.androidapp.domain.util.QuestionShuffler
 import com.example.androidapp.domain.util.ScoreCalculator
 import kotlinx.coroutines.Job
@@ -61,7 +62,8 @@ class TakeQuizViewModel(
     private val quizId: String,
     private val quizRepository: QuizRepository,
     private val attemptRepository: AttemptRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val guestSessionManager: GuestSessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<TakeQuizUiState>(TakeQuizUiState.Loading)
@@ -200,7 +202,7 @@ class TakeQuizViewModel(
 
             val score = calculateScore()
             val answerMap = answers.mapValues { (_, v) -> v.toList() }
-            val userId = authRepository.getCurrentUser()?.id ?: "guest_${UUID.randomUUID()}"
+            val userId = authRepository.getCurrentUser()?.id ?: (guestSessionManager.guestId ?: guestSessionManager.startGuestSession())
 
             val attempt = Attempt(
                 id = attemptId,

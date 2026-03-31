@@ -159,6 +159,15 @@
     <string name="auth_or_divider">hoặc</string>
     <string name="auth_password_toggle_cd">Hiện/ẩn mật khẩu</string>
     <string name="auth_password_mismatch">Mật khẩu xác nhận không khớp</string>
+    <string name="auth_password_short">Mật khẩu quá ngắn (ít nhất 6 ký tự)</string>
+    <string name="auth_email_invalid">Email không hợp lệ</string>
+
+    <!-- Login Prompt -->
+    <string name="login_prompt_title">Yêu cầu đăng nhập</string>
+    <string name="login_prompt_message">Bạn cần có tài khoản để sử dụng tính năng này. Đăng nhập hoặc đăng ký để tiếp tục.</string>
+    <string name="login_prompt_login_button">Đăng nhập</string>
+    <string name="login_prompt_register_button">Đăng ký</string>
+    <string name="login_prompt_dismiss">Hủy</string>
 
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết Quizz</string>
@@ -241,6 +250,7 @@
     <!-- Pull to Refresh -->
 
     <!-- Offline Banner -->
+    <string name="offline_banner_message">Không có kết nối mạng</string>
 
     <!-- Join Quiz Validation -->
 

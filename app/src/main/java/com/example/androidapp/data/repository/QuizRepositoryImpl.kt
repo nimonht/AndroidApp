@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.UUID
+import com.example.androidapp.data.network.retryWithBackoff
 
 /**
  * Local-first implementation of [QuizRepository].
@@ -89,9 +90,11 @@ class QuizRepositoryImpl(
         val local = quizDao.getQuizByShareCode(shareCode)
         if (local != null) return local.toDomain()
         return try {
-            val remote = remoteDataSource.getQuizByShareCode(shareCode)
-            remote?.toDomain()?.also { quiz ->
-                quizDao.insertQuiz(quiz.toEntity())
+            retryWithBackoff(maxRetries = 2) {
+                val remote = remoteDataSource.getQuizByShareCode(shareCode)
+                remote?.toDomain()?.also { quiz ->
+                    quizDao.insertQuiz(quiz.toEntity())
+                }
             }
         } catch (_: Exception) {
             null

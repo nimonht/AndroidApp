@@ -1,6 +1,7 @@
 package com.example.androidapp
 
 import android.app.Application
+import com.example.androidapp.data.error.GlobalErrorHandler
 import com.example.androidapp.di.AppContainer
 import com.example.androidapp.di.AppContainerImpl
 
@@ -18,6 +19,11 @@ class QuizzezApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        
+        // Setup Global Error Handler
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler(GlobalErrorHandler(applicationContext, defaultHandler))
+
         // Initialize manual dependency injection container
         appContainer = AppContainerImpl(this)
     }

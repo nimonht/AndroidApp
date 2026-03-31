@@ -90,4 +90,10 @@ interface AttemptDao {
      */
     @Query("DELETE FROM attempts WHERE quiz_id = :quizId")
     suspend fun deleteAttemptsByQuizId(quizId: String)
+
+    /**
+     * Update the user ID for all attempts made by a guest.
+     */
+    @Query("UPDATE attempts SET user_id = :userId WHERE user_id = :guestId")
+    suspend fun updateGuestAttempts(guestId: String, userId: String): Int
 }
