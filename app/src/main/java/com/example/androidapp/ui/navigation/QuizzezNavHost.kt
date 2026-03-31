@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -16,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.components.navigation.CreateQuizFAB
+import com.example.androidapp.ui.components.common.LoginPromptDialog
 import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
@@ -54,6 +58,18 @@ fun QuizzezNavHost(
 
     val currentUser by LocalAppContainer.authRepository.currentUser
         .collectAsStateWithLifecycle(initialValue = null)
+
+    var showLoginPrompt by remember { mutableStateOf(false) }
+
+    if (showLoginPrompt) {
+        LoginPromptDialog(
+            onLogin = {
+                showLoginPrompt = false
+                navController.navigate(Routes.LOGIN)
+            },
+            onDismiss = { showLoginPrompt = false }
+        )
+    }
 
     Scaffold(
         bottomBar = {
@@ -119,9 +135,27 @@ fun QuizzezNavHost(
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
-                    onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
-                    onNavigateToEditProfile = { navController.navigate(Routes.PROFILE_EDIT) }
+                    onNavigateToHistory = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.HISTORY)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    },
+                    onNavigateToTrash = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.TRASH)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    },
+                    onNavigateToEditProfile = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.PROFILE_EDIT)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    }
                 )
             }
 

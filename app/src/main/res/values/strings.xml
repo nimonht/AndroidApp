@@ -79,6 +79,8 @@
     <string name="email">Email</string>
     <string name="password">Mật khẩu</string>
     <string name="username">Tên người dùng</string>
+    <string name="login_prompt_title">Yêu cầu đăng nhập</string>
+    <string name="login_prompt_message">Bạn cần đăng nhập để sử dụng tính năng này. Đăng nhập ngay?</string>
 
     <!-- Create Quiz -->
     <string name="create_add_question_cd">Thêm câu hỏi</string>
