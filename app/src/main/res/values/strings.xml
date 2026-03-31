@@ -53,6 +53,8 @@
     <string name="regenerate_code">Tạo lại mã</string>
     <string name="share_code_copied">Đã sao chép mã chia sẻ</string>
     <string name="share_code_qr_cd">Mã QR chia sẻ</string>
+    <string name="share_quiz_text">Hãy thử Quizz này trên Quizzez! Mã tham gia: %1$s</string>
+    <string name="share_quiz_chooser_title">Chia sẻ Quizz qua</string>
     <string name="options_title">Tùy chọn</string>
     <string name="duplicate">Nhân bản</string>
     <string name="filter_title">Bộ lọc</string>
