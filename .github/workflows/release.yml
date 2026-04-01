@@ -1,0 +1,95 @@
+# Automatic release workflow for Quizzez Android App.
+# Creates a Git tag and GitHub Release when a commit message on main
+# matches the pattern: "release v<semver>" (case-insensitive).
+#
+# Examples of recognized commit messages:
+#   release v1.0.0
+#   Release v2.1.3-beta.2
+#   RELEASE v1.0.0-rc-1
+#   release v0.9.0-alpha.1
+
+name: Release on Version Bump
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  create-release:
+    name: Detect version bump and create release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse version from commit message
+        id: version
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Case-insensitive match for "release v<semver>" with optional pre-release suffix.
+          # Supports formats like v1.0.0, v1.0.0-rc-1, v1.0.0-beta.2, v1.0.0-alpha.1, etc.
+          VERSION=$(echo "$COMMIT_MSG" | grep -ioP '(?<=release\s)v\d+\.\d+\.\d+(-[a-zA-Z0-9]+([.\-][a-zA-Z0-9]+)*)?' | head -n 1)
+
+          if [ -z "$VERSION" ]; then
+            echo "No version pattern found in commit message. Skipping release."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Detected version: $VERSION"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Determine if this is a pre-release (contains -rc, -beta, -alpha, or similar suffixes).
+          if echo "$VERSION" | grep -qiP '\-[a-zA-Z]'; then
+            echo "Pre-release version detected."
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Stable release version detected."
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check if tag already exists
+        if: steps.version.outputs.found == 'true'
+        id: tag-check
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists. Skipping release."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG does not exist. Proceeding with release."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Git tag
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -84,10 +84,15 @@ fun QuizResultScreen(
                 onRetry = { viewModel.onRetry() },
                 modifier = Modifier.fillMaxSize()
             )
+
             is QuizResultUiState.Success -> ResultContent(
                 quiz = state.quiz,
                 attempt = state.attempt,
                 percentage = state.percentage,
+                earnedScore = state.earnedScore,
+                maxScore = state.maxScore,
+                correctCount = state.correctCount,
+                wrongCount = state.wrongCount,
                 onNavigateHome = onNavigateHome,
                 onRetryQuiz = onRetryQuiz,
                 onReviewAnswers = onReviewAnswers,
@@ -102,6 +107,10 @@ private fun ResultContent(
     quiz: Quiz,
     attempt: Attempt,
     percentage: Int,
+    earnedScore: Int,
+    maxScore: Int,
+    correctCount: Int,
+    wrongCount: Int,
     onNavigateHome: () -> Unit,
     onRetryQuiz: () -> Unit,
     onReviewAnswers: () -> Unit,
@@ -143,7 +152,7 @@ private fun ResultContent(
                     color = MaterialTheme.colorScheme.onBackground
                 )
             ) {
-                append("%02d".format(attempt.score))
+                append("%02d".format(earnedScore))
             }
             withStyle(
                 SpanStyle(
@@ -163,7 +172,7 @@ private fun ResultContent(
                     color = MaterialTheme.colorScheme.onBackground
                 )
             ) {
-                append("%02d".format(attempt.totalQuestions))
+                append("%02d".format(maxScore))
             }
         }
         Text(text = scoreAnnotated, textAlign = TextAlign.Center)
@@ -211,8 +220,8 @@ private fun ResultContent(
 
         // ── Stats grid ────────────────────────────────────────────────────
         ResultStatsGrid(
-            correctCount = attempt.score,
-            wrongCount = attempt.totalQuestions - attempt.score,
+            correctCount = correctCount,
+            wrongCount = wrongCount,
             timeTaken = timeTakenStr,
             modifier = Modifier
                 .fillMaxWidth()
@@ -380,4 +389,3 @@ private fun ResultStatColumn(
         )
     }
 }
-

@@ -166,8 +166,8 @@ fun HomeScreen(
                             onClick = { onNavigateToQuiz(quiz.id) }
                         )
 
-                        // Floating edit button for draft (non-public) quizzes
-                        if (!quiz.isPublic) {
+                        // Floating edit button for draft quizzes only (not published)
+                        if (quiz.shareCode == null && !quiz.isPublic) {
                             SmallFloatingActionButton(
                                 onClick = { onNavigateToEditQuiz(quiz.id) },
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
