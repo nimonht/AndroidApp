@@ -15,10 +15,15 @@ import kotlinx.coroutines.launch
 
 /**
  * Combines an [Attempt] with the title of the associated [Quiz].
+ *
+ * @property attempt The user's quiz attempt.
+ * @property quizTitle The title of the quiz, or a fallback if the quiz was deleted.
+ * @property isQuizDeleted Whether the associated quiz has been soft-deleted or permanently removed.
  */
 data class AttemptWithQuiz(
     val attempt: Attempt,
-    val quizTitle: String
+    val quizTitle: String,
+    val isQuizDeleted: Boolean = false
 )
 
 /**
@@ -55,6 +60,11 @@ class HistoryViewModel(
         loadHistory()
     }
 
+    companion object {
+        /** Fallback title shown when the quiz has been permanently deleted from the database. */
+        const val DELETED_QUIZ_FALLBACK_TITLE = "N/A"
+    }
+
     /**
      * Dispatches a [HistoryEvent] to the ViewModel.
      */
@@ -76,11 +86,16 @@ class HistoryViewModel(
             attemptRepository.getAttemptsByUser(user.id).collect { attempts ->
                 val enriched = attempts.map { attempt ->
                     val quiz = quizRepository.getQuizById(attempt.quizId)
-                    AttemptWithQuiz(attempt, quiz?.title ?: attempt.quizId)
+                    val isDeleted = quiz == null || quiz.deletedAt != null
+                    val title = if (quiz != null) quiz.title else DELETED_QUIZ_FALLBACK_TITLE
+                    AttemptWithQuiz(
+                        attempt = attempt,
+                        quizTitle = title,
+                        isQuizDeleted = isDeleted
+                    )
                 }
                 _uiState.update { it.copy(isLoading = false, attempts = enriched) }
             }
         }
     }
 }
-

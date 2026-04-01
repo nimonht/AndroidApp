@@ -20,7 +20,7 @@ sealed class AttemptDetailUiState {
     data object Loading : AttemptDetailUiState()
     data class Success(
         val attempt: Attempt,
-        val quiz: Quiz,
+        val quiz: Quiz?,
         val percentage: Int,
         val starRating: Int,
         val timeTakenMs: Long,
@@ -65,10 +65,6 @@ class AttemptDetailViewModel(
                 return@launch
             }
             val quiz = quizRepository.getQuizById(attempt.quizId)
-            if (quiz == null) {
-                _uiState.value = AttemptDetailUiState.Error("Không tìm thấy bài kiểm tra")
-                return@launch
-            }
             val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.totalQuestions)
             val starRating = ScoreUtil.calculateStarRating(percentage)
             val timeTakenMs = if (attempt.endTimeMillis != null) {

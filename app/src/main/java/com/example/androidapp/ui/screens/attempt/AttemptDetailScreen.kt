@@ -130,7 +130,7 @@ private fun AttemptDetailContent(
 
         // Quiz title
         Text(
-            text = state.quiz.title,
+            text = state.quiz?.title ?: "N/A",
             fontFamily = PlayfairDisplayFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 28.sp,

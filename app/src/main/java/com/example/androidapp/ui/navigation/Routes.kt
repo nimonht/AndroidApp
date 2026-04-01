@@ -34,6 +34,7 @@ object Routes {
     // Auth Routes
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val QUESTION_POOL = "question_pool"
 
     // Helper functions to build routes with arguments
     object Args {
@@ -101,6 +102,7 @@ sealed class NavigationDestination(val route: String) {
     data object Settings : NavigationDestination(Routes.SETTINGS)
     data object History : NavigationDestination(Routes.HISTORY)
     data object Trash : NavigationDestination(Routes.TRASH)
+    data object QuestionPool : NavigationDestination(Routes.QUESTION_POOL)
 
     // Review & Detail Destinations
     data class AnswerReview(val quizId: String, val attemptId: String) :

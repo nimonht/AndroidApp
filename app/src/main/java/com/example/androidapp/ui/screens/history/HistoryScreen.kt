@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -59,12 +60,14 @@ fun HistoryScreen(
             uiState.isLoading -> LoadingSpinner(
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             uiState.attempts.isEmpty() -> EmptyState(
                 message = stringResource(R.string.history_empty),
                 actionLabel = stringResource(R.string.history_action_explore),
                 onActionClick = onNavigateBack,
                 modifier = Modifier.padding(innerPadding).fillMaxWidth()
             )
+
             else -> LazyColumn(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
@@ -95,13 +98,25 @@ private fun AttemptCard(
     ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = attemptWithQuiz.quizTitle,
+                    text = if (attemptWithQuiz.isQuizDeleted && attemptWithQuiz.quizTitle == HistoryViewModel.DELETED_QUIZ_FALLBACK_TITLE) {
+                        stringResource(R.string.history_deleted_quiz)
+                    } else {
+                        attemptWithQuiz.quizTitle
+                    },
                     style = MaterialTheme.typography.titleMedium
                 )
+                if (attemptWithQuiz.isQuizDeleted) {
+                    Text(
+                        text = stringResource(R.string.history_deleted_quiz_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 Text(
                     text = stringResource(R.string.score_format, attempt.score, attempt.totalQuestions),
                     style = MaterialTheme.typography.bodySmall,

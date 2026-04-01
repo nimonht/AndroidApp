@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,11 @@ sealed class QuizDetailUiState {
     data class Success(
         val quiz: Quiz,
         val questions: List<Question>,
-        val isRefreshing: Boolean = false
+        val isRefreshing: Boolean = false,
+        val isOwner: Boolean = false,
+        val isDeleting: Boolean = false,
+        val isDeleted: Boolean = false,
+        val deleteError: String? = null
     ) : QuizDetailUiState()
 
     data class Error(val message: String) : QuizDetailUiState()
@@ -34,10 +39,13 @@ sealed class QuizDetailUiState {
  * automatically fetches the full quiz (with questions and choices) from
  * Firestore and re-populates Room. The user can also trigger a manual
  * refresh via [onRefresh].
+ *
+ * Supports ownership checking and soft-delete for quiz owners.
  */
 class QuizDetailViewModel(
     private val quizId: String,
-    private val quizRepository: QuizRepository
+    private val quizRepository: QuizRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<QuizDetailUiState>(QuizDetailUiState.Loading)
@@ -51,8 +59,37 @@ class QuizDetailViewModel(
     /** Active collection job so we can cancel it before starting a new one. */
     private var collectJob: Job? = null
 
+    /** Cached current user ID for ownership checks. */
+    private var currentUserId: String? = null
+
     init {
+        resolveCurrentUser()
         loadQuizDetail()
+    }
+
+    /**
+     * Resolves the currently authenticated user so ownership can be checked
+     * against [Quiz.ownerId].
+     */
+    private fun resolveCurrentUser() {
+        viewModelScope.launch {
+            currentUserId = authRepository.getCurrentUser()?.id
+            // Re-evaluate ownership if we already have a success state
+            val current = _uiState.value
+            if (current is QuizDetailUiState.Success) {
+                _uiState.value = current.copy(
+                    isOwner = isQuizOwner(current.quiz)
+                )
+            }
+        }
+    }
+
+    /**
+     * Returns true when the currently authenticated user owns the given quiz.
+     */
+    private fun isQuizOwner(quiz: Quiz): Boolean {
+        val uid = currentUserId ?: return false
+        return uid.isNotBlank() && uid == quiz.ownerId
     }
 
     /**
@@ -70,6 +107,48 @@ class QuizDetailViewModel(
      */
     fun onRefresh() {
         refreshFromRemote()
+    }
+
+    /**
+     * Soft-deletes the quiz (moves it to the recycle bin).
+     * Only quiz owners should call this — the UI should guard access via [QuizDetailUiState.Success.isOwner].
+     * On success, sets [QuizDetailUiState.Success.isDeleted] to true so the screen
+     * can navigate back.
+     */
+    fun onDeleteQuiz() {
+        val current = _uiState.value
+        if (current !is QuizDetailUiState.Success) return
+        if (!current.isOwner) return
+
+        viewModelScope.launch {
+            _uiState.value = current.copy(isDeleting = true, deleteError = null)
+
+            val result = quizRepository.deleteQuiz(quizId)
+            result.fold(
+                onSuccess = {
+                    _uiState.value = current.copy(
+                        isDeleting = false,
+                        isDeleted = true
+                    )
+                },
+                onFailure = { e ->
+                    _uiState.value = current.copy(
+                        isDeleting = false,
+                        deleteError = e.message ?: "Không thể xóa bài kiểm tra"
+                    )
+                }
+            )
+        }
+    }
+
+    /**
+     * Clears the delete error message so the UI can dismiss the error state.
+     */
+    fun onClearDeleteError() {
+        val current = _uiState.value
+        if (current is QuizDetailUiState.Success) {
+            _uiState.value = current.copy(deleteError = null)
+        }
     }
 
     private fun loadQuizDetail() {
@@ -99,7 +178,11 @@ class QuizDetailViewModel(
                     remoteRefreshAttempted = true
                     refreshFromRemote(quiz)
                 } else {
-                    _uiState.value = QuizDetailUiState.Success(quiz, questions)
+                    _uiState.value = QuizDetailUiState.Success(
+                        quiz = quiz,
+                        questions = questions,
+                        isOwner = isQuizOwner(quiz)
+                    )
                 }
             }
         }
@@ -124,7 +207,8 @@ class QuizDetailViewModel(
                 _uiState.value = QuizDetailUiState.Success(
                     quiz = currentQuiz,
                     questions = currentQuestions,
-                    isRefreshing = true
+                    isRefreshing = true,
+                    isOwner = isQuizOwner(currentQuiz)
                 )
             } else {
                 _uiState.value = QuizDetailUiState.Loading

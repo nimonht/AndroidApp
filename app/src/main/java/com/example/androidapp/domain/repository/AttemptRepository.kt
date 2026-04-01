@@ -38,5 +38,15 @@ interface AttemptRepository {
      * Updates an existing attempt (e.g., when finishing).
      */
     suspend fun updateAttempt(attempt: Attempt): Result<Unit>
+
+    /**
+     * Links all attempts made by a guest to a registered user account.
+     * Called after a guest signs up to preserve their quiz history.
+     *
+     * @param guestId The guest's temporary ID (e.g., "guest_UUID").
+     * @param userId The newly registered user's ID.
+     * @return [Result.success] with the count of migrated attempts.
+     */
+    suspend fun linkGuestAttempts(guestId: String, userId: String): Result<Int>
 }
 

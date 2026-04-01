@@ -24,6 +24,9 @@ sealed class AuthUiState {
 
     /** Auth failed with the given [message]. */
     data class Error(val message: String) : AuthUiState()
+
+    /** Session has expired and user needs to re-authenticate. */
+    data object SessionExpired : AuthUiState()
 }
 
 /** Events that can be dispatched to [AuthViewModel]. */
@@ -32,6 +35,7 @@ sealed class AuthEvent {
     data class Register(val email: String, val password: String, val username: String) : AuthEvent()
     data object Logout : AuthEvent()
     data object ClearError : AuthEvent()
+    data object DismissSessionExpired : AuthEvent()
 }
 
 /**
@@ -50,7 +54,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 if (user != null && _uiState.value !is AuthUiState.Authenticated) {
                     _uiState.value = AuthUiState.Authenticated(user)
                 } else if (user == null && _uiState.value is AuthUiState.Authenticated) {
-                    _uiState.value = AuthUiState.Idle
+                    _uiState.value = AuthUiState.SessionExpired
                 }
             }
         }
@@ -65,6 +69,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             is AuthEvent.Register -> onRegister(event.email, event.password, event.username)
             is AuthEvent.Logout -> onLogout()
             is AuthEvent.ClearError -> _uiState.value = AuthUiState.Idle
+            is AuthEvent.DismissSessionExpired -> _uiState.value = AuthUiState.Idle
         }
     }
 

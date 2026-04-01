@@ -53,6 +53,8 @@
     <string name="regenerate_code">Tạo lại mã</string>
     <string name="share_code_copied">Đã sao chép mã chia sẻ</string>
     <string name="share_code_qr_cd">Mã QR chia sẻ</string>
+    <string name="share_quiz_text">Hãy thử Quizz này trên Quizzez! Mã tham gia: %1$s</string>
+    <string name="share_quiz_chooser_title">Chia sẻ Quizz qua</string>
     <string name="options_title">Tùy chọn</string>
     <string name="duplicate">Nhân bản</string>
     <string name="filter_title">Bộ lọc</string>
@@ -77,6 +79,8 @@
     <string name="email">Email</string>
     <string name="password">Mật khẩu</string>
     <string name="username">Tên người dùng</string>
+    <string name="login_prompt_title">Yêu cầu đăng nhập</string>
+    <string name="login_prompt_message">Bạn cần đăng nhập để sử dụng tính năng này. Đăng nhập ngay?</string>
 
     <!-- Create Quiz -->
     <string name="create_add_question_cd">Thêm câu hỏi</string>
@@ -161,6 +165,8 @@
     <string name="history_title">Lịch sử làm bài</string>
     <string name="history_empty">Chưa có lượt làm bài</string>
     <string name="history_action_explore">Khám phá Quizz</string>
+    <string name="history_deleted_quiz">Bài kiểm tra đã bị xóa</string>
+    <string name="history_deleted_quiz_badge">Đã xóa</string>
 
     <!-- Auth -->
     <string name="auth_welcome_back">Chào mừng trở lại!</string>
@@ -322,4 +328,42 @@
     <!-- Create Quiz -->
     <string name="create_import_csv_cd">Nhập từ CSV/Excel</string>
     <string name="create_quiz_public_warning">Bật chế độ công khai sẽ khiến Quizz hiển thị với mọi người và không thể chỉnh sửa sau khi lưu, kể cả lưu nháp.</string>
+    <string name="session_expired_message">Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.</string>
+
+    <!-- Question Pool -->
+    <string name="pool_title">Kho câu hỏi cộng đồng</string>
+    <string name="pool_tab_my_contributions">Đóng góp của tôi</string>
+    <string name="pool_tab_browse">Duyệt kho</string>
+    <string name="pool_my_contributions_empty">Bạn chưa đóng góp câu hỏi nào</string>
+    <string name="pool_browse_empty">Không tìm thấy câu hỏi nào</string>
+    <string name="pool_enter_tags_hint">Nhập từ khóa để tìm kiếm…</string>
+    <string name="pool_search_button">Tìm kiếm</string>
+    <string name="pool_revoke_title">Thu hồi đóng góp?</string>
+    <string name="pool_revoke_message">Câu hỏi này sẽ không còn xuất hiện trong kho cộng đồng. Bạn có chắc chắn?</string>
+    <string name="pool_revoke_confirm">Thu hồi</string>
+    <string name="pool_revoked_success">Đã thu hồi câu hỏi</string>
+    <string name="pool_usage_count">Đã dùng %1$d lần</string>
+    <string name="pool_contributed_by">Đóng góp bởi bạn</string>
+    <string name="pool_status_active">Đang hoạt động</string>
+    <string name="pool_status_revoked">Đã thu hồi</string>
+    <string name="profile_menu_question_pool">Kho câu hỏi cộng đồng</string>
+
+    <!-- Quiz Detail Actions -->
+    <string name="quiz_detail_edit">Chỉnh sửa</string>
+    <string name="quiz_detail_edit_disabled">Không thể chỉnh sửa bài kiểm tra đã xuất bản</string>
+    <string name="quiz_detail_delete">Xóa Quizz</string>
+    <string name="quiz_detail_more_cd">Thêm tùy chọn</string>
+    <string name="quiz_delete_confirm_title">Xóa Quizz?</string>
+    <string name="quiz_delete_confirm_message">Quizz sẽ được chuyển vào thùng rác. Bạn có thể khôi phục trong 30 ngày.</string>
+    <string name="quiz_deleted_success">Đã chuyển Quizz vào thùng rác</string>
+
+    <!-- Pool Import -->
+    <string name="pool_import_title">Nhập câu hỏi từ kho cộng đồng</string>
+    <string name="pool_import_search_hint">Nhập từ khóa tìm kiếm…</string>
+    <string name="pool_import_search_button">Tìm kiếm</string>
+    <string name="pool_import_no_results">Không tìm thấy câu hỏi phù hợp</string>
+    <string name="pool_import_selected_count">Đã chọn %1$d câu hỏi</string>
+    <string name="pool_import_button">Nhập câu hỏi đã chọn</string>
+    <string name="pool_import_cd">Nhập từ kho câu hỏi</string>
+    <string name="pool_import_success">Đã nhập %1$d câu hỏi từ kho cộng đồng</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.androidapp.QuizzezApplication
 import com.example.androidapp.databinding.FragmentAuthBinding
+import com.example.androidapp.R
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
@@ -249,6 +250,16 @@ class AuthFragment : Fragment() {
                 setLoadingState(false)
                 Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
                 viewModel.onEvent(AuthEvent.ClearError)
+            }
+
+            is AuthUiState.SessionExpired -> {
+                setLoadingState(false)
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.session_expired_message),
+                    Snackbar.LENGTH_LONG
+                ).show()
+                viewModel.onEvent(AuthEvent.DismissSessionExpired)
             }
         }
     }

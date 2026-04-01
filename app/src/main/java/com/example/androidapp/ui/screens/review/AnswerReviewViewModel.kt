@@ -27,12 +27,13 @@ data class QuestionReview(
 sealed class AnswerReviewUiState {
     data object Loading : AnswerReviewUiState()
     data class Success(
-        val quiz: Quiz,
+        val quiz: Quiz?,
         val attempt: Attempt,
         val reviews: List<QuestionReview>,
         val correctCount: Int,
         val totalCount: Int
     ) : AnswerReviewUiState()
+
     data class Error(val message: String) : AnswerReviewUiState()
 }
 
@@ -68,7 +69,7 @@ class AnswerReviewViewModel(
             _uiState.value = AnswerReviewUiState.Loading
             val quiz = quizRepository.getQuizById(quizId)
             val attempt = attemptRepository.getAttemptById(attemptId)
-            if (quiz == null || attempt == null) {
+            if (attempt == null) {
                 _uiState.value = AnswerReviewUiState.Error("Không tìm thấy kết quả")
                 return@launch
             }

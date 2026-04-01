@@ -45,11 +45,10 @@ class AttemptRemoteDataSource(private val firestore: FirebaseFirestore) {
      */
     suspend fun getAttemptsByUser(userId: String): List<AttemptDto> {
         return firestore.collection(FirestoreCollections.ATTEMPTS)
-            .whereEqualTo("userId", userId)
+            .whereEqualTo(FirestoreCollections.Fields.USER_ID, userId)
             .get()
             .await()
             .documents
             .mapNotNull { it.toObject(AttemptDto::class.java) }
     }
 }
-

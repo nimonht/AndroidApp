@@ -3,6 +3,7 @@ package com.example.androidapp.data.repository
 import com.example.androidapp.data.remote.firebase.ShareCodeRemoteDataSource
 import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.util.ShareCodeUtil
+import com.example.androidapp.domain.util.safeCall
 
 /**
  * Remote-only implementation of [ShareCodeRepository].
@@ -18,11 +19,9 @@ class ShareCodeRepositoryImpl(
 
     /** {@inheritDoc} */
     override suspend fun lookupQuizId(shareCode: String): Result<String?> {
-        return try {
+        return safeCall {
             val dto = remoteDataSource.lookupShareCode(shareCode)
-            Result.success(dto?.quizId)
-        } catch (e: Exception) {
-            Result.failure(e)
+            dto?.quizId
         }
     }
 
@@ -50,11 +49,8 @@ class ShareCodeRepositoryImpl(
 
     /** {@inheritDoc} */
     override suspend fun deleteShareCode(shareCode: String): Result<Unit> {
-        return try {
+        return safeCall {
             remoteDataSource.deleteShareCode(shareCode)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -101,4 +97,3 @@ class ShareCodeRepositoryImpl(
         }
     }
 }
-

@@ -22,7 +22,8 @@ domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/
                           (min 1 question / 2-10 choices / ≥1 correct), ScoreCalculator (exact
                           set equality grading), QuestionShuffler, SearchFilterLogic (tag/
                           visibility/date filtering), ShareCodeUtil (6-char alphanumeric gen),
-                          TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting)
+                          TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting),
+                          MediaUrlValidator, InputSanitizer, TagValidator
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.
 ui/       ← Compose screens + ViewModels. Screens are stateless; ViewModels own all state.
@@ -51,9 +52,13 @@ data/
                               `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
   network/
     NetworkMonitor.kt       ← ConnectivityManager wrapper; exposes `isOnline: StateFlow<Boolean>`
+  preferences/
+    SettingsPreferences.kt  ← Local app settings (theme, notifications, etc.)
   sync/
     SyncManager.kt          ← Active sync coordinator; `SyncState` enum (IDLE/SYNCING/PENDING/ERROR);
                               `enqueueSync()`, `processPendingOperations()`, `retryFailedOperations()`
+  worker/                   ← Background workers (WorkManager): `BackendMaintenanceWorker.kt`,
+                              `BackgroundSyncWorker.kt`
 ```
 
 Repositories generally delegate Firestore access to `*RemoteDataSource` classes in `data/remote/firebase/`. Current exception: `PoolRepositoryImpl.kt` also receives `FirebaseFirestore` for batch writes in `contributeQuestions()`.
@@ -102,7 +107,8 @@ Use `sealed class` for states with distinct phases (e.g., `TakeQuizUiState`); us
 - Use `collectAsStateWithLifecycle()` (not `collectAsState()`) to collect `StateFlow` in composables.
 
 Reusable components live in `ui/components/` organized by category:
-- `common/` — AlertDialog, BottomSheet, MediaDisplay, TagChip
+- Standalone — `ShareCodeSection`, `TagSuggestionDialog`
+- `common/` — AlertDialog, BottomSheet, MediaDisplay, TagChip, LoginPromptDialog
 - `feedback/` — EmptyState, ErrorState, LoadingSpinner, ScoreCard, SkeletonLoader (`shimmerEffect()` Modifier extension)
 - `forms/` — CodeInputField, DropdownSelector, SwitchToggle, TextInputField, QuizSearchBar
 - `navigation/` — AppTopBar, BottomNavBar, CreateQuizFAB
@@ -197,11 +203,4 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `DOKKA_SETUP.md` | Dokka generation setup (`./gradlew :app:dokkaHtml`) |
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
 | `data/local/AppDatabase.kt` | Room DB v4 definition; `fallbackToDestructiveMigration` — no explicit migrations |
-| `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |
-| `data/remote/AppMappers.kt` | DTO ↔ Domain extension functions (`toDomain` / `toDto`) |
-| `data/remote/firebase/FirestoreCollections.kt` | Firestore collection/field name constants |
-| `data/remote/model/QuizDtoModels.kt` | QuizDto, QuestionDto, and ChoiceDto all in one file |
-| `data/network/NetworkMonitor.kt` | Online/offline state; exposes `isOnline: StateFlow<Boolean>` |
-| `data/sync/SyncManager.kt` | Sync queue coordinator; `SyncState` enum; delegates to `PendingSyncDao` |
-| `domain/repository/AuthRepository.kt` | Auth interface: `currentUser: Flow<User?>`, login, register, logout |
-
+| `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`

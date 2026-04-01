@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -16,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.components.navigation.CreateQuizFAB
+import com.example.androidapp.ui.components.common.LoginPromptDialog
 import com.example.androidapp.ui.navigation.Routes.Args
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
@@ -33,6 +38,7 @@ import com.example.androidapp.ui.screens.quiz.QuizResultScreen
 import com.example.androidapp.ui.screens.quiz.TakeQuizScreen
 import com.example.androidapp.ui.screens.review.AnswerReviewScreen
 import com.example.androidapp.ui.screens.search.SearchScreen
+import com.example.androidapp.ui.screens.pool.QuestionPoolScreen
 import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.settings.SettingsViewModel
 import com.example.androidapp.ui.screens.trash.TrashScreen
@@ -54,6 +60,18 @@ fun QuizzezNavHost(
 
     val currentUser by LocalAppContainer.authRepository.currentUser
         .collectAsStateWithLifecycle(initialValue = null)
+
+    var showLoginPrompt by remember { mutableStateOf(false) }
+
+    if (showLoginPrompt) {
+        LoginPromptDialog(
+            onLogin = {
+                showLoginPrompt = false
+                navController.navigate(Routes.LOGIN)
+            },
+            onDismiss = { showLoginPrompt = false }
+        )
+    }
 
     Scaffold(
         bottomBar = {
@@ -119,16 +137,46 @@ fun QuizzezNavHost(
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
-                    onNavigateToHistory = { navController.navigate(Routes.HISTORY) },
-                    onNavigateToTrash = { navController.navigate(Routes.TRASH) },
-                    onNavigateToEditProfile = { navController.navigate(Routes.PROFILE_EDIT) }
+                    onNavigateToHistory = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.HISTORY)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    },
+                    onNavigateToTrash = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.TRASH)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    },
+                    onNavigateToEditProfile = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.PROFILE_EDIT)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    },
+                    onNavigateToQuestionPool = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.QUESTION_POOL)
+                        } else {
+                            showLoginPrompt = true
+                        }
+                    }
                 )
             }
 
             composable(Routes.PROFILE_EDIT) {
-                EditProfileScreen(
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    EditProfileScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
 
             // ==================== Quiz Screens ====================
@@ -140,7 +188,8 @@ fun QuizzezNavHost(
                 QuizDetailScreen(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
-                    onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) }
+                    onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) },
+                    onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) }
                 )
             }
 
@@ -266,16 +315,35 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.HISTORY) {
-                HistoryScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onAttemptClick = { attemptId ->
-                        navController.navigate(Routes.attemptDetail(attemptId))
-                    }
-                )
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    HistoryScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onAttemptClick = { attemptId ->
+                            navController.navigate(Routes.attemptDetail(attemptId))
+                        }
+                    )
+                }
             }
 
             composable(Routes.TRASH) {
-                TrashScreen(onNavigateBack = { navController.popBackStack() })
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    TrashScreen(onNavigateBack = { navController.popBackStack() })
+                }
+            }
+
+            composable(Routes.QUESTION_POOL) {
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    QuestionPoolScreen(onNavigateBack = { navController.popBackStack() })
+                }
             }
 
             // ==================== Review & Detail Screens ====================

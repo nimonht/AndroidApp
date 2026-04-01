@@ -15,8 +15,10 @@ import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.util.ChecksumUtil
+import com.example.androidapp.domain.util.safeCall
 import com.example.androidapp.domain.repository.HomeQuizzes
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +41,8 @@ class QuizRepositoryImpl(
     private val choiceDao: ChoiceDao,
     private val remoteDataSource: QuizRemoteDataSource,
     private val questionRemoteDataSource: QuestionRemoteDataSource,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val shareCodeRepository: ShareCodeRepository
 ) : QuizRepository {
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
@@ -124,7 +127,7 @@ class QuizRepositoryImpl(
     }
 
     override suspend fun saveQuiz(quiz: Quiz, questions: List<Question>): Result<Unit> {
-        return try {
+        return safeCall {
             val quizId = quiz.id.ifBlank { UUID.randomUUID().toString() }
             val finalQuiz = quiz.copy(id = quizId, questionCount = questions.size)
 
@@ -149,10 +152,6 @@ class QuizRepositoryImpl(
                 quizId,
                 SyncOperation.CREATE
             )
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -161,7 +160,18 @@ class QuizRepositoryImpl(
     }
 
     override suspend fun deleteQuiz(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
+            // Clean up share code to prevent access to the deleted quiz
+            val quiz = quizDao.getQuizById(quizId)
+            quiz?.toDomain()?.shareCode?.let { code ->
+                try {
+                    shareCodeRepository.deleteShareCode(code)
+                } catch (_: Exception) {
+                    // Share code cleanup failure should not block quiz deletion
+                }
+                quizDao.updateQuiz(quiz.copy(shareCode = null))
+            }
+
             val deletedAt = System.currentTimeMillis()
             quizDao.softDeleteQuiz(quizId, deletedAt)
             // Enqueue sync operation synchronously to ensure durability
@@ -170,14 +180,11 @@ class QuizRepositoryImpl(
                 quizId,
                 SyncOperation.UPDATE  // Soft delete is an update operation
             )
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun restoreQuiz(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             quizDao.restoreQuiz(quizId)
             // Enqueue sync operation synchronously to ensure durability
             syncManager.enqueueSync(
@@ -185,15 +192,20 @@ class QuizRepositoryImpl(
                 quizId,
                 SyncOperation.UPDATE  // Restore is an update operation
             )
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun permanentlyDeleteQuiz(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             val entity = quizDao.getQuizById(quizId)
+            // Clean up share code before permanent deletion
+            entity?.toDomain()?.shareCode?.let { code ->
+                try {
+                    shareCodeRepository.deleteShareCode(code)
+                } catch (_: Exception) {
+                    // Share code cleanup failure should not block quiz deletion
+                }
+            }
             if (entity != null) quizDao.deleteQuiz(entity)
             // Enqueue sync operation synchronously to ensure durability
             syncManager.enqueueSync(
@@ -201,14 +213,11 @@ class QuizRepositoryImpl(
                 quizId,
                 SyncOperation.DELETE
             )
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun incrementAttemptCount(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             quizDao.incrementAttemptCount(quizId)
             ioScope.launch {
                 try {
@@ -218,9 +227,7 @@ class QuizRepositoryImpl(
                     // Failure is ignored; this bypasses SyncManager so there is no queued retry
                 }
             }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+            Unit
         }
     }
 
@@ -239,9 +246,20 @@ class QuizRepositoryImpl(
     }
 
     override suspend fun emptyTrash(userId: String): Result<Unit> {
-        return try {
+        return safeCall {
             // Get all deleted quizzes for the user locally
             val deletedQuizzes = quizDao.getDeletedQuizzes(userId).first()
+
+            // Clean up share codes for all trashed quizzes
+            deletedQuizzes.forEach { entity ->
+                entity.toDomain().shareCode?.let { code ->
+                    try {
+                        shareCodeRepository.deleteShareCode(code)
+                    } catch (_: Exception) {
+                        // Share code cleanup failure should not block trash emptying
+                    }
+                }
+            }
 
             // Delete them from local Room DB
             deletedQuizzes.forEach { entity ->
@@ -256,24 +274,20 @@ class QuizRepositoryImpl(
                     // Failures here are swallowed as this is background sync
                 }
             }
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+            Unit
         }
     }
 
     override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {
-        return try {
+        return safeCall {
             val quizDto = remoteDataSource.getQuizById(quizId)
-                ?: return Result.failure(Exception("Quiz not found on remote"))
+                ?: throw Exception("Quiz not found on remote")
 
             val quiz = quizDto.toDomain()
             quizDao.insertQuiz(quiz.toEntity())
             refreshQuestionsAndChoices(quizId)
 
-            Result.success(quiz)
-        } catch (e: Exception) {
-            Result.failure(e)
+            quiz
         }
     }
 

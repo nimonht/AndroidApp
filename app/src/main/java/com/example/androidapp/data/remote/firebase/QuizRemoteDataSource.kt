@@ -3,6 +3,7 @@ package com.example.androidapp.data.remote.firebase
 import com.example.androidapp.data.remote.model.QuestionDto
 import com.example.androidapp.data.remote.model.QuizDto
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -18,40 +19,36 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     /**
      * Emits real-time public quizzes ordered by attempt count descending.
      */
-    fun getPublicQuizzes(): Flow<List<QuizDto>> = callbackFlow {
-        val listener = firestore.collection(FirestoreCollections.QUIZZES)
+    fun getPublicQuizzes(): Flow<List<QuizDto>> = observeQuizzes(
+        firestore.collection(FirestoreCollections.QUIZZES)
             .whereEqualTo(FirestoreCollections.Fields.IS_PUBLIC, true)
             .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val quizzes = snapshot?.documents?.mapNotNull {
-                    it.toObject(QuizDto::class.java)
-                } ?: emptyList()
-                trySend(quizzes)
-            }
-        awaitClose { listener.remove() }
-    }
+    )
 
     /**
      * Emits real-time quizzes owned by [userId].
      */
-    fun getQuizzesByOwner(userId: String): Flow<List<QuizDto>> = callbackFlow {
-        val listener = firestore.collection(FirestoreCollections.QUIZZES)
+    fun getQuizzesByOwner(userId: String): Flow<List<QuizDto>> = observeQuizzes(
+        firestore.collection(FirestoreCollections.QUIZZES)
             .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
             .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val quizzes = snapshot?.documents?.mapNotNull {
-                    it.toObject(QuizDto::class.java)
-                } ?: emptyList()
-                trySend(quizzes)
+    )
+
+    /**
+     * Observes a Firestore [query] in real time, mapping each snapshot to a list of [QuizDto].
+     * Centralizes the [callbackFlow] + [addSnapshotListener] boilerplate.
+     */
+    private fun observeQuizzes(query: Query): Flow<List<QuizDto>> = callbackFlow {
+        val listener = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
             }
+            val quizzes = snapshot?.documents?.mapNotNull {
+                it.toObject(QuizDto::class.java)
+            } ?: emptyList()
+            trySend(quizzes)
+        }
         awaitClose { listener.remove() }
     }
 
