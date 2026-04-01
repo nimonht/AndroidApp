@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -160,9 +161,14 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.PROFILE_EDIT) {
-                EditProfileScreen(
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    EditProfileScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
 
             // ==================== Quiz Screens ====================
@@ -300,16 +306,26 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.HISTORY) {
-                HistoryScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    onAttemptClick = { attemptId ->
-                        navController.navigate(Routes.attemptDetail(attemptId))
-                    }
-                )
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    HistoryScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onAttemptClick = { attemptId ->
+                            navController.navigate(Routes.attemptDetail(attemptId))
+                        }
+                    )
+                }
             }
 
             composable(Routes.TRASH) {
-                TrashScreen(onNavigateBack = { navController.popBackStack() })
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    TrashScreen(onNavigateBack = { navController.popBackStack() })
+                }
             }
 
             // ==================== Review & Detail Screens ====================

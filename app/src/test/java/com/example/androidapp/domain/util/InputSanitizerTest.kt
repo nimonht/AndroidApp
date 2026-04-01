@@ -57,6 +57,12 @@ class InputSanitizerTest {
         assertEquals("abcde", result)
     }
 
+    @Test
+    fun `sanitizeText treats negative maxLength as zero`() {
+        val result = InputSanitizer.sanitizeText("hello", maxLength = -1)
+        assertEquals("", result)
+    }
+
     // ==================== sanitizeHtml ====================
 
     @Test

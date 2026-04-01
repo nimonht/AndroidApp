@@ -23,6 +23,7 @@ object TagValidator {
         return tag.trim()
             .lowercase()
             .replace(MULTI_SPACE_PATTERN, " ")
+            .trim()
     }
 
     /**

@@ -43,6 +43,11 @@ class TagValidatorTest {
         assertEquals("a b", TagValidator.normalizeTag("a _ _ b"))
     }
 
+    @Test
+    fun `normalizeTag trims edge whitespace from underscore replacement`() {
+        assertEquals("tag", TagValidator.normalizeTag("_tag_"))
+    }
+
     // ==================== validateTag ====================
 
     @Test

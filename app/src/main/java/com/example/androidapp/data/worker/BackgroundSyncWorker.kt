@@ -40,7 +40,7 @@ class BackgroundSyncWorker(
                     Log.d(TAG, "No authenticated user, skipping sync.")
                     Result.success()
                 } else {
-                    Log.d(TAG, "Starting full sync for user ${user.id}...")
+                    Log.d(TAG, "Starting full sync for authenticated user...")
                     syncManager.performFullSync(user.id)
                     Log.d(TAG, "Full sync completed successfully.")
                     Result.success()

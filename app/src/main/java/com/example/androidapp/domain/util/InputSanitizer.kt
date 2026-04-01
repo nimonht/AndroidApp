@@ -9,6 +9,7 @@ object InputSanitizer {
     private const val DEFAULT_MAX_LENGTH = 1000
     private const val FIRESTORE_MAX_LENGTH = 10000
 
+    private val CONTROL_CHAR_PATTERN = Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]")
     private val SCRIPT_TAG_PATTERN = Regex("<\\s*script", RegexOption.IGNORE_CASE)
     private val JAVASCRIPT_URL_PATTERN = Regex("javascript\\s*:", RegexOption.IGNORE_CASE)
     private val DATA_URL_PATTERN = Regex("data\\s*:", RegexOption.IGNORE_CASE)
@@ -19,13 +20,15 @@ object InputSanitizer {
      *
      * @param input The raw text input, may be null.
      * @param maxLength The maximum allowed length of the output. Defaults to [DEFAULT_MAX_LENGTH].
+     *   Values less than zero are treated as zero.
      * @return A sanitized string, or an empty string if input is null.
      */
     fun sanitizeText(input: String?, maxLength: Int = DEFAULT_MAX_LENGTH): String {
         if (input == null) return ""
+        val effectiveMax = maxLength.coerceAtLeast(0)
         val trimmed = input.trim()
-        val cleaned = trimmed.replace(Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]"), "")
-        return if (cleaned.length > maxLength) cleaned.substring(0, maxLength) else cleaned
+        val cleaned = trimmed.replace(CONTROL_CHAR_PATTERN, "")
+        return if (cleaned.length > effectiveMax) cleaned.substring(0, effectiveMax) else cleaned
     }
 
     /**

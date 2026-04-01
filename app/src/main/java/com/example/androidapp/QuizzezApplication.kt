@@ -109,9 +109,22 @@ class QuizzezApplication : Application() {
     /**
      * Schedules the [BackgroundSyncWorker] to run every 15 minutes with a
      * network constraint that respects the user's Wi-Fi-only preference.
+     * Only enqueues when auto-sync is enabled; cancels the worker otherwise.
      */
     private fun scheduleBackgroundSync() {
         applicationScope.launch {
+            val autoSync = try {
+                appContainer.settingsPreferences.autoSyncEnabled.first()
+            } catch (_: Exception) {
+                true
+            }
+
+            if (!autoSync) {
+                WorkManager.getInstance(this@QuizzezApplication)
+                    .cancelUniqueWork(BackgroundSyncWorker.WORK_NAME)
+                return@launch
+            }
+
             val wifiOnly = try {
                 appContainer.settingsPreferences.wifiOnlySync.first()
             } catch (_: Exception) {
@@ -132,7 +145,7 @@ class QuizzezApplication : Application() {
 
             WorkManager.getInstance(this@QuizzezApplication).enqueueUniquePeriodicWork(
                 BackgroundSyncWorker.WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 syncRequest
             )
         }
@@ -140,13 +153,18 @@ class QuizzezApplication : Application() {
 
     /**
      * Installs a global uncaught exception handler that logs crashes
-     * before delegating to the default handler.
+     * before delegating to the default handler. If no default handler is
+     * installed, the process is terminated to preserve crash semantics.
      */
     private fun setupGlobalErrorHandler() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             Log.e(TAG, "Uncaught exception on thread ${thread.name}", throwable)
-            defaultHandler?.uncaughtException(thread, throwable)
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, throwable)
+            } else {
+                android.os.Process.killProcess(android.os.Process.myPid())
+            }
         }
     }
 
