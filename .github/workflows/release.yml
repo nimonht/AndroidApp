@@ -1,5 +1,5 @@
 # Automatic release workflow for Quizzez Android App.
-# Creates a Git tag and GitHub Release when a commit message on main
+# Creates a Git tag and GitHub Release when a commit message on master
 # matches the pattern: "release v<semver>" (case-insensitive).
 #
 # Examples of recognized commit messages:
@@ -12,7 +12,7 @@ name: Release on Version Bump
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 permissions:
   contents: write

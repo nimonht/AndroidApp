@@ -207,9 +207,9 @@ Release → emulator (rare)
 ./gradlew assembleRelease -PuseFirebaseEmulator=true
 ```
 
-## Roadmap
+## Version
 
-See development plan at [Roadmap](Roadmap.md).
+App version 1.4.26-rc1
 
 ## License
 
