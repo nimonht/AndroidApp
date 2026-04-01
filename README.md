@@ -209,7 +209,7 @@ Release → emulator (rare)
 
 ## Version
 
-App version 1.4.26-rc1
+App version 1.4.26
 
 ## License
 
