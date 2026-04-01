@@ -16,6 +16,7 @@ object FirestoreCollections {
     // Field names
     object Fields {
         const val OWNER_ID = "ownerId"
+        const val USER_ID = "userId"
         const val IS_PUBLIC = "isPublic"
         const val DELETED_AT = "deletedAt"
         const val SHARE_CODE = "shareCode"
@@ -25,4 +26,3 @@ object FirestoreCollections {
         const val CONTRIBUTOR_ID = "contributorId"
     }
 }
-

@@ -43,6 +43,7 @@ fun ProfileScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToTrash: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToQuestionPool: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -83,7 +84,8 @@ fun ProfileScreen(
             ProfileMenuSection(
                 onHistoryClick = onNavigateToHistory,
                 onTrashClick = onNavigateToTrash,
-                onSettingsClick = onNavigateToSettings
+                onSettingsClick = onNavigateToSettings,
+                onQuestionPoolClick = onNavigateToQuestionPool
             )
 
             Button(
@@ -270,6 +272,7 @@ private fun ProfileMenuSection(
     onHistoryClick: () -> Unit,
     onTrashClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    onQuestionPoolClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -282,6 +285,11 @@ private fun ProfileMenuSection(
             icon = Icons.Default.History,
             title = stringResource(R.string.profile_menu_attempt_history),
             onClick = onHistoryClick
+        )
+        ProfileMenuItem(
+            icon = Icons.Default.QuestionAnswer,
+            title = stringResource(R.string.profile_menu_question_pool),
+            onClick = onQuestionPoolClick
         )
         ProfileMenuItem(
             icon = Icons.Default.Delete,

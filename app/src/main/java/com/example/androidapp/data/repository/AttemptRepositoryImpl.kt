@@ -8,6 +8,7 @@ import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.repository.AttemptRepository
+import com.example.androidapp.domain.util.safeCall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -47,7 +48,7 @@ class AttemptRepositoryImpl(
     }
 
     override suspend fun saveAttempt(attempt: Attempt): Result<String> {
-        return try {
+        return safeCall {
             val attemptId = attempt.id.ifBlank { UUID.randomUUID().toString() }
             val finalAttempt = attempt.copy(id = attemptId)
 
@@ -67,14 +68,12 @@ class AttemptRepositoryImpl(
                 }
             }
 
-            Result.success(attemptId)
-        } catch (e: Exception) {
-            Result.failure(e)
+            attemptId
         }
     }
 
     override suspend fun updateAttempt(attempt: Attempt): Result<Unit> {
-        return try {
+        return safeCall {
             // Write to Room first
             attemptDao.updateAttempt(attempt.toEntity())
 
@@ -91,19 +90,13 @@ class AttemptRepositoryImpl(
                 }
             }
 
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
+            Unit
         }
     }
 
     override suspend fun linkGuestAttempts(guestId: String, userId: String): Result<Int> {
-        return try {
-            val count = attemptDao.updateUserId(guestId, userId)
-            Result.success(count)
-        } catch (e: Exception) {
-            Result.failure(e)
+        return safeCall {
+            attemptDao.updateUserId(guestId, userId)
         }
     }
 }
-

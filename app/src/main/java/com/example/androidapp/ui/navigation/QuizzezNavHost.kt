@@ -38,6 +38,7 @@ import com.example.androidapp.ui.screens.quiz.QuizResultScreen
 import com.example.androidapp.ui.screens.quiz.TakeQuizScreen
 import com.example.androidapp.ui.screens.review.AnswerReviewScreen
 import com.example.androidapp.ui.screens.search.SearchScreen
+import com.example.androidapp.ui.screens.pool.QuestionPoolScreen
 import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.settings.SettingsViewModel
 import com.example.androidapp.ui.screens.trash.TrashScreen
@@ -156,6 +157,13 @@ fun QuizzezNavHost(
                         } else {
                             showLoginPrompt = true
                         }
+                    },
+                    onNavigateToQuestionPool = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.QUESTION_POOL)
+                        } else {
+                            showLoginPrompt = true
+                        }
                     }
                 )
             }
@@ -180,7 +188,8 @@ fun QuizzezNavHost(
                 QuizDetailScreen(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
-                    onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) }
+                    onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) },
+                    onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) }
                 )
             }
 
@@ -325,6 +334,15 @@ fun QuizzezNavHost(
                     showLoginPrompt = true
                 } else {
                     TrashScreen(onNavigateBack = { navController.popBackStack() })
+                }
+            }
+
+            composable(Routes.QUESTION_POOL) {
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    QuestionPoolScreen(onNavigateBack = { navController.popBackStack() })
                 }
             }
 

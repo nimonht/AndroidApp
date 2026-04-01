@@ -1,5 +1,6 @@
 package com.example.androidapp.data.remote.firebase
 
+import android.util.Log
 import com.example.androidapp.data.remote.model.QuestionPoolItemDto
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -108,21 +109,51 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Updates the active status of a pool item.
+     * Updates the active status of a pool item and verifies the write persisted.
+     *
+     * After the Firestore `update()` call completes, a read-back is performed to
+     * confirm the field value matches the requested state. If the document does not
+     * exist or the value does not match, an [IllegalStateException] is thrown so the
+     * caller can surface the failure to the user.
      *
      * @param poolItemId The ID of the pool item to update.
      * @param isActive The new active status.
+     * @throws IllegalStateException if the document is missing or the persisted value
+     *   does not match [isActive] after the update.
      */
     suspend fun setPoolItemActive(poolItemId: String, isActive: Boolean) {
-        firestore.collection(FirestoreCollections.QUESTION_POOL)
+        val docRef = firestore.collection(FirestoreCollections.QUESTION_POOL)
             .document(poolItemId)
-            .update(FirestoreCollections.Fields.IS_ACTIVE, isActive)
-            .await()
+
+        Log.d(TAG, "setPoolItemActive: updating $poolItemId -> isActive=$isActive")
+
+        docRef.update(
+            mapOf(
+                FirestoreCollections.Fields.IS_ACTIVE to isActive,
+                "active" to isActive
+            )
+        ).await()
+
+        // Verify the update actually persisted
+        val snapshot = docRef.get().await()
+        if (!snapshot.exists()) {
+            throw IllegalStateException(
+                "Pool item $poolItemId does not exist after update"
+            )
+        }
+        val actualValue = snapshot.getBoolean(FirestoreCollections.Fields.IS_ACTIVE)
+        Log.d(TAG, "setPoolItemActive: verification read for $poolItemId -> isActive=$actualValue")
+        if (actualValue != isActive) {
+            throw IllegalStateException(
+                "Pool item $poolItemId isActive verification failed: expected $isActive, got $actualValue"
+            )
+        }
     }
 
     companion object {
+        private const val TAG = "PoolRemoteDataSource"
+
         /** Maximum number of tags accepted by tag-based queries (Firestore whereArrayContainsAny limit). */
         const val MAX_TAG_QUERY_LIMIT = 10
     }
 }
-

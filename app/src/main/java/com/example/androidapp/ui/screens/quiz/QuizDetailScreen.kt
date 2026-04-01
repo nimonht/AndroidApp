@@ -7,11 +7,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +39,7 @@ import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.ShareCodeSection
+import com.example.androidapp.ui.components.common.AppAlertDialog
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.navigation.AppTopBar
@@ -42,9 +50,13 @@ import com.example.androidapp.ui.theme.PlayfairDisplayFamily
  * Quiz detail screen showing quiz information before starting.
  * Stateless composable; all state is owned by [QuizDetailViewModel].
  *
+ * Supports owner actions: edit and soft-delete (move to trash) via an
+ * overflow menu in the top app bar.
+ *
  * @param quizId The ID of the quiz to display.
  * @param onNavigateBack Callback to navigate back.
  * @param onStartQuiz Callback when user starts the quiz.
+ * @param onEditQuiz Callback when the owner taps "Edit". Receives the quiz ID.
  * @param modifier Modifier for styling.
  */
 @Composable
@@ -52,6 +64,7 @@ fun QuizDetailScreen(
     quizId: String,
     onNavigateBack: () -> Unit,
     onStartQuiz: () -> Unit,
+    onEditQuiz: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -60,22 +73,114 @@ fun QuizDetailScreen(
         factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                QuizDetailViewModel(quizId, container.quizRepository) as T
+                QuizDetailViewModel(quizId, container.quizRepository, container.authRepository) as T
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showOverflowMenu by remember { mutableStateOf(false) }
+
+    // Navigate back after successful deletion
+    val successState = uiState as? QuizDetailUiState.Success
+    LaunchedEffect(successState?.isDeleted) {
+        if (successState?.isDeleted == true) {
+            snackbarHostState.showSnackbar("Đã chuyển Quizz vào thùng rác")
+            onNavigateBack()
+        }
+    }
+
+    // Show delete error as snackbar
+    LaunchedEffect(successState?.deleteError) {
+        successState?.deleteError?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.onClearDeleteError()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = stringResource(R.string.quiz_detail_title),
                 canNavigateBack = true,
-                navigateUp = onNavigateBack
+                navigateUp = onNavigateBack,
+                actions = {
+                    if (successState?.isOwner == true) {
+                        Box {
+                            IconButton(onClick = { showOverflowMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = stringResource(R.string.quiz_detail_more_cd)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showOverflowMenu,
+                                onDismissRequest = { showOverflowMenu = false }
+                            ) {
+                                val isEditable =
+                                    successState?.quiz?.shareCode == null && successState?.quiz?.isPublic != true
+                                if (isEditable) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.quiz_detail_edit)) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            onEditQuiz(quizId)
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Edit,
+                                                contentDescription = null
+                                            )
+                                        }
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = stringResource(R.string.quiz_detail_edit_disabled),
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                            )
+                                        },
+                                        onClick = {},
+                                        enabled = false,
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Edit,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                            )
+                                        }
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.quiz_detail_delete),
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        showDeleteDialog = true
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {
-            if (uiState is QuizDetailUiState.Success) {
+            if (uiState is QuizDetailUiState.Success && successState?.isDeleted != true) {
                 ExtendedFloatingActionButton(
                     onClick = onStartQuiz,
                     icon = { Icon(Icons.Default.PlayArrow, contentDescription = null) },
@@ -94,6 +199,7 @@ fun QuizDetailScreen(
                     .padding(innerPadding)
                     .fillMaxSize()
             )
+
             is QuizDetailUiState.Error -> ErrorState(
                 message = state.message,
                 onRetry = { viewModel.onRetry() },
@@ -101,12 +207,29 @@ fun QuizDetailScreen(
                     .padding(innerPadding)
                     .fillMaxSize()
             )
+
             is QuizDetailUiState.Success -> QuizDetailContent(
                 quiz = state.quiz,
                 questions = state.questions,
                 modifier = Modifier.padding(innerPadding)
             )
         }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog) {
+        AppAlertDialog(
+            title = stringResource(R.string.quiz_delete_confirm_title),
+            message = stringResource(R.string.quiz_delete_confirm_message),
+            confirmText = stringResource(R.string.delete),
+            dismissText = stringResource(R.string.cancel),
+            isDestructive = true,
+            onConfirm = {
+                showDeleteDialog = false
+                viewModel.onDeleteQuiz()
+            },
+            onDismiss = { showDeleteDialog = false }
+        )
     }
 }
 

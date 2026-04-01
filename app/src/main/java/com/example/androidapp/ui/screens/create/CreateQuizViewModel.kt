@@ -6,6 +6,7 @@ import com.example.androidapp.domain.model.Choice
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.model.QuestionPoolItem
+import android.util.Log
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
@@ -89,7 +90,13 @@ data class CreateQuizUiState(
     val isPublished: Boolean = false,
     val lastSavedAt: Long? = null,
     val shareToPool: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val showPoolDialog: Boolean = false,
+    val poolSearchTags: String = "",
+    val poolResults: List<QuestionPoolItem> = emptyList(),
+    val selectedPoolItemIds: Set<String> = emptySet(),
+    val isPoolLoading: Boolean = false,
+    val poolError: String? = null
 )
 
 /**
@@ -150,6 +157,24 @@ sealed class CreateQuizEvent {
 
     /** Imports a list of questions, appending them to the current list or replacing the initial blank question. */
     data class ImportQuestions(val questions: List<QuestionDraft>) : CreateQuizEvent()
+
+    /** Opens the pool import dialog. */
+    data object ShowPoolDialog : CreateQuizEvent()
+
+    /** Dismisses the pool import dialog and resets pool-related state. */
+    data object DismissPoolDialog : CreateQuizEvent()
+
+    /** Updates the comma-separated tag string used to search the community pool. */
+    data class PoolSearchTagsChanged(val tags: String) : CreateQuizEvent()
+
+    /** Triggers a search of the community pool using [CreateQuizUiState.poolSearchTags]. */
+    data object SearchPool : CreateQuizEvent()
+
+    /** Toggles the selection state of a pool item by its [poolItemId]. */
+    data class TogglePoolItemSelection(val poolItemId: String) : CreateQuizEvent()
+
+    /** Imports the currently selected pool items as [QuestionDraft] entries and closes the dialog. */
+    data object ImportFromPool : CreateQuizEvent()
 }
 
 /**
@@ -271,7 +296,127 @@ class CreateQuizViewModel(
                     }
                     state.copy(questions = merged)
                 }
+
+            is CreateQuizEvent.ShowPoolDialog ->
+                _uiState.update { it.copy(showPoolDialog = true) }
+
+            is CreateQuizEvent.DismissPoolDialog ->
+                _uiState.update {
+                    it.copy(
+                        showPoolDialog = false,
+                        poolSearchTags = "",
+                        poolResults = emptyList(),
+                        selectedPoolItemIds = emptySet(),
+                        isPoolLoading = false,
+                        poolError = null
+                    )
+                }
+
+            is CreateQuizEvent.PoolSearchTagsChanged ->
+                _uiState.update { it.copy(poolSearchTags = event.tags) }
+
+            is CreateQuizEvent.SearchPool -> onSearchPool()
+
+            is CreateQuizEvent.TogglePoolItemSelection ->
+                _uiState.update { state ->
+                    val updated = if (event.poolItemId in state.selectedPoolItemIds) {
+                        state.selectedPoolItemIds - event.poolItemId
+                    } else {
+                        state.selectedPoolItemIds + event.poolItemId
+                    }
+                    state.copy(selectedPoolItemIds = updated)
+                }
+
+            is CreateQuizEvent.ImportFromPool -> onImportFromPool()
         }
+    }
+
+    /**
+     * Searches the community pool using the tags entered in [CreateQuizUiState.poolSearchTags].
+     *
+     * Tags are parsed as a comma-separated string, trimmed, and passed to
+     * [PoolRepository.getPoolQuestionsByTags]. Results are stored in
+     * [CreateQuizUiState.poolResults].
+     */
+    private fun onSearchPool() {
+        viewModelScope.launch {
+            val tags = _uiState.value.poolSearchTags
+                .split(",")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+
+            if (tags.isEmpty()) {
+                _uiState.update { it.copy(poolError = "Vui long nhap tu khoa tim kiem") }
+                return@launch
+            }
+
+            _uiState.update { it.copy(isPoolLoading = true, poolError = null) }
+
+            poolRepository.getPoolQuestionsByTags(tags, activeOnly = true)
+                .fold(
+                    onSuccess = { items ->
+                        _uiState.update {
+                            it.copy(
+                                poolResults = items,
+                                isPoolLoading = false,
+                                selectedPoolItemIds = emptySet()
+                            )
+                        }
+                    },
+                    onFailure = { e ->
+                        Log.e("CreateQuizVM", "Pool search failed", e)
+                        _uiState.update {
+                            it.copy(
+                                isPoolLoading = false,
+                                poolError = e.message ?: "Khong the tim kiem kho cau hoi"
+                            )
+                        }
+                    }
+                )
+        }
+    }
+
+    /**
+     * Maps the selected [QuestionPoolItem]s to [QuestionDraft] entries, dispatches
+     * [CreateQuizEvent.ImportQuestions], increments usage counts, and closes the dialog.
+     */
+    private fun onImportFromPool() {
+        val state = _uiState.value
+        val selectedItems = state.poolResults.filter { it.id in state.selectedPoolItemIds }
+        if (selectedItems.isEmpty()) return
+
+        val drafts = selectedItems.map { poolItem ->
+            QuestionDraft(
+                id = UUID.randomUUID().toString(),
+                content = poolItem.question.content,
+                choices = poolItem.question.choices.map { choice ->
+                    ChoiceDraft(
+                        id = UUID.randomUUID().toString(),
+                        content = choice.content
+                    )
+                },
+                correctIndices = poolItem.question.choices
+                    .mapIndexedNotNull { idx, c -> if (c.isCorrect) idx else null }
+                    .toSet(),
+                isMultiSelect = poolItem.question.isMultiSelect,
+                explanation = poolItem.question.explanation ?: "",
+                mediaUrl = poolItem.question.mediaUrl ?: "",
+                points = poolItem.question.points
+            )
+        }
+
+        // Append imported questions via the existing ImportQuestions handler.
+        onEvent(CreateQuizEvent.ImportQuestions(drafts))
+
+        // Increment usage counts in the background.
+        viewModelScope.launch {
+            for (item in selectedItems) {
+                poolRepository.incrementUsageCount(item.id)
+            }
+        }
+
+        // Close the dialog and reset pool state.
+        onEvent(CreateQuizEvent.DismissPoolDialog)
     }
 
     /**

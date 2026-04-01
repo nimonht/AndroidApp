@@ -12,14 +12,6 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "attempts",
-    foreignKeys = [
-        ForeignKey(
-            entity = QuizEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["quiz_id"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
     indices = [Index(value = ["quiz_id"]), Index(value = ["user_id"])]
 )
 data class AttemptEntity(

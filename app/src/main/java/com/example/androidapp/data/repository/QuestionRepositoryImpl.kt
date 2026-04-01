@@ -11,6 +11,7 @@ import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.repository.QuestionRepository
+import com.example.androidapp.domain.util.safeCall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -56,7 +57,7 @@ class QuestionRepositoryImpl(
     }
 
     override suspend fun addQuestion(quizId: String, question: Question): Result<String> {
-        return try {
+        return safeCall {
             val questionId = question.id.ifBlank { UUID.randomUUID().toString() }
             // Normalize choices once — assign stable IDs + positions here
             val normalizedChoices = question.choices.mapIndexed { idx, choice ->
@@ -83,14 +84,12 @@ class QuestionRepositoryImpl(
                 }
             }
 
-            Result.success(questionId)
-        } catch (e: Exception) {
-            Result.failure(e)
+            questionId
         }
     }
 
     override suspend fun updateQuestion(question: Question): Result<Unit> {
-        return try {
+        return safeCall {
             // Normalize choices once — assign stable IDs + positions here
             val normalizedChoices = question.choices.mapIndexed { idx, choice ->
                 choice.copy(id = choice.id.ifBlank { UUID.randomUUID().toString() }, position = idx)
@@ -116,15 +115,11 @@ class QuestionRepositoryImpl(
                     // Sync will retry automatically when online
                 }
             }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun deleteQuestion(quizId: String, questionId: String): Result<Unit> {
-        return try {
+        return safeCall {
             // Fetch entity to verify it exists and belongs to this quiz
             val entity = questionDao.getQuestionById(questionId)
             if (entity != null && entity.quizId == quizId) {
@@ -145,10 +140,6 @@ class QuestionRepositoryImpl(
                     }
                 }
             }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -156,7 +147,7 @@ class QuestionRepositoryImpl(
         quizId: String,
         questionIds: List<String>
     ): Result<Unit> {
-        return try {
+        return safeCall {
             questionIds.forEachIndexed { index, questionId ->
                 questionDao.updatePosition(questionId, index)
             }
@@ -167,10 +158,6 @@ class QuestionRepositoryImpl(
                     remoteDataSource.updateQuestionPositions(quizId, positionMap)
                 } catch (_: Exception) { }
             }
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 }

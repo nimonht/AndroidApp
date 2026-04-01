@@ -7,6 +7,12 @@ plugins {
     alias(libs.plugins.dokka)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
 android {
     // Whether to point at the local Firebase emulator suite.
     // Defaults to true for debug builds, false for release.
@@ -63,9 +69,6 @@ android {
         buildConfig = true
         viewBinding = true
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 }
 
 dependencies {
@@ -80,9 +83,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
-    // Fragment + RecyclerView (for XML-based screens)
+    // Fragment (for XML-based screens)
     implementation(libs.androidx.fragment.ktx)
-    implementation(libs.androidx.recyclerview)
 
     // Compose (using BoM)
     implementation(platform(libs.compose.bom))
@@ -98,7 +100,6 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
-    implementation(libs.firebase.storage)
 
     // Room
     implementation(libs.room.runtime)

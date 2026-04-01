@@ -77,11 +77,13 @@ fun AnswerReviewScreen(
             is AnswerReviewUiState.Loading -> LoadingSpinner(
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             is AnswerReviewUiState.Error -> ErrorState(
                 message = state.message,
                 onRetry = { viewModel.onRetry() },
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             is AnswerReviewUiState.Success -> ReviewContent(
                 state = state,
                 modifier = Modifier.padding(innerPadding)
@@ -113,7 +115,7 @@ private fun ReviewContent(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = state.quiz.title,
+                    text = state.quiz?.title ?: "N/A",
                     fontFamily = PlayfairDisplayFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 28.sp,

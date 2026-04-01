@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.screens.create
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,18 +12,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
@@ -49,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -126,6 +134,76 @@ fun CreateQuizScreen(
     }
 
     var showTagDialog by remember { mutableStateOf(false) }
+
+    if (uiState.showPoolDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.onEvent(CreateQuizEvent.DismissPoolDialog) },
+            title = { Text("Ngân hàng câu hỏi") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = uiState.poolSearchTags,
+                        onValueChange = { viewModel.onEvent(CreateQuizEvent.PoolSearchTagsChanged(it)) },
+                        label = { Text("Nhập thẻ (cách nhau dấu phẩy)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { viewModel.onEvent(CreateQuizEvent.SearchPool) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !uiState.isPoolLoading
+                    ) {
+                        Text("Tìm kiếm")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (uiState.isPoolLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else {
+                        LazyColumn(modifier = Modifier.height(300.dp)) {
+                            items(uiState.poolResults) { item ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.onEvent(CreateQuizEvent.TogglePoolItemSelection(item.id))
+                                        }
+                                        .padding(vertical = 4.dp)
+                                ) {
+                                    Checkbox(
+                                        checked = uiState.selectedPoolItemIds.contains(item.id),
+                                        onCheckedChange = {
+                                            viewModel.onEvent(CreateQuizEvent.TogglePoolItemSelection(item.id))
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = item.question.content,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.onEvent(CreateQuizEvent.ImportFromPool) },
+                    enabled = uiState.selectedPoolItemIds.isNotEmpty()
+                ) {
+                    Text("Thêm đã chọn")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onEvent(CreateQuizEvent.DismissPoolDialog) }) {
+                    Text("Đóng")
+                }
+            }
+        )
+    }
 
     if (showTagDialog) {
         TagSuggestionDialog(
@@ -339,10 +417,27 @@ fun CreateQuizScreen(
             // Section header
             item {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                Text(
-                    text = stringResource(R.string.create_questions_header, uiState.questions.size),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.create_questions_header, uiState.questions.size),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    TextButton(
+                        onClick = { viewModel.onEvent(CreateQuizEvent.ShowPoolDialog) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Thêm từ Kho")
+                    }
+                }
             }
 
             // Question cards

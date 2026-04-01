@@ -25,7 +25,6 @@ import com.example.androidapp.data.repository.QuizRepositoryImpl
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
-import com.example.androidapp.data.repository.StorageRepositoryImpl
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
@@ -34,14 +33,11 @@ import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.repository.SearchRepository
-import com.example.androidapp.domain.repository.StorageRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
 
 class AppContainerImpl(override val context: Context) : AppContainer {
 
@@ -59,14 +55,6 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         Firebase.firestore.also { firestore ->
             if (BuildConfig.USE_FIREBASE_EMULATOR) {
                 firestore.useEmulator(emulatorHost, 8080)
-            }
-        }
-    }
-
-    override val firebaseStorage: FirebaseStorage by lazy {
-        Firebase.storage.also { storage ->
-            if (BuildConfig.USE_FIREBASE_EMULATOR) {
-                storage.useEmulator(emulatorHost, 9199)
             }
         }
     }
@@ -134,7 +122,15 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     override val quizRepository: QuizRepository by lazy {
-        QuizRepositoryImpl(quizDao, questionDao, choiceDao, quizRemoteDataSource, questionRemoteDataSource, syncManager)
+        QuizRepositoryImpl(
+            quizDao,
+            questionDao,
+            choiceDao,
+            quizRemoteDataSource,
+            questionRemoteDataSource,
+            syncManager,
+            shareCodeRepository
+        )
     }
 
     override val attemptRepository: AttemptRepository by lazy {
@@ -151,10 +147,6 @@ class AppContainerImpl(override val context: Context) : AppContainer {
 
     override val poolRepository: PoolRepository by lazy {
         PoolRepositoryImpl(poolRemoteDataSource, firebaseFirestore)
-    }
-
-    override val storageRepository: StorageRepository by lazy {
-        StorageRepositoryImpl(context, firebaseStorage)
     }
 
     override val searchRepository: SearchRepository by lazy {
