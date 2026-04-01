@@ -108,24 +108,24 @@
   <div class="breadcrumbs"><a href="../../../index.html">app</a><span class="delimiter">/</span><a href="../index.html">com.example.androidapp.ui.screens.quiz</a><span class="delimiter">/</span><span class="current">QuizDetailViewModel</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Quiz</span><wbr></wbr><span>Detail</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">QuizDetailViewModel</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">quizRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-quiz-repository/index.html">QuizRepository</a></span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/androidx/lifecycle/ViewModel.html">ViewModel</a></div><p class="paragraph">ViewModel for the Quiz Detail screen. Loads quiz metadata and question list from the repository.</p><p class="paragraph">Implements a remote refresh fallback: when questions loaded from Room are empty but the quiz advertises <a href="../../com.example.androidapp.domain.model/-quiz/question-count.html">Quiz.questionCount</a> 0, the ViewModel automatically fetches the full quiz (with questions and choices) from Firestore and re-populates Room. The user can also trigger a manual refresh via <a href="on-refresh.html">onRefresh</a>.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">QuizDetailViewModel</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">quizRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-quiz-repository/index.html">QuizRepository</a><span class="token punctuation">, </span></span><span class="parameter ">authRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-auth-repository/index.html">AuthRepository</a></span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/androidx/lifecycle/ViewModel.html">ViewModel</a></div><p class="paragraph">ViewModel for the Quiz Detail screen. Loads quiz metadata and question list from the repository.</p><p class="paragraph">Implements a remote refresh fallback: when questions loaded from Room are empty but the quiz advertises <a href="../../com.example.androidapp.domain.model/-quiz/question-count.html">Quiz.questionCount</a> 0, the ViewModel automatically fetches the full quiz (with questions and choices) from Firestore and re-populates Room. The user can also trigger a manual refresh via <a href="on-refresh.html">onRefresh</a>.</p><p class="paragraph">Supports ownership checking and soft-delete for quiz owners.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="">Constructors</h2>
-        <div class="table"><a data-name="-47595505%2FConstructors%2F492899073" anchor-label="QuizDetailViewModel" id="-47595505%2FConstructors%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+        <div class="table"><a data-name="1375546043%2FConstructors%2F492899073" anchor-label="QuizDetailViewModel" id="1375546043%2FConstructors%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-quiz-detail-view-model.html"><span>Quiz</span><wbr></wbr><span>Detail</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-47595505%2FConstructors%2F492899073"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1375546043%2FConstructors%2F492899073"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">quizRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-quiz-repository/index.html">QuizRepository</a></span></span><span class="token punctuation">)</span></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">quizRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-quiz-repository/index.html">QuizRepository</a><span class="token punctuation">, </span></span><span class="parameter ">authRepository<span class="token operator">: </span><a href="../../com.example.androidapp.domain.repository/-auth-repository/index.html">AuthRepository</a></span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -183,6 +183,21 @@
               </div>
             </div>
           </div>
+<a data-name="-1444683303%2FFunctions%2F492899073" anchor-label="onClearDeleteError" id="-1444683303%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-clear-delete-error.html"><span>on</span><wbr></wbr><span>Clear</span><wbr></wbr><span>Delete</span><wbr></wbr><span><span>Error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1444683303%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="on-clear-delete-error.html"><span class="token function">onClearDeleteError</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Clears the delete error message so the UI can dismiss the error state.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
 <a data-name="-1930136507%2FFunctions%2F492899073" anchor-label="onCleared" id="-1930136507%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
@@ -194,6 +209,21 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../com.example.androidapp.ui.screens.trash/-recycle-bin-view-model/index.html#-1930136507%2FFunctions%2F492899073"><span class="token function">onCleared</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-676375351%2FFunctions%2F492899073" anchor-label="onDeleteQuiz" id="-676375351%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-delete-quiz.html"><span>on</span><wbr></wbr><span>Delete</span><wbr></wbr><span><span>Quiz</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-676375351%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="on-delete-quiz.html"><span class="token function">onDeleteQuiz</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Soft-deletes the quiz (moves it to the recycle bin). Only quiz owners should call this — the UI should guard access via <a href="../-quiz-detail-ui-state/-success/is-owner.html">QuizDetailUiState.Success.isOwner</a>. On success, sets <a href="../-quiz-detail-ui-state/-success/is-deleted.html">QuizDetailUiState.Success.isDeleted</a> to true so the screen can navigate back.</p></div></div></div>
                 </div>
               </div>
             </div>
