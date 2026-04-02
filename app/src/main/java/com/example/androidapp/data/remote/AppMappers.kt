@@ -12,7 +12,8 @@ fun UserDto.toDomain() = User(
     displayName = displayName,
     username = username,
     photoUrl = photoUrl,
-    role = UserRole.fromString(role)
+    role = UserRole.fromString(role),
+    isBanned = deletedAt != null
 )
 
 fun User.toDto() = UserDto(

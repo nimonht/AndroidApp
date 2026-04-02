@@ -18,7 +18,7 @@ import com.example.androidapp.R
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.ui.components.admin.AdminUserCard
-import com.example.androidapp.ui.components.common.AlertDialog
+import com.example.androidapp.ui.components.common.AppAlertDialog
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
@@ -110,17 +110,15 @@ fun AdminUserManagementScreen(
 
             // Loading overlay for actions
             if (uiState.isPerformingAction) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                        modifier = Modifier.fillMaxSize()
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        LoadingSpinner(modifier = Modifier.align(Alignment.Center))
+                        LoadingSpinner()
                     }
                 }
             }
@@ -129,7 +127,7 @@ fun AdminUserManagementScreen(
 
     // Delete confirmation dialog
     userToDelete?.let { user ->
-        AlertDialog(
+        AppAlertDialog(
             title = stringResource(R.string.admin_delete_user_title),
             message = stringResource(R.string.admin_delete_user_message, user.displayName),
             confirmText = stringResource(R.string.delete),
@@ -138,14 +136,15 @@ fun AdminUserManagementScreen(
                 viewModel.deleteUser(user.id)
                 userToDelete = null
             },
-            onDismiss = { userToDelete = null }
+            onDismiss = { userToDelete = null },
+            isDestructive = true
         )
     }
 
     // Ban/Unban confirmation dialog
     userToBanUnban?.let { user ->
         val isBanning = !user.isBanned
-        AlertDialog(
+        AppAlertDialog(
             title = if (isBanning) {
                 stringResource(R.string.admin_ban_user_title)
             } else {
@@ -177,7 +176,6 @@ fun AdminUserManagementScreen(
     // Action error snackbar
     uiState.actionError?.let { error ->
         LaunchedEffect(error) {
-            // Show error for 3 seconds then clear
             kotlinx.coroutines.delay(3000)
             viewModel.clearActionError()
         }
@@ -254,31 +252,20 @@ private fun UserManagementContentPreview() {
                     id = "user1",
                     email = "admin@example.com",
                     displayName = "Quản trị viên",
-                    avatarUrl = null,
-                    role = UserRole.ADMIN,
-                    isBanned = false,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    role = UserRole.ADMIN
                 ),
                 User(
                     id = "user2",
                     email = "user@example.com",
                     displayName = "Nguyễn Văn A",
-                    avatarUrl = null,
-                    role = UserRole.USER,
-                    isBanned = false,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    role = UserRole.USER
                 ),
                 User(
                     id = "user3",
                     email = "banned@example.com",
                     displayName = "Người dùng bị cấm",
-                    avatarUrl = null,
                     role = UserRole.USER,
-                    isBanned = true,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    isBanned = true
                 )
             ),
             searchQuery = "",

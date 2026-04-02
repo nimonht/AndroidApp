@@ -8,6 +8,7 @@ import com.example.androidapp.domain.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 /**
@@ -36,22 +37,19 @@ class AdminUserManagementViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             adminRepository.getAllUsers()
-                .collect { result ->
-                    result
-                        .onSuccess { users ->
-                            allUsers = users
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                users = filterUsers(users, _uiState.value.searchQuery),
-                                error = null
-                            )
-                        }
-                        .onFailure { error ->
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                error = error.message ?: "Không thể tải danh sách người dùng"
-                            )
-                        }
+                .catch { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Không thể tải danh sách người dùng"
+                    )
+                }
+                .collect { users ->
+                    allUsers = users
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        users = filterUsers(users, _uiState.value.searchQuery),
+                        error = null
+                    )
                 }
         }
     }

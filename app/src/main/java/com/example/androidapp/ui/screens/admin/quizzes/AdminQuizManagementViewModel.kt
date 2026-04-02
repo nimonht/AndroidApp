@@ -7,6 +7,7 @@ import com.example.androidapp.domain.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 /**
@@ -28,33 +29,30 @@ class AdminQuizManagementViewModel(
     }
 
     /**
-     * Load all quizzes from the repository.
+     * Load all quizzes from the repository (including deleted for admin management).
      */
     fun loadQuizzes() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            adminRepository.getAllQuizzes()
-                .collect { result ->
-                    result
-                        .onSuccess { quizzes ->
-                            allQuizzes = quizzes
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                quizzes = filterQuizzes(
-                                    quizzes,
-                                    _uiState.value.searchQuery,
-                                    _uiState.value.showDeleted
-                                ),
-                                error = null
-                            )
-                        }
-                        .onFailure { error ->
-                            _uiState.value = _uiState.value.copy(
-                                isLoading = false,
-                                error = error.message ?: "Không thể tải danh sách quiz"
-                            )
-                        }
+            adminRepository.getAllQuizzes(includeDeleted = true)
+                .catch { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Không thể tải danh sách quiz"
+                    )
+                }
+                .collect { quizzes ->
+                    allQuizzes = quizzes
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        quizzes = filterQuizzes(
+                            quizzes,
+                            _uiState.value.searchQuery,
+                            _uiState.value.showDeleted
+                        ),
+                        error = null
+                    )
                 }
         }
     }

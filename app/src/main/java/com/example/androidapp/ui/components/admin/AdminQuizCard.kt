@@ -103,23 +103,6 @@ fun AdminQuizCard(
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Draft badge
-                    if (quiz.isDraft) {
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.tertiaryContainer
-                        ) {
-                            Text(
-                                text = "Nháp",
-                                fontFamily = InterFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                            )
-                        }
-                    }
-
                     // Visibility badge
                     Surface(
                         shape = MaterialTheme.shapes.extraSmall,
@@ -379,16 +362,12 @@ private fun AdminQuizCardPreview() {
             quiz = Quiz(
                 id = "quiz1",
                 title = "Kiểm tra tiếng Việt lớp 10",
-                description = "Bài kiểm tra về ngữ pháp và từ vựng",
                 ownerId = "user1",
                 authorName = "Nguyễn Văn A",
-                thumbnailUrl = null,
                 tags = listOf("Tiếng Việt", "Lớp 10", "Ngữ pháp"),
                 questionCount = 20,
                 attemptCount = 145,
-                isDraft = false,
                 isPublic = true,
-                shareCode = null,
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
                 deletedAt = null

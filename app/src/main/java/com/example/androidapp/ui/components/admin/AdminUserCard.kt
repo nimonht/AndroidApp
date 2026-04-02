@@ -7,12 +7,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.androidapp.R
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.ui.theme.InterFamily
@@ -41,7 +43,11 @@ fun AdminUserCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = if (user.isBanned) {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
         ),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -59,9 +65,9 @@ fun AdminUserCard(
                 modifier = Modifier.weight(1f)
             ) {
                 // Avatar
-                if (!user.avatarUrl.isNullOrEmpty()) {
+                if (!user.photoUrl.isNullOrEmpty()) {
                     AsyncImage(
-                        model = user.avatarUrl,
+                        model = user.photoUrl,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp)
                     )
@@ -99,30 +105,51 @@ fun AdminUserCard(
                     )
 
                     // Role badge
-                    val roleColor = when (user.role) {
-                        UserRole.ADMIN -> MaterialTheme.colorScheme.error
-                        UserRole.USER -> MaterialTheme.colorScheme.primary
-                        UserRole.GUEST -> MaterialTheme.colorScheme.surfaceVariant
-                    }
-
-                    val roleText = when (user.role) {
-                        UserRole.ADMIN -> "Quản trị viên"
-                        UserRole.USER -> "Người dùng"
-                        UserRole.GUEST -> "Khách"
-                    }
-
-                    Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = roleColor.copy(alpha = 0.15f)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = roleText,
-                            fontFamily = InterFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
-                            color = roleColor,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                        val roleColor = when (user.role) {
+                            UserRole.ADMIN -> MaterialTheme.colorScheme.error
+                            UserRole.USER -> MaterialTheme.colorScheme.primary
+                            UserRole.GUEST -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+
+                        val roleText = when (user.role) {
+                            UserRole.ADMIN -> stringResource(R.string.admin_role_admin)
+                            UserRole.USER -> stringResource(R.string.admin_role_user)
+                            UserRole.GUEST -> stringResource(R.string.admin_role_guest)
+                        }
+
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = roleColor.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = roleText,
+                                fontFamily = InterFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp,
+                                color = roleColor,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        // Banned badge
+                        if (user.isBanned) {
+                            Surface(
+                                shape = MaterialTheme.shapes.extraSmall,
+                                color = MaterialTheme.colorScheme.errorContainer
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.admin_user_banned),
+                                    fontFamily = InterFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -132,7 +159,7 @@ fun AdminUserCard(
                 IconButton(onClick = { showMenu = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Thao tác",
+                        contentDescription = stringResource(R.string.admin_user_actions),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -144,7 +171,7 @@ fun AdminUserCard(
                     // Role change options
                     if (user.role != UserRole.ADMIN) {
                         DropdownMenuItem(
-                            text = { Text("Đặt làm Quản trị viên") },
+                            text = { Text(stringResource(R.string.admin_promote_admin)) },
                             onClick = {
                                 onRoleChange(UserRole.ADMIN)
                                 showMenu = false
@@ -157,7 +184,7 @@ fun AdminUserCard(
 
                     if (user.role != UserRole.USER) {
                         DropdownMenuItem(
-                            text = { Text("Đặt làm Người dùng") },
+                            text = { Text(stringResource(R.string.admin_demote_user)) },
                             onClick = {
                                 onRoleChange(UserRole.USER)
                                 showMenu = false
@@ -168,11 +195,16 @@ fun AdminUserCard(
                         )
                     }
 
-                    Divider()
+                    HorizontalDivider()
 
                     // Ban/Unban
                     DropdownMenuItem(
-                        text = { Text(if (user.isBanned) "Bỏ cấm" else "Cấm người dùng") },
+                        text = {
+                            Text(
+                                if (user.isBanned) stringResource(R.string.admin_unban_user)
+                                else stringResource(R.string.admin_ban_user)
+                            )
+                        },
                         onClick = {
                             onBanToggle()
                             showMenu = false
@@ -185,11 +217,11 @@ fun AdminUserCard(
                         }
                     )
 
-                    Divider()
+                    HorizontalDivider()
 
                     // Delete
                     DropdownMenuItem(
-                        text = { Text("Xóa vĩnh viễn", color = MaterialTheme.colorScheme.error) },
+                        text = { Text(stringResource(R.string.admin_delete_user), color = MaterialTheme.colorScheme.error) },
                         onClick = {
                             onDelete()
                             showMenu = false
@@ -217,11 +249,7 @@ private fun AdminUserCardPreview() {
                 id = "user1",
                 email = "user@example.com",
                 displayName = "Nguyễn Văn A",
-                avatarUrl = null,
-                role = UserRole.USER,
-                isBanned = false,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
+                role = UserRole.USER
             ),
             onRoleChange = {},
             onBanToggle = {},

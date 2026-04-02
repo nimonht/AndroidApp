@@ -423,6 +423,12 @@ fun QuizzezNavHost(
 
             // ==================== Admin Screens ====================
             composable(Routes.ADMIN_DASHBOARD) {
+                // Guard: redirect non-admin users back
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
                 val container = LocalAppContainer
                 val viewModel: AdminDashboardViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
@@ -442,6 +448,11 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.ADMIN_USERS) {
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
                 val container = LocalAppContainer
                 val viewModel: AdminUserManagementViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
@@ -458,6 +469,11 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.ADMIN_QUIZZES) {
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
                 val container = LocalAppContainer
                 val viewModel: AdminQuizManagementViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
@@ -475,6 +491,11 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.ADMIN_REPORTS) {
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
                 val container = LocalAppContainer
                 val viewModel: AdminReportsViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {

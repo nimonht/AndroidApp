@@ -372,9 +372,8 @@ private fun DashboardContentPreview() {
                 privateQuizzes = 434,
                 draftQuizzes = 123,
                 deletedQuizzes = 45,
-                totalQuestions = 12345,
                 totalAttempts = 67890,
-                totalPoolQuestions = 234
+                totalQuestionsInPool = 234
             ),
             onNavigateToUsers = {},
             onNavigateToQuizzes = {},

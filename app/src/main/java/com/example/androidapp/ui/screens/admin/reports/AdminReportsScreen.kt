@@ -149,7 +149,7 @@ private fun ReportsContent(
             )
         }
 
-        Divider()
+        HorizontalDivider()
 
         // Content Analytics Section
         Text(
@@ -212,13 +212,13 @@ private fun ReportsContent(
 
             StatisticCard(
                 title = stringResource(R.string.admin_stat_total_questions),
-                value = stats.totalQuestions.toString(),
+                value = stats.totalQuestionsInPool.toString(),
                 icon = Icons.Default.QuestionAnswer,
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
-        Divider()
+        HorizontalDivider()
 
         // Engagement Analytics Section
         Text(
@@ -249,7 +249,7 @@ private fun ReportsContent(
             )
         }
 
-        Divider()
+        HorizontalDivider()
 
         // Community Content Section
         Text(
@@ -265,7 +265,7 @@ private fun ReportsContent(
         ) {
             StatisticCard(
                 title = stringResource(R.string.admin_stat_question_pool),
-                value = stats.totalPoolQuestions.toString(),
+                value = stats.totalQuestionsInPool.toString(),
                 icon = Icons.Default.Folder,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -358,9 +358,8 @@ private fun ReportsContentPreview() {
                 privateQuizzes = 434,
                 draftQuizzes = 123,
                 deletedQuizzes = 45,
-                totalQuestions = 12345,
                 totalAttempts = 67890,
-                totalPoolQuestions = 234
+                totalQuestionsInPool = 234
             ),
             modifier = Modifier.fillMaxSize()
         )

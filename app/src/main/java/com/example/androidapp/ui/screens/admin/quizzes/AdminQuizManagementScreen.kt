@@ -17,7 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.R
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.admin.AdminQuizCard
-import com.example.androidapp.ui.components.common.AlertDialog
+import com.example.androidapp.ui.components.common.AppAlertDialog
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
@@ -113,17 +113,15 @@ fun AdminQuizManagementScreen(
 
             // Loading overlay for actions
             if (uiState.isPerformingAction) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
+                Surface(
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                        modifier = Modifier.fillMaxSize()
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        LoadingSpinner(modifier = Modifier.align(Alignment.Center))
+                        LoadingSpinner()
                     }
                 }
             }
@@ -133,7 +131,7 @@ fun AdminQuizManagementScreen(
     // Delete confirmation dialog
     quizToDelete?.let { quiz ->
         val isPermanentDelete = quiz.deletedAt != null
-        AlertDialog(
+        AppAlertDialog(
             title = if (isPermanentDelete) {
                 stringResource(R.string.admin_delete_quiz_permanent_title)
             } else {
@@ -150,7 +148,8 @@ fun AdminQuizManagementScreen(
                 viewModel.deleteQuiz(quiz.id)
                 quizToDelete = null
             },
-            onDismiss = { quizToDelete = null }
+            onDismiss = { quizToDelete = null },
+            isDestructive = true
         )
     }
 
@@ -264,16 +263,12 @@ private fun QuizManagementContentPreview() {
                 Quiz(
                     id = "quiz1",
                     title = "Kiểm tra tiếng Việt lớp 10",
-                    description = "Bài kiểm tra về ngữ pháp và từ vựng",
                     ownerId = "user1",
                     authorName = "Nguyễn Văn A",
-                    thumbnailUrl = null,
                     tags = listOf("Tiếng Việt", "Lớp 10"),
                     questionCount = 20,
                     attemptCount = 145,
-                    isDraft = false,
                     isPublic = true,
-                    shareCode = null,
                     createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis(),
                     deletedAt = null
@@ -281,14 +276,11 @@ private fun QuizManagementContentPreview() {
                 Quiz(
                     id = "quiz2",
                     title = "Quiz toán học",
-                    description = "Bài kiểm tra toán",
                     ownerId = "user2",
                     authorName = "Trần Thị B",
-                    thumbnailUrl = null,
                     tags = listOf("Toán học"),
                     questionCount = 15,
                     attemptCount = 78,
-                    isDraft = true,
                     isPublic = false,
                     shareCode = "ABC123",
                     createdAt = System.currentTimeMillis(),

@@ -153,7 +153,8 @@ fun UserEntity.toDomain(): User = User(
     displayName = displayName ?: username,
     username = username,
     photoUrl = photoUrl,
-    role = UserRole.fromString(role)
+    role = UserRole.fromString(role),
+    isBanned = deletedAt != null
 )
 
 /** Maps domain [User] to [UserEntity] for Room storage. */

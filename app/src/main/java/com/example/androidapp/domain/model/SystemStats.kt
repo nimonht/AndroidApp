@@ -29,26 +29,23 @@ data class SystemStats(
     val adminUsers: Int = 0
 ) {
     /**
-     * Calculate the average number of attempts per quiz.
+     * Average number of attempts per quiz.
      * Returns 0.0 if no quizzes exist.
      */
-    fun averageAttemptsPerQuiz(): Double {
-        return if (totalQuizzes > 0) totalAttempts.toDouble() / totalQuizzes else 0.0
-    }
+    val averageAttemptsPerQuiz: Double
+        get() = if (totalQuizzes > 0) totalAttempts.toDouble() / totalQuizzes else 0.0
 
     /**
-     * Calculate the percentage of active users.
+     * Percentage of active users.
      * Returns 0.0 if no users exist.
      */
-    fun activeUserPercentage(): Double {
-        return if (totalUsers > 0) (activeUsers.toDouble() / totalUsers) * 100 else 0.0
-    }
+    val activeUserPercentage: Double
+        get() = if (totalUsers > 0) (activeUsers.toDouble() / totalUsers) * 100 else 0.0
 
     /**
-     * Calculate the percentage of public quizzes.
+     * Percentage of public quizzes.
      * Returns 0.0 if no quizzes exist.
      */
-    fun publicQuizPercentage(): Double {
-        return if (totalQuizzes > 0) (publicQuizzes.toDouble() / totalQuizzes) * 100 else 0.0
-    }
+    val publicQuizPercentage: Double
+        get() = if (totalQuizzes > 0) (publicQuizzes.toDouble() / totalQuizzes) * 100 else 0.0
 }

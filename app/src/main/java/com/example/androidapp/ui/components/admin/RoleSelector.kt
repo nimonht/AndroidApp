@@ -4,10 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.androidapp.R
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
@@ -37,16 +39,16 @@ fun RoleSelector(
     ) {
         OutlinedTextField(
             value = when (selectedRole) {
-                UserRole.ADMIN -> "Quản trị viên"
-                UserRole.USER -> "Người dùng"
-                UserRole.GUEST -> "Khách"
+                UserRole.ADMIN -> stringResource(R.string.admin_role_admin)
+                UserRole.USER -> stringResource(R.string.admin_role_user)
+                UserRole.GUEST -> stringResource(R.string.admin_role_guest)
             },
             onValueChange = {},
             readOnly = true,
             enabled = enabled,
             label = {
                 Text(
-                    text = "Vai trò",
+                    text = stringResource(R.string.admin_role_label),
                     fontFamily = InterFamily,
                     fontWeight = FontWeight.Medium
                 )
@@ -72,7 +74,7 @@ fun RoleSelector(
             DropdownMenuItem(
                 text = {
                     Text(
-                        text = "Quản trị viên",
+                        text = stringResource(R.string.admin_role_admin),
                         fontFamily = InterFamily,
                         fontWeight = FontWeight.Medium
                     )
@@ -86,7 +88,7 @@ fun RoleSelector(
             DropdownMenuItem(
                 text = {
                     Text(
-                        text = "Người dùng",
+                        text = stringResource(R.string.admin_role_user),
                         fontFamily = InterFamily,
                         fontWeight = FontWeight.Medium
                     )
@@ -100,7 +102,7 @@ fun RoleSelector(
             DropdownMenuItem(
                 text = {
                     Text(
-                        text = "Khách",
+                        text = stringResource(R.string.admin_role_guest),
                         fontFamily = InterFamily,
                         fontWeight = FontWeight.Medium
                     )

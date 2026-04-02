@@ -17,10 +17,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Check if user is an administrator
+    // Check if user is an administrator (and not soft-deleted/banned)
     function isAdmin() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
       return isSignedIn() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        userDoc.role == 'admin' &&
+        (!('deletedAt' in userDoc) || userDoc.deletedAt == null);
     }
 
     // Get quiz data from database

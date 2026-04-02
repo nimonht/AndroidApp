@@ -378,6 +378,9 @@
     <!-- Admin Dashboard -->
     <string name="admin_dashboard_statistics">Thống kê hệ thống</string>
     <string name="admin_dashboard_quick_actions">Hành động nhanh</string>
+    <string name="admin_overview">Tổng quan</string>
+    <string name="admin_insights">Phân tích</string>
+    <string name="admin_quick_actions">Hành động nhanh</string>
     <string name="admin_total_users">Tổng số người dùng</string>
     <string name="admin_total_quizzes">Tổng số câu đố</string>
     <string name="admin_total_attempts">Tổng số lượt làm</string>
@@ -391,9 +394,29 @@
     <string name="admin_card_manage_users">Quản lý người dùng</string>
     <string name="admin_card_manage_quizzes">Quản lý câu đố</string>
     <string name="admin_card_view_reports">Xem báo cáo</string>
+    <string name="admin_stat_total_users">Tổng số người dùng</string>
+    <string name="admin_stat_total_quizzes">Tổng số quiz</string>
+    <string name="admin_stat_total_attempts">Tổng số lượt chơi</string>
+    <string name="admin_stat_active_users">Người dùng hoạt động</string>
+    <string name="admin_stat_public_quizzes">Quiz công khai</string>
+    <string name="admin_stat_private_quizzes">Quiz riêng tư</string>
+    <string name="admin_stat_draft_quizzes">Quiz nháp</string>
+    <string name="admin_stat_deleted_quizzes">Quiz đã xóa</string>
+    <string name="admin_stat_question_pool">Kho câu hỏi cộng đồng</string>
+    <string name="admin_stat_avg_attempts_per_quiz">Trung bình lượt chơi/quiz</string>
+    <string name="admin_stat_active_user_percentage">Tỷ lệ người dùng hoạt động</string>
+    <string name="admin_stat_public_quiz_percentage">Tỷ lệ quiz công khai</string>
+    <string name="admin_stat_total_questions">Tổng số câu hỏi</string>
+    <string name="admin_manage_users">Quản lý người dùng</string>
+    <string name="admin_manage_quizzes">Quản lý quiz</string>
+    <string name="admin_view_reports">Xem báo cáo</string>
 
     <!-- Admin User Management -->
     <string name="admin_search_users">Tìm kiếm người dùng…</string>
+    <string name="admin_search_users_placeholder">Nhập email hoặc tên người dùng…</string>
+    <string name="admin_user_count">%1$d người dùng</string>
+    <string name="admin_no_users">Không có người dùng nào</string>
+    <string name="admin_no_users_search">Không tìm thấy người dùng phù hợp</string>
     <string name="admin_user_role_guest">Khách</string>
     <string name="admin_user_role_user">Người dùng</string>
     <string name="admin_user_role_admin">Quản trị viên</string>
@@ -414,9 +437,27 @@
     <string name="admin_user_banned_success">Đã cấm người dùng</string>
     <string name="admin_user_unbanned_success">Đã bỏ cấm người dùng</string>
     <string name="admin_user_deleted_success">Đã xóa người dùng</string>
+    <string name="admin_delete_user_title">Xóa người dùng vĩnh viễn</string>
+    <string name="admin_delete_user_message">Bạn có chắc muốn xóa vĩnh viễn %1$s? Hành động này không thể hoàn tác.</string>
+    <string name="admin_ban_user_title">Cấm người dùng</string>
+    <string name="admin_ban_user_message">Bạn có chắc muốn cấm %1$s? Người dùng sẽ không thể truy cập ứng dụng.</string>
+    <string name="admin_unban_user_title">Bỏ cấm người dùng</string>
+    <string name="admin_unban_user_message">Bạn có chắc muốn bỏ cấm %1$s?</string>
+    <string name="admin_ban">Cấm</string>
+    <string name="admin_unban">Bỏ cấm</string>
+    <string name="admin_role_label">Vai trò</string>
+    <string name="admin_role_admin">Quản trị viên</string>
+    <string name="admin_role_user">Người dùng</string>
+    <string name="admin_role_guest">Khách</string>
 
     <!-- Admin Quiz Management -->
     <string name="admin_search_quizzes">Tìm kiếm câu đố…</string>
+    <string name="admin_search_quizzes_placeholder">Nhập tên quiz hoặc tác giả…</string>
+    <string name="admin_quiz_count">%1$d quiz</string>
+    <string name="admin_show_deleted">Hiển thị đã xóa</string>
+    <string name="admin_no_quizzes">Không có quiz nào</string>
+    <string name="admin_no_deleted_quizzes">Không có quiz đã xóa</string>
+    <string name="admin_no_quizzes_search">Không tìm thấy quiz phù hợp</string>
     <string name="admin_quiz_owner">Chủ sở hữu: %1$s</string>
     <string name="admin_quiz_status_public">Công khai</string>
     <string name="admin_quiz_status_private">Riêng tư</string>
@@ -438,9 +479,17 @@
     <string name="admin_quiz_unpublished">Đã hủy xuất bản câu đố</string>
     <string name="admin_quiz_restored">Đã khôi phục câu đố</string>
     <string name="admin_quiz_deleted_permanent">Đã xóa vĩnh viễn câu đố</string>
+    <string name="admin_delete_quiz_permanent_title">Xóa quiz vĩnh viễn</string>
+    <string name="admin_delete_quiz_title">Xóa quiz</string>
+    <string name="admin_delete_quiz_permanent_message">Bạn có chắc muốn xóa vĩnh viễn \"%1$s\"? Hành động này không thể hoàn tác.</string>
+    <string name="admin_delete_quiz_message">Bạn có chắc muốn xóa \"%1$s\"?</string>
 
     <!-- Admin Reports -->
     <string name="admin_reports_overview">Tổng quan</string>
+    <string name="admin_reports_user_analytics">Phân tích người dùng</string>
+    <string name="admin_reports_content_analytics">Phân tích nội dung</string>
+    <string name="admin_reports_engagement_analytics">Phân tích tương tác</string>
+    <string name="admin_reports_community_content">Nội dung cộng đồng</string>
     <string name="admin_reports_user_growth">Tăng trưởng người dùng</string>
     <string name="admin_reports_quiz_popularity">Câu đố phổ biến</string>
     <string name="admin_reports_activity">Hoạt động</string>
