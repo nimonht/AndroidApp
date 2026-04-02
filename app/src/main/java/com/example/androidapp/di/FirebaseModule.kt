@@ -11,12 +11,14 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.remote.firebase.AdminRemoteDataSource
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.firebase.PoolRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.firebase.ShareCodeRemoteDataSource
 import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
+import com.example.androidapp.data.repository.AdminRepositoryImpl
 import com.example.androidapp.data.repository.AttemptRepositoryImpl
 import com.example.androidapp.data.repository.AuthRepositoryImpl
 import com.example.androidapp.data.repository.PoolRepositoryImpl
@@ -26,6 +28,7 @@ import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
@@ -117,6 +120,10 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         PoolRemoteDataSource(firebaseFirestore)
     }
 
+    private val adminRemoteDataSource: AdminRemoteDataSource by lazy {
+        AdminRemoteDataSource(firebaseFirestore)
+    }
+
     override val authRepository: AuthRepository by lazy {
         AuthRepositoryImpl(firebaseAuth, userDao, userRemoteDataSource)
     }
@@ -147,6 +154,10 @@ class AppContainerImpl(override val context: Context) : AppContainer {
 
     override val poolRepository: PoolRepository by lazy {
         PoolRepositoryImpl(poolRemoteDataSource, firebaseFirestore)
+    }
+
+    override val adminRepository: AdminRepository by lazy {
+        AdminRepositoryImpl(adminRemoteDataSource)
     }
 
     override val searchRepository: SearchRepository by lazy {

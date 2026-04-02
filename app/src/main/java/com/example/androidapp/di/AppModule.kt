@@ -10,6 +10,7 @@ import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
@@ -47,6 +48,7 @@ interface AppContainer {
     val questionRepository: QuestionRepository
     val shareCodeRepository: ShareCodeRepository
     val poolRepository: PoolRepository
+    val adminRepository: AdminRepository
     val searchRepository: SearchRepository
     val settingsPreferences: SettingsPreferences
 }
