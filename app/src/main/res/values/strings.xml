@@ -91,6 +91,7 @@
 
     <!-- Profile -->
     <string name="profile_section_general">Chung</string>
+    <string name="profile_section_admin">Quản trị</string>
     <string name="profile_menu_attempt_history">Lịch sử làm bài</string>
     <string name="profile_menu_recycle_bin">Thùng rác</string>
     <string name="profile_menu_settings">Cài đặt</string>

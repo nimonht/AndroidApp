@@ -34,6 +34,8 @@ import com.example.androidapp.ui.theme.QuizzezTheme
  * @param onNavigateToHistory Callback to navigate to attempt history.
  * @param onNavigateToTrash Callback to navigate to the recycle bin.
  * @param onNavigateToEditProfile Callback to navigate to the edit-profile screen.
+ * @param onNavigateToQuestionPool Callback to navigate to the question pool.
+ * @param onNavigateToAdminPanel Callback to navigate to the admin panel.
  * @param modifier Modifier for styling.
  */
 @Composable
@@ -44,6 +46,7 @@ fun ProfileScreen(
     onNavigateToTrash: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToQuestionPool: () -> Unit = {},
+    onNavigateToAdminPanel: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -85,7 +88,9 @@ fun ProfileScreen(
                 onHistoryClick = onNavigateToHistory,
                 onTrashClick = onNavigateToTrash,
                 onSettingsClick = onNavigateToSettings,
-                onQuestionPoolClick = onNavigateToQuestionPool
+                onQuestionPoolClick = onNavigateToQuestionPool,
+                onAdminPanelClick = onNavigateToAdminPanel,
+                isAdmin = user.isAdmin()
             )
 
             Button(
@@ -273,9 +278,27 @@ private fun ProfileMenuSection(
     onTrashClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onQuestionPoolClick: () -> Unit,
+    onAdminPanelClick: () -> Unit,
+    isAdmin: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Admin section (only for admins)
+        if (isAdmin) {
+            Text(
+                text = stringResource(R.string.profile_section_admin),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            ProfileMenuItem(
+                icon = Icons.Default.AdminPanelSettings,
+                title = stringResource(R.string.admin_dashboard_title),
+                onClick = onAdminPanelClick
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Text(
             text = stringResource(R.string.profile_section_general),
             style = MaterialTheme.typography.titleSmall,
