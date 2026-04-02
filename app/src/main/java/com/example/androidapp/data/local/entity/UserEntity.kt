@@ -23,6 +23,9 @@ data class UserEntity(
     @ColumnInfo(name = "photo_url")
     val photoUrl: String? = null,
 
+    @ColumnInfo(name = "role")
+    val role: String = "user",  // "guest", "user", or "admin"
+
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
 

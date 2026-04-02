@@ -6,7 +6,14 @@ import com.google.firebase.Timestamp
 import java.util.Date
 
 // --- USER ---
-fun UserDto.toDomain() = User(id, email, displayName, username, photoUrl)
+fun UserDto.toDomain() = User(
+    id = id,
+    email = email,
+    displayName = displayName,
+    username = username,
+    photoUrl = photoUrl,
+    role = UserRole.fromString(role)
+)
 
 fun User.toDto() = UserDto(
     id = id,
@@ -14,6 +21,7 @@ fun User.toDto() = UserDto(
     displayName = displayName,
     username = username,
     photoUrl = photoUrl,
+    role = role.toFirestoreValue(),
     createdAt = Timestamp.now(),
     updatedAt = Timestamp.now()
 )
@@ -28,6 +36,7 @@ fun User.toDto(existingDto: UserDto?): UserDto = UserDto(
     displayName = displayName,
     username = username,
     photoUrl = photoUrl,
+    role = role.toFirestoreValue(),
     createdAt = existingDto?.createdAt ?: Timestamp.now(),
     updatedAt = Timestamp.now()
 )

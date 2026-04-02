@@ -152,7 +152,8 @@ fun UserEntity.toDomain(): User = User(
     email = email,
     displayName = displayName ?: username,
     username = username,
-    photoUrl = photoUrl
+    photoUrl = photoUrl,
+    role = UserRole.fromString(role)
 )
 
 /** Maps domain [User] to [UserEntity] for Room storage. */
@@ -161,5 +162,6 @@ fun User.toEntity(): UserEntity = UserEntity(
     username = username,
     email = email,
     displayName = displayName,
-    photoUrl = photoUrl
+    photoUrl = photoUrl,
+    role = role.toFirestoreValue()
 )

@@ -2,11 +2,34 @@ package com.example.androidapp.domain.model
 
 /**
  * Domain model representing a user.
+ *
+ * @property id Unique user identifier
+ * @property email User's email address
+ * @property displayName Display name shown in UI
+ * @property username Unique username
+ * @property photoUrl Optional profile picture URL
+ * @property role User's role (GUEST, USER, or ADMIN) - defaults to USER
  */
 data class User(
     val id: String,
     val email: String,
     val displayName: String,
     val username: String = "",
-    val photoUrl: String? = null
-)
+    val photoUrl: String? = null,
+    val role: UserRole = UserRole.USER
+) {
+    /**
+     * Check if this user is an administrator.
+     */
+    fun isAdmin(): Boolean = role == UserRole.ADMIN
+
+    /**
+     * Check if this user is a guest (not authenticated).
+     */
+    fun isGuest(): Boolean = role == UserRole.GUEST
+
+    /**
+     * Check if this user is a standard authenticated user.
+     */
+    fun isRegularUser(): Boolean = role == UserRole.USER
+}
