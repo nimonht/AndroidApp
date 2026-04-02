@@ -36,6 +36,12 @@ object Routes {
     const val REGISTER = "register"
     const val QUESTION_POOL = "question_pool"
 
+    // Admin Routes
+    const val ADMIN_DASHBOARD = "admin/dashboard"
+    const val ADMIN_USERS = "admin/users"
+    const val ADMIN_QUIZZES = "admin/quizzes"
+    const val ADMIN_REPORTS = "admin/reports"
+
     // Helper functions to build routes with arguments
     object Args {
         const val QUIZ_ID = "quizId"
@@ -120,4 +126,10 @@ sealed class NavigationDestination(val route: String) {
     // Auth Destinations
     data object Login : NavigationDestination(Routes.LOGIN)
     data object Register : NavigationDestination(Routes.REGISTER)
+
+    // Admin Destinations
+    data object AdminDashboard : NavigationDestination(Routes.ADMIN_DASHBOARD)
+    data object AdminUsers : NavigationDestination(Routes.ADMIN_USERS)
+    data object AdminQuizzes : NavigationDestination(Routes.ADMIN_QUIZZES)
+    data object AdminReports : NavigationDestination(Routes.ADMIN_REPORTS)
 }

@@ -366,4 +366,89 @@
     <string name="pool_import_button">Nhập câu hỏi đã chọn</string>
     <string name="pool_import_cd">Nhập từ kho câu hỏi</string>
     <string name="pool_import_success">Đã nhập %1$d câu hỏi từ kho cộng đồng</string>
+
+    <!-- Admin Panel -->
+    <string name="admin_dashboard_title">Bảng điều khiển quản trị</string>
+    <string name="admin_users_title">Quản lý người dùng</string>
+    <string name="admin_quizzes_title">Quản lý câu đố</string>
+    <string name="admin_reports_title">Báo cáo</string>
+    <string name="admin_panel_entry">Bảng điều khiển quản trị</string>
+
+    <!-- Admin Dashboard -->
+    <string name="admin_dashboard_statistics">Thống kê hệ thống</string>
+    <string name="admin_dashboard_quick_actions">Hành động nhanh</string>
+    <string name="admin_total_users">Tổng số người dùng</string>
+    <string name="admin_total_quizzes">Tổng số câu đố</string>
+    <string name="admin_total_attempts">Tổng số lượt làm</string>
+    <string name="admin_total_questions_pool">Tổng số câu hỏi trong kho</string>
+    <string name="admin_active_users">Người dùng hoạt động</string>
+    <string name="admin_public_quizzes">Câu đố công khai</string>
+    <string name="admin_private_quizzes">Câu đố riêng tư</string>
+    <string name="admin_draft_quizzes">Câu đố nháp</string>
+    <string name="admin_deleted_quizzes">Câu đố đã xóa</string>
+    <string name="admin_users_count">Quản trị viên</string>
+    <string name="admin_card_manage_users">Quản lý người dùng</string>
+    <string name="admin_card_manage_quizzes">Quản lý câu đố</string>
+    <string name="admin_card_view_reports">Xem báo cáo</string>
+
+    <!-- Admin User Management -->
+    <string name="admin_search_users">Tìm kiếm người dùng…</string>
+    <string name="admin_user_role_guest">Khách</string>
+    <string name="admin_user_role_user">Người dùng</string>
+    <string name="admin_user_role_admin">Quản trị viên</string>
+    <string name="admin_promote_admin">Thăng cấp quản trị viên</string>
+    <string name="admin_demote_user">Hạ cấp người dùng</string>
+    <string name="admin_ban_user">Cấm người dùng</string>
+    <string name="admin_unban_user">Bỏ cấm người dùng</string>
+    <string name="admin_delete_user">Xóa người dùng</string>
+    <string name="admin_user_banned">Đã cấm</string>
+    <string name="admin_user_actions">Hành động</string>
+    <string name="admin_user_email">Email: %1$s</string>
+    <string name="admin_user_created">Tạo: %1$s</string>
+    <string name="admin_ban_confirm">Xác nhận cấm người dùng?</string>
+    <string name="admin_ban_message">Người dùng sẽ không thể truy cập ứng dụng.</string>
+    <string name="admin_delete_confirm">Xác nhận xóa người dùng?</string>
+    <string name="admin_delete_message">Hành động này không thể hoàn tác. Tất cả dữ liệu của người dùng sẽ bị xóa vĩnh viễn.</string>
+    <string name="admin_role_updated">Đã cập nhật vai trò người dùng</string>
+    <string name="admin_user_banned_success">Đã cấm người dùng</string>
+    <string name="admin_user_unbanned_success">Đã bỏ cấm người dùng</string>
+    <string name="admin_user_deleted_success">Đã xóa người dùng</string>
+
+    <!-- Admin Quiz Management -->
+    <string name="admin_search_quizzes">Tìm kiếm câu đố…</string>
+    <string name="admin_quiz_owner">Chủ sở hữu: %1$s</string>
+    <string name="admin_quiz_status_public">Công khai</string>
+    <string name="admin_quiz_status_private">Riêng tư</string>
+    <string name="admin_quiz_status_draft">Nháp</string>
+    <string name="admin_quiz_status_deleted">Đã xóa</string>
+    <string name="admin_quiz_publish">Xuất bản</string>
+    <string name="admin_quiz_unpublish">Hủy xuất bản</string>
+    <string name="admin_quiz_restore">Khôi phục</string>
+    <string name="admin_quiz_delete_permanent">Xóa vĩnh viễn</string>
+    <string name="admin_quiz_actions">Hành động</string>
+    <string name="admin_quiz_include_deleted">Bao gồm đã xóa</string>
+    <string name="admin_publish_confirm">Xác nhận xuất bản?</string>
+    <string name="admin_publish_message">Câu đố sẽ được công khai và xuất hiện trong tìm kiếm.</string>
+    <string name="admin_unpublish_confirm">Xác nhận hủy xuất bản?</string>
+    <string name="admin_unpublish_message">Câu đố sẽ trở thành riêng tư.</string>
+    <string name="admin_delete_permanent_confirm">Xác nhận xóa vĩnh viễn?</string>
+    <string name="admin_delete_permanent_message">Hành động này không thể hoàn tác. Câu đố và tất cả câu hỏi sẽ bị xóa vĩnh viễn.</string>
+    <string name="admin_quiz_published">Đã xuất bản câu đố</string>
+    <string name="admin_quiz_unpublished">Đã hủy xuất bản câu đố</string>
+    <string name="admin_quiz_restored">Đã khôi phục câu đố</string>
+    <string name="admin_quiz_deleted_permanent">Đã xóa vĩnh viễn câu đố</string>
+
+    <!-- Admin Reports -->
+    <string name="admin_reports_overview">Tổng quan</string>
+    <string name="admin_reports_user_growth">Tăng trưởng người dùng</string>
+    <string name="admin_reports_quiz_popularity">Câu đố phổ biến</string>
+    <string name="admin_reports_activity">Hoạt động</string>
+    <string name="admin_reports_last_30_days">30 ngày qua</string>
+    <string name="admin_reports_export">Xuất báo cáo</string>
+
+    <!-- Admin Errors -->
+    <string name="admin_error_unauthorized">Bạn không có quyền truy cập trang này</string>
+    <string name="admin_error_load_failed">Không thể tải dữ liệu quản trị</string>
+    <string name="admin_error_action_failed">Hành động quản trị thất bại</string>
+
 </resources>

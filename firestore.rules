@@ -17,6 +17,12 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Check if user is an administrator
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Get quiz data from database
     function getQuiz(quizId) {
       return get(/databases/$(database)/documents/quizzes/$(quizId)).data;
@@ -52,12 +58,18 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Any authenticated user can read user profiles
-      allow read: if isSignedIn();
+      // Admins can read all users (including deleted)
+      allow read: if isSignedIn() || isAdmin();
 
-      // Users can only create/update/delete their own profile
+      // Users can only create their own profile
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+
+      // Users can update their own profile, or admins can update any profile
+      // When admins update, they can change the role field
+      allow update: if isOwner(userId) || isAdmin();
+
+      // Users can delete their own profile, or admins can delete any profile
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // ============================================================================
@@ -72,9 +84,10 @@ service cloud.firestore {
     match /quizzes/{quizId} {
       // Owner can always read their quizzes (including soft-deleted ones for
       // trash / restore). Non-owners can read non-deleted quizzes that are
-      // either public or shared via share code.
+      // either public or shared via share code. Admins can read all quizzes.
       allow read: if isOwner(resource.data.ownerId)
-        || isQuizAccessible();
+        || isQuizAccessible()
+        || isAdmin();
 
       // Authenticated users can create quizzes they own
       allow create: if isSignedIn()
@@ -82,36 +95,38 @@ service cloud.firestore {
 
       // Only the owner can update; ownerId is immutable
       // Or anyone can update IF they are ONLY incrementing the attemptCount by 1
+      // Or admins can update any quiz
       allow update: if (isOwner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId)
         || (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptCount'])
           && request.resource.data.attemptCount == resource.data.attemptCount + 1
-        );
+        )
+        || isAdmin();
 
-      // Only the owner can delete
-      allow delete: if isOwner(resource.data.ownerId);
+      // Only the owner can delete, or admins can delete any quiz
+      allow delete: if isOwner(resource.data.ownerId) || isAdmin();
 
       // ========================================================================
       // QUESTIONS SUBCOLLECTION
       // ========================================================================
 
       match /questions/{questionId} {
-        // Quiz owner or readers of accessible quizzes (public or share-code)
-        allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId);
+        // Quiz owner or readers of accessible quizzes (public or share-code) or admins
+        allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId) || isAdmin();
 
-        // Only quiz owner can write questions
-        allow write: if isQuizOwner(quizId);
+        // Only quiz owner can write questions, or admins
+        allow write: if isQuizOwner(quizId) || isAdmin();
 
         // ======================================================================
         // CHOICES SUBCOLLECTION
         // ======================================================================
 
         match /choices/{choiceId} {
-          // Quiz owner or readers of accessible quizzes (public or share-code)
-          allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId);
+          // Quiz owner or readers of accessible quizzes (public or share-code) or admins
+          allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId) || isAdmin();
 
-          // Only quiz owner can write choices
-          allow write: if isQuizOwner(quizId);
+          // Only quiz owner can write choices, or admins
+          allow write: if isQuizOwner(quizId) || isAdmin();
         }
       }
     }
@@ -121,11 +136,11 @@ service cloud.firestore {
     // ============================================================================
 
     match /attempts/{attemptId} {
-      // Attempt owner or quiz owner can read
+      // Attempt owner or quiz owner can read, or admins can read all
       allow read: if isSignedIn() && (
         isOwner(resource.data.userId)
         || isQuizOwner(resource.data.quizId)
-      );
+      ) || isAdmin();
 
       // Authenticated users create attempts for themselves; guests can also create
       allow create: if (isSignedIn() && request.resource.data.userId == request.auth.uid)
@@ -135,11 +150,11 @@ service cloud.firestore {
       allow update: if (isSignedIn() && isOwner(resource.data.userId))
         || resource.data.userId.matches('guest_.*');
 
-      // Attempt owner or quiz owner can delete
+      // Attempt owner or quiz owner can delete, or admins can delete any attempt
       allow delete: if isSignedIn() && (
         isOwner(resource.data.userId)
         || isQuizOwner(resource.data.quizId)
-      );
+      ) || isAdmin();
     }
 
     // ============================================================================
