@@ -10,6 +10,7 @@ import com.example.androidapp.domain.model.Choice
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.model.UserRole
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 

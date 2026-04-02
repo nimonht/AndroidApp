@@ -198,7 +198,7 @@ fun AdminQuizCard(
                                 }
                             )
 
-                            Divider()
+                            HorizontalDivider()
                         }
 
                         // Restore (if deleted)
@@ -214,7 +214,7 @@ fun AdminQuizCard(
                                 }
                             )
 
-                            Divider()
+                            HorizontalDivider()
                         }
 
                         // Delete

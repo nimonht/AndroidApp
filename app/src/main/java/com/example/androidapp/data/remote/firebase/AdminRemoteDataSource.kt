@@ -286,7 +286,7 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
                 doc.toObject(QuizDto::class.java)
             }?.filter { quiz ->
                 quiz.title.contains(query, ignoreCase = true) ||
-                        quiz.description.contains(query, ignoreCase = true) ||
+                        (quiz.description?.contains(query, ignoreCase = true) == true) ||
                         quiz.authorName.contains(query, ignoreCase = true)
             } ?: emptyList()
             trySend(quizzes)

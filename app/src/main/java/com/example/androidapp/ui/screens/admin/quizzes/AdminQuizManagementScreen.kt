@@ -184,7 +184,6 @@ private fun QuizManagementContent(
             value = searchQuery,
             onValueChange = onSearchQueryChanged,
             label = stringResource(R.string.admin_search_quizzes),
-            placeholder = stringResource(R.string.admin_search_quizzes_placeholder),
             modifier = Modifier.fillMaxWidth()
         )
 

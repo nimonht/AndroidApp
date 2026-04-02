@@ -201,7 +201,6 @@ private fun UserManagementContent(
             value = searchQuery,
             onValueChange = onSearchQueryChanged,
             label = stringResource(R.string.admin_search_users),
-            placeholder = stringResource(R.string.admin_search_users_placeholder),
             modifier = Modifier.fillMaxWidth()
         )
 
