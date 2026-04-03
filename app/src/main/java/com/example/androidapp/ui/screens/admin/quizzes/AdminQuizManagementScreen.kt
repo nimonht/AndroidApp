@@ -44,6 +44,7 @@ fun AdminQuizManagementScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var quizToDelete by remember { mutableStateOf<Quiz?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
@@ -69,6 +70,7 @@ fun AdminQuizManagementScreen(
                 )
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         Box(
@@ -156,7 +158,7 @@ fun AdminQuizManagementScreen(
     // Action error snackbar
     uiState.actionError?.let { error ->
         LaunchedEffect(error) {
-            kotlinx.coroutines.delay(3000)
+            snackbarHostState.showSnackbar(error)
             viewModel.clearActionError()
         }
     }

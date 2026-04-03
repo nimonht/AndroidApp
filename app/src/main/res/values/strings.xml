@@ -496,6 +496,18 @@
     <string name="admin_reports_last_30_days">30 ngày qua</string>
     <string name="admin_reports_export">Xuất báo cáo</string>
 
+    <!-- Admin Insight/Report Descriptions -->
+    <string name="admin_insight_avg_attempts_desc">Trung bình số lượt chơi trên mỗi quiz</string>
+    <string name="admin_insight_active_user_desc">Tỷ lệ người dùng hoạt động trong 30 ngày qua</string>
+    <string name="admin_insight_public_quiz_desc">Tỷ lệ quiz công khai so với tổng quiz</string>
+    <string name="admin_action_manage_users_desc">Quản lý tài khoản, vai trò và trạng thái người dùng</string>
+    <string name="admin_action_manage_quizzes_desc">Quản lý quiz, xuất bản và xóa nội dung</string>
+    <string name="admin_action_view_reports_desc">Xem báo cáo chi tiết và phân tích hệ thống</string>
+    <string name="admin_reports_active_user_desc">Tỷ lệ người dùng hoạt động trong 30 ngày qua. Cho biết mức độ tương tác của cộng đồng người dùng.</string>
+    <string name="admin_reports_public_quiz_desc">Tỷ lệ quiz công khai so với tổng số quiz. Tỷ lệ cao cho thấy nhiều nội dung được chia sẻ công khai.</string>
+    <string name="admin_reports_avg_attempts_desc">Trung bình số lượt chơi trên mỗi quiz. Chỉ số này phản ánh mức độ phổ biến của các quiz.</string>
+    <string name="admin_reports_deleted_quizzes_desc">Số quiz đã bị xóa mềm. Có thể khôi phục hoặc xóa vĩnh viễn từ quản lý quiz.</string>
+
     <!-- Admin Errors -->
     <string name="admin_error_unauthorized">Bạn không có quyền truy cập trang này</string>
     <string name="admin_error_load_failed">Không thể tải dữ liệu quản trị</string>

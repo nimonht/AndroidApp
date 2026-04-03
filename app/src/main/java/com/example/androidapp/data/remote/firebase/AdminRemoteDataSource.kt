@@ -4,7 +4,6 @@ import com.example.androidapp.data.remote.model.AttemptDto
 import com.example.androidapp.data.remote.model.QuizDto
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
@@ -93,7 +92,8 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
 
     /**
      * Permanently delete a user document and all associated data.
-     * This includes their quizzes, attempts, and contributions.
+     * This includes their quizzes (with questions/choices subcollections),
+     * attempts, and contributions.
      * Uses chunked batches to respect Firestore's 500-operation limit.
      */
     suspend fun deleteUserPermanently(userId: String) {
@@ -102,13 +102,37 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
             firestore.collection(FirestoreCollections.USERS).document(userId)
         )
 
-        // Collect user's quizzes
+        // Collect user's quizzes and their subcollections (questions/choices)
         val quizzes = firestore.collection(FirestoreCollections.QUIZZES)
             .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
             .get()
             .await()
         quizzes.documents.forEach { quizDoc ->
-            refsToDelete.add(quizDoc.reference)
+            val quizRef = quizDoc.reference
+
+            // Collect all questions for this quiz
+            val questionsSnapshot = quizRef
+                .collection(FirestoreCollections.QUESTIONS)
+                .get()
+                .await()
+
+            questionsSnapshot.documents.forEach { questionDoc ->
+                val questionRef = questionDoc.reference
+
+                // Collect all choices for this question
+                val choicesSnapshot = questionRef
+                    .collection(FirestoreCollections.CHOICES)
+                    .get()
+                    .await()
+
+                choicesSnapshot.documents.forEach { choiceDoc ->
+                    refsToDelete.add(choiceDoc.reference)
+                }
+
+                refsToDelete.add(questionRef)
+            }
+
+            refsToDelete.add(quizRef)
         }
 
         // Collect user's attempts
@@ -420,10 +444,13 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
 
     /**
      * Get count of soft-deleted quizzes in recycle bin.
+     * Uses a sentinel timestamp to match documents with a real deletedAt value.
      */
     suspend fun getDeletedQuizzesCount(): Int {
+        val epoch = Timestamp(java.util.Date(0))
         return firestore.collection(FirestoreCollections.QUIZZES)
-            .whereNotEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
+            .whereGreaterThan(FirestoreCollections.Fields.DELETED_AT, epoch)
+            .orderBy(FirestoreCollections.Fields.DELETED_AT)
             .get()
             .await()
             .size()

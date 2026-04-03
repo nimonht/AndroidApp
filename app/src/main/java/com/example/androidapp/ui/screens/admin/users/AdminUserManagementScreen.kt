@@ -44,6 +44,7 @@ fun AdminUserManagementScreen(
 
     var userToDelete by remember { mutableStateOf<User?>(null) }
     var userToBanUnban by remember { mutableStateOf<User?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
@@ -69,6 +70,7 @@ fun AdminUserManagementScreen(
                 )
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         Box(
@@ -176,7 +178,7 @@ fun AdminUserManagementScreen(
     // Action error snackbar
     uiState.actionError?.let { error ->
         LaunchedEffect(error) {
-            kotlinx.coroutines.delay(3000)
+            snackbarHostState.showSnackbar(error)
             viewModel.clearActionError()
         }
     }

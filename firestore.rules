@@ -19,10 +19,11 @@ service cloud.firestore {
 
     // Check if user is an administrator (and not soft-deleted/banned)
     function isAdmin() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
       return isSignedIn() &&
-        userDoc.role == 'admin' &&
-        (!('deletedAt' in userDoc) || userDoc.deletedAt == null);
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
+        (!('deletedAt' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deletedAt == null);
     }
 
     // Get quiz data from database
@@ -97,13 +98,13 @@ service cloud.firestore {
 
       // Only the owner can update; ownerId is immutable
       // Or anyone can update IF they are ONLY incrementing the attemptCount by 1
-      // Or admins can update any quiz
+      // Or admins can update any quiz but ownerId must remain immutable
       allow update: if (isOwner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId)
         || (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptCount'])
           && request.resource.data.attemptCount == resource.data.attemptCount + 1
         )
-        || isAdmin();
+        || (isAdmin() && request.resource.data.ownerId == resource.data.ownerId);
 
       // Only the owner can delete, or admins can delete any quiz
       allow delete: if isOwner(resource.data.ownerId) || isAdmin();

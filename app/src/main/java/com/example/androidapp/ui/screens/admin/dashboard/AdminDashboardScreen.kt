@@ -205,19 +205,19 @@ private fun DashboardContent(
             InsightCard(
                 title = stringResource(R.string.admin_stat_avg_attempts_per_quiz),
                 value = String.format("%.1f", stats.averageAttemptsPerQuiz),
-                description = "Trung bình số lượt chơi trên mỗi quiz"
+                description = stringResource(R.string.admin_insight_avg_attempts_desc)
             )
 
             InsightCard(
                 title = stringResource(R.string.admin_stat_active_user_percentage),
                 value = String.format("%.1f%%", stats.activeUserPercentage),
-                description = "Tỷ lệ người dùng hoạt động trong 30 ngày qua"
+                description = stringResource(R.string.admin_insight_active_user_desc)
             )
 
             InsightCard(
                 title = stringResource(R.string.admin_stat_public_quiz_percentage),
                 value = String.format("%.1f%%", stats.publicQuizPercentage),
-                description = "Tỷ lệ quiz công khai so với tổng quiz"
+                description = stringResource(R.string.admin_insight_public_quiz_desc)
             )
         }
 
@@ -235,21 +235,21 @@ private fun DashboardContent(
         ) {
             QuickActionCard(
                 title = stringResource(R.string.admin_manage_users),
-                description = "Quản lý tài khoản, vai trò và trạng thái người dùng",
+                description = stringResource(R.string.admin_action_manage_users_desc),
                 icon = Icons.Default.People,
                 onClick = onNavigateToUsers
             )
 
             QuickActionCard(
                 title = stringResource(R.string.admin_manage_quizzes),
-                description = "Quản lý quiz, xuất bản và xóa nội dung",
+                description = stringResource(R.string.admin_action_manage_quizzes_desc),
                 icon = Icons.Default.Quiz,
                 onClick = onNavigateToQuizzes
             )
 
             QuickActionCard(
                 title = stringResource(R.string.admin_view_reports),
-                description = "Xem báo cáo chi tiết và phân tích hệ thống",
+                description = stringResource(R.string.admin_action_view_reports_desc),
                 icon = Icons.Default.Assessment,
                 onClick = onNavigateToReports
             )

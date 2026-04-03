@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +25,7 @@ class AdminUserManagementViewModel(
     val uiState: StateFlow<AdminUserManagementUiState> = _uiState.asStateFlow()
 
     private var allUsers: List<User> = emptyList()
+    private var loadUsersJob: Job? = null
 
     init {
         loadUsers()
@@ -31,9 +33,11 @@ class AdminUserManagementViewModel(
 
     /**
      * Load all users from the repository.
+     * Cancels any previous collection to avoid multiple active listeners.
      */
     fun loadUsers() {
-        viewModelScope.launch {
+        loadUsersJob?.cancel()
+        loadUsersJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             adminRepository.getAllUsers()

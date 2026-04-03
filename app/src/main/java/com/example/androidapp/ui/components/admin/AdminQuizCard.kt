@@ -12,12 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.androidapp.R
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
@@ -128,7 +130,8 @@ fun AdminQuizCard(
                                 }
                             )
                             Text(
-                                text = if (quiz.isPublic) "Công khai" else "Riêng tư",
+                                text = if (quiz.isPublic) stringResource(R.string.admin_quiz_status_public)
+                                       else stringResource(R.string.admin_quiz_status_private),
                                 fontFamily = InterFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp,
@@ -148,7 +151,7 @@ fun AdminQuizCard(
                             color = MaterialTheme.colorScheme.errorContainer
                         ) {
                             Text(
-                                text = "Đã xóa",
+                                text = stringResource(R.string.admin_quiz_status_deleted),
                                 fontFamily = InterFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp,
@@ -173,7 +176,7 @@ fun AdminQuizCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Thao tác",
+                            contentDescription = stringResource(R.string.admin_quiz_actions),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -185,7 +188,12 @@ fun AdminQuizCard(
                         if (quiz.deletedAt == null) {
                             // Publish/Unpublish
                             DropdownMenuItem(
-                                text = { Text(if (quiz.isPublic) "Hủy công khai" else "Công khai") },
+                                text = {
+                                    Text(
+                                        if (quiz.isPublic) stringResource(R.string.admin_quiz_unpublish)
+                                        else stringResource(R.string.admin_quiz_publish)
+                                    )
+                                },
                                 onClick = {
                                     onPublishToggle()
                                     showMenu = false
@@ -204,7 +212,7 @@ fun AdminQuizCard(
                         // Restore (if deleted)
                         if (quiz.deletedAt != null && onRestore != null) {
                             DropdownMenuItem(
-                                text = { Text("Khôi phục") },
+                                text = { Text(stringResource(R.string.admin_quiz_restore)) },
                                 onClick = {
                                     onRestore()
                                     showMenu = false
@@ -221,7 +229,8 @@ fun AdminQuizCard(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    if (quiz.deletedAt != null) "Xóa vĩnh viễn" else "Xóa",
+                                    if (quiz.deletedAt != null) stringResource(R.string.admin_quiz_delete_permanent)
+                                    else stringResource(R.string.delete),
                                     color = MaterialTheme.colorScheme.error
                                 )
                             },

@@ -8,9 +8,9 @@ import com.example.androidapp.domain.model.SystemStats
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
@@ -29,10 +29,6 @@ class AdminRepositoryImpl(
     override fun getAllUsers(): Flow<List<User>> {
         return adminRemoteDataSource.getAllUsers()
             .map { userDtos -> userDtos.map { it.toDomain() } }
-            .catch { e ->
-                // Log error and emit empty list as fallback
-                emit(emptyList())
-            }
     }
 
     override suspend fun updateUserRole(userId: String, newRole: UserRole): Result<Unit> {
@@ -76,10 +72,6 @@ class AdminRepositoryImpl(
     override fun getAllQuizzes(includeDeleted: Boolean): Flow<List<Quiz>> {
         return adminRemoteDataSource.getAllQuizzes(includeDeleted)
             .map { quizDtos -> quizDtos.map { it.toDomain() } }
-            .catch { e ->
-                // Log error and emit empty list as fallback
-                emit(emptyList())
-            }
     }
 
     override suspend fun deleteQuizPermanently(quizId: String): Result<Unit> {
@@ -123,10 +115,6 @@ class AdminRepositoryImpl(
     override fun getAllAttempts(): Flow<List<Attempt>> {
         return adminRemoteDataSource.getAllAttempts()
             .map { attemptDtos -> attemptDtos.map { it.toDomain() } }
-            .catch { e ->
-                // Log error and emit empty list as fallback
-                emit(emptyList())
-            }
     }
 
     override suspend fun deleteAttempt(attemptId: String): Result<Unit> {
@@ -141,40 +129,34 @@ class AdminRepositoryImpl(
     // ========== STATISTICS ==========
 
     override fun getSystemStats(): Flow<SystemStats> = flow {
-        try {
-            // Fetch all statistics in parallel
-            val totalUsers = adminRemoteDataSource.getTotalUsersCount()
-            val totalQuizzes = adminRemoteDataSource.getTotalQuizzesCount()
-            val totalAttempts = adminRemoteDataSource.getTotalAttemptsCount()
-            val totalQuestionsInPool = adminRemoteDataSource.getTotalQuestionsInPoolCount()
-            val activeUsers = adminRemoteDataSource.getActiveUsersCount()
-            val publicQuizzes = adminRemoteDataSource.getPublicQuizzesCount()
-            val privateQuizzes = adminRemoteDataSource.getPrivateQuizzesCount()
-            val draftQuizzes = adminRemoteDataSource.getDraftQuizzesCount()
-            val deletedQuizzes = adminRemoteDataSource.getDeletedQuizzesCount()
-            val adminUsers = adminRemoteDataSource.getAdminUsersCount()
+        // Fetch all statistics in parallel using coroutineScope + async
+        val stats = coroutineScope {
+            val totalUsers = async { adminRemoteDataSource.getTotalUsersCount() }
+            val totalQuizzes = async { adminRemoteDataSource.getTotalQuizzesCount() }
+            val totalAttempts = async { adminRemoteDataSource.getTotalAttemptsCount() }
+            val totalQuestionsInPool = async { adminRemoteDataSource.getTotalQuestionsInPoolCount() }
+            val activeUsers = async { adminRemoteDataSource.getActiveUsersCount() }
+            val publicQuizzes = async { adminRemoteDataSource.getPublicQuizzesCount() }
+            val privateQuizzes = async { adminRemoteDataSource.getPrivateQuizzesCount() }
+            val draftQuizzes = async { adminRemoteDataSource.getDraftQuizzesCount() }
+            val deletedQuizzes = async { adminRemoteDataSource.getDeletedQuizzesCount() }
+            val adminUsers = async { adminRemoteDataSource.getAdminUsersCount() }
 
-            val stats = SystemStats(
-                totalUsers = totalUsers,
-                totalQuizzes = totalQuizzes,
-                totalAttempts = totalAttempts,
-                totalQuestionsInPool = totalQuestionsInPool,
-                activeUsers = activeUsers,
-                publicQuizzes = publicQuizzes,
-                privateQuizzes = privateQuizzes,
-                draftQuizzes = draftQuizzes,
-                deletedQuizzes = deletedQuizzes,
-                adminUsers = adminUsers
+            SystemStats(
+                totalUsers = totalUsers.await(),
+                totalQuizzes = totalQuizzes.await(),
+                totalAttempts = totalAttempts.await(),
+                totalQuestionsInPool = totalQuestionsInPool.await(),
+                activeUsers = activeUsers.await(),
+                publicQuizzes = publicQuizzes.await(),
+                privateQuizzes = privateQuizzes.await(),
+                draftQuizzes = draftQuizzes.await(),
+                deletedQuizzes = deletedQuizzes.await(),
+                adminUsers = adminUsers.await()
             )
-
-            emit(stats)
-        } catch (e: Exception) {
-            // Emit default stats on error
-            emit(SystemStats())
         }
-    }.catch { e ->
-        // Fallback to empty stats
-        emit(SystemStats())
+
+        emit(stats)
     }
 
     // ========== SEARCH ==========
@@ -185,9 +167,6 @@ class AdminRepositoryImpl(
         } else {
             adminRemoteDataSource.searchUsers(query)
                 .map { userDtos -> userDtos.map { it.toDomain() } }
-                .catch { e ->
-                    emit(emptyList())
-                }
         }
     }
 
@@ -197,9 +176,6 @@ class AdminRepositoryImpl(
         } else {
             adminRemoteDataSource.searchQuizzes(query, includeDeleted)
                 .map { quizDtos -> quizDtos.map { it.toDomain() } }
-                .catch { e ->
-                    emit(emptyList())
-                }
         }
     }
 }

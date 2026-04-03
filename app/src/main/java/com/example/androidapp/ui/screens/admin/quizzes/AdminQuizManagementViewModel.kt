@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AdminRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +24,7 @@ class AdminQuizManagementViewModel(
     val uiState: StateFlow<AdminQuizManagementUiState> = _uiState.asStateFlow()
 
     private var allQuizzes: List<Quiz> = emptyList()
+    private var loadQuizzesJob: Job? = null
 
     init {
         loadQuizzes()
@@ -30,9 +32,11 @@ class AdminQuizManagementViewModel(
 
     /**
      * Load all quizzes from the repository (including deleted for admin management).
+     * Cancels any previous collection to avoid multiple active listeners.
      */
     fun loadQuizzes() {
-        viewModelScope.launch {
+        loadQuizzesJob?.cancel()
+        loadQuizzesJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
             adminRepository.getAllQuizzes(includeDeleted = true)

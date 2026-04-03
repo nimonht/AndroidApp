@@ -142,8 +142,7 @@ private fun ReportsContent(
             ReportCard(
                 title = stringResource(R.string.admin_stat_active_user_percentage),
                 value = String.format("%.1f%%", stats.activeUserPercentage),
-                description = "Tỷ lệ người dùng hoạt động trong 30 ngày qua. " +
-                    "Cho biết mức độ tương tác của cộng đồng người dùng.",
+                description = stringResource(R.string.admin_reports_active_user_desc),
                 icon = Icons.Default.TrendingUp,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -204,8 +203,7 @@ private fun ReportsContent(
             ReportCard(
                 title = stringResource(R.string.admin_stat_public_quiz_percentage),
                 value = String.format("%.1f%%", stats.publicQuizPercentage),
-                description = "Tỷ lệ quiz công khai so với tổng số quiz. " +
-                    "Tỷ lệ cao cho thấy nhiều nội dung được chia sẻ công khai.",
+                description = stringResource(R.string.admin_reports_public_quiz_desc),
                 icon = Icons.Default.BarChart,
                 color = MaterialTheme.colorScheme.secondary
             )
@@ -242,8 +240,7 @@ private fun ReportsContent(
             ReportCard(
                 title = stringResource(R.string.admin_stat_avg_attempts_per_quiz),
                 value = String.format("%.1f", stats.averageAttemptsPerQuiz),
-                description = "Trung bình số lượt chơi trên mỗi quiz. " +
-                    "Chỉ số này phản ánh mức độ phổ biến của các quiz.",
+                description = stringResource(R.string.admin_reports_avg_attempts_desc),
                 icon = Icons.Default.Analytics,
                 color = MaterialTheme.colorScheme.tertiary
             )
@@ -273,8 +270,7 @@ private fun ReportsContent(
             ReportCard(
                 title = stringResource(R.string.admin_stat_deleted_quizzes),
                 value = stats.deletedQuizzes.toString(),
-                description = "Số quiz đã bị xóa mềm. " +
-                    "Có thể khôi phục hoặc xóa vĩnh viễn từ quản lý quiz.",
+                description = stringResource(R.string.admin_reports_deleted_quizzes_desc),
                 icon = Icons.Default.DeleteOutline,
                 color = MaterialTheme.colorScheme.error
             )
