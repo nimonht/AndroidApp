@@ -5,6 +5,7 @@ import com.example.androidapp.data.remote.model.QuizDto
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -17,7 +18,10 @@ import kotlinx.coroutines.channels.awaitClose
  * Provides elevated access to Firestore collections for administrative tasks.
  * All methods assume the caller has been authorized as an admin.
  */
-class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
+class AdminRemoteDataSource(
+    private val firestore: FirebaseFirestore,
+    private val functions: FirebaseFunctions
+) {
 
     companion object {
         /** Firestore batch operation limit. */
@@ -110,6 +114,15 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
         quizzes.documents.forEach { quizDoc ->
             val quizRef = quizDoc.reference
 
+            // Collect share code document if quiz has one
+            val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
+            if (!shareCode.isNullOrBlank()) {
+                refsToDelete.add(
+                    firestore.collection(FirestoreCollections.SHARE_CODES)
+                        .document(shareCode)
+                )
+            }
+
             // Collect all questions for this quiz
             val questionsSnapshot = quizRef
                 .collection(FirestoreCollections.QUESTIONS)
@@ -149,6 +162,17 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
             val batch = firestore.batch()
             chunk.forEach { ref -> batch.delete(ref) }
             batch.commit().await()
+        }
+
+        // Delete user from Firebase Authentication via Cloud Function
+        try {
+            functions.getHttpsCallable("deleteUserAuth")
+                .call(hashMapOf("userId" to userId))
+                .await()
+        } catch (e: Exception) {
+            // Log but do not throw -- Firestore data is already deleted.
+            // The Auth record may need manual cleanup if this fails.
+            android.util.Log.e("AdminRemoteDataSource", "Failed to delete user from Auth: ${e.message}")
         }
     }
 
@@ -211,13 +235,21 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
      */
     suspend fun deleteQuizPermanently(quizId: String) {
         // Collect all document references to delete
-        val refsToDelete = mutableListOf(
-            firestore.collection(FirestoreCollections.QUIZZES).document(quizId)
-        )
+        val quizRef = firestore.collection(FirestoreCollections.QUIZZES).document(quizId)
+        val refsToDelete = mutableListOf(quizRef)
+
+        // Read quiz document to retrieve its share code
+        val quizDoc = quizRef.get().await()
+        val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
+        if (!shareCode.isNullOrBlank()) {
+            refsToDelete.add(
+                firestore.collection(FirestoreCollections.SHARE_CODES)
+                    .document(shareCode)
+            )
+        }
 
         // Collect all questions and their choices
-        val questions = firestore.collection(FirestoreCollections.QUIZZES)
-            .document(quizId)
+        val questions = quizRef
             .collection(FirestoreCollections.QUESTIONS)
             .get()
             .await()
@@ -234,6 +266,15 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
             choices.documents.forEach { choiceDoc ->
                 refsToDelete.add(choiceDoc.reference)
             }
+        }
+
+        // Collect all attempts for this quiz
+        val attempts = firestore.collection(FirestoreCollections.ATTEMPTS)
+            .whereEqualTo(FirestoreCollections.Fields.QUIZ_ID, quizId)
+            .get()
+            .await()
+        attempts.documents.forEach { attemptDoc ->
+            refsToDelete.add(attemptDoc.reference)
         }
 
         // Commit in chunks of 500 (Firestore batch limit)

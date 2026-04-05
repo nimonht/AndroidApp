@@ -8,7 +8,6 @@ import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.QuestionShuffler
-import com.example.androidapp.domain.util.ScoreCalculator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -194,7 +193,7 @@ class TakeQuizViewModel(
             _uiState.value = active.copy(isSubmitting = true)
             timerJob?.cancel()
 
-            val score = calculateScore()
+            val scoreBreakdown = calculatePointScores()
             val answerMap = answers.mapValues { (_, v) -> v.toList() }
             val userId = authRepository.getCurrentUser()?.id ?: "guest_${UUID.randomUUID()}"
 
@@ -202,8 +201,8 @@ class TakeQuizViewModel(
                 id = attemptId,
                 userId = userId,
                 quizId = quizId,
-                score = score,
-                totalQuestions = questions.size,
+                score = scoreBreakdown.earnedScore,
+                totalQuestions = scoreBreakdown.maxScore,
                 answers = answerMap,
                 startTimeMillis = startTimeMillis,
                 endTimeMillis = System.currentTimeMillis(),
@@ -221,12 +220,20 @@ class TakeQuizViewModel(
         }
     }
 
-    private fun calculateScore(): Int {
-        val correctAnswers: Map<String, Set<String>> = questions.associate { question ->
-            question.id to question.choices.filter { it.isCorrect }.map { it.id }.toSet()
+    private data class ScoreBreakdown(val earnedScore: Int, val maxScore: Int)
+
+    private fun calculatePointScores(): ScoreBreakdown {
+        var earned = 0
+        var max = 0
+        for (question in questions) {
+            max += question.points
+            val correctIds = question.choices.filter { it.isCorrect }.map { it.id }.toSet()
+            val userIds = answers[question.id]?.toSet() ?: emptySet()
+            if (correctIds == userIds) {
+                earned += question.points
+            }
         }
-        val userAnswers: Map<String, Set<String>> = answers.mapValues { (_, v) -> v.toSet() }
-        return ScoreCalculator.calculateCorrectCount(correctAnswers, userAnswers)
+        return ScoreBreakdown(earnedScore = earned, maxScore = max)
     }
 
     private fun emitActiveState() {

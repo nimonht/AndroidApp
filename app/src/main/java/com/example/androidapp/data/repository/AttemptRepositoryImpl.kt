@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -30,6 +31,14 @@ class AttemptRepositoryImpl(
     override fun getAttemptsByUser(userId: String): Flow<List<Attempt>> {
         return attemptDao.getAttemptsByUser(userId).map { entities ->
             entities.map { it.toDomain() }
+        }.onStart {
+            // Refresh attempts from Firebase in the background so that
+            // history is available when logging in on a new device.
+            try {
+                syncManager.downloadAttempts(userId)
+            } catch (_: Exception) {
+                // Silently fail; local data is still emitted by the Flow
+            }
         }
     }
 

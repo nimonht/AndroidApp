@@ -69,6 +69,13 @@ fun QuizzezNavHost(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Normalize the route pattern for BottomNavBar so the Search tab stays
+    // selected even when the route includes optional query parameters.
+    val bottomBarRoute = when {
+        currentRoute?.startsWith("search") == true -> Routes.SEARCH
+        else -> currentRoute
+    }
+
     val currentUser by LocalAppContainer.authRepository.currentUser
         .collectAsStateWithLifecycle(initialValue = null)
 
@@ -89,7 +96,7 @@ fun QuizzezNavHost(
             // Show bottom navigation bar only on main screens
             if (shouldShowBottomBar(currentRoute)) {
                 BottomNavBar(
-                    currentRoute = currentRoute,
+                    currentRoute = bottomBarRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(Routes.HOME) { saveState = true }
@@ -132,15 +139,28 @@ fun QuizzezNavHost(
                     },
                     onNavigateToEditQuiz = { quizId ->
                         navController.navigate(Routes.quizEdit(quizId))
+                    },
+                    onNavigateToSearchWithTag = { tag ->
+                        navController.navigate(Routes.searchWithTag(tag))
                     }
                 )
             }
 
-            composable(Routes.SEARCH) {
+            composable(
+                route = Routes.SEARCH_WITH_TAG,
+                arguments = listOf(
+                    navArgument(Args.TAG) {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { backStackEntry ->
+                val initialTag = backStackEntry.arguments?.getString(Args.TAG)
                 SearchScreen(
                     onNavigateToQuiz = { quizId ->
                         navController.navigate(Routes.quizDetail(quizId))
-                    }
+                    },
+                    initialTag = initialTag?.ifBlank { null }
                 )
             }
 
@@ -205,7 +225,8 @@ fun QuizzezNavHost(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
                     onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) },
-                    onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) }
+                    onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) },
+                    onTagClick = { tag -> navController.navigate(Routes.searchWithTag(tag)) }
                 )
             }
 
@@ -518,5 +539,5 @@ fun QuizzezNavHost(
  * Determines whether the bottom navigation bar should be visible for the current route.
  */
 private fun shouldShowBottomBar(currentRoute: String?): Boolean {
-    return currentRoute in listOf(Routes.HOME, Routes.SEARCH, Routes.PROFILE)
+    return currentRoute in listOf(Routes.HOME, Routes.SEARCH_WITH_TAG, Routes.PROFILE)
 }

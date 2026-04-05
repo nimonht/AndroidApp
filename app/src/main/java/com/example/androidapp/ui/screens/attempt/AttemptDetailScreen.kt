@@ -190,7 +190,7 @@ private fun AttemptDetailContent(
         ) {
             StatColumn(
                 icon = Icons.Default.Check,
-                value = state.attempt.score.toString(),
+                value = state.correctCount.toString(),
                 label = stringResource(R.string.quiz_result_stat_correct),
                 modifier = Modifier.weight(1f)
             )
@@ -200,7 +200,7 @@ private fun AttemptDetailContent(
             )
             StatColumn(
                 icon = Icons.Default.Close,
-                value = (state.attempt.totalQuestions - state.attempt.score).toString(),
+                value = state.wrongCount.toString(),
                 label = stringResource(R.string.quiz_result_stat_wrong),
                 modifier = Modifier.weight(1f)
             )

@@ -13,6 +13,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -51,6 +52,7 @@ import androidx.compose.foundation.layout.FlowRow
 @Composable
 fun SearchScreen(
     onNavigateToQuiz: (String) -> Unit,
+    initialTag: String? = null,
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -62,6 +64,14 @@ fun SearchScreen(
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Khi nguoi dung dieu huong den man hinh Tim kiem voi tag cho truoc,
+    // tu dong kich hoat tim kiem theo tag do.
+    LaunchedEffect(initialTag) {
+        if (!initialTag.isNullOrBlank()) {
+            viewModel.onEvent(SearchEvent.OnTagFilterFromNavigation(initialTag))
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize(),

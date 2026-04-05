@@ -65,6 +65,7 @@ fun QuizDetailScreen(
     onNavigateBack: () -> Unit,
     onStartQuiz: () -> Unit,
     onEditQuiz: (String) -> Unit = {},
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -211,6 +212,7 @@ fun QuizDetailScreen(
             is QuizDetailUiState.Success -> QuizDetailContent(
                 quiz = state.quiz,
                 questions = state.questions,
+                onTagClick = onTagClick,
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -237,6 +239,7 @@ fun QuizDetailScreen(
 private fun QuizDetailContent(
     quiz: Quiz,
     questions: List<Question>,
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -317,7 +320,7 @@ private fun QuizDetailContent(
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(quiz.tags) { tag ->
                             SuggestionChip(
-                                onClick = { },
+                                onClick = { onTagClick(tag) },
                                 label = { Text(tag) }
                             )
                         }

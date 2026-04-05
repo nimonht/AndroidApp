@@ -291,6 +291,8 @@
     <string name="create_question_move_down">Di chuyển xuống</string>
     <string name="create_question_remove">Xóa câu hỏi</string>
     <string name="create_question_points_label">Điểm: %1$d</string>
+    <string name="create_question_multi_select">Nhiều đáp án đúng</string>
+    <string name="create_question_multi_select_desc">Cho phép chọn nhiều đáp án đúng cho câu hỏi này</string>
     <string name="create_last_saved">Lưu lúc %1$s</string>
 
     <!-- Share to Pool -->

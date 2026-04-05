@@ -68,6 +68,33 @@ interface QuizDao {
     fun getPublicQuizzes(): Flow<List<QuizEntity>>
 
     /**
+     * Get all public quizzes that are not deleted (one-time, non-reactive).
+     * Used for comparing local cache against remote set during stale quiz cleanup.
+     */
+    @Query("SELECT * FROM quizzes WHERE is_public = 1 AND deleted_at IS NULL")
+    suspend fun getPublicQuizzesOnce(): List<QuizEntity>
+
+    /**
+     * Get all cached quizzes not owned by the given user that are not deleted.
+     * Used to identify stale cached quizzes from other users during sync cleanup.
+     */
+    @Query("SELECT * FROM quizzes WHERE owner_id != :userId AND deleted_at IS NULL")
+    suspend fun getNonOwnedQuizzes(userId: String): List<QuizEntity>
+
+    /**
+     * Get all quizzes owned by a specific user that are not deleted (one-time, non-reactive).
+     * Used for comparing local cache against remote set during stale quiz cleanup.
+     */
+    @Query("SELECT * FROM quizzes WHERE owner_id = :userId AND deleted_at IS NULL")
+    suspend fun getQuizzesByOwnerOnce(userId: String): List<QuizEntity>
+
+    /**
+     * Permanently delete a quiz by its ID.
+     */
+    @Query("DELETE FROM quizzes WHERE id = :quizId")
+    suspend fun deleteQuizById(quizId: String)
+
+    /**
      * Get deleted quizzes (recycle bin) for a user.
      */
     @Query(

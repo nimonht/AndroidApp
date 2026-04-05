@@ -295,7 +295,7 @@ class QuizRepositoryImpl(
         ioScope.launch {
             if (!syncManager.isSyncAllowed()) return@launch
             refreshMyQuizzes(userId)
-            refreshPublicQuizzes()
+            refreshPublicQuizzes(currentUserId = userId)
         }
     }
 
@@ -303,23 +303,60 @@ class QuizRepositoryImpl(
         if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
+            val remoteQuizIds = dtos.map { it.id }.toSet()
+
             dtos.forEach { dto ->
                 val quiz = dto.toDomain()
                 quizDao.insertQuiz(quiz.toEntity())
                 refreshQuestionsAndChoices(quiz.id)
             }
+
+            // Clean up stale local quizzes owned by this user that no longer exist on remote.
+            // Only clean quizzes that are NOT pending local sync (to avoid deleting locally-created drafts).
+            val localMyQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
+            val staleQuizzes = localMyQuizzes.filter { local ->
+                local.id !in remoteQuizIds && local.syncStatus != "PENDING"
+            }
+            staleQuizzes.forEach { staleQuiz ->
+                val questions = questionDao.getQuestionsByQuizIdOnce(staleQuiz.id)
+                questions.forEach { question ->
+                    choiceDao.deleteChoicesByQuestionId(question.id)
+                    questionDao.deleteQuestion(question)
+                }
+                quizDao.deleteQuiz(staleQuiz)
+            }
         } catch (_: Exception) {
         }
     }
 
-    private suspend fun refreshPublicQuizzes() {
+    private suspend fun refreshPublicQuizzes(currentUserId: String? = null) {
         if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getPublicQuizzes().first()
+            val remoteQuizIds = dtos.map { it.id }.toSet()
+
             dtos.forEach { dto ->
                 val quiz = dto.toDomain()
                 quizDao.insertQuiz(quiz.toEntity())
                 refreshQuestionsAndChoices(quiz.id)
+            }
+
+            // Clean up stale local public quizzes that no longer exist on remote.
+            // Only remove quizzes not owned by the current user to preserve their own data.
+            if (currentUserId != null) {
+                val localPublicQuizzes = quizDao.getPublicQuizzesOnce()
+                val staleQuizzes = localPublicQuizzes.filter { local ->
+                    local.id !in remoteQuizIds && local.ownerId != currentUserId
+                }
+                staleQuizzes.forEach { staleQuiz ->
+                    // Clean up associated questions and choices (no FK cascade)
+                    val questions = questionDao.getQuestionsByQuizIdOnce(staleQuiz.id)
+                    questions.forEach { question ->
+                        choiceDao.deleteChoicesByQuestionId(question.id)
+                        questionDao.deleteQuestion(question)
+                    }
+                    quizDao.deleteQuiz(staleQuiz)
+                }
             }
         } catch (_: Exception) {
         }

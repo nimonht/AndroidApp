@@ -3,6 +3,7 @@ package com.example.androidapp.ui.screens.attempt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Attempt
+import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.QuizRepository
@@ -24,7 +25,11 @@ sealed class AttemptDetailUiState {
         val percentage: Int,
         val starRating: Int,
         val timeTakenMs: Long,
-        val timeTakenFormatted: String
+        val timeTakenFormatted: String,
+        /** Number of questions answered correctly. */
+        val correctCount: Int,
+        /** Number of questions answered incorrectly. */
+        val wrongCount: Int
     ) : AttemptDetailUiState()
 
     data class Error(val message: String) : AttemptDetailUiState()
@@ -74,14 +79,50 @@ class AttemptDetailViewModel(
             }
             val timeTakenFormatted = TimeFormatter.formatDuration(timeTakenMs / 1000L)
 
+            // Calculate actual correct/incorrect question counts from the answers map
+            val questions = quiz?.let { quizRepository.getQuestionsForQuizOnce(it.id) } ?: emptyList()
+            val counts = calculateQuestionCounts(questions, attempt)
+
             _uiState.value = AttemptDetailUiState.Success(
                 attempt = attempt,
                 quiz = quiz,
                 percentage = percentage,
                 starRating = starRating,
                 timeTakenMs = timeTakenMs,
-                timeTakenFormatted = timeTakenFormatted
+                timeTakenFormatted = timeTakenFormatted,
+                correctCount = counts.correct,
+                wrongCount = counts.wrong
             )
         }
     }
+
+    /**
+     * Counts how many questions were answered correctly vs incorrectly
+     * by comparing the user's answers against the correct choice IDs.
+     * Uses exact set equality (same algorithm as grading).
+     */
+    private fun calculateQuestionCounts(
+        questions: List<Question>,
+        attempt: Attempt
+    ): QuestionCounts {
+        if (questions.isEmpty()) {
+            // Fallback: if questions are unavailable (e.g., quiz deleted),
+            // we cannot compute counts. Return zeros.
+            return QuestionCounts(correct = 0, wrong = 0)
+        }
+        var correct = 0
+        for (question in questions) {
+            val correctIds = question.choices
+                .filter { it.isCorrect }
+                .map { it.id }
+                .toSet()
+            val userIds = attempt.answers[question.id]?.toSet() ?: emptySet()
+            if (correctIds == userIds) {
+                correct++
+            }
+        }
+        return QuestionCounts(correct = correct, wrong = questions.size - correct)
+    }
+
+    private data class QuestionCounts(val correct: Int, val wrong: Int)
 }

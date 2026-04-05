@@ -39,6 +39,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.functions
 
 class AppContainerImpl(override val context: Context) : AppContainer {
 
@@ -56,6 +58,14 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         Firebase.firestore.also { firestore ->
             if (BuildConfig.USE_FIREBASE_EMULATOR) {
                 firestore.useEmulator(emulatorHost, 8080)
+            }
+        }
+    }
+
+    private val firebaseFunctions: FirebaseFunctions by lazy {
+        Firebase.functions.also { functions ->
+            if (BuildConfig.USE_FIREBASE_EMULATOR) {
+                functions.useEmulator(emulatorHost, 5001)
             }
         }
     }
@@ -119,11 +129,11 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     private val adminRemoteDataSource: AdminRemoteDataSource by lazy {
-        AdminRemoteDataSource(firebaseFirestore)
+        AdminRemoteDataSource(firebaseFirestore, firebaseFunctions)
     }
 
     override val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(firebaseAuth, userDao, userRemoteDataSource)
+        AuthRepositoryImpl(firebaseAuth, userDao, userRemoteDataSource, firebaseFirestore)
     }
 
     override val quizRepository: QuizRepository by lazy {

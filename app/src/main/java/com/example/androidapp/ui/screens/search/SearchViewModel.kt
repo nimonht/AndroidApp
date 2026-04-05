@@ -76,6 +76,7 @@ class SearchViewModel(
             is SearchEvent.OnDiscoverTagToggle -> handleDiscoverTagToggle(event.tag)
             is SearchEvent.OnToggleViewMode -> handleToggleViewMode()
             is SearchEvent.OnSortOptionSelected -> handleSortOptionSelected(event.option)
+            is SearchEvent.OnTagFilterFromNavigation -> handleTagFilterFromNavigation(event.tag)
         }
     }
 
@@ -292,6 +293,21 @@ class SearchViewModel(
                     option
                 )
             )
+        }
+    }
+
+    /**
+     * Xu ly khi nguoi dung nhan vao tag tu man hinh khac (VD: QuizCard, QuizDetailScreen)
+     * de chuyen den man hinh Tim kiem voi ket qua da loc theo tag do.
+     *
+     * Dat query bang tag, luu vao lich su, va thuc hien tim kiem ngay lap tuc.
+     */
+    private fun handleTagFilterFromNavigation(tag: String) {
+        _uiState.update { it.copy(query = tag) }
+        _queryFlow.value = tag
+        viewModelScope.launch {
+            searchRepository.addRecentSearch(tag)
+            performSearch(tag)
         }
     }
 

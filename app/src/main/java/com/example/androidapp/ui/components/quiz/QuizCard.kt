@@ -37,6 +37,7 @@ import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 fun QuizCard(
     quiz: Quiz,
     onClick: () -> Unit,
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -88,7 +89,7 @@ fun QuizCard(
                         )
                     }
                 }
-                
+
                 // Attempt count badge floating on top right of the image
                 Surface(
                     shape = MaterialTheme.shapes.small,
@@ -171,7 +172,7 @@ fun QuizCard(
                     ) {
                         items(quiz.tags) { tag ->
                             SuggestionChip(
-                                onClick = { },
+                                onClick = { onTagClick(tag) },
                                 label = { Text(tag, fontSize = 12.sp) },
                                 colors = SuggestionChipDefaults.suggestionChipColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,

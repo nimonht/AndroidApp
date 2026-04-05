@@ -180,7 +180,9 @@ object QuizFormHelper {
                     Pair(choice, idx in draft.correctIndices)
                 }
             },
-            isCorrect = { (_, correct) -> correct }
+            isCorrect = { (_, correct) -> correct },
+            getQuestionContent = { draft -> draft.content },
+            getChoiceContent = { (choice, _) -> choice.content }
         )
 
         return if (result.isValid) null else result.errorMessage

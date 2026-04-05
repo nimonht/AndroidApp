@@ -339,6 +339,22 @@ class SyncManager(
                 }
             }
 
+            // Clean up stale local quizzes owned by this user that no longer exist on remote.
+            // Only clean quizzes that are NOT pending local sync (to avoid deleting locally-created drafts).
+            val remoteQuizIds = quizDtos.map { it.id }.toSet()
+            val localUserQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
+            val staleQuizzes = localUserQuizzes.filter { local ->
+                local.id !in remoteQuizIds && local.syncStatus != "PENDING"
+            }
+            staleQuizzes.forEach { staleQuiz ->
+                val questions = questionDao.getQuestionsByQuizIdOnce(staleQuiz.id)
+                questions.forEach { question ->
+                    choiceDao.deleteChoicesByQuestionId(question.id)
+                    questionDao.deleteQuestion(question)
+                }
+                quizDao.deleteQuiz(staleQuiz)
+            }
+
             _syncState.value = SyncState.IDLE
         } catch (e: Exception) {
             _syncState.value = SyncState.ERROR
@@ -348,14 +364,35 @@ class SyncManager(
     /**
      * Download (pull) public quizzes from Firebase and save to Room cache.
      */
-    suspend fun downloadPublicQuizzes() {
+    suspend fun downloadPublicQuizzes(currentUserId: String? = null) {
         if (!isSyncAllowed()) return
         try {
             val quizDtos = quizRemoteDataSource.getPublicQuizzes().first()
+            val remoteQuizIds = quizDtos.map { it.id }.toSet()
 
             quizDtos.forEach { quizDto ->
                 val quiz = quizDto.toDomain()
                 quizDao.insertQuiz(quiz.toEntity())
+            }
+
+            // Clean up stale local public quizzes that no longer exist on remote.
+            // Only remove quizzes not owned by the current user to preserve their own data.
+            if (currentUserId != null) {
+                val localPublicQuizzes = quizDao.getPublicQuizzesOnce()
+                val staleQuizzes = localPublicQuizzes.filter { local ->
+                    local.id !in remoteQuizIds && local.ownerId != currentUserId
+                }
+                staleQuizzes.forEach { staleQuiz ->
+                    // Clean up associated questions and choices (no FK cascade).
+                    // Attempts are in a separate table with no foreign key,
+                    // so they are intentionally preserved.
+                    val questions = questionDao.getQuestionsByQuizIdOnce(staleQuiz.id)
+                    questions.forEach { question ->
+                        choiceDao.deleteChoicesByQuestionId(question.id)
+                        questionDao.deleteQuestion(question)
+                    }
+                    quizDao.deleteQuiz(staleQuiz)
+                }
             }
         } catch (_: Exception) {
             // Silently fail for public quiz refresh
@@ -400,7 +437,7 @@ class SyncManager(
             // Then, download updates from Firebase
             downloadQuizzes(userId)
             downloadAttempts(userId)
-            downloadPublicQuizzes()
+            downloadPublicQuizzes(currentUserId = userId)
         }
     }
 }

@@ -38,6 +38,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -513,6 +514,32 @@ internal fun QuestionEditorCard(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
+            // ---- Multi-select toggle ----
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.create_question_multi_select),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = question.isMultiSelect,
+                    onCheckedChange = { isMulti ->
+                        // When switching from multi to single, keep only the first correct index
+                        val newIndices = if (!isMulti && question.correctIndices.size > 1) {
+                            setOf(question.correctIndices.first())
+                        } else {
+                            question.correctIndices
+                        }
+                        onQuestionChange(question.copy(isMultiSelect = isMulti, correctIndices = newIndices))
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // ---- Choices ----
             question.choices.forEachIndexed { cIdx, choice ->
                 Row(
@@ -520,20 +547,25 @@ internal fun QuestionEditorCard(
                     modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     // Tap to mark as correct answer
-                    RadioButton(
-                        selected = cIdx in question.correctIndices,
-                        onClick = {
-                            val newIndices = if (question.isMultiSelect) {
-                                if (cIdx in question.correctIndices)
+                    if (question.isMultiSelect) {
+                        Checkbox(
+                            checked = cIdx in question.correctIndices,
+                            onCheckedChange = {
+                                val newIndices = if (cIdx in question.correctIndices)
                                     question.correctIndices - cIdx
                                 else
                                     question.correctIndices + cIdx
-                            } else {
-                                setOf(cIdx)
+                                onQuestionChange(question.copy(correctIndices = newIndices))
                             }
-                            onQuestionChange(question.copy(correctIndices = newIndices))
-                        }
-                    )
+                        )
+                    } else {
+                        RadioButton(
+                            selected = cIdx in question.correctIndices,
+                            onClick = {
+                                onQuestionChange(question.copy(correctIndices = setOf(cIdx)))
+                            }
+                        )
+                    }
 
                     OutlinedTextField(
                         value = choice.content,

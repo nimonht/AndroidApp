@@ -23,19 +23,24 @@ object QuizValidator {
     /**
      * Validates the structure of a quiz based on strict business rules.
      * Rules: Minimum 1 question, each question must have 2-10 choices,
-     * and each question must have at least 1 correct choice.
+     * each question must have at least 1 correct choice, and optionally
+     * validates that question and choice content is not blank.
      *
      * @param Q The type representing a Question model.
      * @param C The type representing a Choice model.
      * @param questions The list of questions to validate.
      * @param getChoices A selector function to extract the list of choices from a question.
      * @param isCorrect A selector function to determine if a choice is marked as correct.
+     * @param getQuestionContent Optional selector to extract question content for blank validation.
+     * @param getChoiceContent Optional selector to extract choice content for blank validation.
      * @return A QuizValidationResult indicating success or detailing the specific error.
      */
     fun <Q, C> validate(
         questions: List<Q>,
         getChoices: (Q) -> List<C>,
-        isCorrect: (C) -> Boolean
+        isCorrect: (C) -> Boolean,
+        getQuestionContent: ((Q) -> String)? = null,
+        getChoiceContent: ((C) -> String)? = null
     ): QuizValidationResult {
         if (questions.size < MIN_QUESTIONS) {
             return QuizValidationResult(
@@ -48,11 +53,34 @@ object QuizValidator {
             val choices = getChoices(question)
             val questionNumber = index + 1
 
+            // Validate question content if accessor is provided
+            if (getQuestionContent != null) {
+                val content = getQuestionContent(question)
+                if (content.isBlank()) {
+                    return QuizValidationResult(
+                        isValid = false,
+                        errorMessage = "Question $questionNumber must have content."
+                    )
+                }
+            }
+
             if (choices.size !in MIN_CHOICES..MAX_CHOICES) {
                 return QuizValidationResult(
                     isValid = false,
                     errorMessage = "Question $questionNumber must have between $MIN_CHOICES and $MAX_CHOICES choices."
                 )
+            }
+
+            // Validate choice content if accessor is provided
+            if (getChoiceContent != null) {
+                choices.forEachIndexed { choiceIndex, choice ->
+                    if (getChoiceContent(choice).isBlank()) {
+                        return QuizValidationResult(
+                            isValid = false,
+                            errorMessage = "Choice ${choiceIndex + 1} in question $questionNumber must have content."
+                        )
+                    }
+                }
             }
 
             val correctCount = choices.count { isCorrect(it) }

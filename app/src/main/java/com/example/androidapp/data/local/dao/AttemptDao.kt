@@ -65,6 +65,13 @@ interface AttemptDao {
     suspend fun deleteAttempt(attempt: AttemptEntity)
 
     /**
+     * Get the total number of attempts for a specific user.
+     * Returns a Flow that emits the count whenever it changes.
+     */
+    @Query("SELECT COUNT(*) FROM attempts WHERE user_id = :userId")
+    fun getAttemptCountByUser(userId: String): Flow<Int>
+
+    /**
      * Update the userId for all attempts belonging to a guest.
      * Returns the number of rows affected.
      */

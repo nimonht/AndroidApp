@@ -55,6 +55,7 @@ fun HomeScreen(
     onNavigateToQuiz: (String) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToEditQuiz: (String) -> Unit = {},
+    onNavigateToSearchWithTag: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -137,7 +138,8 @@ fun HomeScreen(
             } else {
                 RecentlyPlayedRow(
                     quizzes = uiState.recentQuizzes,
-                    onQuizClick = onNavigateToQuiz
+                    onQuizClick = onNavigateToQuiz,
+                    onTagClick = onNavigateToSearchWithTag
                 )
             }
 
@@ -163,7 +165,8 @@ fun HomeScreen(
                     ) {
                         QuizCard(
                             quiz = quiz,
-                            onClick = { onNavigateToQuiz(quiz.id) }
+                            onClick = { onNavigateToQuiz(quiz.id) },
+                            onTagClick = onNavigateToSearchWithTag
                         )
 
                         // Floating edit button for draft quizzes only (not published)
@@ -205,7 +208,8 @@ fun HomeScreen(
             } else {
                 RecentlyPlayedRow(
                     quizzes = uiState.trendingQuizzes,
-                    onQuizClick = onNavigateToQuiz
+                    onQuizClick = onNavigateToQuiz,
+                    onTagClick = onNavigateToSearchWithTag
                 )
             }
 
@@ -419,6 +423,7 @@ private fun SectionHeader(
 private fun RecentlyPlayedRow(
     quizzes: List<Quiz>,
     onQuizClick: (String) -> Unit,
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyRow(
@@ -430,6 +435,7 @@ private fun RecentlyPlayedRow(
             QuizCard(
                 quiz = quiz,
                 onClick = { onQuizClick(quiz.id) },
+                onTagClick = onTagClick,
                 modifier = Modifier.width(280.dp)
             )
         }
