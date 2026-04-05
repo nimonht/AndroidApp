@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.R
@@ -427,7 +428,7 @@ private fun UserAnalyticsSection(
                     )
                     UserStatRow(
                         icon = Icons.Default.Shield,
-                        label = "Admin",
+                        label = stringResource(R.string.admin_role_admin),
                         value = stats.adminUsers.toString(),
                         color = MaterialTheme.colorScheme.tertiary
                     )
@@ -448,7 +449,7 @@ private fun UserAnalyticsSection(
  */
 @Composable
 private fun UserStatRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     value: String,
     color: Color,
@@ -638,7 +639,7 @@ private fun AiInsightsSection(
     stats: SystemStats,
     modifier: Modifier = Modifier
 ) {
-    val purpleAccent = Color(0xFF9C27B0)
+    val purpleAccent = MaterialTheme.colorScheme.tertiary
 
     Column(
         modifier = modifier.fillMaxWidth(),

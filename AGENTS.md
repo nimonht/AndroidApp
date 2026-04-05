@@ -13,7 +13,7 @@ domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/
             model/      ← Domain models (Quiz, Question, Choice, Attempt, User, ShareCode,
                           QuestionPoolItem, UserRole, SystemStats)
             repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository,
-                          QuestionRepository, ShareCodeRepository, PoolRepository,
+                          ShareCodeRepository, PoolRepository,
                           AdminRepository, SearchRepository)
             util/       ← ScoreUtil (star-rating + percentage helpers), ChecksumUtil (SHA-256 quiz
                           integrity), CsvParser + CsvValidator (CSV bulk import), QuizValidator
@@ -47,7 +47,7 @@ data/
                               `AttemptDto.kt`, `UserDto.kt`, `ShareCodeDto.kt`, `QuestionPoolItemDto.kt`
   repository/               ← Repository implementations: `QuizRepositoryImpl.kt`, `AttemptRepositoryImpl.kt`,
                               `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao + UserRemoteDataSource),
-                              `QuestionRepositoryImpl.kt`, `ShareCodeRepositoryImpl.kt`,
+                              `ShareCodeRepositoryImpl.kt`,
                               `PoolRepositoryImpl.kt`, `AdminRepositoryImpl.kt`,
                               `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
   network/

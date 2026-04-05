@@ -47,30 +47,6 @@ interface AttemptDao {
     suspend fun getLatestAttempt(userId: String, quizId: String): AttemptEntity?
 
     /**
-     * Get in-progress attempts (not finished) for a user.
-     */
-    @Query("SELECT * FROM attempts WHERE user_id = :userId AND finished_at IS NULL")
-    suspend fun getInProgressAttempts(userId: String): List<AttemptEntity>
-
-    /**
-     * Get the count of completed attempts for a quiz.
-     */
-    @Query("SELECT COUNT(*) FROM attempts WHERE quiz_id = :quizId AND finished_at IS NOT NULL")
-    suspend fun getAttemptCount(quizId: String): Int
-
-    /**
-     * Get the average score for a quiz.
-     */
-    @Query(
-        """
-        SELECT AVG(CAST(score AS FLOAT) / max_score * 100)
-        FROM attempts
-        WHERE quiz_id = :quizId AND finished_at IS NOT NULL AND max_score > 0
-    """
-    )
-    suspend fun getAverageScore(quizId: String): Float?
-
-    /**
      * Insert an attempt, or update it if it already exists.
      */
     @Upsert
@@ -87,12 +63,6 @@ interface AttemptDao {
      */
     @Delete
     suspend fun deleteAttempt(attempt: AttemptEntity)
-
-    /**
-     * Delete all attempts for a quiz.
-     */
-    @Query("DELETE FROM attempts WHERE quiz_id = :quizId")
-    suspend fun deleteAttemptsByQuizId(quizId: String)
 
     /**
      * Update the userId for all attempts belonging to a guest.

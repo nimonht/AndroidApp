@@ -21,52 +21,36 @@ interface PendingSyncDao {
      * Returns operations with PENDING or FAILED status that haven't exceeded retry limit.
      * Ordered by creation time (oldest first = FIFO queue).
      */
-    @Query("""
-        SELECT * FROM pending_sync_operations 
-        WHERE status IN ('PENDING', 'FAILED') AND retry_count < max_retries 
+    @Query(
+        """
+        SELECT * FROM pending_sync_operations
+        WHERE status IN ('PENDING', 'FAILED') AND retry_count < max_retries
         ORDER BY created_at ASC
-    """)
+    """
+    )
     suspend fun getPendingOperations(): List<PendingSyncEntity>
-
-    /**
-     * Get all operations for a specific entity.
-     */
-    @Query("""
-        SELECT * FROM pending_sync_operations 
-        WHERE entity_type = :entityType AND entity_id = :entityId 
-        ORDER BY created_at ASC
-    """)
-    suspend fun getOperationsByEntity(entityType: String, entityId: String): List<PendingSyncEntity>
-
-    /**
-     * Get all operations filtered by status.
-     */
-    @Query("SELECT * FROM pending_sync_operations WHERE status = :status ORDER BY created_at ASC")
-    suspend fun getOperationsByStatus(status: String): List<PendingSyncEntity>
-
-    /**
-     * Get a single operation by ID.
-     */
-    @Query("SELECT * FROM pending_sync_operations WHERE id = :id")
-    suspend fun getOperationById(id: Long): PendingSyncEntity?
 
     /**
      * Get the count of pending operations (PENDING or FAILED within retry limit).
      */
-    @Query("""
-        SELECT COUNT(*) FROM pending_sync_operations 
+    @Query(
+        """
+        SELECT COUNT(*) FROM pending_sync_operations
         WHERE status IN ('PENDING', 'FAILED') AND retry_count < max_retries
-    """)
+    """
+    )
     suspend fun getPendingCount(): Int
 
     /**
      * Observe the count of pending operations as a Flow.
      * Useful for showing sync status indicators in the UI.
      */
-    @Query("""
-        SELECT COUNT(*) FROM pending_sync_operations 
+    @Query(
+        """
+        SELECT COUNT(*) FROM pending_sync_operations
         WHERE status IN ('PENDING', 'FAILED') AND retry_count < max_retries
-    """)
+    """
+    )
     fun observePendingCount(): Flow<Int>
 
     /**
@@ -74,12 +58,6 @@ interface PendingSyncDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOperation(operation: PendingSyncEntity): Long
-
-    /**
-     * Insert multiple pending sync operations.
-     */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOperations(operations: List<PendingSyncEntity>)
 
     /**
      * Update an existing operation.
@@ -90,24 +68,28 @@ interface PendingSyncDao {
     /**
      * Update the status and last attempt timestamp of an operation.
      */
-    @Query("""
-        UPDATE pending_sync_operations 
-        SET status = :status, last_attempt_at = :lastAttemptAt 
+    @Query(
+        """
+        UPDATE pending_sync_operations
+        SET status = :status, last_attempt_at = :lastAttemptAt
         WHERE id = :id
-    """)
+    """
+    )
     suspend fun updateStatus(id: Long, status: String, lastAttemptAt: Long = System.currentTimeMillis())
 
     /**
      * Increment the retry count and update the error message for a failed operation.
      */
-    @Query("""
-        UPDATE pending_sync_operations 
-        SET retry_count = retry_count + 1, 
-            error_message = :errorMessage, 
+    @Query(
+        """
+        UPDATE pending_sync_operations
+        SET retry_count = retry_count + 1,
+            error_message = :errorMessage,
             status = 'FAILED',
-            last_attempt_at = :lastAttemptAt 
+            last_attempt_at = :lastAttemptAt
         WHERE id = :id
-    """)
+    """
+    )
     suspend fun incrementRetryCount(id: Long, errorMessage: String?, lastAttemptAt: Long = System.currentTimeMillis())
 
     /**
@@ -123,25 +105,15 @@ interface PendingSyncDao {
     suspend fun deleteCompletedOperations()
 
     /**
-     * Delete all operations for a specific entity.
-     * Useful when the entity is permanently deleted.
-     */
-    @Query("DELETE FROM pending_sync_operations WHERE entity_type = :entityType AND entity_id = :entityId")
-    suspend fun deleteByEntity(entityType: String, entityId: String)
-
-    /**
-     * Delete all operations (reset sync queue).
-     */
-    @Query("DELETE FROM pending_sync_operations")
-    suspend fun deleteAllOperations()
-    /**
      * Reset all failed operations back to PENDING status for retry.
      * Also clears error_message and last_attempt_at to avoid surfacing stale diagnostics.
      */
-    @Query("""
-        UPDATE pending_sync_operations 
-        SET status = 'PENDING', retry_count = 0, error_message = NULL, last_attempt_at = NULL 
+    @Query(
+        """
+        UPDATE pending_sync_operations
+        SET status = 'PENDING', retry_count = 0, error_message = NULL, last_attempt_at = NULL
         WHERE status = 'FAILED'
-    """)
+    """
+    )
     suspend fun resetFailedToPending()
 }

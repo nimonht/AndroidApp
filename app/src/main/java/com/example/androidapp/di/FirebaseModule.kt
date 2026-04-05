@@ -22,7 +22,6 @@ import com.example.androidapp.data.repository.AdminRepositoryImpl
 import com.example.androidapp.data.repository.AttemptRepositoryImpl
 import com.example.androidapp.data.repository.AuthRepositoryImpl
 import com.example.androidapp.data.repository.PoolRepositoryImpl
-import com.example.androidapp.data.repository.QuestionRepositoryImpl
 import com.example.androidapp.data.repository.QuizRepositoryImpl
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.preferences.SettingsPreferences
@@ -32,7 +31,6 @@ import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
-import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.repository.SearchRepository
@@ -142,10 +140,6 @@ class AppContainerImpl(override val context: Context) : AppContainer {
 
     override val attemptRepository: AttemptRepository by lazy {
         AttemptRepositoryImpl(attemptDao, syncManager)
-    }
-
-    override val questionRepository: QuestionRepository by lazy {
-        QuestionRepositoryImpl(questionDao, choiceDao, questionRemoteDataSource, syncManager)
     }
 
     override val shareCodeRepository: ShareCodeRepository by lazy {

@@ -155,7 +155,7 @@ class EditProfileViewModel(
                     try {
                         val responseCode = connection.responseCode
                         if (responseCode != HttpURLConnection.HTTP_OK) {
-                            throw Exception("Wallhaven API returned HTTP $responseCode")
+                            throw Exception("Wallhaven API trả về lỗi HTTP $responseCode")
                         }
 
                         val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
@@ -163,7 +163,7 @@ class EditProfileViewModel(
                         val dataArray = json.getJSONArray("data")
 
                         if (dataArray.length() == 0) {
-                            throw Exception("No images found from Wallhaven")
+                            throw Exception("Không tìm thấy hình ảnh từ Wallhaven")
                         }
 
                         val firstItem = dataArray.getJSONObject(0)
@@ -181,7 +181,7 @@ class EditProfileViewModel(
                 _uiState.update {
                     it.copy(
                         isLoadingAvatar = false,
-                        error = e.localizedMessage ?: "Failed to fetch random avatar"
+                        error = e.localizedMessage ?: "Không thể tải ảnh đại diện ngẫu nhiên"
                     )
                 }
             }

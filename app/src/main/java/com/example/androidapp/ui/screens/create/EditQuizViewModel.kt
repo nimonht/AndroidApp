@@ -2,15 +2,10 @@ package com.example.androidapp.ui.screens.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.androidapp.domain.model.Choice
-import com.example.androidapp.domain.model.Question
-import com.example.androidapp.domain.model.Quiz
-import com.example.androidapp.domain.model.QuestionPoolItem
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
-import com.example.androidapp.domain.util.QuizValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -105,7 +100,7 @@ sealed class EditQuizEvent {
      */
     data object PublishQuiz : EditQuizEvent()
 
-    /** Legacy save alias — behaves identically to [PublishQuiz]. */
+    /** Legacy save alias -- behaves identically to [PublishQuiz]. */
     data object SaveQuiz : EditQuizEvent()
 
     /** Toggles whether each question will be contributed to the community pool after publishing. */
@@ -120,10 +115,14 @@ sealed class EditQuizEvent {
  * Pre-populates the form from the repository and saves changes back.
  * Supports draft saving without publishing and explicit publish action.
  *
+ * Question CRUD, validation, and domain-mapping logic is delegated to [QuizFormHelper]
+ * to avoid duplication with [CreateQuizViewModel].
+ *
  * @param quizId The ID of the quiz to load and edit.
  * @param quizRepository Repository for persisting quizzes and questions.
  * @param authRepository Repository for retrieving the currently authenticated user.
  * @param poolRepository Repository for contributing questions to the community pool.
+ * @param shareCodeRepository Repository for generating share codes.
  */
 class EditQuizViewModel(
     private val quizId: String,
@@ -171,46 +170,38 @@ class EditQuizViewModel(
                 _uiState.update { it.copy(tags = event.tags) }
 
             is EditQuizEvent.AddQuestion ->
-                _uiState.update { it.copy(questions = it.questions + QuestionDraft()) }
+                _uiState.update {
+                    it.copy(questions = QuizFormHelper.addQuestion(it.questions))
+                }
 
             is EditQuizEvent.UpdateQuestion ->
-                _uiState.update { state ->
-                    state.copy(questions = state.questions.toMutableList().apply {
-                        this[event.index] = event.draft
-                    })
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.updateQuestion(
+                            it.questions, event.index, event.draft
+                        )
+                    )
                 }
 
             is EditQuizEvent.RemoveQuestion ->
-                _uiState.update { state ->
-                    if (state.questions.size > 1) {
-                        state.copy(
-                            questions = state.questions.toMutableList().apply {
-                                removeAt(event.index)
-                            }
-                        )
-                    } else state
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.removeQuestion(it.questions, event.index)
+                    )
                 }
 
             is EditQuizEvent.MoveQuestionUp ->
-                _uiState.update { state ->
-                    val idx = event.index
-                    if (idx <= 0 || idx >= state.questions.size) return@update state
-                    val list = state.questions.toMutableList()
-                    val temp = list[idx - 1]
-                    list[idx - 1] = list[idx]
-                    list[idx] = temp
-                    state.copy(questions = list)
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.moveQuestionUp(it.questions, event.index)
+                    )
                 }
 
             is EditQuizEvent.MoveQuestionDown ->
-                _uiState.update { state ->
-                    val idx = event.index
-                    if (idx < 0 || idx >= state.questions.size - 1) return@update state
-                    val list = state.questions.toMutableList()
-                    val temp = list[idx + 1]
-                    list[idx + 1] = list[idx]
-                    list[idx] = temp
-                    state.copy(questions = list)
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.moveQuestionDown(it.questions, event.index)
+                    )
                 }
 
             is EditQuizEvent.SaveDraft ->
@@ -289,35 +280,19 @@ class EditQuizViewModel(
         viewModelScope.launch {
             val state = _uiState.value
 
-            if (state.title.isBlank()) {
-                _uiState.update { it.copy(error = "Vui lòng nhập tiêu đề bài kiểm tra") }
-                return@launch
-            }
-
-            val validationResult = QuizValidator.validate(
-                questions = state.questions,
-                getChoices = { draft ->
-                    draft.choices.mapIndexed { idx, choice ->
-                        Pair(choice, idx in draft.correctIndices)
-                    }
-                },
-                isCorrect = { (_, correct) -> correct }
-            )
-            if (!validationResult.isValid) {
-                _uiState.update { it.copy(error = validationResult.errorMessage) }
+            val validationError = QuizFormHelper.validateQuizForm(state.title, state.questions)
+            if (validationError != null) {
+                _uiState.update { it.copy(error = validationError) }
                 return@launch
             }
 
             _uiState.update { it.copy(isLoading = true) }
 
             val user = authRepository.getCurrentUser()
-            val tags = state.tags
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
+            val tags = QuizFormHelper.parseTags(state.tags)
 
             // On publish, respect the user's explicit isPublic toggle choice.
-            // On draft save, force isPublic = false — drafts must never be public.
+            // On draft save, force isPublic = false -- drafts must never be public.
             val effectiveIsPublic = if (publishAfterSave) state.isPublic else false
 
             val existingQuiz = quizRepository.getQuizById(quizId)
@@ -329,12 +304,12 @@ class EditQuizViewModel(
                 }
             }
 
-            val quiz = Quiz(
-                id = quizId,
+            val quiz = QuizFormHelper.buildQuizFromForm(
+                quizId = quizId,
                 ownerId = user?.id ?: "",
                 title = state.title,
-                description = state.description.takeIf { it.isNotBlank() },
-                thumbnailUrl = state.thumbnailUrl.takeIf { it.isNotBlank() },
+                description = state.description,
+                thumbnailUrl = state.thumbnailUrl,
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,
@@ -343,26 +318,7 @@ class EditQuizViewModel(
                 updatedAt = System.currentTimeMillis()
             )
 
-            val questions = state.questions.mapIndexed { idx, draft ->
-                Question(
-                    id = draft.id,
-                    quizId = quizId,
-                    content = draft.content,
-                    choices = draft.choices.mapIndexed { cIdx, choice ->
-                        Choice(
-                            id = choice.id,
-                            content = choice.content,
-                            isCorrect = cIdx in draft.correctIndices,
-                            position = cIdx
-                        )
-                    },
-                    isMultiSelect = draft.isMultiSelect,
-                    explanation = draft.explanation.takeIf { it.isNotBlank() },
-                    mediaUrl = draft.mediaUrl.takeIf { it.isNotBlank() },
-                    points = draft.points,
-                    position = idx
-                )
-            }
+            val questions = QuizFormHelper.mapQuestionsToEntities(quizId, state.questions)
 
             val result = quizRepository.updateQuiz(quiz, questions)
             _uiState.update { it.copy(isLoading = false) }
@@ -373,17 +329,14 @@ class EditQuizViewModel(
                         // Contribute each question to the community pool if opted in.
                         // Pool contribution only runs on publish, never on draft saves.
                         if (state.shareToPool) {
-                            questions.forEach { question ->
-                                poolRepository.contributeQuestion(
-                                    QuestionPoolItem(
-                                        id = question.id,
-                                        question = question,
-                                        contributorId = user?.id,
-                                        sourceQuizId = quizId,
-                                        tags = tags,
-                                        usageCount = 0
-                                    )
-                                )
+                            val contributions = QuizFormHelper.buildPoolContributions(
+                                questions = questions,
+                                contributorId = user?.id,
+                                sourceQuizId = quizId,
+                                tags = tags
+                            )
+                            contributions.forEach { poolItem ->
+                                poolRepository.contributeQuestion(poolItem)
                             }
                         }
                         _uiState.update {

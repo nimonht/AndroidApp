@@ -19,7 +19,6 @@ import com.example.androidapp.domain.util.safeCall
 import com.example.androidapp.domain.repository.HomeQuizzes
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import java.util.Date
 import java.util.UUID
 
 /**

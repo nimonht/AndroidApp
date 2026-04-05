@@ -168,7 +168,7 @@ class QuizDetailViewModel(
                         return@launch
                     }
                 }
-                _uiState.value = QuizDetailUiState.Error("Khong tim thay bai kiem tra")
+                _uiState.value = QuizDetailUiState.Error("Không tìm thấy bài kiểm tra")
                 return@launch
             }
 
@@ -224,7 +224,7 @@ class QuizDetailViewModel(
                 } else {
                     _uiState.value = QuizDetailUiState.Error(
                         result.exceptionOrNull()?.message
-                            ?: "Khong the tai du lieu tu may chu"
+                            ?: "Không thể tải dữ liệu từ máy chủ"
                     )
                 }
                 return@launch

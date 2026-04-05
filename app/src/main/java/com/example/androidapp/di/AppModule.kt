@@ -14,7 +14,6 @@ import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
-import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
@@ -45,7 +44,6 @@ interface AppContainer {
     val authRepository: AuthRepository
     val quizRepository: QuizRepository
     val attemptRepository: AttemptRepository
-    val questionRepository: QuestionRepository
     val shareCodeRepository: ShareCodeRepository
     val poolRepository: PoolRepository
     val adminRepository: AdminRepository

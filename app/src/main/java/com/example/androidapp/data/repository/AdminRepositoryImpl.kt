@@ -8,6 +8,7 @@ import com.example.androidapp.domain.model.SystemStats
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
+import com.example.androidapp.domain.util.safeCall
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -32,38 +33,26 @@ class AdminRepositoryImpl(
     }
 
     override suspend fun updateUserRole(userId: String, newRole: UserRole): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.updateUserRole(userId, newRole.toFirestoreValue())
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun banUser(userId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.banUser(userId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun unbanUser(userId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.unbanUser(userId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun deleteUserPermanently(userId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.deleteUserPermanently(userId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -75,38 +64,26 @@ class AdminRepositoryImpl(
     }
 
     override suspend fun deleteQuizPermanently(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.deleteQuizPermanently(quizId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun restoreQuiz(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.restoreQuiz(quizId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun forcePublishQuiz(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.forcePublishQuiz(quizId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
     override suspend fun unpublishQuiz(quizId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.unpublishQuiz(quizId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 
@@ -118,11 +95,8 @@ class AdminRepositoryImpl(
     }
 
     override suspend fun deleteAttempt(attemptId: String): Result<Unit> {
-        return try {
+        return safeCall {
             adminRemoteDataSource.deleteAttempt(attemptId)
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 

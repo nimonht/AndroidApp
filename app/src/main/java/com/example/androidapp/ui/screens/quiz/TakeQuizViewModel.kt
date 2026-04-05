@@ -188,10 +188,6 @@ class TakeQuizViewModel(
         }
     }
 
-    /** Whether exit has been confirmed (used by screen to trigger navigation). */
-    var exitConfirmed: Boolean = false
-        private set
-
     private fun onSubmitQuiz() {
         viewModelScope.launch {
             val active = _uiState.value as? TakeQuizUiState.Active ?: return@launch

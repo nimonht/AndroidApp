@@ -27,7 +27,7 @@ graph TD
 ```
 
 <details>
-<summary>📊 View as Text Diagram (if Mermaid doesn't render)</summary>
+<summary>View as Text Diagram (if Mermaid doesn't render)</summary>
 
 ```
 App Entry
@@ -300,10 +300,10 @@ fun ChoiceButton(
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [←]              Quizzez                           [👤]   │
+│  [←]              Quizzez                          [User]  │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Hello, Thanh! 👋                                           │
+│  Hello, Thanh!                                              │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │  Enter quiz code    [______]  [Join →]              │    │
@@ -316,16 +316,16 @@ fun ChoiceButton(
 │                                                             │
 │  My Quizzes                                    [See All →]  │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │ [📷] Math Quiz 101          10 Qs   │   45 plays   │     │
+│  │ [img] Math Quiz 101         10 Qs   │   45 plays   │     │
 │  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 │  Trending Quizzes                              [See All →]  │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │ [📷] Science Trivia          ★4.5   │   500+ plays │     │
+│  │ [img] Science Trivia         ★4.5   │   500+ plays │     │
 │  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
-│        [🔍]              [🏠]              [👤]             │
+│      [Search]           [Home]           [User]             │
 │       Search             Home             Profile           │
 │                          [+]                                │
 │                         (FAB)                               │
@@ -339,7 +339,7 @@ fun ChoiceButton(
 │  [✕]                                           [Submit]     │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Question 4 of 10                        ⏱ 12:45           │
+│  Question 4 of 10                        Time: 12:45       │
 │  ████████████░░░░░░░░░░░░░░░░░░░                            │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
@@ -375,16 +375,16 @@ fun ChoiceButton(
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [←]              Quiz Complete                      [📤]   │
+│  [←]              Quiz Complete                    [Share]  │
 ├─────────────────────────────────────────────────────────────┤
-│                         🎉                                  │
+│                    Congratulations!                          │
 │                    Your Score                               │
 │                      8/10                                   │
 │                      80%                                    │
 │                    ★★★★☆                                    │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  ✅ Correct: 8       ❌ Wrong: 2       ⏱ 8:32       │   │
+│  │  Correct: 8         Wrong: 2         Time: 8:32    │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
@@ -577,7 +577,6 @@ sealed class TakeQuizUiState {
 interface AppContainer {
     val firebaseAuth: FirebaseAuth
     val firebaseFirestore: FirebaseFirestore
-    val firebaseStorage: FirebaseStorage
     // ... other dependencies
 }
 
@@ -589,10 +588,6 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     
     override val firebaseFirestore: FirebaseFirestore by lazy {
         Firebase.firestore
-    }
-    
-    override val firebaseStorage: FirebaseStorage by lazy {
-        Firebase.storage
     }
     // ... other implementations
 }

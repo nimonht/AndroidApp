@@ -34,22 +34,10 @@ interface ChoiceDao {
     suspend fun getChoiceById(choiceId: String): ChoiceEntity?
 
     /**
-     * Get correct choices for a question.
-     */
-    @Query("SELECT * FROM choices WHERE question_id = :questionId AND is_correct = 1")
-    suspend fun getCorrectChoices(questionId: String): List<ChoiceEntity>
-
-    /**
      * Insert a choice, or update it if it already exists.
      */
     @Upsert
     suspend fun insertChoice(choice: ChoiceEntity)
-
-    /**
-     * Insert multiple choices, or update those that already exist.
-     */
-    @Upsert
-    suspend fun insertChoices(choices: List<ChoiceEntity>)
 
     /**
      * Update an existing choice.

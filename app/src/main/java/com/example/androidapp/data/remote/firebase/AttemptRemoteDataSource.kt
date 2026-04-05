@@ -20,27 +20,6 @@ class AttemptRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Updates an existing attempt document.
-     */
-    suspend fun updateAttempt(attemptDto: AttemptDto) {
-        firestore.collection(FirestoreCollections.ATTEMPTS)
-            .document(attemptDto.id)
-            .set(attemptDto)
-            .await()
-    }
-
-    /**
-     * Fetches a single attempt by ID.
-     */
-    suspend fun getAttemptById(attemptId: String): AttemptDto? {
-        return firestore.collection(FirestoreCollections.ATTEMPTS)
-            .document(attemptId)
-            .get()
-            .await()
-            .toObject(AttemptDto::class.java)
-    }
-
-    /**
      * Fetches all attempts for a user.
      */
     suspend fun getAttemptsByUser(userId: String): List<AttemptDto> {

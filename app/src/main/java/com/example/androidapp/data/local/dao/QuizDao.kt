@@ -68,12 +68,6 @@ interface QuizDao {
     fun getPublicQuizzes(): Flow<List<QuizEntity>>
 
     /**
-     * Get quizzes that need to be synced.
-     */
-    @Query("SELECT * FROM quizzes WHERE sync_status IN ('PENDING', 'FAILED')")
-    suspend fun getUnsyncedQuizzes(): List<QuizEntity>
-
-    /**
      * Get deleted quizzes (recycle bin) for a user.
      */
     @Query(
@@ -90,12 +84,6 @@ interface QuizDao {
      */
     @Upsert
     suspend fun insertQuiz(quiz: QuizEntity)
-
-    /**
-     * Insert multiple quizzes.
-     */
-    @Upsert
-    suspend fun insertQuizzes(quizzes: List<QuizEntity>)
 
     /**
      * Update an existing quiz.
@@ -132,13 +120,6 @@ interface QuizDao {
      */
     @Delete
     suspend fun deleteQuiz(quiz: QuizEntity)
-
-    /**
-     * Permanently delete quizzes older than 30 days in recycle bin.
-     */
-    @Query("DELETE FROM quizzes WHERE deleted_at IS NOT NULL AND deleted_at < :threshold")
-    suspend fun deleteOldQuizzes(threshold: Long)
-
 
     /**
      * Search quizzes by title or tags.

@@ -29,7 +29,6 @@ app/src/main/java/com/example/androidapp/
 ├── di/                  # Dependency Injection (Manual DI)
 ├── domain/              # Business Logic Layer
 │   ├── model/           # Domain Models
-│   ├── usecase/         # Use Cases
 │   └── util/            # Utilities
 ├── data/                # Data Layer
 │   ├── local/           # Room Database
@@ -51,8 +50,7 @@ app/src/main/java/com/example/androidapp/
 | Backend | Firebase (Serverless) |
 | Cloud Database | Cloud Firestore |
 | Authentication | Firebase Auth |
-| Storage | Firebase Storage (quiz media) |
-| Profile Avatars | URL-based (Wallhaven API / user URL) |
+| Media / Avatars | External URLs (Wallhaven API / user-provided URL) |
 | DI | Manual DI |
 | Async | Kotlin Coroutines + Flow |
 
@@ -142,7 +140,6 @@ cd AndroidApp
 3. Download `google-services.json` and place it in `app/` directory
 4. Enable Authentication (Email/Password, Google Sign-In)
 5. Create Firestore Database
-6. Set up Firebase Storage
 
 ### 3. Build and Run
 
@@ -209,7 +206,7 @@ Release → emulator (rare)
 
 ## Version
 
-App version 1.4.26
+App version 1.0
 
 ## License
 

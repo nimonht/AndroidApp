@@ -78,20 +78,6 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Fetches questions for a quiz by quiz ID.
-     */
-    suspend fun getQuestionsForQuiz(quizId: String): List<QuestionDto> {
-        return firestore.collection(FirestoreCollections.QUIZZES)
-            .document(quizId)
-            .collection(FirestoreCollections.QUESTIONS)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { it.toObject(QuestionDto::class.java) }
-            .sortedBy { it.position }
-    }
-
-    /**
      * Saves a quiz and its questions using per-question batch writes.
      * Deletes existing choices before saving to avoid stale data.
      * Processes each question individually to ensure choice cleanup and avoid batch size limits.

@@ -18,19 +18,6 @@ class QuestionRemoteDataSource(private val firestore: FirebaseFirestore) {
             .sortedBy { it.position }
     }
 
-    /**
-     * Fetches all questions for a quiz and populates each question's [QuestionDto.choices]
-     * by reading the choices subcollection. Use this instead of [getQuestionsForQuiz] when
-     * the full question+choice graph is needed (e.g. during refresh/download).
-     */
-    suspend fun getQuestionsWithChoicesForQuiz(quizId: String): List<QuestionDto> {
-        val questions = getQuestionsForQuiz(quizId)
-        return questions.map { question ->
-            val choices = getChoicesForQuestion(quizId, question.id)
-            question.copy(choices = choices)
-        }
-    }
-
     suspend fun getChoicesForQuestion(quizId: String, questionId: String): List<ChoiceDto> {
         return firestore.collection(FirestoreCollections.QUIZZES)
             .document(quizId)

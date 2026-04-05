@@ -36,25 +36,10 @@ class ShareCodeRemoteDataSource(private val firestore: FirebaseFirestore) {
         }.await()
     }
 
-    suspend fun createShareCode(shareCode: String, quizId: String) {
-        firestore.collection(FirestoreCollections.SHARE_CODES)
-            .document(shareCode)
-            .set(mapOf("quizId" to quizId))
-            .await()
-    }
-
     suspend fun deleteShareCode(shareCode: String) {
         firestore.collection(FirestoreCollections.SHARE_CODES)
             .document(shareCode)
             .delete()
             .await()
-    }
-
-    suspend fun shareCodeExists(shareCode: String): Boolean {
-        return firestore.collection(FirestoreCollections.SHARE_CODES)
-            .document(shareCode)
-            .get()
-            .await()
-            .exists()
     }
 }

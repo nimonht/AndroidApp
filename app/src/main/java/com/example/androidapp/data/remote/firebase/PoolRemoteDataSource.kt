@@ -85,18 +85,6 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Deletes a pool item document from Firestore.
-     *
-     * @param poolItemId The ID of the pool item to delete.
-     */
-    suspend fun deletePoolItem(poolItemId: String) {
-        firestore.collection(FirestoreCollections.QUESTION_POOL)
-            .document(poolItemId)
-            .delete()
-            .await()
-    }
-
-    /**
      * Atomically increments the usage count of a pool item by 1.
      *
      * @param poolItemId The ID of the pool item to update.

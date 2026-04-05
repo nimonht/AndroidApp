@@ -359,6 +359,13 @@
     <string name="quiz_delete_confirm_message">Quizz sẽ được chuyển vào thùng rác. Bạn có thể khôi phục trong 30 ngày.</string>
     <string name="quiz_deleted_success">Đã chuyển Quizz vào thùng rác</string>
 
+    <!-- Pool Dialog (Create Quiz) -->
+    <string name="pool_dialog_title">Ngân hàng câu hỏi</string>
+    <string name="pool_dialog_tag_input_label">Nhập thẻ (cách nhau dấu phẩy)</string>
+    <string name="pool_dialog_search">Tìm kiếm</string>
+    <string name="pool_dialog_add_selected">Thêm đã chọn</string>
+    <string name="pool_add_from_pool">Thêm từ Kho</string>
+
     <!-- Pool Import -->
     <string name="pool_import_title">Nhập câu hỏi từ kho cộng đồng</string>
     <string name="pool_import_search_hint">Nhập từ khóa tìm kiếm…</string>

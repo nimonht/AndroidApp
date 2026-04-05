@@ -24,9 +24,6 @@ object ScoreCalculator {
         var score = 0
         for ((questionId, correctChoiceIds) in correctAnswers) {
             val userChoiceIds = userAnswers[questionId] ?: emptySet()
-
-            // Set equality checking in Kotlin compares the contents regardless of order.
-            // This perfectly handles both single choice (Set size = 1) and multiple choice (Set size > 1).
             if (correctChoiceIds == userChoiceIds) {
                 score++
             }

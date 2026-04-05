@@ -267,7 +267,10 @@ private fun QuickStatsSection(
                 value = stats.totalUsers.toString(),
                 subtitle = stringResource(R.string.admin_users_subtitle),
                 icon = Icons.Default.People,
-                gradientColors = listOf(Color(0xFF667EEA), Color(0xFF764BA2)),
+                gradientColors = listOf(
+                    MaterialTheme.colorScheme.primary,
+                    MaterialTheme.colorScheme.tertiary
+                ),
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
 
@@ -276,7 +279,10 @@ private fun QuickStatsSection(
                 value = stats.activeUsers.toString(),
                 subtitle = stringResource(R.string.admin_current_subtitle),
                 icon = Icons.Default.CheckCircle,
-                gradientColors = listOf(Color(0xFF11998E), Color(0xFF38EF7D)),
+                gradientColors = listOf(
+                    MaterialTheme.colorScheme.secondary,
+                    MaterialTheme.colorScheme.secondaryContainer
+                ),
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
 
@@ -285,7 +291,10 @@ private fun QuickStatsSection(
                 value = stats.totalQuizzes.toString(),
                 subtitle = stringResource(R.string.admin_quizzes_subtitle),
                 icon = Icons.Default.Quiz,
-                gradientColors = listOf(Color(0xFFF093FB), Color(0xFFF5576C)),
+                gradientColors = listOf(
+                    MaterialTheme.colorScheme.tertiary,
+                    MaterialTheme.colorScheme.tertiaryContainer
+                ),
                 modifier = Modifier.weight(1f).fillMaxHeight()
             )
         }
@@ -601,7 +610,7 @@ private fun InsightsSection(
                 stats.totalQuestionsInPool.toString()
             ),
             icon = Icons.Default.Folder,
-            accentColor = Color(0xFF9C27B0),
+            accentColor = MaterialTheme.colorScheme.tertiary,
             modifier = Modifier.fillMaxWidth()
         )
     }
