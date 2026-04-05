@@ -138,7 +138,6 @@ class AdminRepositoryImpl(
             val activeUsers = async { adminRemoteDataSource.getActiveUsersCount() }
             val publicQuizzes = async { adminRemoteDataSource.getPublicQuizzesCount() }
             val privateQuizzes = async { adminRemoteDataSource.getPrivateQuizzesCount() }
-            val draftQuizzes = async { adminRemoteDataSource.getDraftQuizzesCount() }
             val deletedQuizzes = async { adminRemoteDataSource.getDeletedQuizzesCount() }
             val adminUsers = async { adminRemoteDataSource.getAdminUsersCount() }
 
@@ -150,7 +149,6 @@ class AdminRepositoryImpl(
                 activeUsers = activeUsers.await(),
                 publicQuizzes = publicQuizzes.await(),
                 privateQuizzes = privateQuizzes.await(),
-                draftQuizzes = draftQuizzes.await(),
                 deletedQuizzes = deletedQuizzes.await(),
                 adminUsers = adminUsers.await()
             )

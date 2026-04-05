@@ -1,16 +1,47 @@
 package com.example.androidapp.ui.screens.admin.users
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,16 +53,20 @@ import com.example.androidapp.ui.components.common.AppAlertDialog
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
-import com.example.androidapp.ui.components.forms.TextInputField
+import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Admin user management screen for managing user accounts, roles, and bans.
  *
+ * Features a modern pill-shaped search bar, user count indicator, and a
+ * scrollable list of [AdminUserCard] items with confirmation dialogs for
+ * destructive actions.
+ *
  * @param viewModel The ViewModel for managing user management state.
  * @param onNavigateBack Callback to navigate back.
- * @param modifier Modifier for styling.
+ * @param modifier Modifier for external styling.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,12 +100,13 @@ fun AdminUserManagementScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         Box(
@@ -85,7 +121,7 @@ fun AdminUserManagementScreen(
 
                 uiState.error != null -> {
                     ErrorState(
-                        message = uiState.error!!,
+                        message = uiState.error,
                         onRetry = { viewModel.loadUsers() },
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -99,12 +135,8 @@ fun AdminUserManagementScreen(
                         onRoleChange = { userId, newRole ->
                             viewModel.updateUserRole(userId, newRole)
                         },
-                        onBanToggle = { user ->
-                            userToBanUnban = user
-                        },
-                        onDelete = { user ->
-                            userToDelete = user
-                        },
+                        onBanToggle = { user -> userToBanUnban = user },
+                        onDelete = { user -> userToDelete = user },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -143,7 +175,7 @@ fun AdminUserManagementScreen(
         )
     }
 
-    // Ban/Unban confirmation dialog
+    // Ban / Unban confirmation dialog
     userToBanUnban?.let { user ->
         val isBanning = !user.isBanned
         AppAlertDialog(
@@ -184,6 +216,13 @@ fun AdminUserManagementScreen(
     }
 }
 
+// ---------------------------------------------------------------------------
+// Private composables
+// ---------------------------------------------------------------------------
+
+/**
+ * Main content area: search bar, user count, and scrollable user list.
+ */
 @Composable
 private fun UserManagementContent(
     users: List<User>,
@@ -194,26 +233,29 @@ private fun UserManagementContent(
     onDelete: (User) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Search bar
-        TextInputField(
-            value = searchQuery,
-            onValueChange = onSearchQueryChanged,
-            label = stringResource(R.string.admin_search_users),
-            modifier = Modifier.fillMaxWidth()
-        )
+    Column(modifier = modifier) {
+        // Search bar + user count header (non-scrollable)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PillSearchBar(
+                query = searchQuery,
+                onQueryChanged = onSearchQueryChanged,
+                modifier = Modifier.fillMaxWidth()
+            )
 
-        // User count
-        Text(
-            text = stringResource(R.string.admin_user_count, users.size),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            Text(
+                text = stringResource(R.string.admin_user_count, users.size),
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = InterFamily,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
-        // User list
+        // User list (scrollable)
         if (users.isEmpty()) {
             EmptyState(
                 message = if (searchQuery.isBlank()) {
@@ -223,10 +265,16 @@ private fun UserManagementContent(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 32.dp)
+                    .weight(1f)
             )
         } else {
             LazyColumn(
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 12.dp,
+                    bottom = 16.dp
+                ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -243,38 +291,190 @@ private fun UserManagementContent(
     }
 }
 
-@Preview(showBackground = true)
+/**
+ * Modern pill-shaped search bar with no outline, filled background,
+ * leading search icon, and optional trailing clear button.
+ */
 @Composable
-private fun UserManagementContentPreview() {
-    QuizzezTheme {
-        UserManagementContent(
-            users = listOf(
-                User(
-                    id = "user1",
-                    email = "admin@example.com",
-                    displayName = "Quản trị viên",
-                    role = UserRole.ADMIN
-                ),
-                User(
-                    id = "user2",
-                    email = "user@example.com",
-                    displayName = "Nguyễn Văn A",
-                    role = UserRole.USER
-                ),
-                User(
-                    id = "user3",
-                    email = "banned@example.com",
-                    displayName = "Người dùng bị cấm",
-                    role = UserRole.USER,
-                    isBanned = true
-                )
-            ),
-            searchQuery = "",
-            onSearchQueryChanged = {},
-            onRoleChange = { _, _ -> },
-            onBanToggle = {},
-            onDelete = {},
-            modifier = Modifier.fillMaxSize()
-        )
+private fun PillSearchBar(
+    query: String,
+    onQueryChanged: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+
+    TextField(
+        value = query,
+        onValueChange = onQueryChanged,
+        placeholder = {
+            Text(
+                text = stringResource(R.string.admin_search_users_placeholder),
+                fontFamily = InterFamily,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = stringResource(R.string.admin_search_users),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChanged("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cancel),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(
+            fontFamily = InterFamily,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        ),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                keyboardController?.hide()
+                focusManager.clearFocus()
+            }
+        ),
+        modifier = modifier
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Previews
+// ---------------------------------------------------------------------------
+
+private val previewUsers = listOf(
+    User(
+        id = "1",
+        email = "admin@example.com",
+        displayName = "Quan Tri Vien",
+        role = UserRole.ADMIN
+    ),
+    User(
+        id = "2",
+        email = "user@example.com",
+        displayName = "Nguyen Van A",
+        photoUrl = "https://example.com/avatar.jpg",
+        role = UserRole.USER
+    ),
+    User(
+        id = "3",
+        email = "banned@example.com",
+        displayName = "Nguoi Dung Bi Cam",
+        role = UserRole.USER,
+        isBanned = true
+    ),
+    User(
+        id = "4",
+        email = "guest@example.com",
+        displayName = "Khach",
+        role = UserRole.GUEST
+    )
+)
+
+@Preview(showBackground = true, name = "User Management Content - Light")
+@Composable
+private fun UserManagementContentLightPreview() {
+    QuizzezTheme(darkTheme = false) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            UserManagementContent(
+                users = previewUsers,
+                searchQuery = "",
+                onSearchQueryChanged = {},
+                onRoleChange = { _, _ -> },
+                onBanToggle = {},
+                onDelete = {},
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "User Management Content - Dark")
+@Composable
+private fun UserManagementContentDarkPreview() {
+    QuizzezTheme(darkTheme = true) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            UserManagementContent(
+                users = previewUsers,
+                searchQuery = "Nguyen",
+                onSearchQueryChanged = {},
+                onRoleChange = { _, _ -> },
+                onBanToggle = {},
+                onDelete = {},
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "User Management - Empty State")
+@Composable
+private fun UserManagementEmptyPreview() {
+    QuizzezTheme(darkTheme = false) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            UserManagementContent(
+                users = emptyList(),
+                searchQuery = "xyz",
+                onSearchQueryChanged = {},
+                onRoleChange = { _, _ -> },
+                onBanToggle = {},
+                onDelete = {},
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Pill Search Bar - Light")
+@Composable
+private fun PillSearchBarLightPreview() {
+    QuizzezTheme(darkTheme = false) {
+        Surface(
+            color = MaterialTheme.colorScheme.background,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            PillSearchBar(
+                query = "",
+                onQueryChanged = {},
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Pill Search Bar - Dark")
+@Composable
+private fun PillSearchBarDarkPreview() {
+    QuizzezTheme(darkTheme = true) {
+        Surface(
+            color = MaterialTheme.colorScheme.background,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            PillSearchBar(
+                query = "admin",
+                onQueryChanged = {},
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }

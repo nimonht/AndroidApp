@@ -185,6 +185,7 @@
     <string name="auth_or_divider">hoặc</string>
     <string name="auth_password_toggle_cd">Hiện/ẩn mật khẩu</string>
     <string name="auth_password_mismatch">Mật khẩu xác nhận không khớp</string>
+    <string name="auth_account_banned">Tài khoản của bạn đã bị cấm sử dụng ứng dụng. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.</string>
 
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết Quizz</string>
@@ -388,7 +389,7 @@
     <string name="admin_active_users">Người dùng hoạt động</string>
     <string name="admin_public_quizzes">Câu đố công khai</string>
     <string name="admin_private_quizzes">Câu đố riêng tư</string>
-    <string name="admin_draft_quizzes">Câu đố nháp</string>
+
     <string name="admin_deleted_quizzes">Câu đố đã xóa</string>
     <string name="admin_users_count">Quản trị viên</string>
     <string name="admin_card_manage_users">Quản lý người dùng</string>
@@ -400,7 +401,7 @@
     <string name="admin_stat_active_users">Người dùng hoạt động</string>
     <string name="admin_stat_public_quizzes">Quiz công khai</string>
     <string name="admin_stat_private_quizzes">Quiz riêng tư</string>
-    <string name="admin_stat_draft_quizzes">Quiz nháp</string>
+
     <string name="admin_stat_deleted_quizzes">Quiz đã xóa</string>
     <string name="admin_stat_question_pool">Kho câu hỏi cộng đồng</string>
     <string name="admin_stat_avg_attempts_per_quiz">Trung bình lượt chơi/quiz</string>
@@ -512,5 +513,66 @@
     <string name="admin_error_unauthorized">Bạn không có quyền truy cập trang này</string>
     <string name="admin_error_load_failed">Không thể tải dữ liệu quản trị</string>
     <string name="admin_error_action_failed">Hành động quản trị thất bại</string>
+
+    <!-- Admin Dashboard Redesign -->
+    <string name="admin_greeting">Chào bạn, %1$s!</string>
+    <string name="admin_search_placeholder">Tìm kiếm…</string>
+    <string name="admin_quick_stats">Thống kê nhanh</string>
+    <string name="admin_users_subtitle">người dùng</string>
+    <string name="admin_current_subtitle">hiện tại</string>
+    <string name="admin_quizzes_subtitle">câu đố</string>
+    <string name="admin_attempts_subtitle">lượt chơi</string>
+    <string name="admin_engagement_chart">Biểu đồ tương tác</string>
+    <string name="admin_active_users_weekly">Người dùng hoạt động (Tuần qua)</string>
+    <string name="admin_trend_increase">Tăng %1$s%%</string>
+    <string name="admin_recent_activity">Hoạt động gần đây</string>
+
+
+    <!-- Admin Quiz Distribution Chart -->
+    <string name="admin_quiz_distribution">Phân bố quiz theo trạng thái</string>
+    <string name="admin_public_label">Công khai</string>
+    <string name="admin_private_label">Riêng tư</string>
+
+    <string name="admin_deleted_label">Đã xóa</string>
+
+    <!-- Admin User Engagement -->
+    <string name="admin_user_engagement">Mức độ tương tác</string>
+    <string name="admin_active_ratio">Tỷ lệ hoạt động</string>
+    <string name="admin_active_of_total">%1$d / %2$d người dùng</string>
+
+    <!-- Admin Reports Redesign -->
+    <string name="admin_advanced_analytics">Báo cáo phân tích nâng cao</string>
+    <string name="admin_total_plays">Tổng lượt chơi</string>
+    <string name="admin_completion_rate">Tỷ lệ hoàn thành</string>
+    <string name="admin_increase_this_month">+%1$s%% tháng này</string>
+    <string name="admin_avg_duration">Thời gian trung bình: %1$s</string>
+    <string name="admin_quizzes_by_status">Quiz theo trạng thái</string>
+    <string name="admin_created_vs_played">Quiz đã tạo và đã chơi</string>
+    <string name="admin_created_label">Đã tạo</string>
+    <string name="admin_played_label">Đã chơi</string>
+
+    <!-- Admin AI Insights -->
+    <string name="admin_ai_insights">Phân tích thông minh</string>
+    <string name="admin_insight_engagement_title">Tương tác người dùng</string>
+    <string name="admin_insight_engagement_desc">Trung bình %1$s lượt chơi mỗi quiz cho thấy mức độ tương tác tốt từ cộng đồng.</string>
+    <string name="admin_insight_growth_title">Tăng trưởng tốt</string>
+    <string name="admin_insight_growth_desc">%1$s người dùng đang hoạt động, chiếm %2$s%% tổng số người dùng.</string>
+    <string name="admin_insight_content_title">Nội dung phong phú</string>
+    <string name="admin_insight_content_desc">%1$s quiz công khai giúp cộng đồng tiếp cận nội dung dễ dàng hơn.</string>
+    <string name="admin_insight_community_title">Cộng đồng đóng góp</string>
+    <string name="admin_insight_community_desc">%1$s câu hỏi trong kho cộng đồng, tạo nguồn tài nguyên phong phú.</string>
+
+    <!-- Admin User Management Redesign -->
+    <string name="admin_filter_all">Tất cả</string>
+    <string name="admin_filter_admins">Quản trị viên</string>
+    <string name="admin_filter_users">Người dùng</string>
+    <string name="admin_filter_banned">Bị cấm</string>
+    <string name="admin_user_joined">Tham gia: %1$s</string>
+    <string name="admin_no_avatar">Không có ảnh</string>
+
+    <!-- Admin Stats Summary -->
+    <string name="admin_stats_summary">Tổng quan hệ thống</string>
+    <string name="admin_pool_questions_short">Kho câu hỏi</string>
+    <string name="admin_admin_count">Quản trị viên</string>
 
 </resources>

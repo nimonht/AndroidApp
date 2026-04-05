@@ -83,6 +83,12 @@ class AuthRepositoryImpl(
                 // Fetch full profile (including role) from Firestore/Room
                 scope.launch {
                     val user = fetchFullUserProfile(firebaseUser.uid, firebaseUser)
+                    // If user was banned while app was closed, force sign-out
+                    if (user.isBanned) {
+                        firebaseAuth.signOut()
+                        _currentUser.value = null
+                        return@launch
+                    }
                     _currentUser.value = user
                 }
             } else {
@@ -110,6 +116,12 @@ class AuthRepositoryImpl(
 
             // Fetch full profile (including role) from Firestore, falling back to Room
             val user = fetchFullUserProfile(firebaseUser.uid, firebaseUser)
+
+            // Reject banned users — sign out immediately so they cannot use the app
+            if (user.isBanned) {
+                firebaseAuth.signOut()
+                return Result.failure(Exception("Tài khoản của bạn đã bị cấm sử dụng ứng dụng. Vui lòng liên hệ quản trị viên để biết thêm chi tiết."))
+            }
 
             // Update the shared flow so all collectors get the latest data
             _currentUser.value = user

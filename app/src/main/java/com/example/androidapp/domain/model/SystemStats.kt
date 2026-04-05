@@ -12,7 +12,6 @@ package com.example.androidapp.domain.model
  * @property activeUsers Number of users who have activity in the last 30 days
  * @property publicQuizzes Number of quizzes marked as public
  * @property privateQuizzes Number of quizzes that are private (not public, not deleted)
- * @property draftQuizzes Number of quizzes still in draft state
  * @property deletedQuizzes Number of soft-deleted quizzes in recycle bin
  * @property adminUsers Number of users with admin role
  */
@@ -24,7 +23,6 @@ data class SystemStats(
     val activeUsers: Int = 0,
     val publicQuizzes: Int = 0,
     val privateQuizzes: Int = 0,
-    val draftQuizzes: Int = 0,
     val deletedQuizzes: Int = 0,
     val adminUsers: Int = 0
 ) {

@@ -10,20 +10,19 @@ Android quiz app (Kotlin + Jetpack Compose + Firebase) named **Quizzez**. Users 
 
 ```
 domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/Firebase imports.
-            model/      ← Domain models (Quiz, Question, Choice, Attempt, User, ShareCode, QuestionPoolItem)
+            model/      ← Domain models (Quiz, Question, Choice, Attempt, User, ShareCode,
+                          QuestionPoolItem, UserRole, SystemStats)
             repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository,
                           QuestionRepository, ShareCodeRepository, PoolRepository,
-                          StorageRepository, SearchRepository)
-                          NOTE: StorageRepository is no longer used by EditProfileViewModel;
-                          profile avatars are now URL-based (user-pasted or Wallhaven API fetch).
-            usecase/    ← (currently empty; business logic lives directly in ViewModels)
+                          AdminRepository, SearchRepository)
             util/       ← ScoreUtil (star-rating + percentage helpers), ChecksumUtil (SHA-256 quiz
                           integrity), CsvParser + CsvValidator (CSV bulk import), QuizValidator
                           (min 1 question / 2-10 choices / ≥1 correct), ScoreCalculator (exact
                           set equality grading), QuestionShuffler, SearchFilterLogic (tag/
                           visibility/date filtering), ShareCodeUtil (6-char alphanumeric gen),
                           TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting),
-                          MediaUrlValidator, InputSanitizer, TagValidator
+                          MediaUrlValidator, InputSanitizer, TagValidator,
+                          SafeCall (try/catch → Result<T> wrapper for repository impls)
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.
 ui/       ← Compose screens + ViewModels. Screens are stateless; ViewModels own all state.
@@ -33,7 +32,7 @@ Data layer internal structure:
 ```
 data/
   local/
-    AppDatabase.kt          ← Room DB definition (v4); uses fallbackToDestructiveMigration (no explicit migrations)
+    AppDatabase.kt          ← Room DB definition (v5); uses fallbackToDestructiveMigration (no explicit migrations)
     EntityMappers.kt        ← Extension fns: Entity ↔ Domain (toDomain / toEntity)
     converter/Converters.kt ← Room TypeConverters using Gson
     dao/                    ← DAOs (QuizDao, QuestionDao, ChoiceDao, AttemptDao, UserDao, PendingSyncDao)
@@ -42,13 +41,14 @@ data/
     AppMappers.kt           ← Extension fns: DTO ↔ Domain (toDomain / toDto)
     firebase/               ← Remote data sources (QuizRemoteDataSource, AttemptRemoteDataSource,
                               UserRemoteDataSource, QuestionRemoteDataSource,
-                              ShareCodeRemoteDataSource, PoolRemoteDataSource)
+                              ShareCodeRemoteDataSource, PoolRemoteDataSource,
+                              AdminRemoteDataSource) + FirestoreCollections.kt (collection/field constants)
     model/                  ← Firestore DTOs: `QuizDtoModels.kt` (QuizDto + QuestionDto + ChoiceDto),
                               `AttemptDto.kt`, `UserDto.kt`, `ShareCodeDto.kt`, `QuestionPoolItemDto.kt`
   repository/               ← Repository implementations: `QuizRepositoryImpl.kt`, `AttemptRepositoryImpl.kt`,
                               `AuthRepositoryImpl.kt` (wraps FirebaseAuth + UserDao + UserRemoteDataSource),
                               `QuestionRepositoryImpl.kt`, `ShareCodeRepositoryImpl.kt`,
-                              `PoolRepositoryImpl.kt`, `StorageRepositoryImpl.kt` (wraps Firebase Storage),
+                              `PoolRepositoryImpl.kt`, `AdminRepositoryImpl.kt`,
                               `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
   network/
     NetworkMonitor.kt       ← ConnectivityManager wrapper; exposes `isOnline: StateFlow<Boolean>`
@@ -63,7 +63,7 @@ data/
 
 Repositories generally delegate Firestore access to `*RemoteDataSource` classes in `data/remote/firebase/`. Current exception: `PoolRepositoryImpl.kt` also receives `FirebaseFirestore` for batch writes in `contributeQuestions()`.
 
-**Local-first with cloud sync**: Room-backed flows (notably quiz/question/attempt) write to Room first (`syncStatus = PENDING` or queued via `PendingSyncEntity`), then sync to Firestore in the background. Reads emit Room data immediately and refresh from Firestore when online. Some repositories are intentionally remote-only (`ShareCodeRepositoryImpl`, `PoolRepositoryImpl`, `StorageRepositoryImpl`).
+**Local-first with cloud sync**: Room-backed flows (notably quiz/question/attempt) write to Room first (`syncStatus = PENDING` or queued via `PendingSyncEntity`), then sync to Firestore in the background. Reads emit Room data immediately and refresh from Firestore when online. Some repositories are intentionally remote-only (`ShareCodeRepositoryImpl`, `PoolRepositoryImpl`, `AdminRepositoryImpl`).
 
 `PendingSyncEntity` (`data/local/entity/PendingSyncEntity.kt`) provides a separate retry queue (`pending_sync_operations` table) with `retryCount`, `maxRetries`, and `PendingSyncStatus` (PENDING / IN_PROGRESS / FAILED / COMPLETED). `PendingSyncDao` exposes `observePendingCount(): Flow<Int>` for UI sync indicators.
 
@@ -108,6 +108,7 @@ Use `sealed class` for states with distinct phases (e.g., `TakeQuizUiState`); us
 
 Reusable components live in `ui/components/` organized by category:
 - Standalone — `ShareCodeSection`, `TagSuggestionDialog`
+- `admin/` — StatisticCard, AdminUserCard, AdminQuizCard, RoleSelector
 - `common/` — AlertDialog, BottomSheet, MediaDisplay, TagChip, LoginPromptDialog
 - `feedback/` — EmptyState, ErrorState, LoadingSpinner, ScoreCard, SkeletonLoader (`shimmerEffect()` Modifier extension)
 - `forms/` — CodeInputField, DropdownSelector, SwitchToggle, TextInputField, QuizSearchBar
@@ -145,7 +146,7 @@ Existing screen directories under `ui/screens/`:
 - `home/` — `HomeScreen`, `HomeViewModel`
 - `search/` — `SearchScreen`, `SearchViewModel`; state and events are split into standalone files (`SearchUiState.kt`, `SearchEvent.kt`); display model `QuizCardDraft` and sub-composables (`SearchControlsRow`, `TagFilterRow`, `SearchResultsGrid`, `SearchResultsList`, `DiscoverSection`) also live in this package; `SortOption` enum (DATE / POPULARITY / RELEVANCE) is defined in `SearchUiState.kt`
 - `profile/` — `ProfileScreen`, `ProfileViewModel`, `EditProfileScreen`, `EditProfileViewModel`.
-  `EditProfileViewModel` depends only on `AuthRepository` (no `StorageRepository`). Profile avatars
+  `EditProfileViewModel` depends only on `AuthRepository`. Profile avatars
   are URL-based: users paste a URL manually or fetch a random avatar from the Wallhaven API.
   Events: `AvatarUrlChanged(url: String)`, `FetchRandomAvatar` (replaced the old `AvatarSelected(uri: Uri)`).
   `EditProfileUiState` includes `isLoadingAvatar: Boolean` for tracking Wallhaven fetch progress.
@@ -161,6 +162,13 @@ Existing screen directories under `ui/screens/`:
 - `attempt/` — `AttemptDetailScreen`, `AttemptDetailViewModel`
 - `trash/` — `TrashScreen`, `RecycleBinViewModel`
 - `settings/` — `SettingsScreen`, `SettingsViewModel`
+- `pool/` — `QuestionPoolScreen`, `QuestionPoolViewModel`
+- `admin/` — Admin panel (accessed from Profile, not bottom nav); role-guarded in NavHost + Firestore rules.
+  Sub-packages: `dashboard/` (`AdminDashboardScreen`/`ViewModel`/`UiState`),
+  `users/` (`AdminUserManagementScreen`/`ViewModel`/`UiState`),
+  `quizzes/` (`AdminQuizManagementScreen`/`ViewModel`/`UiState`),
+  `reports/` (`AdminReportsScreen`/`ViewModel`/`UiState`).
+  Admin routes: `admin/dashboard`, `admin/users`, `admin/quizzes`, `admin/reports`.
 
 ## Build & Test Commands
 
@@ -181,8 +189,8 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 - **No emojis** anywhere in source code, comments, scripts, or configs.
 - Naming: `{Name}ViewModel`, `{Name}RepositoryImpl`, `{Name}Entity`, `{Name}Dao`, `{Name}Dto`, `{Action}{Entity}UseCase`.
 - Exception: the Trash screen ViewModel is named `RecycleBinViewModel` (not `TrashViewModel`) — match this when editing that file.
-- `domain/usecase/` is currently empty — no use-case classes are implemented. Business logic lives directly in ViewModels.
-- **Profile avatars** are served via URL (user-pasted or randomly fetched from the Wallhaven API), **not** uploaded to Firebase Storage. `EditProfileViewModel` does not depend on `StorageRepository`.
+- `domain/usecase/` does not exist — no use-case classes are implemented. Business logic lives directly in ViewModels.
+- **Profile avatars** are served via URL (user-pasted or randomly fetched from the Wallhaven API), **not** uploaded to Firebase Storage. There is no `StorageRepository`; `EditProfileViewModel` depends only on `AuthRepository`.
 - Private `MutableStateFlow` prefixed with `_`; event handlers prefixed with `on`.
 - KDoc required for all public APIs (see `CODE_RULES.md` §10.1 for format).
 - Branch pattern: `feature/{task-id}-{description}` / `bugfix/{task-id}-{description}`.
@@ -202,5 +210,5 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `CODE_RULES.md` | Full coding standards with examples |
 | `DOKKA_SETUP.md` | Dokka generation setup (`./gradlew :app:dokkaHtml`) |
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
-| `data/local/AppDatabase.kt` | Room DB v4 definition; `fallbackToDestructiveMigration` — no explicit migrations |
-| `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`
+| `data/local/AppDatabase.kt` | Room DB v5 definition; `fallbackToDestructiveMigration` — no explicit migrations |
+| `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |

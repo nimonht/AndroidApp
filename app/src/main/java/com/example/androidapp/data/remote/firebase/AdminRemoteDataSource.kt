@@ -431,18 +431,6 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Get count of draft quizzes.
-     */
-    suspend fun getDraftQuizzesCount(): Int {
-        return firestore.collection(FirestoreCollections.QUIZZES)
-            .whereEqualTo("isDraft", true)
-            .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
-            .get()
-            .await()
-            .size()
-    }
-
-    /**
      * Get count of soft-deleted quizzes in recycle bin.
      * Uses a sentinel timestamp to match documents with a real deletedAt value.
      */
