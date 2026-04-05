@@ -350,6 +350,9 @@ class AdminRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     // ========== STATISTICS ==========
+    // TODO: Replace full-collection `.get().size()` with Firestore count aggregation
+    //       queries (e.g. `query.count().get()`) once the app's minimum Firebase SDK
+    //       version supports them, to reduce read costs and latency at scale.
 
     /**
      * Get count of all users (excluding soft-deleted).

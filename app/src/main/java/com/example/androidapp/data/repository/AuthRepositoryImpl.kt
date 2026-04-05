@@ -80,9 +80,13 @@ class AuthRepositoryImpl(
 
             val firebaseUser = auth.currentUser
             if (firebaseUser != null) {
+                val capturedUid = firebaseUser.uid
                 // Fetch full profile (including role) from Firestore/Room
                 scope.launch {
-                    val user = fetchFullUserProfile(firebaseUser.uid, firebaseUser)
+                    val user = fetchFullUserProfile(capturedUid, firebaseUser)
+                    // Guard against stale writes: the user may have signed out
+                    // (or switched accounts) while the coroutine was in-flight.
+                    if (firebaseAuth.currentUser?.uid != capturedUid) return@launch
                     // If user was banned while app was closed, force sign-out
                     if (user.isBanned) {
                         firebaseAuth.signOut()

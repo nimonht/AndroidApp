@@ -398,7 +398,6 @@
     <string name="admin_private_quizzes">Câu đố riêng tư</string>
 
     <string name="admin_deleted_quizzes">Câu đố đã xóa</string>
-    <string name="admin_users_count">Quản trị viên</string>
     <string name="admin_card_manage_users">Quản lý người dùng</string>
     <string name="admin_card_manage_quizzes">Quản lý câu đố</string>
     <string name="admin_card_view_reports">Xem báo cáo</string>

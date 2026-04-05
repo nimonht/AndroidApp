@@ -170,7 +170,7 @@ object QuizFormHelper {
      */
     fun validateQuizForm(title: String, questions: List<QuestionDraft>): String? {
         if (title.isBlank()) {
-            return "Vui long nhap tieu de bai kiem tra"
+            return "Vui lòng nhập tiêu đề bài kiểm tra"
         }
 
         val result = QuizValidator.validate(

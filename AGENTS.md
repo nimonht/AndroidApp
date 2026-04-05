@@ -21,7 +21,7 @@ domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/
                           set equality grading), QuestionShuffler, SearchFilterLogic (tag/
                           visibility/date filtering), ShareCodeUtil (6-char alphanumeric gen),
                           TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting),
-                          MediaUrlValidator, InputSanitizer, TagValidator,
+                          InputSanitizer, TagValidator,
                           SafeCall (try/catch → Result<T> wrapper for repository impls)
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.

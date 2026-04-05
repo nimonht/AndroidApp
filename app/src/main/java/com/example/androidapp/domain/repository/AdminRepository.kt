@@ -128,7 +128,8 @@ interface AdminRepository {
 
     /**
      * Retrieve system-wide statistics for the admin dashboard.
-     * Emits updates whenever underlying data changes.
+     * Emits a single snapshot of the current counts and completes.
+     * Call again (e.g. via retry) to refresh.
      *
      * @return Flow emitting current [SystemStats]
      */

@@ -17,13 +17,16 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Check if user is an administrator (and not soft-deleted/banned)
+    // Check if user is an administrator (and not soft-deleted/banned).
+    // Caches the user document once to minimise Firestore reads.
     function isAdmin() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' &&
-        (!('deletedAt' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) ||
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deletedAt == null);
+      let me = isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+          : null;
+      return me != null &&
+        me.role == 'admin' &&
+        (!('deletedAt' in me) || me.deletedAt == null);
     }
 
     // Get quiz data from database
@@ -61,15 +64,15 @@ service cloud.firestore {
 
     match /users/{userId} {
       // Any authenticated user can read user profiles
-      // Admins can read all users (including deleted)
-      allow read: if isSignedIn() || isAdmin();
+      allow read: if isSignedIn();
 
       // Users can only create their own profile
       allow create: if isOwner(userId);
 
-      // Users can update their own profile, or admins can update any profile
-      // When admins update, they can change the role field
-      allow update: if isOwner(userId) || isAdmin();
+      // Owners can update their profile EXCEPT role and deletedAt (prevents self-escalation).
+      // Admins can update any profile (including role changes for user management).
+      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'deletedAt']))
+        || isAdmin();
 
       // Users can delete their own profile, or admins can delete any profile
       allow delete: if isOwner(userId) || isAdmin();
