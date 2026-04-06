@@ -38,7 +38,7 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

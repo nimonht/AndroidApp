@@ -34,7 +34,8 @@ fun QuizEntity.toDomain(): Quiz = Quiz(
     checksum = checksum,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    deletedAt = deletedAt
+    deletedAt = deletedAt,
+    isRemovedFromCloud = isRemovedFromCloud
 )
 
 /** Maps domain [Quiz] to [QuizEntity] for Room storage. */
@@ -54,7 +55,8 @@ fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt,
-    syncStatus = syncStatus
+    syncStatus = syncStatus,
+    isRemovedFromCloud = isRemovedFromCloud
 )
 
 // --- QUESTION ---

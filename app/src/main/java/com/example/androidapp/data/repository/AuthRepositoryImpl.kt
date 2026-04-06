@@ -450,8 +450,28 @@ class AuthRepositoryImpl(
                 userDao.insertUser(domainUser.toEntity())
                 return domainUser
             }
+
+            // Firestore is reachable but no user document exists.
+            // This happens when the registration Firestore write failed, or
+            // the account was created before the users collection was
+            // introduced. Create the missing document so the profile is
+            // discoverable by other features (admin panel, quiz author
+            // display, etc.).
+            val newUserDto = UserDto(
+                id = uid,
+                email = firebaseUser.email ?: "",
+                displayName = firebaseUser.displayName ?: "",
+                username = firebaseUser.displayName ?: "",
+                photoUrl = firebaseUser.photoUrl?.toString(),
+                createdAt = Timestamp.now(),
+                updatedAt = Timestamp.now()
+            )
+            userRemoteDataSource.saveUser(newUserDto)
+            val domainUser = newUserDto.toDomain()
+            userDao.insertUser(domainUser.toEntity())
+            return domainUser
         } catch (_: Exception) {
-            // Firestore fetch failed (e.g. offline) — fall through to Room
+            // Firestore unavailable (offline) — fall through to Room
         }
 
         // 2. Try Room cache

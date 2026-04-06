@@ -157,6 +157,8 @@
     <string name="home_join_session_label">THAM GIA</string>
     <string name="home_join_button">THAM GIA</string>
     <string name="home_code_placeholder">e.g. ABC123</string>
+    <string name="home_admin_removed_warning">Có %1$d bài kiểm tra đã bị xóa khỏi đám mây bởi quản trị viên. Chỉ bạn có thể xem chúng trên thiết bị này. Hãy xóa thủ công nếu không cần nữa.</string>
+    <string name="home_quiz_removed_from_cloud">Đã bị xóa khỏi đám mây</string>
 
     <!-- Dialogs -->
     <string name="loading_processing">Đang xử lý…</string>

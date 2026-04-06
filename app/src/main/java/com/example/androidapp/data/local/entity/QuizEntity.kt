@@ -52,7 +52,15 @@ data class QuizEntity(
     val deletedAt: Long? = null,
 
     @ColumnInfo(name = "sync_status")
-    val syncStatus: String = SyncStatus.SYNCED.name
+    val syncStatus: String = SyncStatus.SYNCED.name,
+
+    /**
+     * True when the quiz was permanently removed from Firestore (e.g. by an
+     * admin) but still exists in the local Room database. The user is warned
+     * that only they can see this quiz and should delete it manually.
+     */
+    @ColumnInfo(name = "is_removed_from_cloud", defaultValue = "0")
+    val isRemovedFromCloud: Boolean = false
 )
 
 /**

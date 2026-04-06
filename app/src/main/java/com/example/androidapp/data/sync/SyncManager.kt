@@ -339,20 +339,18 @@ class SyncManager(
                 }
             }
 
-            // Clean up stale local quizzes owned by this user that no longer exist on remote.
-            // Only clean quizzes that are NOT pending local sync (to avoid deleting locally-created drafts).
+            // Detect owner's quizzes that no longer exist on Firestore.
+            // Instead of deleting them (they may have been removed by an admin),
+            // mark them so the user is warned and can decide to delete manually.
             val remoteQuizIds = quizDtos.map { it.id }.toSet()
             val localUserQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
             val staleQuizzes = localUserQuizzes.filter { local ->
                 local.id !in remoteQuizIds && local.syncStatus != "PENDING"
             }
             staleQuizzes.forEach { staleQuiz ->
-                val questions = questionDao.getQuestionsByQuizIdOnce(staleQuiz.id)
-                questions.forEach { question ->
-                    choiceDao.deleteChoicesByQuestionId(question.id)
-                    questionDao.deleteQuestion(question)
+                if (!staleQuiz.isRemovedFromCloud) {
+                    quizDao.markRemovedFromCloud(staleQuiz.id, true)
                 }
-                quizDao.deleteQuiz(staleQuiz)
             }
 
             _syncState.value = SyncState.IDLE

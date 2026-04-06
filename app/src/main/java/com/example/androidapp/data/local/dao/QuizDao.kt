@@ -89,6 +89,14 @@ interface QuizDao {
     suspend fun getQuizzesByOwnerOnce(userId: String): List<QuizEntity>
 
     /**
+     * Marks a quiz as removed from the cloud (or clears the flag).
+     * Used when a sync detects an owner's quiz no longer exists on Firestore
+     * (e.g. deleted by an admin) so the user can be warned.
+     */
+    @Query("UPDATE quizzes SET is_removed_from_cloud = :isRemoved WHERE id = :quizId")
+    suspend fun markRemovedFromCloud(quizId: String, isRemoved: Boolean)
+
+    /**
      * Permanently delete a quiz by its ID.
      */
     @Query("DELETE FROM quizzes WHERE id = :quizId")

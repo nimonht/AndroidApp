@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,7 +29,13 @@ data class HomeUiState(
     val isLoggedIn: Boolean = false,
     val displayName: String = "",
     val photoUrl: String? = null,
-    val userId: String = ""
+    val userId: String = "",
+    /**
+     * Number of the current user's quizzes that were removed from Firestore
+     * (e.g. by an admin) but still exist locally. When greater than zero the
+     * UI shows a warning banner.
+     */
+    val adminRemovedQuizCount: Int = 0
 )
 
 /** Events that can be dispatched to [HomeViewModel]. */
@@ -53,6 +60,15 @@ class HomeViewModel(
 
     /** Current UI state for the Home screen. */
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /**
+     * Handle for the long-lived home-data collection coroutine.
+     * Cancelled and relaunched on every [loadHomeData] call so that:
+     * 1. Only one collector exists at a time (no zombie coroutines).
+     * 2. A fresh Room subscription always emits the current snapshot
+     *    immediately, guaranteeing `isRefreshing` is reset to false.
+     */
+    private var homeDataJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -119,27 +135,40 @@ class HomeViewModel(
         }
     }
 
+    /**
+     * Handles pull-to-refresh. Sets the refreshing flag immediately and
+     * relaunches the home-data collector which cancels the previous one.
+     */
     private fun onRefresh() {
         val userId = _uiState.value.userId
         if (userId.isNotBlank()) {
-            viewModelScope.launch {
-                _uiState.update { it.copy(isRefreshing = true) }
-                loadHomeData(userId)
-            }
+            _uiState.update { it.copy(isRefreshing = true) }
+            loadHomeData(userId)
         }
     }
 
+    /**
+     * Cancels any in-flight home-data collection and starts a fresh one.
+     *
+     * Cancelling the previous [homeDataJob] is critical: Room/Firestore cold
+     * Flows always emit current data on first subscription, so a fresh
+     * `.collect` is guaranteed to fire immediately. This ensures
+     * `isRefreshing` is reset to `false` without relying on data changes.
+     */
     private fun loadHomeData(userId: String) {
-        viewModelScope.launch {
+        homeDataJob?.cancel()
+        homeDataJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             quizRepository.getHomeQuizzes(userId).collect { homeQuizzes ->
+                val removedCount = homeQuizzes.myQuizzes.count { it.isRemovedFromCloud }
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
                         isRefreshing = false,
                         recentQuizzes = homeQuizzes.recentAttemptQuizzes,
                         myQuizzes = homeQuizzes.myQuizzes,
-                        trendingQuizzes = homeQuizzes.trendingQuizzes
+                        trendingQuizzes = homeQuizzes.trendingQuizzes,
+                        adminRemovedQuizCount = removedCount
                     )
                 }
             }
