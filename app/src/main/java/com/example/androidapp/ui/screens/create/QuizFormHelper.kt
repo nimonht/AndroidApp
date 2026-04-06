@@ -19,6 +19,7 @@ import java.util.UUID
  * @property explanation Optional explanation shown after answering.
  * @property mediaUrl Optional URL for an image or video attached to the question.
  * @property points The point value awarded for a correct answer (1-10).
+ * @property sourcePoolItemId ID of the [QuestionPoolItem] this draft was imported from, or null if manually created.
  */
 data class QuestionDraft(
     val id: String = UUID.randomUUID().toString(),
@@ -28,7 +29,8 @@ data class QuestionDraft(
     val isMultiSelect: Boolean = false,
     val explanation: String = "",
     val mediaUrl: String = "",
-    val points: Int = 1
+    val points: Int = 1,
+    val sourcePoolItemId: String? = null
 )
 
 /**
@@ -306,7 +308,8 @@ object QuizFormHelper {
                 isMultiSelect = poolItem.question.isMultiSelect,
                 explanation = poolItem.question.explanation ?: "",
                 mediaUrl = poolItem.question.mediaUrl ?: "",
-                points = poolItem.question.points
+                points = poolItem.question.points,
+                sourcePoolItemId = poolItem.id
             )
         }
 

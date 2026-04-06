@@ -330,7 +330,10 @@ class CreateQuizViewModel(
 
     /**
      * Maps the selected [QuestionPoolItem]s to [QuestionDraft] entries, dispatches
-     * [CreateQuizEvent.ImportQuestions], increments usage counts, and closes the dialog.
+     * [CreateQuizEvent.ImportQuestions], and closes the dialog.
+     *
+     * Usage-count increments are deferred to [onSaveQuiz] so that only questions
+     * still present at publish time are counted.
      */
     private fun onImportFromPool() {
         val state = _uiState.value
@@ -341,13 +344,6 @@ class CreateQuizViewModel(
 
         // Append imported questions via the existing ImportQuestions handler.
         onEvent(CreateQuizEvent.ImportQuestions(drafts))
-
-        // Increment usage counts in the background.
-        viewModelScope.launch {
-            for (item in selectedItems) {
-                poolRepository.incrementUsageCount(item.id)
-            }
-        }
 
         // Close the dialog and reset pool state.
         onEvent(CreateQuizEvent.DismissPoolDialog)
@@ -360,7 +356,8 @@ class CreateQuizViewModel(
      * [CreateQuizUiState.isSaved] is set to `true` to trigger back navigation.
      * The [CreateQuizUiState.isPublic] toggle is respected so the user can
      * publish a quiz as either **private** (share-code only) or **public**
-     * (searchable by anyone). Pool contribution only runs on the publish path.
+     * (searchable by anyone). Pool contribution and pool usage-count increments
+     * only run on the publish path.
      *
      * When [publishAfterSave] is `false` the quiz is saved as a draft --
      * [CreateQuizUiState.isPublic] is forced to `false` (drafts must never be
@@ -428,6 +425,15 @@ class CreateQuizViewModel(
                             contributions.forEach { poolItem ->
                                 poolRepository.contributeQuestion(poolItem)
                             }
+                        }
+                        // Increment usage counts for questions imported from the
+                        // community pool. Only drafts still present at publish time
+                        // are counted, so removals before publishing are respected.
+                        val poolItemIds = state.questions
+                            .mapNotNull { draft -> draft.sourcePoolItemId }
+                            .distinct()
+                        for (poolItemId in poolItemIds) {
+                            poolRepository.incrementUsageCount(poolItemId)
                         }
                         _uiState.update {
                             it.copy(

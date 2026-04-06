@@ -135,13 +135,20 @@ fun QuizzezNavHost(
                         navController.navigate(Routes.quizDetail(quizId))
                     },
                     onNavigateToSearch = {
-                        navController.navigate(Routes.SEARCH)
+                        navController.navigate(Routes.SEARCH) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     },
                     onNavigateToEditQuiz = { quizId ->
                         navController.navigate(Routes.quizEdit(quizId))
                     },
                     onNavigateToSearchWithTag = { tag ->
-                        navController.navigate(Routes.searchWithTag(tag))
+                        navController.navigate(Routes.searchWithTag(tag)) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -226,7 +233,12 @@ fun QuizzezNavHost(
                     onNavigateBack = { navController.popBackStack() },
                     onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) },
                     onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) },
-                    onTagClick = { tag -> navController.navigate(Routes.searchWithTag(tag)) }
+                    onTagClick = { tag ->
+                        navController.navigate(Routes.searchWithTag(tag)) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
