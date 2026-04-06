@@ -9,6 +9,7 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
@@ -40,6 +41,13 @@ interface AppContainer {
 
     val networkMonitor: NetworkMonitor
     val syncManager: SyncManager
+
+    /**
+     * Manages incremental invalidation of locally-cached quizzes that
+     * have been permanently deleted from Firestore by other users or
+     * maintenance tasks. Uses a lightweight tombstone-based approach.
+     */
+    val quizInvalidationManager: QuizInvalidationManager
 
     val authRepository: AuthRepository
     val quizRepository: QuizRepository

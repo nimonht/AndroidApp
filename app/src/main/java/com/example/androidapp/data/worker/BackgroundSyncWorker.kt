@@ -8,17 +8,22 @@ import com.example.androidapp.QuizzezApplication
 import kotlinx.coroutines.flow.first
 
 /**
- * Periodic background worker that synchronizes local Room data with Firestore.
+ * Periodic background worker that performs a full bi-directional sync
+ * followed by an incremental tombstone-based invalidation check.
  *
- * The worker is scheduled via WorkManager with a 15-minute repeat interval and
- * a network connectivity constraint. On each run it:
- * 1. Checks whether sync is currently allowed (network + user preferences).
- * 2. Retrieves the authenticated user; skips silently when no user is signed in.
- * 3. Delegates to [com.example.androidapp.data.sync.SyncManager.performFullSync]
- *    which uploads pending local changes and then downloads remote updates.
+ * Scheduled via WorkManager with a 15-minute repeat interval and a
+ * network connectivity constraint. The worker:
  *
- * Returns [Result.success] when the sync completes (or is skipped) and
- * [Result.retry] on transient failures so WorkManager can back off and retry.
+ * 1. Guards on sync-allowed settings and authenticated user.
+ * 2. Delegates to [SyncManager.performFullSync] for upload + download.
+ * 3. Runs [QuizInvalidationManager.checkForDeletedQuizzes] to purge
+ *    locally-cached quizzes that were permanently deleted on Firestore
+ *    by other users or maintenance tasks. This is a lightweight query
+ *    against the `quizDeletions` tombstone collection -- far cheaper
+ *    than re-fetching all quizzes.
+ *
+ * Returns [Result.retry] on failure so WorkManager applies exponential
+ * backoff automatically.
  */
 class BackgroundSyncWorker(
     appContext: Context,
@@ -29,6 +34,7 @@ class BackgroundSyncWorker(
         val container = (applicationContext as QuizzezApplication).appContainer
         val syncManager = container.syncManager
         val authRepository = container.authRepository
+        val quizInvalidationManager = container.quizInvalidationManager
 
         return try {
             if (!syncManager.isSyncAllowed()) {
@@ -42,6 +48,17 @@ class BackgroundSyncWorker(
                 } else {
                     Log.d(TAG, "Starting full sync for authenticated user...")
                     syncManager.performFullSync(user.id)
+
+                    // Run lightweight tombstone-based invalidation to purge
+                    // locally-cached quizzes that were permanently deleted on
+                    // Firestore since the last check. This is an incremental
+                    // query (typically returning 0-5 documents) and is much
+                    // cheaper than the full stale-cleanup pass.
+                    val purgedCount = quizInvalidationManager.checkForDeletedQuizzes()
+                    if (purgedCount > 0) {
+                        Log.d(TAG, "Invalidation sweep purged $purgedCount stale local quizzes.")
+                    }
+
                     Log.d(TAG, "Full sync completed successfully.")
                     Result.success()
                 }

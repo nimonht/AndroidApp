@@ -13,6 +13,16 @@ object FirestoreCollections {
     const val SHARE_CODES = "shareCodes"
     const val QUESTION_POOL = "questionPool"
 
+    /**
+     * Lightweight tombstone collection that records permanent quiz deletions.
+     * Clients query this collection incrementally (by [Fields.DELETED_AT])
+     * to detect quizzes removed from Firestore without re-fetching all quizzes.
+     *
+     * Document schema: `{ quizId: String, deletedAt: Timestamp }`.
+     * Old entries are cleaned up by [BackendMaintenanceWorker] after 90 days.
+     */
+    const val QUIZ_DELETIONS = "quizDeletions"
+
     // Field names
     object Fields {
         const val OWNER_ID = "ownerId"

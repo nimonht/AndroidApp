@@ -19,9 +19,13 @@ import java.util.Date
  * Responsibilities:
  * 1. Cascade-delete quizzes soft-deleted more than 30 days ago
  *    (including subcollections: questions, choices, and related attempts).
+ *    Writes a deletion tombstone for each permanently removed quiz so that
+ *    other clients can detect the removal incrementally.
  * 2. Aggregate quiz statistics (attempt counts) from the attempts collection.
  * 3. Remove inactive question-pool entries.
- * 4. Clean up user documents marked for deletion.
+ * 4. Clean up user documents marked for deletion (with tombstones for their quizzes).
+ * 5. Garbage-collect old deletion tombstones (older than 90 days) to prevent
+ *    unbounded growth of the `quizDeletions` collection.
  *
  * Each task is executed independently so a failure in one does not prevent
  * the others from running. The worker returns [Result.success] unless a
@@ -67,6 +71,13 @@ class BackendMaintenanceWorker(
             hasErrors = true
         }
 
+        try {
+            cleanupOldTombstones(firestore)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to cleanup old deletion tombstones", e)
+            hasErrors = true
+        }
+
         Log.d(TAG, "Backend maintenance tasks completed (errors=$hasErrors).")
         return if (hasErrors) Result.retry() else Result.success()
     }
@@ -74,6 +85,10 @@ class BackendMaintenanceWorker(
     /**
      * Deletes quizzes that have been in the recycle bin for more than 30 days,
      * along with all their subcollections (questions -> choices) and related attempts.
+     *
+     * Writes a deletion tombstone for each permanently removed quiz so that
+     * other clients can detect the removal during their next incremental
+     * invalidation check (via [QuizInvalidationManager.checkForDeletedQuizzes]).
      */
     private suspend fun cleanupOldDeletedQuizzes(firestore: FirebaseFirestore) {
         val cutoff = Timestamp(Date(System.currentTimeMillis() - DELETION_THRESHOLD_MS))
@@ -93,6 +108,10 @@ class BackendMaintenanceWorker(
 
             val quizId = doc.id
             try {
+                // Write a deletion tombstone before removing the quiz document
+                // so other clients can detect the permanent removal.
+                writeSingleTombstone(firestore, quizId)
+
                 // 1. Delete related attempts (top-level collection)
                 deleteCollectionByField(
                     firestore,
@@ -210,6 +229,9 @@ class BackendMaintenanceWorker(
     /**
      * Removes user documents that are marked for deletion (have a non-null [deletedAt]).
      * Also cleans up quizzes, attempts, and pool contributions owned by those users.
+     *
+     * Writes deletion tombstones for each of the user's quizzes before removing
+     * them, so other clients that cached those quizzes can detect the removal.
      */
     private suspend fun cleanupDeletedUsers(firestore: FirebaseFirestore) {
         Log.d(TAG, "Cleaning up deleted users...")
@@ -228,6 +250,10 @@ class BackendMaintenanceWorker(
                     .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
                     .get()
                     .await()
+
+                // Write deletion tombstones for all the user's quizzes in batches
+                // before actually deleting them.
+                writeTombstonesForQuizDocs(firestore, userQuizzes)
 
                 for (quizDoc in userQuizzes.documents) {
                     val quizId = quizDoc.id
@@ -279,6 +305,30 @@ class BackendMaintenanceWorker(
         Log.d(TAG, "Cleaned up $deletedCount deleted users and their data.")
     }
 
+    /**
+     * Removes deletion tombstones older than [TOMBSTONE_RETENTION_MS] (90 days).
+     *
+     * Tombstones serve as lightweight markers so other clients can detect
+     * permanent quiz deletions incrementally. After 90 days any client that
+     * has not synced will fall back to the full stale-cleanup mechanism in
+     * [SyncManager.downloadPublicQuizzes], so old tombstones can be safely
+     * garbage-collected to prevent unbounded collection growth.
+     */
+    private suspend fun cleanupOldTombstones(firestore: FirebaseFirestore) {
+        Log.d(TAG, "Cleaning up old deletion tombstones...")
+
+        val cutoff = Timestamp(Date(System.currentTimeMillis() - TOMBSTONE_RETENTION_MS))
+
+        val snapshot = firestore.collection(FirestoreCollections.QUIZ_DELETIONS)
+            .whereLessThan(FirestoreCollections.Fields.DELETED_AT, cutoff)
+            .get()
+            .await()
+
+        deleteBatch(firestore, snapshot)
+
+        Log.d(TAG, "Cleaned up ${snapshot.size()} old deletion tombstones.")
+    }
+
     // ---- Helpers ----
 
     /**
@@ -310,14 +360,68 @@ class BackendMaintenanceWorker(
         deleteBatch(firestore, snapshot)
     }
 
+    /**
+     * Writes a single deletion tombstone document for the given [quizId].
+     * Used when permanently removing individual quizzes (e.g., during the
+     * 30-day cascade cleanup).
+     */
+    private suspend fun writeSingleTombstone(firestore: FirebaseFirestore, quizId: String) {
+        val tombstone = hashMapOf(
+            FirestoreCollections.Fields.QUIZ_ID to quizId,
+            FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
+        )
+        firestore.collection(FirestoreCollections.QUIZ_DELETIONS)
+            .add(tombstone)
+            .await()
+    }
+
+    /**
+     * Writes deletion tombstones for all quiz documents in the given snapshot.
+     * Uses batched writes chunked to respect Firestore's 500-operation limit.
+     *
+     * Call this before batch-deleting the quiz documents themselves so that
+     * other clients can detect the removal during their next invalidation sweep.
+     */
+    private suspend fun writeTombstonesForQuizDocs(
+        firestore: FirebaseFirestore,
+        quizSnapshot: QuerySnapshot
+    ) {
+        if (quizSnapshot.isEmpty) return
+
+        quizSnapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
+            val batch = firestore.batch()
+            chunk.forEach { quizDoc ->
+                val tombstoneRef = firestore
+                    .collection(FirestoreCollections.QUIZ_DELETIONS)
+                    .document()
+                batch.set(
+                    tombstoneRef,
+                    hashMapOf(
+                        FirestoreCollections.Fields.QUIZ_ID to quizDoc.id,
+                        FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
+                    )
+                )
+            }
+            batch.commit().await()
+        }
+    }
+
     companion object {
         private const val TAG = "BackendMaintenance"
         const val WORK_NAME = "BackendMaintenanceWorker"
+
         /**
          * How long a soft-deleted quiz must remain in the recycle bin before
          * permanent removal. Set to 30 days for production.
          */
         private const val DELETION_THRESHOLD_MS = 30L * 24 * 60 * 60 * 1000 // 30 days
         private const val BATCH_LIMIT = 500
+
+        /**
+         * How long deletion tombstones are retained before garbage collection.
+         * Set to 90 days -- any client that has not synced within this window
+         * will rely on the full stale-cleanup safety net instead.
+         */
+        private const val TOMBSTONE_RETENTION_MS = 90L * 24 * 60 * 60 * 1000 // 90 days
     }
 }

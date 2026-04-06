@@ -23,6 +23,7 @@ import com.example.androidapp.data.repository.AttemptRepositoryImpl
 import com.example.androidapp.data.repository.AuthRepositoryImpl
 import com.example.androidapp.data.repository.PoolRepositoryImpl
 import com.example.androidapp.data.repository.QuizRepositoryImpl
+import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
@@ -101,6 +102,17 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             attemptRemoteDataSource,
             networkMonitor,
             settingsPreferences
+        )
+    }
+
+    override val quizInvalidationManager: QuizInvalidationManager by lazy {
+        QuizInvalidationManager(
+            context,
+            quizDao,
+            questionDao,
+            choiceDao,
+            quizRemoteDataSource,
+            networkMonitor
         )
     }
 

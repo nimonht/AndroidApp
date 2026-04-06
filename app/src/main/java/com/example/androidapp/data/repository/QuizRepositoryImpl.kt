@@ -279,7 +279,13 @@ class QuizRepositoryImpl(
     override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {
         return safeCall {
             val quizDto = remoteDataSource.getQuizById(quizId)
-                ?: throw Exception("Quiz not found on remote")
+
+            if (quizDto == null || quizDto.deletedAt != null) {
+                // Quiz has been deleted or soft-deleted on remote -- purge the
+                // local copy so the user does not interact with stale content.
+                purgeLocalQuiz(quizId)
+                throw Exception("Quiz no longer available on remote")
+            }
 
             val quiz = quizDto.toDomain()
             quizDao.insertQuiz(quiz.toEntity())
@@ -360,6 +366,26 @@ class QuizRepositoryImpl(
             }
         } catch (_: Exception) {
         }
+    }
+
+    /**
+     * Removes a quiz and all its associated questions and choices from
+     * the local Room database. Attempts are intentionally preserved
+     * because they reference the quiz by ID but have no foreign key
+     * constraint -- the user's history remains intact.
+     *
+     * Called when a remote check reveals the quiz has been permanently
+     * deleted or soft-deleted by its owner.
+     *
+     * @param quizId the ID of the quiz to purge.
+     */
+    private suspend fun purgeLocalQuiz(quizId: String) {
+        val questions = questionDao.getQuestionsByQuizIdOnce(quizId)
+        for (question in questions) {
+            choiceDao.deleteChoicesByQuestionId(question.id)
+            questionDao.deleteQuestion(question)
+        }
+        quizDao.deleteQuizById(quizId)
     }
 
     /**
