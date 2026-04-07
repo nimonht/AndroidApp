@@ -2,6 +2,7 @@ package com.example.androidapp.data.remote.firebase
 
 import android.util.Log
 import com.example.androidapp.data.remote.model.QuestionPoolItemDto
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -136,6 +137,70 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
                 "Pool item $poolItemId isActive verification failed: expected $isActive, got $actualValue"
             )
         }
+    }
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Queries pool items contributed by a user with cursor-based pagination.
+     *
+     * @param userId The contributor's user ID.
+     * @param pageSize Number of documents to fetch.
+     * @param startAfterDoc The last [DocumentSnapshot] from the previous page, or null for the first page.
+     * @return A pair of the pool item DTOs and the last [DocumentSnapshot] for cursor continuation.
+     */
+    suspend fun getContributionsByUserPaged(
+        userId: String,
+        pageSize: Int,
+        startAfterDoc: DocumentSnapshot? = null
+    ): Pair<List<QuestionPoolItemDto>, DocumentSnapshot?> {
+        var query = firestore.collection(FirestoreCollections.QUESTION_POOL)
+            .whereEqualTo(FirestoreCollections.Fields.CONTRIBUTOR_ID, userId)
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(pageSize.toLong())
+
+        if (startAfterDoc != null) {
+            query = query.startAfter(startAfterDoc)
+        }
+
+        val snapshot = query.get().await()
+        val items = snapshot.documents.mapNotNull { it.toObject(QuestionPoolItemDto::class.java) }
+        val lastDoc = snapshot.documents.lastOrNull()
+        return Pair(items, lastDoc)
+    }
+
+    /**
+     * Queries active pool items by tags with cursor-based pagination.
+     *
+     * @param tags The tags to filter by (at most [MAX_TAG_QUERY_LIMIT]).
+     * @param pageSize Number of documents to fetch.
+     * @param startAfterDoc The last [DocumentSnapshot] from the previous page, or null for the first page.
+     * @return A pair of the pool item DTOs and the last [DocumentSnapshot] for cursor continuation.
+     * @throws IllegalArgumentException if [tags] exceeds [MAX_TAG_QUERY_LIMIT].
+     */
+    suspend fun getActivePoolItemsByTagsPaged(
+        tags: List<String>,
+        pageSize: Int,
+        startAfterDoc: DocumentSnapshot? = null
+    ): Pair<List<QuestionPoolItemDto>, DocumentSnapshot?> {
+        if (tags.isEmpty()) return Pair(emptyList(), null)
+        require(tags.size <= MAX_TAG_QUERY_LIMIT) {
+            "getActivePoolItemsByTagsPaged accepts at most $MAX_TAG_QUERY_LIMIT tags; received ${tags.size}."
+        }
+
+        var query = firestore.collection(FirestoreCollections.QUESTION_POOL)
+            .whereArrayContainsAny("tags", tags)
+            .whereEqualTo(FirestoreCollections.Fields.IS_ACTIVE, true)
+            .limit(pageSize.toLong())
+
+        if (startAfterDoc != null) {
+            query = query.startAfter(startAfterDoc)
+        }
+
+        val snapshot = query.get().await()
+        val items = snapshot.documents.mapNotNull { it.toObject(QuestionPoolItemDto::class.java) }
+        val lastDoc = snapshot.documents.lastOrNull()
+        return Pair(items, lastDoc)
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package com.example.androidapp.domain.repository
 
+import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.QuestionPoolItem
 
@@ -91,4 +92,37 @@ interface PoolRepository {
      * @return [Result] containing the selected [QuestionPoolItem] objects.
      */
     suspend fun autoGenerateQuiz(tags: List<String>, count: Int): Result<List<QuestionPoolItem>>
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Lists contributed questions by the user with cursor-based pagination.
+     * Pass [loadMore] = false to reset to the first page.
+     *
+     * @param userId The user's ID.
+     * @param pageSize Number of items per page.
+     * @param loadMore If true, fetches the next page; if false, resets to first page.
+     * @return [Result] wrapping a [PaginatedResult] with contributions and hasMore flag.
+     */
+    suspend fun getMyContributionsPaged(
+        userId: String,
+        pageSize: Int,
+        loadMore: Boolean = false
+    ): Result<PaginatedResult<QuestionPoolItem>>
+
+    /**
+     * Queries pool questions by tags with cursor-based pagination.
+     *
+     * @param tags The tags to filter by.
+     * @param activeOnly If true, returns only active items.
+     * @param pageSize Number of items per page.
+     * @param loadMore If true, fetches the next page; if false, resets to first page.
+     * @return [Result] wrapping a [PaginatedResult] with pool items and hasMore flag.
+     */
+    suspend fun getPoolQuestionsByTagsPaged(
+        tags: List<String>,
+        activeOnly: Boolean = true,
+        pageSize: Int,
+        loadMore: Boolean = false
+    ): Result<PaginatedResult<QuestionPoolItem>>
 }

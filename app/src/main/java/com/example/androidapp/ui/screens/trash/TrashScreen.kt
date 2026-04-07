@@ -114,6 +114,26 @@ fun TrashScreen(
                         onDeletePermanently = { quizToDeletePermanently = quiz.id }
                     )
                 }
+
+                // Pagination: load more trigger
+                if (uiState.hasMore) {
+                    item {
+                        LaunchedEffect(Unit) {
+                            viewModel.onEvent(RecycleBinEvent.LoadMore)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                }
             }
         }
 

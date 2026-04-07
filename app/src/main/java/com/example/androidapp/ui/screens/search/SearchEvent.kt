@@ -24,4 +24,10 @@ sealed class SearchEvent {
 
     // Tag click navigation: nguoi dung nhan vao tag tu man hinh khac de tim kiem theo tag
     data class OnTagFilterFromNavigation(val tag: String) : SearchEvent()
+
+    /** Triggered when the user scrolls near the bottom of discover sections. */
+    data object LoadMoreDiscover : SearchEvent()
+
+    /** Triggered when the user scrolls near the bottom of search results. */
+    data object LoadMoreSearchResults : SearchEvent()
 }

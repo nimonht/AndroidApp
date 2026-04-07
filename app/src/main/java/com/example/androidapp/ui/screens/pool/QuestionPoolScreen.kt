@@ -105,6 +105,8 @@ fun QuestionPoolScreen(
                 0 -> MyContributionsTab(
                     contributions = uiState.myContributions,
                     isLoading = uiState.isLoading,
+                    hasMore = uiState.hasMoreContributions,
+                    onLoadMore = { viewModel.onEvent(QuestionPoolEvent.LoadMoreContributions) },
                     onRevoke = { revokeTargetId = it }
                 )
 
@@ -112,6 +114,8 @@ fun QuestionPoolScreen(
                     results = uiState.browseResults,
                     searchTags = uiState.searchTags,
                     isLoading = uiState.isLoading,
+                    hasMore = uiState.hasMoreBrowse,
+                    onLoadMore = { viewModel.onEvent(QuestionPoolEvent.LoadMoreBrowse) },
                     onSearchTagsChanged = { viewModel.onEvent(QuestionPoolEvent.SearchTagsChanged(it)) },
                     onSearch = { viewModel.onEvent(QuestionPoolEvent.SearchPool) }
                 )
@@ -144,6 +148,8 @@ fun QuestionPoolScreen(
 private fun MyContributionsTab(
     contributions: List<QuestionPoolItem>,
     isLoading: Boolean,
+    hasMore: Boolean,
+    onLoadMore: () -> Unit,
     onRevoke: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -166,6 +172,26 @@ private fun MyContributionsTab(
                     item = item,
                     onRevoke = { onRevoke(item.id) }
                 )
+            }
+
+            // Pagination: load more trigger
+            if (hasMore) {
+                item {
+                    LaunchedEffect(Unit) {
+                        onLoadMore()
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
             }
         }
     }
@@ -306,6 +332,8 @@ private fun BrowsePoolTab(
     results: List<QuestionPoolItem>,
     searchTags: String,
     isLoading: Boolean,
+    hasMore: Boolean,
+    onLoadMore: () -> Unit,
     onSearchTagsChanged: (String) -> Unit,
     onSearch: () -> Unit,
     modifier: Modifier = Modifier
@@ -353,6 +381,26 @@ private fun BrowsePoolTab(
             ) {
                 items(results, key = { it.id }) { item ->
                     BrowsePoolCard(item = item)
+                }
+
+                // Pagination: load more trigger
+                if (hasMore) {
+                    item {
+                        LaunchedEffect(Unit) {
+                            onLoadMore()
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 }
             }
         }

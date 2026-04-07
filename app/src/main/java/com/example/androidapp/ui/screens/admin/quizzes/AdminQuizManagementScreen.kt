@@ -93,6 +93,7 @@ fun AdminQuizManagementScreen(
 
                 else -> {
                     QuizManagementContent(
+                        uiState = uiState,
                         quizzes = uiState.quizzes,
                         searchQuery = uiState.searchQuery,
                         showDeleted = uiState.showDeleted,
@@ -108,6 +109,7 @@ fun AdminQuizManagementScreen(
                         onDelete = { quiz ->
                             quizToDelete = quiz
                         },
+                        onLoadMore = { viewModel.loadMoreQuizzes() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -166,6 +168,7 @@ fun AdminQuizManagementScreen(
 
 @Composable
 private fun QuizManagementContent(
+    uiState: AdminQuizManagementUiState,
     quizzes: List<Quiz>,
     searchQuery: String,
     showDeleted: Boolean,
@@ -175,6 +178,7 @@ private fun QuizManagementContent(
     onPublishToggle: (Quiz) -> Unit,
     onRestore: (Quiz) -> Unit,
     onDelete: (Quiz) -> Unit,
+    onLoadMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -250,6 +254,28 @@ private fun QuizManagementContent(
                         onDelete = { onDelete(quiz) }
                     )
                 }
+
+                // Pagination: load more trigger
+                if (uiState.hasMore && !uiState.isLoading) {
+                    item {
+                        LaunchedEffect(Unit) {
+                            onLoadMore()
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isLoadingMore) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -260,6 +286,7 @@ private fun QuizManagementContent(
 private fun QuizManagementContentPreview() {
     QuizzezTheme {
         QuizManagementContent(
+            uiState = AdminQuizManagementUiState(isLoading = false, hasMore = false),
             quizzes = listOf(
                 Quiz(
                     id = "quiz1",
@@ -297,6 +324,7 @@ private fun QuizManagementContentPreview() {
             onPublishToggle = {},
             onRestore = {},
             onDelete = {},
+            onLoadMore = {},
             modifier = Modifier.fillMaxSize()
         )
     }

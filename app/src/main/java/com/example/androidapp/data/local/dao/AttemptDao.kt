@@ -77,4 +77,21 @@ interface AttemptDao {
      */
     @Query("UPDATE attempts SET user_id = :newUserId WHERE user_id = :guestId")
     suspend fun updateUserId(guestId: String, newUserId: String): Int
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Get attempts for a user with a dynamic limit for pagination.
+     * Used by the History screen to incrementally load attempt history.
+     */
+    @Query("SELECT * FROM attempts WHERE user_id = :userId ORDER BY started_at DESC LIMIT :limit")
+    fun getAttemptsByUserLimited(userId: String, limit: Int): Flow<List<AttemptEntity>>
+
+    /**
+     * Get the total count of attempts for a user.
+     * Used by pagination to determine if more items are available.
+     * This is a one-shot suspend query (not a Flow).
+     */
+    @Query("SELECT COUNT(*) FROM attempts WHERE user_id = :userId")
+    suspend fun getAttemptCountByUserOnce(userId: String): Int
 }

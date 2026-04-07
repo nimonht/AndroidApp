@@ -3,12 +3,14 @@ package com.example.androidapp.data.repository
 import com.example.androidapp.data.remote.firebase.AdminRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.domain.model.Attempt
+import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.model.SystemStats
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.util.safeCall
+import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +26,12 @@ import kotlinx.coroutines.flow.map
 class AdminRepositoryImpl(
     private val adminRemoteDataSource: AdminRemoteDataSource
 ) : AdminRepository {
+
+    /** Cursor for user pagination. Held by the singleton repository instance. */
+    private var lastUserDoc: DocumentSnapshot? = null
+
+    /** Cursor for quiz pagination. */
+    private var lastQuizDoc: DocumentSnapshot? = null
 
     // ========== USER MANAGEMENT ==========
 
@@ -149,5 +157,33 @@ class AdminRepositoryImpl(
             adminRemoteDataSource.searchQuizzes(query, includeDeleted)
                 .map { quizDtos -> quizDtos.map { it.toDomain() } }
         }
+    }
+
+    // ==================== Paginated queries ====================
+
+    override suspend fun getUsersPage(pageSize: Int, loadMore: Boolean): PaginatedResult<User> {
+        if (!loadMore) lastUserDoc = null
+        val (dtos, lastDoc) = adminRemoteDataSource.getUsersPage(pageSize, lastUserDoc)
+        lastUserDoc = lastDoc
+        return PaginatedResult(
+            items = dtos.map { it.toDomain() },
+            hasMore = dtos.size >= pageSize
+        )
+    }
+
+    override suspend fun getQuizzesPage(
+        pageSize: Int,
+        includeDeleted: Boolean,
+        loadMore: Boolean
+    ): PaginatedResult<Quiz> {
+        if (!loadMore) lastQuizDoc = null
+        val (dtos, lastDoc) = adminRemoteDataSource.getQuizzesPage(
+            pageSize, includeDeleted, lastQuizDoc
+        )
+        lastQuizDoc = lastDoc
+        return PaginatedResult(
+            items = dtos.map { it.toDomain() },
+            hasMore = dtos.size >= pageSize
+        )
     }
 }

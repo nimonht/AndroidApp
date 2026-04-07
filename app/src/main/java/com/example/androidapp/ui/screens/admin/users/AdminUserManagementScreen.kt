@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -129,6 +131,7 @@ fun AdminUserManagementScreen(
 
                 else -> {
                     UserManagementContent(
+                        uiState = uiState,
                         users = uiState.users,
                         searchQuery = uiState.searchQuery,
                         onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
@@ -137,6 +140,7 @@ fun AdminUserManagementScreen(
                         },
                         onBanToggle = { user -> userToBanUnban = user },
                         onDelete = { user -> userToDelete = user },
+                        onLoadMore = { viewModel.loadMoreUsers() },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -225,12 +229,14 @@ fun AdminUserManagementScreen(
  */
 @Composable
 private fun UserManagementContent(
+    uiState: AdminUserManagementUiState,
     users: List<User>,
     searchQuery: String,
     onSearchQueryChanged: (String) -> Unit,
     onRoleChange: (String, UserRole) -> Unit,
     onBanToggle: (User) -> Unit,
     onDelete: (User) -> Unit,
+    onLoadMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -285,6 +291,28 @@ private fun UserManagementContent(
                         onBanToggle = { onBanToggle(user) },
                         onDelete = { onDelete(user) }
                     )
+                }
+
+                // Pagination: load more trigger
+                if (uiState.hasMore && !uiState.isLoading) {
+                    item {
+                        LaunchedEffect(Unit) {
+                            onLoadMore()
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isLoadingMore) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -397,12 +425,14 @@ private fun UserManagementContentLightPreview() {
     QuizzezTheme(darkTheme = false) {
         Surface(color = MaterialTheme.colorScheme.background) {
             UserManagementContent(
+                uiState = AdminUserManagementUiState(isLoading = false),
                 users = previewUsers,
                 searchQuery = "",
                 onSearchQueryChanged = {},
                 onRoleChange = { _, _ -> },
                 onBanToggle = {},
                 onDelete = {},
+                onLoadMore = {},
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -415,12 +445,14 @@ private fun UserManagementContentDarkPreview() {
     QuizzezTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
             UserManagementContent(
+                uiState = AdminUserManagementUiState(isLoading = false),
                 users = previewUsers,
                 searchQuery = "Nguyen",
                 onSearchQueryChanged = {},
                 onRoleChange = { _, _ -> },
                 onBanToggle = {},
                 onDelete = {},
+                onLoadMore = {},
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -433,12 +465,14 @@ private fun UserManagementEmptyPreview() {
     QuizzezTheme(darkTheme = false) {
         Surface(color = MaterialTheme.colorScheme.background) {
             UserManagementContent(
+                uiState = AdminUserManagementUiState(isLoading = false),
                 users = emptyList(),
                 searchQuery = "xyz",
                 onSearchQueryChanged = {},
                 onRoleChange = { _, _ -> },
                 onBanToggle = {},
                 onDelete = {},
+                onLoadMore = {},
                 modifier = Modifier.fillMaxSize()
             )
         }

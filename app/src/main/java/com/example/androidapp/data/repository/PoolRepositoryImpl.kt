@@ -6,9 +6,11 @@ import com.example.androidapp.data.remote.firebase.PoolRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.domain.model.Question
+import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.QuestionPoolItem
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.util.safeCall
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.WriteBatch
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -27,6 +29,12 @@ class PoolRepositoryImpl(
     private val remoteDataSource: PoolRemoteDataSource,
     private val firestore: FirebaseFirestore
 ) : PoolRepository {
+
+    /** Cursor for contributions pagination. */
+    private var lastContributionDoc: DocumentSnapshot? = null
+
+    /** Cursor for pool browse pagination. */
+    private var lastBrowseDoc: DocumentSnapshot? = null
 
     /** {@inheritDoc} */
     override suspend fun contributeQuestion(poolItem: QuestionPoolItem): Result<Unit> {
@@ -135,6 +143,45 @@ class PoolRepositoryImpl(
             dtos.shuffled()
                 .take(count)
                 .map { it.toDomain() }
+        }
+    }
+
+    // ==================== Paginated query implementations ====================
+
+    override suspend fun getMyContributionsPaged(
+        userId: String,
+        pageSize: Int,
+        loadMore: Boolean
+    ): Result<PaginatedResult<QuestionPoolItem>> {
+        return safeCall {
+            if (!loadMore) lastContributionDoc = null
+            val (dtos, lastDoc) = remoteDataSource.getContributionsByUserPaged(
+                userId, pageSize, lastContributionDoc
+            )
+            lastContributionDoc = lastDoc
+            PaginatedResult(
+                items = dtos.map { it.toDomain() },
+                hasMore = dtos.size >= pageSize
+            )
+        }
+    }
+
+    override suspend fun getPoolQuestionsByTagsPaged(
+        tags: List<String>,
+        activeOnly: Boolean,
+        pageSize: Int,
+        loadMore: Boolean
+    ): Result<PaginatedResult<QuestionPoolItem>> {
+        return safeCall {
+            if (!loadMore) lastBrowseDoc = null
+            val (dtos, lastDoc) = remoteDataSource.getActivePoolItemsByTagsPaged(
+                tags, pageSize, lastBrowseDoc
+            )
+            lastBrowseDoc = lastDoc
+            PaginatedResult(
+                items = dtos.map { it.toDomain() },
+                hasMore = dtos.size >= pageSize
+            )
         }
     }
 

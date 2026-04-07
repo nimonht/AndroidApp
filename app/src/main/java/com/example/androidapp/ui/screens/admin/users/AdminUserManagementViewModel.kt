@@ -6,15 +6,17 @@ import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel for the admin user management screen.
+ *
+ * Uses cursor-based Firestore pagination instead of loading all users at once.
+ * Pages are accumulated in [allUsers] and client-side filtering is applied
+ * on the accumulated set.
  *
  * @param adminRepository Repository for admin operations.
  * @param networkMonitor Monitor for observing network connectivity state.
@@ -28,7 +30,11 @@ class AdminUserManagementViewModel(
     val uiState: StateFlow<AdminUserManagementUiState> = _uiState.asStateFlow()
 
     private var allUsers: List<User> = emptyList()
-    private var loadUsersJob: Job? = null
+
+    private companion object {
+        /** Number of users to fetch per page from Firestore. */
+        const val PAGE_SIZE = 30
+    }
 
     init {
         loadUsers()
@@ -46,7 +52,7 @@ class AdminUserManagementViewModel(
     private fun requireOnline(): Boolean {
         if (!networkMonitor.isOnline.value) {
             _uiState.value = _uiState.value.copy(
-                actionError = "Không có kết nối mạng. Vui lòng kết nối internet để thực hiện thao tác quản trị."
+                actionError = "Khong co ket noi mang. Vui long ket noi internet de thuc hien thao tac quan tri."
             )
             return false
         }
@@ -54,29 +60,55 @@ class AdminUserManagementViewModel(
     }
 
     /**
-     * Load all users from the repository.
-     * Cancels any previous collection to avoid multiple active listeners.
+     * Load the first page of users from the repository.
+     * Resets pagination to the beginning.
      */
     fun loadUsers() {
-        loadUsersJob?.cancel()
-        loadUsersJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, hasMore = true)
+            allUsers = emptyList()
 
-            adminRepository.getAllUsers()
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Không thể tải danh sách người dùng"
-                    )
-                }
-                .collect { users ->
-                    allUsers = users
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        users = filterUsers(users, _uiState.value.searchQuery),
-                        error = null
-                    )
-                }
+            try {
+                val page = adminRepository.getUsersPage(PAGE_SIZE, loadMore = false)
+                allUsers = page.items
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    users = filterUsers(allUsers, _uiState.value.searchQuery),
+                    hasMore = page.hasMore,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Khong the tai danh sach nguoi dung"
+                )
+            }
+        }
+    }
+
+    /**
+     * Load the next page of users and append to the accumulated list.
+     */
+    fun loadMoreUsers() {
+        if (!_uiState.value.hasMore || _uiState.value.isLoadingMore) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingMore = true)
+
+            try {
+                val page = adminRepository.getUsersPage(PAGE_SIZE, loadMore = true)
+                allUsers = allUsers + page.items
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    users = filterUsers(allUsers, _uiState.value.searchQuery),
+                    hasMore = page.hasMore
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    error = e.message ?: "Khong the tai them nguoi dung"
+                )
+            }
         }
     }
 
@@ -104,11 +136,13 @@ class AdminUserManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    // Refresh to get updated data
+                    loadUsers()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể cập nhật vai trò"
+                        actionError = error.message ?: "Khong the cap nhat vai tro"
                     )
                 }
         }
@@ -128,11 +162,12 @@ class AdminUserManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    loadUsers()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể cấm người dùng"
+                        actionError = error.message ?: "Khong the cam nguoi dung"
                     )
                 }
         }
@@ -152,11 +187,12 @@ class AdminUserManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    loadUsers()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể bỏ cấm người dùng"
+                        actionError = error.message ?: "Khong the bo cam nguoi dung"
                     )
                 }
         }
@@ -176,11 +212,12 @@ class AdminUserManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    loadUsers()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể xóa người dùng"
+                        actionError = error.message ?: "Khong the xoa nguoi dung"
                     )
                 }
         }

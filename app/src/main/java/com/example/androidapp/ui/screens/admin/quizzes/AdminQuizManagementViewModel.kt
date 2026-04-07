@@ -5,15 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AdminRepository
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel for the admin quiz management screen.
+ *
+ * Uses cursor-based Firestore pagination instead of loading all quizzes at once.
+ * Pages are accumulated in [allQuizzes] and client-side filtering is applied
+ * on the accumulated set.
  *
  * @param adminRepository Repository for admin operations.
  * @param networkMonitor Monitor for observing network connectivity state.
@@ -27,7 +29,11 @@ class AdminQuizManagementViewModel(
     val uiState: StateFlow<AdminQuizManagementUiState> = _uiState.asStateFlow()
 
     private var allQuizzes: List<Quiz> = emptyList()
-    private var loadQuizzesJob: Job? = null
+
+    private companion object {
+        /** Number of quizzes to fetch per page from Firestore. */
+        const val PAGE_SIZE = 30
+    }
 
     init {
         loadQuizzes()
@@ -45,7 +51,7 @@ class AdminQuizManagementViewModel(
     private fun requireOnline(): Boolean {
         if (!networkMonitor.isOnline.value) {
             _uiState.value = _uiState.value.copy(
-                actionError = "Không có kết nối mạng. Vui lòng kết nối internet để thực hiện thao tác quản trị."
+                actionError = "Khong co ket noi mang. Vui long ket noi internet de thuc hien thao tac quan tri."
             )
             return false
         }
@@ -53,33 +59,71 @@ class AdminQuizManagementViewModel(
     }
 
     /**
-     * Load all quizzes from the repository (including deleted for admin management).
-     * Cancels any previous collection to avoid multiple active listeners.
+     * Load the first page of quizzes from the repository.
+     * Resets pagination to the beginning.
      */
     fun loadQuizzes() {
-        loadQuizzesJob?.cancel()
-        loadQuizzesJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, hasMore = true)
+            allQuizzes = emptyList()
 
-            adminRepository.getAllQuizzes(includeDeleted = true)
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Không thể tải danh sách quiz"
-                    )
-                }
-                .collect { quizzes ->
-                    allQuizzes = quizzes
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        quizzes = filterQuizzes(
-                            quizzes,
-                            _uiState.value.searchQuery,
-                            _uiState.value.showDeleted
-                        ),
-                        error = null
-                    )
-                }
+            try {
+                val page = adminRepository.getQuizzesPage(
+                    pageSize = PAGE_SIZE,
+                    includeDeleted = true,
+                    loadMore = false
+                )
+                allQuizzes = page.items
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    quizzes = filterQuizzes(
+                        allQuizzes,
+                        _uiState.value.searchQuery,
+                        _uiState.value.showDeleted
+                    ),
+                    hasMore = page.hasMore,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Khong the tai danh sach quiz"
+                )
+            }
+        }
+    }
+
+    /**
+     * Load the next page of quizzes and append to the accumulated list.
+     */
+    fun loadMoreQuizzes() {
+        if (!_uiState.value.hasMore || _uiState.value.isLoadingMore) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingMore = true)
+
+            try {
+                val page = adminRepository.getQuizzesPage(
+                    pageSize = PAGE_SIZE,
+                    includeDeleted = true,
+                    loadMore = true
+                )
+                allQuizzes = allQuizzes + page.items
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    quizzes = filterQuizzes(
+                        allQuizzes,
+                        _uiState.value.searchQuery,
+                        _uiState.value.showDeleted
+                    ),
+                    hasMore = page.hasMore
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    error = e.message ?: "Khong the tai them quiz"
+                )
+            }
         }
     }
 
@@ -124,11 +168,12 @@ class AdminQuizManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    loadQuizzes()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể cập nhật trạng thái quiz"
+                        actionError = error.message ?: "Khong the cap nhat trang thai quiz"
                     )
                 }
         }
@@ -148,11 +193,12 @@ class AdminQuizManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    loadQuizzes()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể khôi phục quiz"
+                        actionError = error.message ?: "Khong the khoi phuc quiz"
                     )
                 }
         }
@@ -172,11 +218,12 @@ class AdminQuizManagementViewModel(
                         isPerformingAction = false,
                         actionError = null
                     )
+                    loadQuizzes()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Không thể xóa quiz"
+                        actionError = error.message ?: "Khong the xoa quiz"
                     )
                 }
         }

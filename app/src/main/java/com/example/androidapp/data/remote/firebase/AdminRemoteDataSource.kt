@@ -4,6 +4,7 @@ import com.example.androidapp.data.remote.model.AttemptDto
 import com.example.androidapp.data.remote.model.QuizDto
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.firestore.Query
@@ -518,5 +519,68 @@ class AdminRemoteDataSource(
 
         // Combine both sets
         return (activeQuizUsers + activeAttemptUsers).size
+    }
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Fetches a page of users from Firestore, ordered by email.
+     * Uses cursor-based pagination via [startAfterDoc].
+     *
+     * @param pageSize Number of documents to fetch.
+     * @param startAfterDoc The last [DocumentSnapshot] from the previous page, or null for the first page.
+     * @return A pair of the user DTOs and the last [DocumentSnapshot] for cursor continuation (null if no results).
+     */
+    suspend fun getUsersPage(
+        pageSize: Int,
+        startAfterDoc: DocumentSnapshot? = null
+    ): Pair<List<UserDto>, DocumentSnapshot?> {
+        var query = firestore.collection(FirestoreCollections.USERS)
+            .orderBy("email")
+            .limit(pageSize.toLong())
+
+        if (startAfterDoc != null) {
+            query = query.startAfter(startAfterDoc)
+        }
+
+        val snapshot = query.get().await()
+        val users = snapshot.documents.mapNotNull { it.toObject(UserDto::class.java) }
+        val lastDoc = snapshot.documents.lastOrNull()
+        return Pair(users, lastDoc)
+    }
+
+    /**
+     * Fetches a page of quizzes from Firestore, ordered by updatedAt descending.
+     * Uses cursor-based pagination via [startAfterDoc].
+     *
+     * @param pageSize Number of documents to fetch.
+     * @param includeDeleted If true, includes soft-deleted quizzes.
+     * @param startAfterDoc The last [DocumentSnapshot] from the previous page, or null for the first page.
+     * @return A pair of the quiz DTOs and the last [DocumentSnapshot] for cursor continuation (null if no results).
+     */
+    suspend fun getQuizzesPage(
+        pageSize: Int,
+        includeDeleted: Boolean = false,
+        startAfterDoc: DocumentSnapshot? = null
+    ): Pair<List<QuizDto>, DocumentSnapshot?> {
+        var query = if (includeDeleted) {
+            firestore.collection(FirestoreCollections.QUIZZES)
+                .orderBy(FirestoreCollections.Fields.UPDATED_AT, Query.Direction.DESCENDING)
+        } else {
+            firestore.collection(FirestoreCollections.QUIZZES)
+                .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
+                .orderBy(FirestoreCollections.Fields.UPDATED_AT, Query.Direction.DESCENDING)
+        }
+
+        query = query.limit(pageSize.toLong())
+
+        if (startAfterDoc != null) {
+            query = query.startAfter(startAfterDoc)
+        }
+
+        val snapshot = query.get().await()
+        val quizzes = snapshot.documents.mapNotNull { it.toObject(QuizDto::class.java) }
+        val lastDoc = snapshot.documents.lastOrNull()
+        return Pair(quizzes, lastDoc)
     }
 }

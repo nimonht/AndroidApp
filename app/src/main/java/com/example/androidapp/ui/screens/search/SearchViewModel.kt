@@ -6,13 +6,16 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.util.SearchFilterLogic
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -27,10 +30,11 @@ import kotlinx.coroutines.launch
  * muc "Top hom nay", "Noi bat", "Trending", "Top toan thoi gian" tu cac quiz
  * cong khai, giu phan man hinh luon co noi dung khi nguoi dung chua tim kiem.
  *
- * Ket qua tho ([Quiz]) duoc luu noi bo de ho tro loc tag; chi nhung ket qua
- * da loc va map thanh [QuizCardDraft] moi duoc phat ra trong [SearchUiState].
+ * Pagination: Uses dynamic LIMIT Room queries. The limit increases when the
+ * user scrolls near the bottom, and Room re-emits the full list up to the
+ * new limit. This avoids loading all public quizzes into memory.
  */
-@OptIn(FlowPreview::class)
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SearchViewModel(
     private val quizRepository: QuizRepository,
     private val searchRepository: SearchRepository
@@ -48,13 +52,36 @@ class SearchViewModel(
     private var allResults: List<Quiz> = emptyList()
 
     /**
-     * Danh sach tat ca quiz cong khai, giu lai de loc tag kham pha
-     * ma khong can truy van lai Firestore.
+     * Danh sach tat ca quiz cong khai (up to current limit), giu lai de loc
+     * tag kham pha ma khong can truy van lai Firestore.
      */
     private var allPublicQuizzes: List<Quiz> = emptyList()
 
     /** Flow noi bo de debounce thay doi truy van. */
     private val _queryFlow = MutableStateFlow("")
+
+    /** Dynamic limit for discover public quizzes. Increases on LoadMoreDiscover. */
+    private val _discoverLimit = MutableStateFlow(INITIAL_DISCOVER_LIMIT)
+
+    /** Dynamic limit for search results. Increases on LoadMoreSearchResults. */
+    private val _searchLimit = MutableStateFlow(INITIAL_SEARCH_LIMIT)
+
+    /** Job for the search results collector, cancelled and restarted on new searches. */
+    private var searchJob: Job? = null
+
+    private companion object {
+        /** Initial number of public quizzes to load for the discover section. */
+        const val INITIAL_DISCOVER_LIMIT = 50
+
+        /** Number of additional public quizzes to load on each "load more" for discover. */
+        const val DISCOVER_PAGE_SIZE = 50
+
+        /** Initial number of search results to load. */
+        const val INITIAL_SEARCH_LIMIT = 30
+
+        /** Number of additional search results to load on each "load more". */
+        const val SEARCH_PAGE_SIZE = 30
+    }
 
     init {
         collectRecentSearches()
@@ -77,6 +104,8 @@ class SearchViewModel(
             is SearchEvent.OnToggleViewMode -> handleToggleViewMode()
             is SearchEvent.OnSortOptionSelected -> handleSortOptionSelected(event.option)
             is SearchEvent.OnTagFilterFromNavigation -> handleTagFilterFromNavigation(event.tag)
+            is SearchEvent.LoadMoreDiscover -> handleLoadMoreDiscover()
+            is SearchEvent.LoadMoreSearchResults -> handleLoadMoreSearchResults()
         }
     }
 
@@ -108,13 +137,15 @@ class SearchViewModel(
                 .collectLatest { query ->
                     if (query.isBlank()) {
                         allResults = emptyList()
+                        _searchLimit.value = INITIAL_SEARCH_LIMIT
                         _uiState.update {
                             it.copy(
                                 searchResults = emptyList(),
                                 availableTags = emptyList(),
                                 selectedTags = emptyList(),
                                 isSearching = false,
-                                hasSearched = false
+                                hasSearched = false,
+                                hasMoreSearchResults = true
                             )
                         }
                     } else {
@@ -125,21 +156,23 @@ class SearchViewModel(
     }
 
     /**
-     * Tai du lieu Kham pha phan man hinh tim kiem:
-     *  - [SearchUiState.discoverTags]        — tat ca tag tu quiz cong khai, sap xep theo tan suat giam dan.
-     *  - [SearchUiState.todayTopQuizzes]      — top 10 quiz moi nhat (createdAt giam dan).
-     *  - [SearchUiState.featuredQuizzes]      — top 8 quiz theo attemptCount giam dan, isPublic = true.
-     *  - [SearchUiState.trendingQuizzes]      — top 10 quiz theo attemptCount giam dan.
-     *  - [SearchUiState.allTimeTopQuizzes]    — top 10 quiz moi thoi dai theo attemptCount giam dan.
-     *
-     * Su dung [collectLatest] de phan ung voi cap nhat real-time tu Firestore.
+     * Tai du lieu Kham pha phan man hinh tim kiem voi pagination.
+     * Uses [_discoverLimit] via [flatMapLatest] so that increasing the limit
+     * triggers a new Room query with the higher LIMIT value.
      */
     private fun loadDiscoverData() {
         _uiState.update { it.copy(isLoadingDiscover = true) }
 
         viewModelScope.launch {
-            quizRepository.getPublicQuizzes().collectLatest { quizzes ->
+            _discoverLimit.flatMapLatest { limit ->
+                quizRepository.getPublicQuizzesLimited(limit)
+            }.collectLatest { quizzes ->
                 allPublicQuizzes = quizzes
+                val totalCount = try {
+                    quizRepository.getPublicQuizzesCount()
+                } catch (_: Exception) {
+                    quizzes.size
+                }
 
                 // --- Tag cloud: dem tan suat, sap xep giam dan ---
                 val tagFrequency: Map<String, Int> = quizzes
@@ -151,7 +184,7 @@ class SearchViewModel(
                     .sortedByDescending { it.value }
                     .map { it.key }
 
-                val discoverData = deriveDiscoverData(quizzes, emptyList())
+                val discoverData = deriveDiscoverData(quizzes, _uiState.value.selectedDiscoverTags)
 
                 _uiState.update { state ->
                     state.copy(
@@ -160,12 +193,31 @@ class SearchViewModel(
                         featuredQuizzes = discoverData.featured,
                         trendingQuizzes = discoverData.trending,
                         allTimeTopQuizzes = discoverData.allTimeTop,
-                        selectedDiscoverTags = emptyList(),
-                        isLoadingDiscover = false
+                        isLoadingDiscover = false,
+                        isLoadingMore = false,
+                        hasMoreDiscover = quizzes.size < totalCount
                     )
                 }
             }
         }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Pagination handlers
+    // ---------------------------------------------------------------------------
+
+    /** Increases the discover limit to load more public quizzes. */
+    private fun handleLoadMoreDiscover() {
+        if (!_uiState.value.hasMoreDiscover || _uiState.value.isLoadingMore) return
+        _uiState.update { it.copy(isLoadingMore = true) }
+        _discoverLimit.value += DISCOVER_PAGE_SIZE
+    }
+
+    /** Increases the search limit to load more search results. */
+    private fun handleLoadMoreSearchResults() {
+        if (!_uiState.value.hasMoreSearchResults || _uiState.value.isLoadingMore) return
+        _uiState.update { it.copy(isLoadingMore = true) }
+        _searchLimit.value += SEARCH_PAGE_SIZE
     }
 
     // ---------------------------------------------------------------------------
@@ -190,11 +242,13 @@ class SearchViewModel(
                 availableTags = emptyList(),
                 selectedTags = emptyList(),
                 isSearching = false,
-                hasSearched = false
+                hasSearched = false,
+                hasMoreSearchResults = true
             )
         }
         allResults = emptyList()
         _queryFlow.value = ""
+        _searchLimit.value = INITIAL_SEARCH_LIMIT
     }
 
     /**
@@ -299,8 +353,6 @@ class SearchViewModel(
     /**
      * Xu ly khi nguoi dung nhan vao tag tu man hinh khac (VD: QuizCard, QuizDetailScreen)
      * de chuyen den man hinh Tim kiem voi ket qua da loc theo tag do.
-     *
-     * Dat query bang tag, luu vao lich su, va thuc hien tim kiem ngay lap tuc.
      */
     private fun handleTagFilterFromNavigation(tag: String) {
         _uiState.update { it.copy(query = tag) }
@@ -316,31 +368,46 @@ class SearchViewModel(
     // ---------------------------------------------------------------------------
 
     /**
-     * Thuc hien truy van tim kiem qua [QuizRepository], luu ket qua tho,
-     * trich xuat tag, va cap nhat UI state.
+     * Thuc hien truy van tim kiem qua [QuizRepository] voi pagination.
+     * Cancels any previous search job and starts a new one that uses
+     * [_searchLimit] via [flatMapLatest].
      */
-    private suspend fun performSearch(query: String) {
+    private fun performSearch(query: String) {
+        // Reset search limit for new query
+        _searchLimit.value = INITIAL_SEARCH_LIMIT
         _uiState.update { it.copy(isSearching = true) }
 
-        quizRepository.searchQuizzes(query).collectLatest { quizzes ->
-            allResults = quizzes
-            val availableTags = extractAvailableTags(quizzes)
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _searchLimit.flatMapLatest { limit ->
+                quizRepository.searchQuizzesLimited(query, limit)
+            }.collectLatest { quizzes ->
+                allResults = quizzes
+                val availableTags = extractAvailableTags(quizzes)
+                val totalCount = try {
+                    quizRepository.getSearchResultsCount(query)
+                } catch (_: Exception) {
+                    quizzes.size
+                }
 
-            _uiState.update { state ->
-                // Giu lai chi nhung tag da chon ma van con trong ket qua moi
-                val validSelectedTags = state.selectedTags.filter { it in availableTags }
+                _uiState.update { state ->
+                    // Giu lai chi nhung tag da chon ma van con trong ket qua moi
+                    val validSelectedTags = state.selectedTags.filter { it in availableTags }
 
-                state.copy(
-                    isSearching = false,
-                    hasSearched = true,
-                    availableTags = availableTags,
-                    selectedTags = validSelectedTags,
-                    searchResults = deriveSearchResults(
-                        quizzes,
-                        validSelectedTags,
-                        state.sortOption
+                    state.copy(
+                        isSearching = false,
+                        hasSearched = true,
+                        availableTags = availableTags,
+                        selectedTags = validSelectedTags,
+                        searchResults = deriveSearchResults(
+                            quizzes,
+                            validSelectedTags,
+                            state.sortOption
+                        ),
+                        hasMoreSearchResults = quizzes.size < totalCount,
+                        isLoadingMore = false
                     )
-                )
+                }
             }
         }
     }
@@ -359,11 +426,6 @@ class SearchViewModel(
     /**
      * Loc va sap xep danh sach [Quiz] thanh [QuizCardDraft] dua tren
      * tag da chon va tieu chi sap xep hien tai.
-     *
-     * @param quizzes Danh sach ket qua tho tu repository.
-     * @param selectedTags Cac tag dang duoc chon de loc. Neu rong thi khong loc.
-     * @param sortOption Tieu chi sap xep hien tai.
-     * @return Danh sach [QuizCardDraft] da loc va sap xep.
      */
     private fun deriveSearchResults(
         quizzes: List<Quiz>,

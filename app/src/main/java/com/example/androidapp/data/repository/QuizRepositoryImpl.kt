@@ -45,14 +45,22 @@ class QuizRepositoryImpl(
 
     private val ioScope = CoroutineScope(Dispatchers.IO)
 
+    private companion object {
+        /** Maximum number of user-owned quizzes shown on the home screen. */
+        const val HOME_MY_QUIZZES_LIMIT = 20
+
+        /** Maximum number of trending (public) quizzes shown on the home screen. */
+        const val HOME_TRENDING_LIMIT = 20
+    }
+
     override fun getHomeQuizzes(userId: String): Flow<HomeQuizzes> {
         val recentQuizzesFlow = quizDao.getRecentAttemptQuizzes(userId).map { entities ->
             entities.map { it.toDomain() }
         }
-        val myQuizzesFlow = quizDao.getQuizzesByOwner(userId).map { entities ->
+        val myQuizzesFlow = quizDao.getQuizzesByOwnerLimited(userId, HOME_MY_QUIZZES_LIMIT).map { entities ->
             entities.map { it.toDomain() }
         }
-        val publicQuizzesFlow = quizDao.getPublicQuizzes().map { entities ->
+        val publicQuizzesFlow = quizDao.getPublicQuizzesLimited(HOME_TRENDING_LIMIT).map { entities ->
             entities.map { it.toDomain() }
         }
         // Refresh from Firestore in background when flow starts
@@ -60,7 +68,8 @@ class QuizRepositoryImpl(
             HomeQuizzes(
                 recentAttemptQuizzes = recent,
                 myQuizzes = mine,
-                trendingQuizzes = public.sortedByDescending { it.attemptCount }.take(10)
+                // publicQuizzesFlow is already sorted by attempt_count DESC and limited
+                trendingQuizzes = public
             )
         }.onStart {
             refreshFromFirestore(userId)
@@ -277,6 +286,40 @@ class QuizRepositoryImpl(
                 )
             }
         }
+    }
+
+    // ==================== Paginated query implementations ====================
+
+    override fun getPublicQuizzesLimited(limit: Int): Flow<List<Quiz>> {
+        return quizDao.getPublicQuizzesLimited(limit).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart { refreshPublicQuizzes() }
+    }
+
+    override fun getMyQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>> {
+        return quizDao.getQuizzesByOwnerLimited(userId, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart { refreshMyQuizzes(userId) }
+    }
+
+    override fun searchQuizzesLimited(query: String, limit: Int): Flow<List<Quiz>> {
+        return quizDao.searchQuizzesLimited(query, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override fun getDeletedQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>> {
+        return quizDao.getDeletedQuizzesLimited(userId, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getPublicQuizzesCount(): Int {
+        return quizDao.getPublicQuizzesCount()
+    }
+
+    override suspend fun getSearchResultsCount(query: String): Int {
+        return quizDao.searchQuizzesCount(query)
     }
 
     override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {

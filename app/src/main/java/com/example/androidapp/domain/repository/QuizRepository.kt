@@ -1,5 +1,6 @@
 package com.example.androidapp.domain.repository
 
+import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import kotlinx.coroutines.flow.Flow
@@ -130,4 +131,50 @@ interface QuizRepository {
      *         or [Result.failure] if the quiz does not exist remotely or the fetch fails.
      */
     suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz>
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Emits public quizzes with a dynamic limit for incremental loading.
+     * The limit increases as the user scrolls, and Room re-emits the full
+     * list up to the new limit whenever data changes.
+     *
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun getPublicQuizzesLimited(limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Emits quizzes owned by the user with a dynamic limit.
+     *
+     * @param userId The owner's user ID.
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun getMyQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Emits search results with a dynamic limit.
+     *
+     * @param query The search query.
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun searchQuizzesLimited(query: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Emits soft-deleted quizzes with a dynamic limit.
+     *
+     * @param userId The owner's user ID.
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun getDeletedQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Returns the total count of public non-deleted quizzes.
+     * Used by pagination to determine if more items are available.
+     */
+    suspend fun getPublicQuizzesCount(): Int
+
+    /**
+     * Returns the total count of search results for a query.
+     */
+    suspend fun getSearchResultsCount(query: String): Int
 }

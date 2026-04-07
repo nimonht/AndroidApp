@@ -108,4 +108,22 @@ class AttemptRepositoryImpl(
             attemptDao.updateUserId(guestId, userId)
         }
     }
+
+    // ==================== Paginated query implementations ====================
+
+    override fun getAttemptsByUserLimited(userId: String, limit: Int): Flow<List<Attempt>> {
+        return attemptDao.getAttemptsByUserLimited(userId, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart {
+            try {
+                syncManager.downloadAttempts(userId)
+            } catch (_: Exception) {
+                // Silently fail; local data is still emitted by the Flow
+            }
+        }
+    }
+
+    override suspend fun getAttemptCountByUser(userId: String): Int {
+        return attemptDao.getAttemptCountByUserOnce(userId)
+    }
 }

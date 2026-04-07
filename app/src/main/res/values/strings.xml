@@ -153,6 +153,11 @@
     <string name="profile_stats_label">Thống kê</string>
     <string name="profile_edit_button_cd">Chỉnh sửa hồ sơ</string>
 
+    <!-- Pagination -->
+    <string name="load_more">Tải thêm</string>
+    <string name="loading_more">Đang tải thêm…</string>
+    <string name="no_more_items">Đã hiển thị tất cả</string>
+
     <!-- Trash -->
     <string name="trash_title">Thùng rác</string>
     <string name="trash_empty">Thùng rác trống</string>

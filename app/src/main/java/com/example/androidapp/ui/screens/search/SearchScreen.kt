@@ -1,6 +1,7 @@
 package com.example.androidapp.ui.screens.search
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -8,13 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -137,6 +141,9 @@ fun SearchScreen(
                     SearchResultsGrid(
                         results = uiState.searchResults,
                         onQuizClick = onNavigateToQuiz,
+                        hasMoreSearchResults = uiState.hasMoreSearchResults,
+                        isLoadingMore = uiState.isLoadingMore,
+                        onLoadMore = { viewModel.onEvent(SearchEvent.LoadMoreSearchResults) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -145,6 +152,9 @@ fun SearchScreen(
                     SearchResultsList(
                         results = uiState.searchResults,
                         onQuizClick = onNavigateToQuiz,
+                        hasMoreSearchResults = uiState.hasMoreSearchResults,
+                        isLoadingMore = uiState.isLoadingMore,
+                        onLoadMore = { viewModel.onEvent(SearchEvent.LoadMoreSearchResults) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -160,6 +170,7 @@ fun SearchScreen(
                         viewModel.onEvent(SearchEvent.OnDiscoverTagToggle(tag))
                     },
                     onQuizClick = onNavigateToQuiz,
+                    onEvent = viewModel::onEvent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -184,6 +195,7 @@ private fun DiscoverContent(
     uiState: SearchUiState,
     onTagClick: (String) -> Unit,
     onQuizClick: (String) -> Unit,
+    onEvent: (SearchEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (uiState.isLoadingDiscover) {
@@ -277,6 +289,28 @@ private fun DiscoverContent(
                     onQuizClick = onQuizClick,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+        }
+
+        // Pagination: load more discover quizzes
+        if (uiState.hasMoreDiscover) {
+            item(key = "discover_load_more") {
+                LaunchedEffect(Unit) {
+                    onEvent(SearchEvent.LoadMoreDiscover)
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (uiState.isLoadingMore) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
             }
         }
     }

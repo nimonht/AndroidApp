@@ -48,5 +48,20 @@ interface AttemptRepository {
      * @return [Result.success] with the count of migrated attempts.
      */
     suspend fun linkGuestAttempts(guestId: String, userId: String): Result<Int>
-}
 
+    // ==================== Paginated queries ====================
+
+    /**
+     * Emits attempts for a user with a dynamic limit for incremental loading.
+     *
+     * @param userId The user's ID.
+     * @param limit Maximum number of attempts to return.
+     */
+    fun getAttemptsByUserLimited(userId: String, limit: Int): Flow<List<Attempt>>
+
+    /**
+     * Returns the total count of attempts for a user (one-shot).
+     * Used by pagination to determine if more items are available.
+     */
+    suspend fun getAttemptCountByUser(userId: String): Int
+}

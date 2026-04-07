@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,6 +79,26 @@ fun HistoryScreen(
                         attemptWithQuiz = attemptWithQuiz,
                         onClick = { onAttemptClick(attemptWithQuiz.attempt.id) }
                     )
+                }
+
+                // Pagination: load more trigger
+                if (uiState.hasMore) {
+                    item {
+                        LaunchedEffect(Unit) {
+                            viewModel.onEvent(HistoryEvent.LoadMore)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 }
             }
         }

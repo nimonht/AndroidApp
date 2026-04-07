@@ -1,6 +1,7 @@
 package com.example.androidapp.domain.repository
 
 import com.example.androidapp.domain.model.Attempt
+import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.model.SystemStats
 import com.example.androidapp.domain.model.User
@@ -153,4 +154,30 @@ interface AdminRepository {
      * @return Flow emitting matching quizzes
      */
     fun searchQuizzes(query: String, includeDeleted: Boolean = false): Flow<List<Quiz>>
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Fetches a page of users for admin management.
+     * Uses cursor-based pagination. Pass [loadMore] = false to reset to the first page.
+     *
+     * @param pageSize Number of items per page.
+     * @param loadMore If true, fetches the next page; if false, resets to the first page.
+     * @return [PaginatedResult] containing the user list and whether more pages exist.
+     */
+    suspend fun getUsersPage(pageSize: Int, loadMore: Boolean = false): PaginatedResult<User>
+
+    /**
+     * Fetches a page of quizzes for admin management.
+     *
+     * @param pageSize Number of items per page.
+     * @param includeDeleted Whether to include soft-deleted quizzes.
+     * @param loadMore If true, fetches the next page; if false, resets to the first page.
+     * @return [PaginatedResult] containing the quiz list and whether more pages exist.
+     */
+    suspend fun getQuizzesPage(
+        pageSize: Int,
+        includeDeleted: Boolean = false,
+        loadMore: Boolean = false
+    ): PaginatedResult<Quiz>
 }

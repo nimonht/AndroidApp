@@ -50,5 +50,14 @@ data class SearchUiState(
     val isLoadingDiscover: Boolean = false,
 
     /** Tag dang duoc chon de loc tren man hinh Kham pha (multi-select, AND logic). */
-    val selectedDiscoverTags: List<String> = emptyList()
+    val selectedDiscoverTags: List<String> = emptyList(),
+
+    /** Whether more discover quizzes can be loaded. */
+    val hasMoreDiscover: Boolean = true,
+
+    /** Whether more search results can be loaded. */
+    val hasMoreSearchResults: Boolean = true,
+
+    /** Whether a load-more operation is in progress. */
+    val isLoadingMore: Boolean = false
 )

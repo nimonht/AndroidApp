@@ -19,6 +19,9 @@ import kotlinx.coroutines.launch
  * @property browseResults Questions found by tag search in the pool.
  * @property searchTags Comma-separated tag input for browsing.
  * @property isLoading Whether a loading operation is in progress.
+ * @property isLoadingMore Whether a "load more" operation is in progress.
+ * @property hasMoreContributions Whether more contributions can be loaded.
+ * @property hasMoreBrowse Whether more browse results can be loaded.
  * @property error Current error message, or null.
  * @property successMessage Transient success message, or null.
  */
@@ -28,6 +31,9 @@ data class QuestionPoolUiState(
     val browseResults: List<QuestionPoolItem> = emptyList(),
     val searchTags: String = "",
     val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
+    val hasMoreContributions: Boolean = true,
+    val hasMoreBrowse: Boolean = true,
     val error: String? = null,
     val successMessage: String? = null
 )
@@ -54,11 +60,18 @@ sealed class QuestionPoolEvent {
 
     /** Refreshes the current tab data. */
     data object Refresh : QuestionPoolEvent()
+
+    /** Loads more items for the My Contributions tab. */
+    data object LoadMoreContributions : QuestionPoolEvent()
+
+    /** Loads more items for the Browse tab. */
+    data object LoadMoreBrowse : QuestionPoolEvent()
 }
 
 /**
  * ViewModel for the Question Pool screen.
- * Manages browsing the community question pool and managing user contributions.
+ * Manages browsing the community question pool and managing user contributions
+ * with cursor-based Firestore pagination.
  *
  * @param poolRepository Repository for question pool operations.
  * @param authRepository Repository for retrieving the currently authenticated user.
@@ -73,8 +86,13 @@ class QuestionPoolViewModel(
     /** Current UI state for the Question Pool screen. */
     val uiState: StateFlow<QuestionPoolUiState> = _uiState.asStateFlow()
 
+    private companion object {
+        /** Number of pool items per page. */
+        const val PAGE_SIZE = 20
+    }
+
     init {
-        loadMyContributions()
+        loadMyContributions(loadMore = false)
     }
 
     /**
@@ -84,13 +102,13 @@ class QuestionPoolViewModel(
         when (event) {
             is QuestionPoolEvent.TabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.index) }
-                if (event.index == 0) loadMyContributions()
+                if (event.index == 0) loadMyContributions(loadMore = false)
             }
 
             is QuestionPoolEvent.SearchTagsChanged ->
                 _uiState.update { it.copy(searchTags = event.tags) }
 
-            is QuestionPoolEvent.SearchPool -> searchPool()
+            is QuestionPoolEvent.SearchPool -> searchPool(loadMore = false)
 
             is QuestionPoolEvent.RevokeContribution -> revokeContribution(event.poolItemId)
 
@@ -102,59 +120,131 @@ class QuestionPoolViewModel(
 
             is QuestionPoolEvent.Refresh -> {
                 if (_uiState.value.selectedTab == 0) {
-                    loadMyContributions()
+                    loadMyContributions(loadMore = false)
                 } else {
-                    searchPool()
+                    searchPool(loadMore = false)
                 }
             }
+
+            is QuestionPoolEvent.LoadMoreContributions ->
+                loadMyContributions(loadMore = true)
+
+            is QuestionPoolEvent.LoadMoreBrowse ->
+                searchPool(loadMore = true)
         }
     }
 
-    private fun loadMyContributions() {
+    /**
+     * Loads contributions with cursor-based pagination.
+     *
+     * @param loadMore If true, appends next page; if false, resets to first page.
+     */
+    private fun loadMyContributions(loadMore: Boolean) {
+        if (loadMore && (!_uiState.value.hasMoreContributions || _uiState.value.isLoadingMore)) return
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            if (loadMore) {
+                _uiState.update { it.copy(isLoadingMore = true) }
+            } else {
+                _uiState.update { it.copy(isLoading = true) }
+            }
+
             val user = authRepository.getCurrentUser()
             if (user == null) {
-                _uiState.update { it.copy(isLoading = false, error = "Vui lòng đăng nhập") }
+                _uiState.update { it.copy(isLoading = false, isLoadingMore = false, error = "Vui long dang nhap") }
                 return@launch
             }
-            val result = poolRepository.getMyContributions(user.id)
+
+            val result = poolRepository.getMyContributionsPaged(
+                userId = user.id,
+                pageSize = PAGE_SIZE,
+                loadMore = loadMore
+            )
+
             result.fold(
-                onSuccess = { contributions ->
-                    _uiState.update {
-                        it.copy(isLoading = false, myContributions = contributions)
+                onSuccess = { page ->
+                    _uiState.update { state ->
+                        val updatedContributions = if (loadMore) {
+                            state.myContributions + page.items
+                        } else {
+                            page.items
+                        }
+                        state.copy(
+                            isLoading = false,
+                            isLoadingMore = false,
+                            myContributions = updatedContributions,
+                            hasMoreContributions = page.hasMore
+                        )
                     }
                 },
                 onFailure = { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = e.message ?: "Không thể tải dữ liệu")
+                        it.copy(
+                            isLoading = false,
+                            isLoadingMore = false,
+                            error = e.message ?: "Khong the tai du lieu"
+                        )
                     }
                 }
             )
         }
     }
 
-    private fun searchPool() {
-        viewModelScope.launch {
-            val tags = _uiState.value.searchTags
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
+    /**
+     * Searches pool by tags with cursor-based pagination.
+     *
+     * @param loadMore If true, appends next page; if false, resets to first page.
+     */
+    private fun searchPool(loadMore: Boolean) {
+        val tags = _uiState.value.searchTags
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
 
-            if (tags.isEmpty()) {
-                _uiState.update { it.copy(error = "Vui lòng nhập ít nhất một từ khóa") }
-                return@launch
+        if (tags.isEmpty()) {
+            _uiState.update { it.copy(error = "Vui long nhap it nhat mot tu khoa") }
+            return
+        }
+
+        if (loadMore && (!_uiState.value.hasMoreBrowse || _uiState.value.isLoadingMore)) return
+
+        viewModelScope.launch {
+            if (loadMore) {
+                _uiState.update { it.copy(isLoadingMore = true) }
+            } else {
+                _uiState.update { it.copy(isLoading = true) }
             }
 
-            _uiState.update { it.copy(isLoading = true) }
-            val result = poolRepository.getPoolQuestionsByTags(tags, activeOnly = true)
+            val result = poolRepository.getPoolQuestionsByTagsPaged(
+                tags = tags,
+                activeOnly = true,
+                pageSize = PAGE_SIZE,
+                loadMore = loadMore
+            )
+
             result.fold(
-                onSuccess = { items ->
-                    _uiState.update { it.copy(isLoading = false, browseResults = items) }
+                onSuccess = { page ->
+                    _uiState.update { state ->
+                        val updatedResults = if (loadMore) {
+                            state.browseResults + page.items
+                        } else {
+                            page.items
+                        }
+                        state.copy(
+                            isLoading = false,
+                            isLoadingMore = false,
+                            browseResults = updatedResults,
+                            hasMoreBrowse = page.hasMore
+                        )
+                    }
                 },
                 onFailure = { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = e.message ?: "Không thể tìm kiếm")
+                        it.copy(
+                            isLoading = false,
+                            isLoadingMore = false,
+                            error = e.message ?: "Khong the tim kiem"
+                        )
                     }
                 }
             )
@@ -166,14 +256,13 @@ class QuestionPoolViewModel(
             val result = poolRepository.revokeContribution(poolItemId)
             result.fold(
                 onSuccess = {
-                    _uiState.update { it.copy(successMessage = "Đã thu hồi câu hỏi") }
+                    _uiState.update { it.copy(successMessage = "Da thu hoi cau hoi") }
                     // Reload from Firestore to confirm the write persisted
-                    // instead of relying on an optimistic local update.
-                    loadMyContributions()
+                    loadMyContributions(loadMore = false)
                 },
                 onFailure = { e ->
                     _uiState.update {
-                        it.copy(error = e.message ?: "Không thể thu hồi câu hỏi")
+                        it.copy(error = e.message ?: "Khong the thu hoi cau hoi")
                     }
                 }
             )
