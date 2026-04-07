@@ -204,9 +204,31 @@ Release → emulator (rare)
 ./gradlew assembleRelease -PuseFirebaseEmulator=true
 ```
 
+## Samples data for testing
+
+```python
+# Create a virtual environment
+python3 -m venv scripts/.venv 
+
+# Activate the venv
+source scripts/.venv/bin/activate
+
+# Install dependencies
+pip install -r scripts/requirements.txt
+
+# Run the script against the local Firestore emulator
+python scripts/generate-sample-data.py --clean --count 100 --seed 42
+
+# Deactivate when done
+deactivate
+
+# For more options, run
+scripts/generate-sample-data.py --help
+```
+
 ## Version
 
-App version 1.0
+App version 7.4.2026
 
 ## License
 

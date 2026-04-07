@@ -3,10 +3,10 @@ package com.example.androidapp.ui.screens.quiz
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Attempt
-import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.domain.util.ScoreCalculator
 import com.example.androidapp.domain.util.ScoreUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,7 +74,8 @@ class QuizResultViewModel(
             }
 
             val questions = quizRepository.getQuestionsForQuizOnce(quizId)
-            val scoreResult = calculatePointScores(questions, attempt)
+            val userAnswers = attempt.answers.mapValues { (_, v) -> v.toSet() }
+            val scoreResult = ScoreCalculator.calculatePointScore(questions, userAnswers)
 
             val percentage = if (scoreResult.maxScore > 0) (scoreResult.earnedScore * 100) / scoreResult.maxScore else 0
             val starRating = ScoreUtil.calculateStarRating(percentage)
@@ -91,46 +92,4 @@ class QuizResultViewModel(
         }
     }
 
-    /**
-     * Calculates point-based scores from questions and the user's attempt.
-     *
-     * A question is scored only when the user's selected choices exactly match
-     * the set of correct choices (strict set-equality grading). The earned
-     * points for that question equal [Question.points].
-     *
-     * @return A [Pair] of (earnedScore, maxScore).
-     */
-    private data class ScoreBreakdown(
-        val earnedScore: Int,
-        val maxScore: Int,
-        val correctCount: Int,
-        val wrongCount: Int
-    )
-
-    private fun calculatePointScores(
-        questions: List<Question>,
-        attempt: Attempt
-    ): ScoreBreakdown {
-        var earned = 0
-        var max = 0
-        var correct = 0
-        for (question in questions) {
-            max += question.points
-            val correctIds = question.choices
-                .filter { it.isCorrect }
-                .map { it.id }
-                .toSet()
-            val userIds = attempt.answers[question.id]?.toSet() ?: emptySet()
-            if (correctIds == userIds) {
-                earned += question.points
-                correct++
-            }
-        }
-        return ScoreBreakdown(
-            earnedScore = earned,
-            maxScore = max,
-            correctCount = correct,
-            wrongCount = questions.size - correct
-        )
-    }
 }

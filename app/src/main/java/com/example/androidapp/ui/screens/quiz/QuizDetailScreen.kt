@@ -84,9 +84,10 @@ fun QuizDetailScreen(
 
     // Navigate back after successful deletion
     val successState = uiState as? QuizDetailUiState.Success
+    val deletedMessage = stringResource(R.string.quiz_deleted_success)
     LaunchedEffect(successState?.isDeleted) {
         if (successState?.isDeleted == true) {
-            snackbarHostState.showSnackbar("Đã chuyển Quizz vào thùng rác")
+            snackbarHostState.showSnackbar(deletedMessage)
             onNavigateBack()
         }
     }

@@ -373,7 +373,15 @@ private fun EngagementChartSection(
                     stats.activeUsers * 0.95f,
                     stats.activeUsers * 1.1f
                 )
-                val labels = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+                val labels = listOf(
+                    stringResource(R.string.admin_chart_weekday_mon),
+                    stringResource(R.string.admin_chart_weekday_tue),
+                    stringResource(R.string.admin_chart_weekday_wed),
+                    stringResource(R.string.admin_chart_weekday_thu),
+                    stringResource(R.string.admin_chart_weekday_fri),
+                    stringResource(R.string.admin_chart_weekday_sat),
+                    stringResource(R.string.admin_chart_weekday_sun)
+                )
 
                 EngagementLineChart(
                     dataPoints = dataPoints,

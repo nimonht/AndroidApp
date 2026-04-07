@@ -131,7 +131,7 @@ fun AdminQuizCard(
                             )
                             Text(
                                 text = if (quiz.isPublic) stringResource(R.string.admin_quiz_status_public)
-                                       else stringResource(R.string.admin_quiz_status_private),
+                                else stringResource(R.string.admin_quiz_status_private),
                                 fontFamily = InterFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp,
@@ -283,7 +283,7 @@ fun AdminQuizCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = quiz.authorName.ifBlank { "Không rõ" },
+                            text = quiz.authorName.ifBlank { stringResource(R.string.admin_quiz_card_unknown_author) },
                             fontFamily = InterFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 13.sp,

@@ -8,6 +8,7 @@ import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.QuestionShuffler
+import com.example.androidapp.domain.util.ScoreCalculator
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -193,7 +194,8 @@ class TakeQuizViewModel(
             _uiState.value = active.copy(isSubmitting = true)
             timerJob?.cancel()
 
-            val scoreBreakdown = calculatePointScores()
+            val userAnswers = answers.mapValues { (_, v) -> v.toSet() }
+            val scoreResult = ScoreCalculator.calculatePointScore(questions, userAnswers)
             val answerMap = answers.mapValues { (_, v) -> v.toList() }
             val userId = authRepository.getCurrentUser()?.id ?: "guest_${UUID.randomUUID()}"
 
@@ -201,8 +203,8 @@ class TakeQuizViewModel(
                 id = attemptId,
                 userId = userId,
                 quizId = quizId,
-                score = scoreBreakdown.earnedScore,
-                totalQuestions = scoreBreakdown.maxScore,
+                score = scoreResult.earnedScore,
+                totalQuestions = scoreResult.maxScore,
                 answers = answerMap,
                 startTimeMillis = startTimeMillis,
                 endTimeMillis = System.currentTimeMillis(),
@@ -218,22 +220,6 @@ class TakeQuizViewModel(
                 onFailure = { e -> TakeQuizUiState.Error(e.message ?: "Không thể lưu kết quả") }
             )
         }
-    }
-
-    private data class ScoreBreakdown(val earnedScore: Int, val maxScore: Int)
-
-    private fun calculatePointScores(): ScoreBreakdown {
-        var earned = 0
-        var max = 0
-        for (question in questions) {
-            max += question.points
-            val correctIds = question.choices.filter { it.isCorrect }.map { it.id }.toSet()
-            val userIds = answers[question.id]?.toSet() ?: emptySet()
-            if (correctIds == userIds) {
-                earned += question.points
-            }
-        }
-        return ScoreBreakdown(earnedScore = earned, maxScore = max)
     }
 
     private fun emitActiveState() {

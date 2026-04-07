@@ -151,6 +151,23 @@ fastlane/screenshots
 fastlane/test_output
 
 # ==================
+# Python
+# ==================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+*.egg
+dist/
+.mypy_cache/
+.pytest_cache/
+
+# ==================
 # Nix / devenv
 # ==================
 .devenv/

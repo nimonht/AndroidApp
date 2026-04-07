@@ -39,32 +39,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create dummy google-services.json
+      - name: Decode google-services.json
         run: |
-          cat > app/google-services.json << 'EOF'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "dummy-project",
-              "storage_bucket": "dummy-project.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                  "android_client_info": {
-                    "package_name": "com.example.androidapp"
-                  }
-                },
-                "api_key": [
-                  {
-                    "current_key": "dummy-api-key"
-                  }
-                ]
-              }
-            ]
-          }
-          EOF
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
 
       - name: Run Lint
         run: ./gradlew lint --continue

@@ -1,6 +1,7 @@
 # Automatic release workflow for Quizzez Android App.
 # Creates a Git tag and GitHub Release when a commit message on master
 # matches the pattern: "release v<semver>" (case-insensitive).
+# Builds debug and release APKs and attaches them to the GitHub Release.
 #
 # Examples of recognized commit messages:
 #   release v1.0.0
@@ -23,7 +24,7 @@ concurrency:
 
 jobs:
   create-release:
-    name: Detect version bump and create release
+    name: Build APKs and create release
     runs-on: ubuntu-latest
 
     steps:
@@ -74,6 +75,79 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # --- Build environment setup ---
+
+      - name: Set up JDK 17
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Android SDK
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle packages
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/libs.versions.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        run: chmod +x gradlew
+
+      - name: Decode google-services.json
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+
+      # --- Build APKs ---
+
+      - name: Build debug APK
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        run: ./gradlew assembleDebug -PuseFirebaseEmulator=false
+
+      - name: Build release APK
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        run: ./gradlew assembleRelease -PuseFirebaseEmulator=false
+
+      # --- Rename APKs for clarity ---
+
+      - name: Rename APK artifacts
+        if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          mkdir -p release-artifacts
+
+          # Debug APK
+          DEBUG_APK=$(find app/build/outputs/apk/debug -name '*.apk' | head -n 1)
+          if [ -n "$DEBUG_APK" ]; then
+            cp "$DEBUG_APK" "release-artifacts/Quizzez-${TAG}-debug.apk"
+            echo "Debug APK: release-artifacts/Quizzez-${TAG}-debug.apk"
+          else
+            echo "WARNING: Debug APK not found"
+          fi
+
+          # Release APK
+          RELEASE_APK=$(find app/build/outputs/apk/release -name '*.apk' | head -n 1)
+          if [ -n "$RELEASE_APK" ]; then
+            cp "$RELEASE_APK" "release-artifacts/Quizzez-${TAG}-release.apk"
+            echo "Release APK: release-artifacts/Quizzez-${TAG}-release.apk"
+          else
+            echo "WARNING: Release APK not found"
+          fi
+
+          ls -lh release-artifacts/
+
+      # --- Tag and release ---
+
       - name: Create Git tag
         if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
         run: |
@@ -83,13 +157,25 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release with APKs
         if: steps.version.outputs.found == 'true' && steps.tag-check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
+          name: Quizzez ${{ steps.version.outputs.tag }}
           prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
           generate_release_notes: true
+          files: |
+            release-artifacts/*.apk
+          body: |
+            ## Download
+
+            | Variant | Description |
+            |---------|-------------|
+            | `Quizzez-${{ steps.version.outputs.tag }}-release.apk` | Production build (recommended) |
+            | `Quizzez-${{ steps.version.outputs.tag }}-debug.apk` | Debug build with logging enabled |
+
+            ---
+            *Built automatically from commit ${{ github.sha }}*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -265,20 +265,17 @@ class QuizRepositoryImpl(
                 }
             }
 
-            // Delete them from local Room DB
+            // Delete from local Room DB and enqueue a Firestore sync for each
+            // quiz so the deletion is retried automatically when connectivity
+            // returns (instead of a fire-and-forget that silently drops offline).
             deletedQuizzes.forEach { entity ->
                 quizDao.deleteQuiz(entity)
+                syncManager.enqueueSync(
+                    SyncEntityType.QUIZ,
+                    entity.id,
+                    SyncOperation.DELETE
+                )
             }
-
-            // Sync deletion to Firestore in background
-            ioScope.launch {
-                try {
-                    remoteDataSource.emptyTrash(userId)
-                } catch (_: Exception) {
-                    // Failures here are swallowed as this is background sync
-                }
-            }
-            Unit
         }
     }
 

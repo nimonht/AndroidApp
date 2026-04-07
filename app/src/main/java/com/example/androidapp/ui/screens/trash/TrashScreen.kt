@@ -95,11 +95,13 @@ fun TrashScreen(
             uiState.isLoading -> LoadingSpinner(
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             uiState.deletedQuizzes.isEmpty() -> EmptyState(
                 message = stringResource(R.string.trash_empty),
                 icon = Icons.Default.Delete,
                 modifier = Modifier.padding(innerPadding).fillMaxWidth()
             )
+
             else -> LazyColumn(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
@@ -132,7 +134,7 @@ fun TrashScreen(
         quizToDeletePermanently?.let { quizId ->
             AppAlertDialog(
                 title = stringResource(R.string.delete_confirm_title),
-                message = "Bạn có chắc chắn muốn xóa vĩnh viễn bài kiểm tra này không? Hành động này không thể hoàn tác.",
+                message = stringResource(R.string.trash_delete_permanently_confirm_message),
                 confirmText = stringResource(R.string.delete),
                 dismissText = stringResource(R.string.cancel),
                 onConfirm = {
