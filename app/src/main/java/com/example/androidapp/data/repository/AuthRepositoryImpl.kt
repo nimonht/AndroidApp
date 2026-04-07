@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -180,27 +181,44 @@ class AuthRepositoryImpl(
                 photoUrl = avatarUrl
             )
 
-            // Immediately propagate new user (with avatar) to all UI collectors
+            // Persist to Room and Firestore BEFORE emitting _currentUser.
+            // The _currentUser emission triggers the AuthViewModel init collector
+            // which sets AuthUiState.Authenticated. When the XML AuthFragment
+            // observes that state it navigates away and the Fragment (plus its
+            // ViewModel scope) is destroyed. If the Firestore write has not
+            // finished by then the coroutine is cancelled and the user document
+            // never lands in the 'users' collection.
+            //
+            // withContext(NonCancellable) ensures the writes run to completion
+            // even if the caller's scope is cancelled mid-flight (e.g. Fragment
+            // removal racing with coroutine dispatch).
+            withContext(NonCancellable) {
+                // Cache locally
+                userDao.insertUser(user.toEntity())
+                // Persist to Firestore
+                try {
+                    userRemoteDataSource.saveUser(
+                        UserDto(
+                            id = user.id,
+                            email = email,
+                            displayName = username,
+                            username = username,
+                            photoUrl = avatarUrl,
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                    )
+                } catch (_: Exception) {
+                    // Firestore sync failure is non-fatal; fetchFullUserProfile
+                    // will back-fill the document on the next login / app start.
+                }
+            }
+
+            // NOW propagate the authenticated user to all UI collectors.
+            // All persistence is already done, so it is safe for the UI to
+            // navigate away (destroying the Fragment / ViewModel scope).
             _currentUser.value = user
 
-            // Cache locally
-            userDao.insertUser(user.toEntity())
-            // Persist to Firestore in background
-            try {
-                userRemoteDataSource.saveUser(
-                    UserDto(
-                        id = user.id,
-                        email = email,
-                        displayName = username,
-                        username = username,
-                        photoUrl = avatarUrl,
-                        createdAt = Timestamp.now(),
-                        updatedAt = Timestamp.now()
-                    )
-                )
-            } catch (_: Exception) {
-                // Firestore sync failure is non-fatal
-            }
             return Result.success(user)
         } catch (e: FirebaseAuthUserCollisionException) {
             return Result.failure(Exception("Email này đã được sử dụng"))
@@ -394,8 +412,10 @@ class AuthRepositoryImpl(
                         displayName = displayName,
                         username = currentDto?.username ?: "",
                         photoUrl = updatedPhotoUrl,
+                        role = currentDto?.role ?: "user",
                         createdAt = currentDto?.createdAt ?: Timestamp.now(),
-                        updatedAt = Timestamp.now()
+                        updatedAt = Timestamp.now(),
+                        deletedAt = currentDto?.deletedAt
                     )
                 )
             } catch (_: Exception) {

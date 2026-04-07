@@ -27,6 +27,13 @@ interface QuizRepository {
     fun getHomeQuizzes(userId: String): Flow<HomeQuizzes>
 
     /**
+     * Triggers a background refresh of home screen data from Firestore.
+     * Suspends until the refresh is complete (or fails).
+     * Does nothing when sync is not allowed (offline, wifi-only, etc.).
+     */
+    suspend fun refreshHomeData(userId: String)
+
+    /**
      * Emits quizzes owned by the user that are not deleted.
      */
     fun getMyQuizzes(userId: String): Flow<List<Quiz>>

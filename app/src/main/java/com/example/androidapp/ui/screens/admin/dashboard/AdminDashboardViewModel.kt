@@ -2,6 +2,7 @@ package com.example.androidapp.ui.screens.admin.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,9 +14,11 @@ import kotlinx.coroutines.launch
  * ViewModel for the admin dashboard screen.
  *
  * @param adminRepository Repository for admin operations.
+ * @param networkMonitor Monitor for observing network connectivity state.
  */
 class AdminDashboardViewModel(
-    private val adminRepository: AdminRepository
+    private val adminRepository: AdminRepository,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminDashboardUiState())
@@ -23,6 +26,11 @@ class AdminDashboardViewModel(
 
     init {
         loadStats()
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { online ->
+                _uiState.value = _uiState.value.copy(isOnline = online)
+            }
+        }
     }
 
     /**

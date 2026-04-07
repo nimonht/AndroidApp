@@ -8,5 +8,6 @@ import com.example.androidapp.domain.model.SystemStats
 data class AdminDashboardUiState(
     val isLoading: Boolean = true,
     val stats: SystemStats? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isOnline: Boolean = true
 )

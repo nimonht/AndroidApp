@@ -11,5 +11,6 @@ data class AdminUserManagementUiState(
     val searchQuery: String = "",
     val error: String? = null,
     val isPerformingAction: Boolean = false,
-    val actionError: String? = null
+    val actionError: String? = null,
+    val isOnline: Boolean = true
 )

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * UI state for the Home screen.
@@ -50,6 +51,15 @@ sealed class HomeEvent {
 /**
  * ViewModel for the Home screen.
  * Loads recent, owned, and trending quizzes using the local-first pattern.
+ *
+ * Data observation and refresh are intentionally decoupled:
+ * - [observeHomeData] sets up a long-lived collector that continuously emits
+ *   Room snapshots. It is started once per user and never cancelled for refresh.
+ * - [onRefresh] triggers a separate, short-lived Firestore sync with a timeout.
+ *   When the sync writes to Room, the existing observer picks up the changes.
+ *
+ * This guarantees the refresh indicator is always cleared (via `finally`) and
+ * eliminates spinner-stuck bugs caused by Flow emission delays.
  */
 class HomeViewModel(
     private val quizRepository: QuizRepository,
@@ -62,13 +72,24 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     /**
-     * Handle for the long-lived home-data collection coroutine.
-     * Cancelled and relaunched on every [loadHomeData] call so that:
-     * 1. Only one collector exists at a time (no zombie coroutines).
-     * 2. A fresh Room subscription always emits the current snapshot
-     *    immediately, guaranteeing `isRefreshing` is reset to false.
+     * Handle for the long-lived home-data observation coroutine.
+     * Cancelled only when the user changes (login/logout), never for refresh.
      */
     private var homeDataJob: Job? = null
+
+    /**
+     * Handle for the refresh coroutine. Cancelled and relaunched on each
+     * pull-to-refresh so only the latest refresh runs.
+     */
+    private var refreshJob: Job? = null
+
+    private companion object {
+        /**
+         * Maximum time (ms) the Firestore refresh is allowed to take.
+         * The `finally` block ensures the spinner stops even on timeout.
+         */
+        const val REFRESH_TIMEOUT_MS = 8_000L
+    }
 
     init {
         viewModelScope.launch {
@@ -82,7 +103,7 @@ class HomeViewModel(
                     )
                 }
                 if (user != null) {
-                    loadHomeData(user.id)
+                    observeHomeData(user.id)
                 }
             }
         }
@@ -136,26 +157,45 @@ class HomeViewModel(
     }
 
     /**
-     * Handles pull-to-refresh. Sets the refreshing flag immediately and
-     * relaunches the home-data collector which cancels the previous one.
+     * Handles pull-to-refresh.
+     *
+     * Launches a **separate** coroutine (independent of [homeDataJob]) that:
+     * 1. Sets `isRefreshing = true`.
+     * 2. Calls [QuizRepository.refreshHomeData] with a timeout.
+     * 3. Always clears `isRefreshing` in `finally` — even on error or timeout.
+     *
+     * The existing [observeHomeData] collector picks up Room changes written by
+     * the refresh, so the UI updates naturally without restarting the observer.
      */
     private fun onRefresh() {
         val userId = _uiState.value.userId
-        if (userId.isNotBlank()) {
+        if (userId.isBlank()) return
+
+        // Cancel any in-flight refresh so rapid pulls don't pile up.
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true) }
-            loadHomeData(userId)
+            try {
+                withTimeoutOrNull(REFRESH_TIMEOUT_MS) {
+                    quizRepository.refreshHomeData(userId)
+                }
+            } catch (_: Exception) {
+                // Network error, cancellation, etc. — just stop the spinner.
+            } finally {
+                _uiState.update { it.copy(isRefreshing = false) }
+            }
         }
     }
 
     /**
-     * Cancels any in-flight home-data collection and starts a fresh one.
+     * Sets up a long-lived collector for home screen data.
      *
-     * Cancelling the previous [homeDataJob] is critical: Room/Firestore cold
-     * Flows always emit current data on first subscription, so a fresh
-     * `.collect` is guaranteed to fire immediately. This ensures
-     * `isRefreshing` is reset to `false` without relying on data changes.
+     * Cancelled and restarted only when the logged-in user changes — never
+     * for pull-to-refresh. The underlying Room Flows continuously emit
+     * snapshots, and the `onStart` block in the repository triggers an
+     * initial Firestore sync on first subscription.
      */
-    private fun loadHomeData(userId: String) {
+    private fun observeHomeData(userId: String) {
         homeDataJob?.cancel()
         homeDataJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -164,7 +204,6 @@ class HomeViewModel(
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
-                        isRefreshing = false,
                         recentQuizzes = homeQuizzes.recentAttemptQuizzes,
                         myQuizzes = homeQuizzes.myQuizzes,
                         trendingQuizzes = homeQuizzes.trendingQuizzes,

@@ -227,7 +227,11 @@ class BackendMaintenanceWorker(
     }
 
     /**
-     * Removes user documents that are marked for deletion (have a non-null [deletedAt]).
+     * Permanently removes user documents that have been soft-deleted for longer
+     * than [DELETION_THRESHOLD_MS] (30 days). Recently-banned users (whose
+     * [deletedAt] is within the threshold) are intentionally skipped so that
+     * admins have time to unban them if needed.
+     *
      * Also cleans up quizzes, attempts, and pool contributions owned by those users.
      *
      * Writes deletion tombstones for each of the user's quizzes before removing
@@ -235,6 +239,8 @@ class BackendMaintenanceWorker(
      */
     private suspend fun cleanupDeletedUsers(firestore: FirebaseFirestore) {
         Log.d(TAG, "Cleaning up deleted users...")
+
+        val cutoff = Timestamp(Date(System.currentTimeMillis() - DELETION_THRESHOLD_MS))
 
         val snapshot = firestore.collection(FirestoreCollections.USERS)
             .whereNotEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
@@ -244,6 +250,8 @@ class BackendMaintenanceWorker(
         var deletedCount = 0
         for (doc in snapshot.documents) {
             val userId = doc.id
+            val deletedAt = doc.getTimestamp(FirestoreCollections.Fields.DELETED_AT) ?: continue
+            if (deletedAt > cutoff) continue
             try {
                 // Delete user's quizzes (including subcollections)
                 val userQuizzes = firestore.collection(FirestoreCollections.QUIZZES)
@@ -302,7 +310,7 @@ class BackendMaintenanceWorker(
             }
         }
 
-        Log.d(TAG, "Cleaned up $deletedCount deleted users and their data.")
+        Log.d(TAG, "Cleaned up $deletedCount users (deleted before $cutoff) and their data.")
     }
 
     /**

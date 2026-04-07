@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.navigation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -172,6 +174,7 @@ fun QuizzezNavHost(
             }
 
             composable(Routes.PROFILE) {
+                val container = LocalAppContainer
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
@@ -205,7 +208,15 @@ fun QuizzezNavHost(
                     },
                     onNavigateToAdminPanel = {
                         if (currentUser != null && currentUser!!.isAdmin()) {
-                            navController.navigate(Routes.ADMIN_DASHBOARD)
+                            if (container.networkMonitor.isOnline.value) {
+                                navController.navigate(Routes.ADMIN_DASHBOARD)
+                            } else {
+                                Toast.makeText(
+                                    navController.context,
+                                    "Cần kết nối mạng để truy cập bảng điều khiển quản trị",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
                     }
                 )
@@ -467,7 +478,7 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminDashboardViewModel(container.adminRepository) as T
+                            AdminDashboardViewModel(container.adminRepository, container.networkMonitor) as T
                     }
                 )
 
@@ -491,7 +502,7 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminUserManagementViewModel(container.adminRepository) as T
+                            AdminUserManagementViewModel(container.adminRepository, container.networkMonitor) as T
                     }
                 )
 
@@ -512,7 +523,7 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminQuizManagementViewModel(container.adminRepository) as T
+                            AdminQuizManagementViewModel(container.adminRepository, container.networkMonitor) as T
                     }
                 )
 
@@ -534,7 +545,7 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminReportsViewModel(container.adminRepository) as T
+                            AdminReportsViewModel(container.adminRepository, container.networkMonitor) as T
                     }
                 )
 

@@ -2,6 +2,7 @@ package com.example.androidapp.ui.screens.admin.users
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
@@ -16,9 +17,11 @@ import kotlinx.coroutines.launch
  * ViewModel for the admin user management screen.
  *
  * @param adminRepository Repository for admin operations.
+ * @param networkMonitor Monitor for observing network connectivity state.
  */
 class AdminUserManagementViewModel(
-    private val adminRepository: AdminRepository
+    private val adminRepository: AdminRepository,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminUserManagementUiState())
@@ -29,6 +32,25 @@ class AdminUserManagementViewModel(
 
     init {
         loadUsers()
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { online ->
+                _uiState.value = _uiState.value.copy(isOnline = online)
+            }
+        }
+    }
+
+    /**
+     * Returns `true` if the device is currently online.
+     * Sets [AdminUserManagementUiState.actionError] and returns `false` otherwise.
+     */
+    private fun requireOnline(): Boolean {
+        if (!networkMonitor.isOnline.value) {
+            _uiState.value = _uiState.value.copy(
+                actionError = "Không có kết nối mạng. Vui lòng kết nối internet để thực hiện thao tác quản trị."
+            )
+            return false
+        }
+        return true
     }
 
     /**
@@ -72,6 +94,7 @@ class AdminUserManagementViewModel(
      * Update a user's role.
      */
     fun updateUserRole(userId: String, newRole: UserRole) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -95,6 +118,7 @@ class AdminUserManagementViewModel(
      * Ban a user.
      */
     fun banUser(userId: String) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -118,6 +142,7 @@ class AdminUserManagementViewModel(
      * Unban a user.
      */
     fun unbanUser(userId: String) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -141,6 +166,7 @@ class AdminUserManagementViewModel(
      * Delete a user permanently.
      */
     fun deleteUser(userId: String) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -176,7 +202,7 @@ class AdminUserManagementViewModel(
         val lowerQuery = query.lowercase()
         return users.filter { user ->
             user.displayName.lowercase().contains(lowerQuery) ||
-                user.email.lowercase().contains(lowerQuery)
+                    user.email.lowercase().contains(lowerQuery)
         }
     }
 }

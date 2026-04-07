@@ -12,5 +12,6 @@ data class AdminQuizManagementUiState(
     val showDeleted: Boolean = false,
     val error: String? = null,
     val isPerformingAction: Boolean = false,
-    val actionError: String? = null
+    val actionError: String? = null,
+    val isOnline: Boolean = true
 )

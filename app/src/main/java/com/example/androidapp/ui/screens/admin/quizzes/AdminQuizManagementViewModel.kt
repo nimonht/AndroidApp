@@ -2,6 +2,7 @@ package com.example.androidapp.ui.screens.admin.quizzes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AdminRepository
 import kotlinx.coroutines.Job
@@ -15,9 +16,11 @@ import kotlinx.coroutines.launch
  * ViewModel for the admin quiz management screen.
  *
  * @param adminRepository Repository for admin operations.
+ * @param networkMonitor Monitor for observing network connectivity state.
  */
 class AdminQuizManagementViewModel(
-    private val adminRepository: AdminRepository
+    private val adminRepository: AdminRepository,
+    private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminQuizManagementUiState())
@@ -28,6 +31,25 @@ class AdminQuizManagementViewModel(
 
     init {
         loadQuizzes()
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { online ->
+                _uiState.value = _uiState.value.copy(isOnline = online)
+            }
+        }
+    }
+
+    /**
+     * Returns `true` if the device is currently online.
+     * Sets [AdminQuizManagementUiState.actionError] and returns `false` otherwise.
+     */
+    private fun requireOnline(): Boolean {
+        if (!networkMonitor.isOnline.value) {
+            _uiState.value = _uiState.value.copy(
+                actionError = "Không có kết nối mạng. Vui lòng kết nối internet để thực hiện thao tác quản trị."
+            )
+            return false
+        }
+        return true
     }
 
     /**
@@ -86,6 +108,7 @@ class AdminQuizManagementViewModel(
      * Publish or unpublish a quiz.
      */
     fun togglePublishQuiz(quizId: String, currentlyPublic: Boolean) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -115,6 +138,7 @@ class AdminQuizManagementViewModel(
      * Restore a soft-deleted quiz.
      */
     fun restoreQuiz(quizId: String) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -138,6 +162,7 @@ class AdminQuizManagementViewModel(
      * Delete a quiz permanently.
      */
     fun deleteQuiz(quizId: String) {
+        if (!requireOnline()) return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -186,8 +211,8 @@ class AdminQuizManagementViewModel(
             val lowerQuery = query.lowercase()
             filtered = filtered.filter { quiz ->
                 quiz.title.lowercase().contains(lowerQuery) ||
-                    quiz.authorName.lowercase().contains(lowerQuery) ||
-                    quiz.tags.any { it.lowercase().contains(lowerQuery) }
+                        quiz.authorName.lowercase().contains(lowerQuery) ||
+                        quiz.tags.any { it.lowercase().contains(lowerQuery) }
             }
         }
 

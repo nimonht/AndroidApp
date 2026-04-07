@@ -67,6 +67,12 @@ class QuizRepositoryImpl(
         }
     }
 
+    override suspend fun refreshHomeData(userId: String) {
+        if (!syncManager.isSyncAllowed()) return
+        refreshMyQuizzes(userId)
+        refreshPublicQuizzes(currentUserId = userId)
+    }
+
     override fun getMyQuizzes(userId: String): Flow<List<Quiz>> {
         return quizDao.getQuizzesByOwner(userId).map { entities ->
             entities.map { it.toDomain() }
