@@ -826,6 +826,22 @@ def generate_question_pool_items(count, users, quizzes):
 # ---------------------------------------------------------------------------
 
 
+def _strip_doc_id(data, id_field="id"):
+    """Return a shallow copy of *data* without the ``@DocumentId`` field.
+
+    The Kotlin Firestore SDK annotates certain DTO properties with
+    ``@DocumentId``, which tells the SDK to populate them from the
+    document path and **exclude** them from the document body when
+    writing.  When reading, the SDK throws a ``RuntimeException``
+    if the document body contains a field whose name matches a
+    ``@DocumentId``-annotated property.
+
+    Because the Python Admin SDK has no knowledge of ``@DocumentId``,
+    we must strip these fields manually before calling ``set()``.
+    """
+    return {k: v for k, v in data.items() if k != id_field}
+
+
 def delete_collection(db, collection_path, batch_size=400):
     """Delete all documents in a collection (non-recursive)."""
     coll_ref = db.collection(collection_path)
@@ -900,7 +916,8 @@ def write_users(db, users):
 
     for user in users:
         doc_ref = db.collection(COLLECTION_USERS).document(user["id"])
-        doc_data = {k: v for k, v in user.items()}
+        # Strip "id" -- @DocumentId on UserDto
+        doc_data = _strip_doc_id(user, "id")
         batch.set(doc_ref, doc_data)
         batch_count += 1
         written += 1
@@ -936,9 +953,9 @@ def write_quizzes_with_questions(db, quizzes):
         questions_data = quiz.pop("_questions", [])
         state_label = quiz.pop("_state", "unknown")
 
-        # Write quiz document
+        # Write quiz document -- strip "id" (@DocumentId on QuizDto)
         quiz_ref = db.collection(COLLECTION_QUIZZES).document(quiz_id)
-        quiz_ref.set(quiz)
+        quiz_ref.set(_strip_doc_id(quiz, "id"))
         quiz_count += 1
 
         # Write questions and choices as subcollections
@@ -950,7 +967,8 @@ def write_quizzes_with_questions(db, quizzes):
             q_ref = quiz_ref.collection(COLLECTION_QUESTIONS).document(q_id)
 
             # Store the question with an empty choices list (choices go in subcollection)
-            q_doc_data = dict(q_data)
+            # Strip "id" -- @DocumentId on QuestionDto
+            q_doc_data = _strip_doc_id(q_data, "id")
             q_doc_data["choices"] = []
             q_ref.set(q_doc_data)
             question_count += 1
@@ -961,7 +979,8 @@ def write_quizzes_with_questions(db, quizzes):
                 for c_data in choices:
                     c_id = c_data["id"]
                     c_ref = q_ref.collection(COLLECTION_CHOICES).document(c_id)
-                    batch.set(c_ref, c_data)
+                    # Strip "id" -- @DocumentId on ChoiceDto
+                    batch.set(c_ref, _strip_doc_id(c_data, "id"))
                     choice_count += 1
                 batch.commit()
 
@@ -992,7 +1011,8 @@ def write_attempts(db, attempts):
 
     for attempt in attempts:
         doc_ref = db.collection(COLLECTION_ATTEMPTS).document(attempt["id"])
-        batch.set(doc_ref, attempt)
+        # Strip "id" -- @DocumentId in AttemptDto
+        batch.set(doc_ref, _strip_doc_id(attempt, "id"))
         batch_count += 1
         written += 1
 
@@ -1018,7 +1038,8 @@ def write_share_codes(db, share_codes):
     for sc in share_codes:
         code = sc["code"]
         doc_ref = db.collection(COLLECTION_SHARE_CODES).document(code)
-        batch.set(doc_ref, sc)
+        # Strip "code" -- @DocumentId in ShareCodeDto
+        batch.set(doc_ref, _strip_doc_id(sc, "code"))
         batch_count += 1
         written += 1
 
@@ -1043,7 +1064,8 @@ def write_question_pool(db, pool_items):
 
     for item in pool_items:
         doc_ref = db.collection(COLLECTION_QUESTION_POOL).document(item["id"])
-        batch.set(doc_ref, item)
+        # Strip "id" -- @DocumentId in QuestionPoolItemDto
+        batch.set(doc_ref, _strip_doc_id(item, "id"))
         batch_count += 1
         written += 1
 
