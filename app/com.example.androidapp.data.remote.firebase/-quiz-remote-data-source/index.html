@@ -108,7 +108,7 @@
   <div class="breadcrumbs"><a href="../../../index.html">app</a><span class="delimiter">/</span><a href="../index.html">com.example.androidapp.data.remote.firebase</a><span class="delimiter">/</span><span class="current">QuizRemoteDataSource</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Quiz</span><wbr></wbr><span>Remote</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Source</span></span></h1>
-    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">QuizRemoteDataSource</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">firestore<span class="token operator">: </span><span data-unresolved-link="com.google.firebase.firestore/FirebaseFirestore///PointingToDeclaration/">FirebaseFirestore</span></span></span><span class="token punctuation">)</span></div><p class="paragraph">Remote data source for quiz and question Firestore operations. Uses <span data-unresolved-link="kotlinx.coroutines.flow//callbackFlow/#kotlin.coroutines.SuspendFunction1[kotlinx.coroutines.channels.ProducerScope[TypeParam(bounds=[kotlin.Any?])],kotlin.Unit]/PointingToDeclaration/">callbackFlow</span> with addSnapshotListener for real-time streams and batch writes for multi-document mutations.</p></div></div>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">QuizRemoteDataSource</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">firestore<span class="token operator">: </span><span data-unresolved-link="com.google.firebase.firestore/FirebaseFirestore///PointingToDeclaration/">FirebaseFirestore</span></span></span><span class="token punctuation">)</span></div><p class="paragraph">Remote data source for quiz and question Firestore operations. Uses <span data-unresolved-link="kotlinx.coroutines.flow//callbackFlow/#kotlin.coroutines.SuspendFunction1[kotlinx.coroutines.channels.ProducerScope[TypeParam(bounds=[kotlin.Any?])],kotlin.Unit]/PointingToDeclaration/">callbackFlow</span> with addSnapshotListener for real-time streams and batch writes for multi-document mutations.</p><p class="paragraph">Permanent quiz deletions write a lightweight tombstone document to the <a href="../-firestore-collections/-q-u-i-z_-d-e-l-e-t-i-o-n-s.html">FirestoreCollections.QUIZ_DELETIONS</a> collection so that other clients can detect the removal without re-fetching all quizzes.</p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
@@ -132,9 +132,43 @@
           </div>
         </div>
       </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="1503260698%2FClasslikes%2F492899073" anchor-label="Companion" id="1503260698%2FClasslikes%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1503260698%2FClasslikes%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div data-togglable="FUNCTION">
         <h2 class="">Functions</h2>
-        <div class="table"><a data-name="-619019608%2FFunctions%2F492899073" anchor-label="emptyTrash" id="-619019608%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+        <div class="table"><a data-name="-319368013%2FFunctions%2F492899073" anchor-label="cleanupOldTombstones" id="-319368013%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="cleanup-old-tombstones.html"><span>cleanup</span><wbr></wbr><span>Old</span><wbr></wbr><span><span>Tombstones</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-319368013%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="cleanup-old-tombstones.html"><span class="token function">cleanupOldTombstones</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">cutoffTimestamp<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Removes tombstone entries older than <a href="cleanup-old-tombstones.html">cutoffTimestamp</a> to prevent unbounded growth of the <a href="../-firestore-collections/-q-u-i-z_-d-e-l-e-t-i-o-n-s.html">FirestoreCollections.QUIZ_DELETIONS</a> collection. Called by <a href="../../com.example.androidapp.data.worker/-backend-maintenance-worker/index.html">com.example.androidapp.data.worker.BackendMaintenanceWorker</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-619019608%2FFunctions%2F492899073" anchor-label="emptyTrash" id="-619019608%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
@@ -144,7 +178,22 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="empty-trash.html"><span class="token function">emptyTrash</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Deletes all soft-deleted quizzes owned by the user permanently from Firestore. Uses batch writes for efficiency.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="empty-trash.html"><span class="token function">emptyTrash</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Deletes all soft-deleted quizzes owned by the user permanently from Firestore, including each quiz's questions/choices subcollections and associated share-code documents. Writes a deletion tombstone per quiz so other clients can detect the removals.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-857200687%2FFunctions%2F492899073" anchor-label="getDeletionsSince" id="-857200687%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-deletions-since.html"><span>get</span><wbr></wbr><span>Deletions</span><wbr></wbr><span><span>Since</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-857200687%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-deletions-since.html"><span class="token function">getDeletionsSince</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">sinceTimestamp<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Returns quiz IDs that have been permanently deleted since <a href="get-deletions-since.html">sinceTimestamp</a>. Used by <a href="../../com.example.androidapp.data.sync/-quiz-invalidation-manager/index.html">com.example.androidapp.data.sync.QuizInvalidationManager</a> for incremental invalidation of locally-cached quizzes.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -160,21 +209,6 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-public-quizzes.html"><span class="token function">getPublicQuizzes</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/Flow///PointingToDeclaration/">Flow</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.example.androidapp.data.remote.model/-quiz-dto/index.html">QuizDto</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Emits real-time public quizzes ordered by attempt count descending.</p></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="2101474168%2FFunctions%2F492899073" anchor-label="getQuestionsForQuiz" id="2101474168%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
-          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="get-questions-for-quiz.html"><span>get</span><wbr></wbr><span>Questions</span><wbr></wbr><span>For</span><wbr></wbr><span><span>Quiz</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2101474168%2FFunctions%2F492899073"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-questions-for-quiz.html"><span class="token function">getQuestionsForQuiz</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.example.androidapp.data.remote.model/-question-dto/index.html">QuestionDto</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Fetches questions for a quiz by quiz ID.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -249,7 +283,7 @@
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="permanently-delete-quiz.html"><span class="token function">permanentlyDeleteQuiz</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Permanently deletes a quiz document.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="permanently-delete-quiz.html"><span class="token function">permanentlyDeleteQuiz</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Permanently deletes a quiz document, its questions/choices subcollections, and its associated share-code document. Writes a deletion tombstone so other clients can detect the removal.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -295,6 +329,36 @@
               <div>
                 <div class="title">
                   <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="soft-delete-quiz.html"><span class="token function">softDeleteQuiz</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">deletedAt<span class="token operator">: </span><span data-unresolved-link="com.google.firebase/Timestamp///PointingToDeclaration/">Timestamp</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Soft-deletes a quiz by setting the deletedAt timestamp.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2031598395%2FFunctions%2F492899073" anchor-label="writeDeletionTombstone" id="-2031598395%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="write-deletion-tombstone.html"><span>write</span><wbr></wbr><span>Deletion</span><wbr></wbr><span><span>Tombstone</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2031598395%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="write-deletion-tombstone.html"><span class="token function">writeDeletionTombstone</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Writes a single deletion tombstone for the given <a href="write-deletion-tombstone.html">quizId</a>. Use this when permanently deleting a quiz outside of <a href="permanently-delete-quiz.html">permanentlyDeleteQuiz</a> or <a href="empty-trash.html">emptyTrash</a> (e.g., in maintenance workers that operate directly on Firestore).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="794241490%2FFunctions%2F492899073" anchor-label="writeDeletionTombstones" id="794241490%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="write-deletion-tombstones.html"><span>write</span><wbr></wbr><span>Deletion</span><wbr></wbr><span><span>Tombstones</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="794241490%2FFunctions%2F492899073"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="write-deletion-tombstones.html"><span class="token function">writeDeletionTombstones</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Writes deletion tombstones for multiple quiz IDs in batched writes, chunked to respect Firestore's 500-operation limit.</p></div></div></div>
                 </div>
               </div>
             </div>

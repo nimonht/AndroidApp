@@ -130,21 +130,6 @@
               </div>
             </div>
           </div>
-<a data-name="1600611568%2FFunctions%2F492899073" anchor-label="deleteAttemptsByQuizId" id="1600611568%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
-          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="delete-attempts-by-quiz-id.html"><span>delete</span><wbr></wbr><span>Attempts</span><wbr></wbr><span>By</span><wbr></wbr><span>Quiz</span><wbr></wbr><span><span>Id</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1600611568%2FFunctions%2F492899073"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="delete-attempts-by-quiz-id.html"><span class="token function">deleteAttemptsByQuizId</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Delete all attempts for a quiz.</p></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
 <a data-name="720723329%2FFunctions%2F492899073" anchor-label="getAttemptById" id="720723329%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
@@ -160,17 +145,17 @@
               </div>
             </div>
           </div>
-<a data-name="1665648750%2FFunctions%2F492899073" anchor-label="getAttemptCount" id="1665648750%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+<a data-name="-1181722639%2FFunctions%2F492899073" anchor-label="getAttemptCountByUserOnce" id="-1181722639%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="get-attempt-count.html"><span>get</span><wbr></wbr><span>Attempt</span><wbr></wbr><span><span>Count</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1665648750%2FFunctions%2F492899073"></span>
+                  <div><a href="get-attempt-count-by-user-once.html"><span>get</span><wbr></wbr><span>Attempt</span><wbr></wbr><span>Count</span><wbr></wbr><span>By</span><wbr></wbr><span>User</span><wbr></wbr><span><span>Once</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1181722639%2FFunctions%2F492899073"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-attempt-count.html"><span class="token function">getAttemptCount</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Get the count of completed attempts for a quiz.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-attempt-count-by-user-once.html"><span class="token function">getAttemptCountByUserOnce</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Get the total count of attempts for a user. Used by pagination to determine if more items are available. This is a one-shot suspend query (not a Flow).</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -205,32 +190,17 @@
               </div>
             </div>
           </div>
-<a data-name="-1366000031%2FFunctions%2F492899073" anchor-label="getAverageScore" id="-1366000031%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
+<a data-name="-52340023%2FFunctions%2F492899073" anchor-label="getAttemptsByUserLimited" id="-52340023%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
           <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
-                  <div><a href="get-average-score.html"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span><span>Score</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1366000031%2FFunctions%2F492899073"></span>
+                  <div><a href="get-attempts-by-user-limited.html"><span>get</span><wbr></wbr><span>Attempts</span><wbr></wbr><span>By</span><wbr></wbr><span>User</span><wbr></wbr><span><span>Limited</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-52340023%2FFunctions%2F492899073"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-average-score.html"><span class="token function">getAverageScore</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quizId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Get the average score for a quiz.</p></div></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="2071916996%2FFunctions%2F492899073" anchor-label="getInProgressAttempts" id="2071916996%2FFunctions%2F492899073" data-filterable-set=":app:dokkaHtml/release"></a>
-          <div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="get-in-progress-attempts.html"><span>get</span><wbr></wbr><span>In</span><wbr></wbr><span>Progress</span><wbr></wbr><span><span>Attempts</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2071916996%2FFunctions%2F492899073"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-in-progress-attempts.html"><span class="token function">getInProgressAttempts</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.example.androidapp.data.local.entity/-attempt-entity/index.html">AttemptEntity</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Get in-progress attempts (not finished) for a user.</p></div></div></div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-attempts-by-user-limited.html"><span class="token function">getAttemptsByUserLimited</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">userId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">limit<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/Flow///PointingToDeclaration/">Flow</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.example.androidapp.data.local.entity/-attempt-entity/index.html">AttemptEntity</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Get attempts for a user with a dynamic limit for pagination. Used by the History screen to incrementally load attempt history.</p></div></div></div>
                 </div>
               </div>
             </div>
