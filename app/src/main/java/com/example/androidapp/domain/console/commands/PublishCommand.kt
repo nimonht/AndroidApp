@@ -133,6 +133,7 @@ class PublishCommand : Command {
 
         val adminRepo = context.repositories.adminRepository
         val quizzesToPublish = mutableListOf<Quiz>()
+        val skippedLines = mutableListOf<OutputLine>()
 
         if (args.isNotEmpty() && !hasFilterFlags(flags)) {
             // Xuat ban theo ID cu the
@@ -145,11 +146,14 @@ class PublishCommand : Command {
                 }
                 if (quiz.isPublic && !quiz.isDraft) {
                     if (verbose) {
-                        // Quiz da duoc xuat ban — bo qua nhung bao cho nguoi dung biet
+                        skippedLines.add(
+                            OutputLine(
+                                "Bo qua: Quiz '${truncate(quiz.title, 40)}' ($quizId) da duoc xuat ban.",
+                                OutputStyle.WARNING
+                            )
+                        )
                     }
-                    return CommandResult.error(
-                        "Quiz '${truncate(quiz.title, 40)}' ($quizId) da duoc xuat ban."
-                    )
+                    continue
                 }
                 if (quiz.deletedAt != null) {
                     return CommandResult.error(
@@ -195,14 +199,33 @@ class PublishCommand : Command {
         }
 
         if (quizzesToPublish.isEmpty()) {
+            if (skippedLines.isNotEmpty()) {
+                return CommandResult(
+                    output = skippedLines + OutputLine(
+                        "Khong tim thay quiz nao can xuat ban phu hop voi bo loc.",
+                        OutputStyle.INFO
+                    ),
+                    isSuccess = true
+                )
+            }
             return CommandResult.success("Khong tim thay quiz nao can xuat ban phu hop voi bo loc.")
         }
 
         if (dryRun) {
-            return buildDryRunOutput(quizzesToPublish, verbose, format)
+            val result = buildDryRunOutput(quizzesToPublish, verbose, format)
+            return if (skippedLines.isNotEmpty()) {
+                result.copy(output = skippedLines + result.output)
+            } else {
+                result
+            }
         }
 
-        return executePublish(quizzesToPublish, verbose, format, adminRepo)
+        val result = executePublish(quizzesToPublish, verbose, format, adminRepo)
+        return if (skippedLines.isNotEmpty()) {
+            result.copy(output = skippedLines + result.output)
+        } else {
+            result
+        }
     }
 
     /**

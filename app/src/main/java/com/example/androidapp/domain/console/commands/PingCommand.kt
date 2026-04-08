@@ -55,16 +55,16 @@ class PingCommand : Command {
 
         if (lastArg.startsWith("-") || args.isEmpty()) {
             val availableFlags = listOf(
-                Triple("--count", "-c", "So lan ping (mac dinh: 3)"),
-                Triple("--timeout", "-t", "Timeout moi lan (ms, mac dinh: 5000)"),
-                Triple("--service", "-s", "Dich vu can ping (firestore/auth/all)"),
-                Triple("--verbose", "-v", "Hien thi chi tiet tung lan ping")
+                Triple("count", "c", "So lan ping (mac dinh: 3)"),
+                Triple("timeout", "t", "Timeout moi lan (ms, mac dinh: 5000)"),
+                Triple("service", "s", "Dich vu can ping (firestore/auth/all)"),
+                Triple("verbose", "v", "Hien thi chi tiet tung lan ping")
             )
             for ((long, short, desc) in availableFlags) {
                 if (long !in flags && short !in flags) {
                     suggestions.add(
                         CompletionSuggestion(
-                            text = long,
+                            text = "--$long",
                             description = desc,
                             type = SuggestionType.FLAG
                         )
@@ -74,7 +74,7 @@ class PingCommand : Command {
         }
 
         // Suggest service names if the previous flag is --service
-        val serviceFlag = flags["--service"] ?: flags["-s"]
+        val serviceFlag = flags["service"] ?: flags["s"]
         if (serviceFlag == null && args.lastOrNull() in listOf("--service", "-s")) {
             listOf("firestore", "auth", "all").forEach { svc ->
                 suggestions.add(
@@ -95,10 +95,10 @@ class PingCommand : Command {
         flags: Map<String, String?>,
         context: CommandContext
     ): CommandResult {
-        val count = resolveIntFlag(flags, "--count", "-c") ?: 3
-        val timeout = resolveIntFlag(flags, "--timeout", "-t") ?: 5000L
-        val verbose = "--verbose" in flags || "-v" in flags
-        val service = (flags["--service"] ?: flags["-s"])?.lowercase() ?: "firestore"
+        val count = resolveIntFlag(flags, "count", "c") ?: 3
+        val timeout = resolveIntFlag(flags, "timeout", "t") ?: 5000L
+        val verbose = "verbose" in flags || "v" in flags
+        val service = (flags["service"] ?: flags["s"])?.lowercase() ?: "firestore"
 
         if (count < 1 || count > 100) {
             return CommandResult.error("Loi: so lan ping phai tu 1 den 100")
@@ -260,8 +260,8 @@ class PingCommand : Command {
      * Giai quyet gia tri flag so nguyen tu cap co dai (--flag) hoac ngan (-f).
      *
      * @param flags Map flag hien tai.
-     * @param longName Ten flag dai (vd: "--count").
-     * @param shortName Ten flag ngan (vd: "-c").
+     * @param longName Ten flag dai da chuan hoa (vd: "count").
+     * @param shortName Ten flag ngan da chuan hoa (vd: "c").
      * @return Gia tri so nguyen, hoac null neu khong co flag.
      */
     private fun resolveIntFlag(

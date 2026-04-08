@@ -185,6 +185,9 @@ object CommandLexer {
      * Multiple characters (`-abc`) are expanded into separate flags:
      * `-a`, `-b`, `-c`. However, if the characters after `-` look like
      * a number (e.g. `-3`), it is treated as an argument instead.
+     *
+     * The pattern `-<letter><digits>` (e.g. `-n20`, `-c5`) is treated as
+     * a flag with a value: `Flag("n")` with value `"20"`.
      */
     private fun readShortFlags(input: String, start: Int): ShortFlagLexResult {
         var i = start + 1 // skip '-'
@@ -208,8 +211,7 @@ object CommandLexer {
             )
         }
 
-        // Single letter flag might have a value attached (e.g. -n20 or -n 20)
-        // We treat -<single letter> as a simple flag; compound -abc as multiple flags
+        // Single letter flag might have a value attached (e.g. -n20 or -n=value)
         if (chars.length == 1) {
             // Check if next char is '=' for -k=value syntax
             if (i < len && input[i] == '=') {
@@ -220,9 +222,16 @@ object CommandLexer {
             }
             tokens.add(CommandToken.Flag(chars))
         } else {
-            // Compound short flags: -abc -> Flag(a), Flag(b), Flag(c)
-            for (ch in chars) {
-                tokens.add(CommandToken.Flag(ch.toString()))
+            // Check for -<letter><digits> pattern (e.g. -n20, -c5)
+            val firstChar = chars[0]
+            val rest = chars.substring(1)
+            if (firstChar.isLetter() && rest.all { it.isDigit() }) {
+                tokens.add(CommandToken.FlagValue(firstChar.toString(), rest))
+            } else {
+                // Compound short flags: -abc -> Flag(a), Flag(b), Flag(c)
+                for (ch in chars) {
+                    tokens.add(CommandToken.Flag(ch.toString()))
+                }
             }
         }
 

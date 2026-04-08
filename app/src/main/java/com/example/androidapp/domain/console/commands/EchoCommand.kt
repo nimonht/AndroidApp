@@ -71,7 +71,8 @@ class EchoCommand : Command {
 
         if (lastArg.startsWith("-")) {
             return allFlags.filter {
-                it.text.startsWith(lastArg) && !flags.containsKey(it.text.removePrefix("--"))
+                it.text.startsWith(lastArg) &&
+                    !flags.containsKey(it.text.removePrefix("--").removePrefix("-"))
             }
         }
 

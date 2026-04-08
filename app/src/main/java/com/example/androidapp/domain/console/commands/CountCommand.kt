@@ -74,29 +74,29 @@ class CountCommand : Command {
         val available = mutableListOf<CompletionSuggestion>()
 
         val definedFlags = mapOf(
-            "--lines" to "Dem so dong",
-            "--words" to "Dem so tu",
-            "--chars" to "Dem so ky tu",
-            "--unique" to "Dem so dong duy nhat",
-            "--non-empty" to "Dem so dong khong trong",
-            "--by-field" to "Thong ke tan suat theo truong N"
+            "lines" to ("--lines" to "Dem so dong"),
+            "words" to ("--words" to "Dem so tu"),
+            "chars" to ("--chars" to "Dem so ky tu"),
+            "unique" to ("--unique" to "Dem so dong duy nhat"),
+            "non-empty" to ("--non-empty" to "Dem so dong khong trong"),
+            "by-field" to ("--by-field" to "Thong ke tan suat theo truong N")
         )
 
         val shortAliases = mapOf(
-            "-l" to "--lines",
-            "-w" to "--words",
-            "-c" to "--chars"
+            "l" to "lines",
+            "w" to "words",
+            "c" to "chars"
         )
 
-        val usedLongFlags = flags.keys
-        val allUsed = usedLongFlags + shortAliases.filterValues { it in usedLongFlags }.keys
+        val usedFlags = flags.keys
+        val usedNormalizedFlags = usedFlags + shortAliases.filterKeys { it in usedFlags }.values
 
-        for ((flag, desc) in definedFlags) {
-            if (flag !in allUsed) {
+        for ((normalizedFlag, suggestion) in definedFlags) {
+            if (normalizedFlag !in usedNormalizedFlags) {
                 available.add(
                     CompletionSuggestion(
-                        text = flag,
-                        description = desc,
+                        text = suggestion.first,
+                        description = suggestion.second,
                         type = SuggestionType.FLAG
                     )
                 )

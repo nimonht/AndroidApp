@@ -149,11 +149,27 @@ class SortCommand : Command {
             delimiter = delimiter
         )
 
-        // Sort: stable preserves insertion order for equal elements
+        // Sort: stable preserves input order for equal keys; non-stable applies
+        // a deterministic tie-breaker instead of relying on insertion order.
         if (stable) {
             lines.sortWith(comparator)
         } else {
-            lines.sortWith(comparator)
+            lines = lines.withIndex()
+                .sortedWith { a, b ->
+                    val primary = comparator.compare(a.value, b.value)
+                    if (primary != 0) {
+                        primary
+                    } else {
+                        val tieBreaker = if (ignoreCase) {
+                            a.value.compareTo(b.value, ignoreCase = true)
+                        } else {
+                            a.value.compareTo(b.value)
+                        }
+                        if (tieBreaker != 0) tieBreaker else a.index.compareTo(b.index)
+                    }
+                }
+                .map { it.value }
+                .toMutableList()
         }
 
         if (reverse) {

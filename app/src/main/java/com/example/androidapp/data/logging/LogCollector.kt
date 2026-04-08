@@ -24,11 +24,14 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * Reads `logcat -v threadtime` filtered to the current PID and parses
  * each line into a [LogEntry]. Maintains an in-memory ring buffer capped
- * at [maxEntries] items, dropping the oldest entries when the limit is
- * exceeded.
+ * at [maxEntries] items using an [ArrayDeque], dropping the oldest entries
+ * when the limit is exceeded.
  *
  * Exposes a [StateFlow] of the current log entries for reactive UI
- * consumption (e.g. the Log Viewer screen).
+ * consumption (e.g. the Log Viewer screen). Snapshots are emitted in
+ * batches (every [FLUSH_INTERVAL_MS] milliseconds or when the pending
+ * batch reaches [FLUSH_BATCH_SIZE]) to reduce per-line GC pressure and
+ * StateFlow churn under high log volume.
  *
  * **Lifecycle**: call [install] once at application startup (typically
  * from the DI container). The reader coroutine runs on [Dispatchers.IO]
@@ -55,6 +58,15 @@ class LogCollector(
 
     private val nextId = AtomicLong(0)
     private var readerJob: Job? = null
+
+    /** Internal mutable ring buffer. Only accessed from the IO reader coroutine. */
+    private val ringBuffer = ArrayDeque<LogEntry>(maxEntries)
+
+    /** Pending entries accumulated since the last flush. */
+    private var pendingCount = 0
+
+    /** Timestamp of the last flush to [_logs]. */
+    private var lastFlushTime = 0L
 
     /**
      * Regex pattern matching the logcat `threadtime` format:
@@ -116,6 +128,7 @@ class LogCollector(
             } catch (_: Exception) {
                 // Stream closed or process killed — stop gracefully.
             } finally {
+                flushToStateFlow()
                 try {
                     reader.close()
                 } catch (_: Exception) { /* best-effort */ }
@@ -130,6 +143,8 @@ class LogCollector(
      * Clears all captured log entries and resets the buffer.
      */
     fun clear() {
+        ringBuffer.clear()
+        pendingCount = 0
         _logs.value = emptyList()
     }
 
@@ -199,20 +214,38 @@ class LogCollector(
      * Appends a [LogEntry] to the ring buffer, dropping the oldest entries
      * if the buffer exceeds [maxEntries].
      *
-     * This method replaces the entire list in the [MutableStateFlow] to
-     * ensure atomic snapshot semantics for collectors.
+     * Uses an [ArrayDeque] internally to avoid O(n) list copies on every
+     * log line. Snapshots are flushed to the [StateFlow] in batches to
+     * reduce GC pressure and UI churn.
      */
     private fun appendEntry(entry: LogEntry) {
-        val current = _logs.value
-        val updated = if (current.size >= maxEntries) {
-            // Drop the oldest entries to maintain the ring buffer size.
-            // Drop enough to avoid repeated trimming on every single entry
-            // when running at capacity — drop 5% at a time.
-            val dropCount = (maxEntries * 0.05).toInt().coerceAtLeast(1)
-            current.drop(dropCount) + entry
-        } else {
-            current + entry
+        while (ringBuffer.size >= maxEntries) {
+            ringBuffer.removeFirst()
         }
-        _logs.value = updated
+        ringBuffer.addLast(entry)
+        pendingCount++
+
+        val now = System.currentTimeMillis()
+        if (pendingCount >= FLUSH_BATCH_SIZE || now - lastFlushTime >= FLUSH_INTERVAL_MS) {
+            flushToStateFlow()
+        }
+    }
+
+    /**
+     * Publishes the current ring buffer contents as an immutable snapshot
+     * to the [_logs] StateFlow.
+     */
+    private fun flushToStateFlow() {
+        _logs.value = ringBuffer.toList()
+        pendingCount = 0
+        lastFlushTime = System.currentTimeMillis()
+    }
+
+    private companion object {
+        /** Maximum entries to accumulate before flushing to StateFlow. */
+        const val FLUSH_BATCH_SIZE = 50
+
+        /** Maximum time in milliseconds between flushes. */
+        const val FLUSH_INTERVAL_MS = 200L
     }
 }

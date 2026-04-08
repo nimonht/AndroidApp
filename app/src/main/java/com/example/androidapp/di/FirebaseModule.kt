@@ -53,7 +53,6 @@ import com.google.firebase.functions.functions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.runBlocking
 
 class AppContainerImpl(override val context: Context) : AppContainer {
 
@@ -250,14 +249,15 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         CommandExecutor(
             registry = commandRegistry,
             contextProvider = {
-                val user = runBlocking {
-                    authRepository.getCurrentUser()
-                } ?: User(
-                    id = "guest",
-                    email = "",
-                    displayName = "Guest",
-                    role = UserRole.GUEST
-                )
+                // Use the cached StateFlow value from AuthRepository to avoid
+                // blocking the calling thread (autocomplete runs on the UI thread).
+                val user = (authRepository.currentUser as? kotlinx.coroutines.flow.StateFlow<User?>)?.value
+                    ?: User(
+                        id = "guest",
+                        email = "",
+                        displayName = "Guest",
+                        role = UserRole.GUEST
+                    )
                 CommandContext(
                     currentUser = user,
                     repositories = RepositoryBundle(

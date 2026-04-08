@@ -91,21 +91,20 @@ class DeleteCommand(
 
         // Chua co flag loai — goi y cac flag loai thuc the
         val suggestions = mutableListOf<CompletionSuggestion>()
-        val usedFlags = flags.keys.map { "--$it" }.toSet()
+        val usedFlags = flags.keys
 
         val entityFlags = listOf(
-            "-u" to "Xoa nguoi dung",
-            "-q" to "Xoa quiz",
-            "-a" to "Xoa luot lam quiz",
-            "-p" to "Xoa pool item"
+            Triple("u", "user", "Xoa nguoi dung"),
+            Triple("q", "quiz", "Xoa quiz"),
+            Triple("a", "attempt", "Xoa luot lam quiz"),
+            Triple("p", "pool", "Xoa pool item")
         )
 
-        for ((flag, desc) in entityFlags) {
-            val longForm = shortFlagToLong(flag)
-            if (flag !in usedFlags && longForm !in usedFlags) {
+        for ((short, long, desc) in entityFlags) {
+            if (short !in usedFlags && long !in usedFlags) {
                 suggestions.add(
                     CompletionSuggestion(
-                        text = flag,
+                        text = "-$short",
                         description = desc,
                         type = SuggestionType.FLAG
                     )
@@ -115,17 +114,17 @@ class DeleteCommand(
 
         // Cac flag chung
         val commonFlags = listOf(
-            "--dry-run" to "Mo phong thao tac, khong thuc su xoa",
-            "--confirm" to "Xac nhan thao tac huy diet",
-            "--format" to "Dinh dang dau ra (table/json)",
-            "--verbose" to "Hien thi chi tiet"
+            "dry-run" to "Mo phong thao tac, khong thuc su xoa",
+            "confirm" to "Xac nhan thao tac huy diet",
+            "format" to "Dinh dang dau ra (table/json)",
+            "verbose" to "Hien thi chi tiet"
         )
 
         for ((flag, desc) in commonFlags) {
             if (flag !in usedFlags) {
                 suggestions.add(
                     CompletionSuggestion(
-                        text = flag,
+                        text = "--$flag",
                         description = desc,
                         type = SuggestionType.FLAG
                     )
@@ -283,20 +282,6 @@ class DeleteCommand(
         lines.add(OutputLine("  del -p poolId123 --confirm", OutputStyle.MUTED))
 
         return CommandResult(output = lines, isSuccess = false, exitCode = 1)
-    }
-
-    /**
-     * Chuyen doi flag ngan thanh dang dai.
-     *
-     * @param shortFlag Flag ngan (vd: "-u").
-     * @return Flag dang dai tuong ung (vd: "--user").
-     */
-    private fun shortFlagToLong(shortFlag: String): String = when (shortFlag) {
-        "-u" -> "--user"
-        "-q" -> "--quiz"
-        "-a" -> "--attempt"
-        "-p" -> "--pool"
-        else -> shortFlag
     }
 
     /**
