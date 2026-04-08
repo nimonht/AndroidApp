@@ -35,12 +35,15 @@ import com.example.androidapp.ui.theme.QuizzezTheme
 fun AdminQuizCard(
     quiz: Quiz,
     onClick: () -> Unit,
-    onPublishToggle: () -> Unit,
+    onPublishToggle: (() -> Unit)? = null,
     onRestore: (() -> Unit)? = null,
-    onDelete: () -> Unit,
+    onDelete: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
+
+    // Determine if the menu should be shown at all
+    val hasAnyAction = onPublishToggle != null || onRestore != null || onDelete != null
 
     ElevatedCard(
         onClick = onClick,
@@ -136,89 +139,97 @@ fun AdminQuizCard(
                 }
 
                 // Action menu
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(4.dp)
-                ) {
-                    IconButton(
-                        onClick = { showMenu = true },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                        )
+                if (hasAnyAction) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.admin_quiz_actions),
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        if (quiz.deletedAt == null) {
-                            // Publish/Unpublish
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (quiz.isPublic) stringResource(R.string.admin_quiz_unpublish)
-                                        else stringResource(R.string.admin_quiz_publish)
-                                    )
-                                },
-                                onClick = {
-                                    onPublishToggle()
-                                    showMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        if (quiz.isPublic) Icons.Default.Lock else Icons.Default.Public,
-                                        contentDescription = null
-                                    )
-                                }
+                        IconButton(
+                            onClick = { showMenu = true },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
                             )
-
-                            HorizontalDivider()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.admin_quiz_actions),
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
                         }
 
-                        // Restore (if deleted)
-                        if (quiz.deletedAt != null && onRestore != null) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.admin_quiz_restore)) },
-                                onClick = {
-                                    onRestore()
-                                    showMenu = false
-                                },
-                                leadingIcon = {
-                                    Icon(Icons.Default.Restore, contentDescription = null)
-                                }
-                            )
-
-                            HorizontalDivider()
-                        }
-
-                        // Delete
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    if (quiz.deletedAt != null) stringResource(R.string.admin_quiz_delete_permanent)
-                                    else stringResource(R.string.delete),
-                                    color = MaterialTheme.colorScheme.error
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            if (quiz.deletedAt == null && onPublishToggle != null) {
+                                // Publish/Unpublish
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (quiz.isPublic) stringResource(R.string.admin_quiz_unpublish)
+                                            else stringResource(R.string.admin_quiz_publish)
+                                        )
+                                    },
+                                    onClick = {
+                                        onPublishToggle()
+                                        showMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            if (quiz.isPublic) Icons.Default.Lock else Icons.Default.Public,
+                                            contentDescription = null
+                                        )
+                                    }
                                 )
-                            },
-                            onClick = {
-                                onDelete()
-                                showMenu = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error
+
+                                if (onRestore != null || onDelete != null) {
+                                    HorizontalDivider()
+                                }
+                            }
+
+                            // Restore (if deleted)
+                            if (quiz.deletedAt != null && onRestore != null) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.admin_quiz_restore)) },
+                                    onClick = {
+                                        onRestore()
+                                        showMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Restore, contentDescription = null)
+                                    }
+                                )
+
+                                if (onDelete != null) {
+                                    HorizontalDivider()
+                                }
+                            }
+
+                            // Delete
+                            if (onDelete != null) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (quiz.deletedAt != null) stringResource(R.string.admin_quiz_delete_permanent)
+                                            else stringResource(R.string.delete),
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    },
+                                    onClick = {
+                                        onDelete()
+                                        showMenu = false
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 )
                             }
-                        )
+                        }
                     }
                 }
             }

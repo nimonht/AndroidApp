@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.R
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.SystemStats
 import com.example.androidapp.ui.components.admin.AdminInsightCard
 import com.example.androidapp.ui.components.admin.BarChartItem
@@ -84,6 +85,9 @@ fun AdminReportsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val hasViewReports = uiState.isSuperuser ||
+            uiState.currentPermissions.contains(AdminPermission.VIEW_REPORTS)
 
     Scaffold(
         topBar = {
@@ -127,6 +131,14 @@ fun AdminReportsScreen(
                     ErrorState(
                         message = uiState.error?.toMessage(),
                         onRetry = { viewModel.loadStats() },
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                !hasViewReports -> {
+                    ErrorState(
+                        message = stringResource(R.string.error_insufficient_permissions),
+                        onRetry = onNavigateBack,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }

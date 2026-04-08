@@ -45,8 +45,25 @@ class AdminQuizManagementViewModel(
     }
 
     init {
-        loadPermissions()
-        loadQuizzes()
+        // Load permissions first, then gate screen access with MANAGE_QUIZZES.
+        viewModelScope.launch {
+            loadPermissions()
+
+            // Screen-level gate: MANAGE_QUIZZES required to view the quiz list.
+            val state = _uiState.value
+            if (!state.isSuperuser &&
+                !state.currentPermissions.contains(AdminPermission.MANAGE_QUIZZES)
+            ) {
+                _uiState.value = state.copy(
+                    isLoading = false,
+                    error = UiError.INSUFFICIENT_PERMISSIONS
+                )
+                return@launch
+            }
+
+            loadQuizzesInternal()
+        }
+
         viewModelScope.launch {
             networkMonitor.isOnline.collect { online ->
                 _uiState.value = _uiState.value.copy(isOnline = online)
@@ -57,18 +74,16 @@ class AdminQuizManagementViewModel(
     /**
      * Loads the current admin user's permissions and superuser status into UI state.
      */
-    private fun loadPermissions() {
-        viewModelScope.launch {
-            try {
-                val user = authRepository.getCurrentUser()
-                val perms = adminRepository.getCurrentAdminPermissions()
-                _uiState.value = _uiState.value.copy(
-                    currentPermissions = perms,
-                    isSuperuser = user?.isSuperuser() == true
-                )
-            } catch (_: Exception) {
-                // Non-critical: permissions default to empty, actions will be rejected.
-            }
+    private suspend fun loadPermissions() {
+        try {
+            val user = authRepository.getCurrentUser()
+            val perms = adminRepository.getCurrentAdminPermissions()
+            _uiState.value = _uiState.value.copy(
+                currentPermissions = perms,
+                isSuperuser = user?.isSuperuser() == true
+            )
+        } catch (_: Exception) {
+            // Non-critical: permissions default to empty, actions will be rejected.
         }
     }
 
@@ -100,10 +115,26 @@ class AdminQuizManagementViewModel(
     }
 
     /**
+     * Public reload trigger. Re-checks [AdminPermission.MANAGE_QUIZZES] before
+     * fetching, in case the screen is being retried after a permission error.
+     */
+    fun loadQuizzes() {
+        val state = _uiState.value
+        if (!state.isSuperuser && !state.currentPermissions.contains(AdminPermission.MANAGE_QUIZZES)) {
+            _uiState.value = state.copy(
+                isLoading = false,
+                error = UiError.INSUFFICIENT_PERMISSIONS
+            )
+            return
+        }
+        loadQuizzesInternal()
+    }
+
+    /**
      * Load the first page of quizzes from the repository.
      * Resets pagination to the beginning.
      */
-    fun loadQuizzes() {
+    private fun loadQuizzesInternal() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, hasMore = true)
             allQuizzes = emptyList()

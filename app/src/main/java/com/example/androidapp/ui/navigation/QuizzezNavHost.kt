@@ -479,7 +479,11 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminDashboardViewModel(container.adminRepository, container.networkMonitor) as T
+                            AdminDashboardViewModel(
+                                container.adminRepository,
+                                container.authRepository,
+                                container.networkMonitor
+                            ) as T
                     }
                 )
 
@@ -554,7 +558,11 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminReportsViewModel(container.adminRepository, container.networkMonitor) as T
+                            AdminReportsViewModel(
+                                container.adminRepository,
+                                container.authRepository,
+                                container.networkMonitor
+                            ) as T
                     }
                 )
 

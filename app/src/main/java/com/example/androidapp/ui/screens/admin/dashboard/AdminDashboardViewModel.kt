@@ -2,6 +2,7 @@ package com.example.androidapp.ui.screens.admin.dashboard
 
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.repository.AdminRepository
+import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.ui.screens.admin.BaseAdminStatsViewModel
 
 /**
@@ -12,9 +13,11 @@ import com.example.androidapp.ui.screens.admin.BaseAdminStatsViewModel
  * ViewModel types, allowing them to diverge independently in the future.
  *
  * @param adminRepository Repository for admin operations.
+ * @param authRepository Repository for authentication and current-user queries.
  * @param networkMonitor Monitor for observing network connectivity state.
  */
 class AdminDashboardViewModel(
     adminRepository: AdminRepository,
+    authRepository: AuthRepository,
     networkMonitor: NetworkMonitor
-) : BaseAdminStatsViewModel(adminRepository, networkMonitor)
+) : BaseAdminStatsViewModel(adminRepository, authRepository, networkMonitor)

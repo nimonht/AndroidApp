@@ -45,7 +45,7 @@ class AdminUserManagementViewModel(
     }
 
     init {
-        // Load current user context (permissions + superuser flag)
+        // Load permissions first, then gate screen access with MANAGE_USERS.
         viewModelScope.launch {
             val user = authRepository.getCurrentUser()
             val perms = try {
@@ -58,9 +58,20 @@ class AdminUserManagementViewModel(
                 isSuperuser = user?.isSuperuser() == true,
                 currentUserId = user?.id ?: ""
             )
-        }
 
-        loadUsers()
+            // Screen-level gate: MANAGE_USERS required to view the user list.
+            if (user?.isSuperuser() != true &&
+                !perms.contains(AdminPermission.MANAGE_USERS)
+            ) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = UiError.INSUFFICIENT_PERMISSIONS
+                )
+                return@launch
+            }
+
+            loadUsersInternal()
+        }
 
         viewModelScope.launch {
             networkMonitor.isOnline.collect { online ->
@@ -88,10 +99,26 @@ class AdminUserManagementViewModel(
     // -----------------------------------------------------------------------
 
     /**
+     * Public reload trigger. Re-checks [AdminPermission.MANAGE_USERS] before
+     * fetching, in case the screen is being retried after a permission error.
+     */
+    fun loadUsers() {
+        val state = _uiState.value
+        if (!state.isSuperuser && !state.currentPermissions.contains(AdminPermission.MANAGE_USERS)) {
+            _uiState.value = state.copy(
+                isLoading = false,
+                error = UiError.INSUFFICIENT_PERMISSIONS
+            )
+            return
+        }
+        loadUsersInternal()
+    }
+
+    /**
      * Load the first page of users from the repository.
      * Resets pagination to the beginning.
      */
-    fun loadUsers() {
+    private fun loadUsersInternal() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, hasMore = true)
             allUsers = emptyList()

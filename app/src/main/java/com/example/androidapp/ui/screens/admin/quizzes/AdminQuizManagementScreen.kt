@@ -459,13 +459,21 @@ private fun QuizManagementContent(
                     AdminQuizCard(
                         quiz = quiz,
                         onClick = { onQuizClick(quiz.id) },
-                        onPublishToggle = { onPublishToggle(quiz) },
+                        onPublishToggle = if (quiz.deletedAt == null && hasPublishPermission) {
+                            { onPublishToggle(quiz) }
+                        } else {
+                            null
+                        },
                         onRestore = if (quiz.deletedAt != null && hasManagePermission) {
                             { onRestore(quiz) }
                         } else {
                             null
                         },
-                        onDelete = { onDelete(quiz) }
+                        onDelete = if (hasDeletePermission) {
+                            { onDelete(quiz) }
+                        } else {
+                            null
+                        }
                     )
                 }
 

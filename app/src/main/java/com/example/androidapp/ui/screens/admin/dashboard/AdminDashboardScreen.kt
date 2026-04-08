@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.R
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.SystemStats
 import com.example.androidapp.ui.components.admin.AdminInsightCard
 import com.example.androidapp.ui.components.admin.BarChartItem
@@ -93,6 +94,13 @@ fun AdminDashboardScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val hasManageUsers = uiState.isSuperuser ||
+            uiState.currentPermissions.contains(AdminPermission.MANAGE_USERS)
+    val hasManageQuizzes = uiState.isSuperuser ||
+            uiState.currentPermissions.contains(AdminPermission.MANAGE_QUIZZES)
+    val hasViewReports = uiState.isSuperuser ||
+            uiState.currentPermissions.contains(AdminPermission.VIEW_REPORTS)
 
     Scaffold(
         topBar = {
@@ -145,6 +153,9 @@ fun AdminDashboardScreen(
                         onNavigateToUsers = onNavigateToUsers,
                         onNavigateToQuizzes = onNavigateToQuizzes,
                         onNavigateToReports = onNavigateToReports,
+                        hasManageUsers = hasManageUsers,
+                        hasManageQuizzes = hasManageQuizzes,
+                        hasViewReports = hasViewReports,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -164,6 +175,9 @@ fun AdminDashboardScreen(
  * @param onNavigateToUsers  Quick-action callback for user management.
  * @param onNavigateToQuizzes Quick-action callback for quiz management.
  * @param onNavigateToReports Quick-action callback for reports.
+ * @param hasManageUsers     Whether the current admin may manage users.
+ * @param hasManageQuizzes   Whether the current admin may manage quizzes.
+ * @param hasViewReports     Whether the current admin may view reports.
  * @param modifier           Modifier for external layout customisation.
  */
 @Composable
@@ -172,6 +186,9 @@ private fun DashboardContent(
     onNavigateToUsers: () -> Unit,
     onNavigateToQuizzes: () -> Unit,
     onNavigateToReports: () -> Unit,
+    hasManageUsers: Boolean,
+    hasManageQuizzes: Boolean,
+    hasViewReports: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -206,6 +223,9 @@ private fun DashboardContent(
             onNavigateToUsers = onNavigateToUsers,
             onNavigateToQuizzes = onNavigateToQuizzes,
             onNavigateToReports = onNavigateToReports,
+            hasManageUsers = hasManageUsers,
+            hasManageQuizzes = hasManageQuizzes,
+            hasViewReports = hasViewReports,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -630,11 +650,17 @@ private fun InsightsSection(
 // ---------------------------------------------------------------------------
 
 /**
- * Section with three elevated navigation tiles for common admin operations.
+ * Section with elevated navigation tiles for common admin operations.
+ *
+ * Tiles are shown conditionally based on the current admin's permissions.
+ * If no permission flags are set the entire section is hidden.
  *
  * @param onNavigateToUsers   Callback for the "Manage Users" action.
  * @param onNavigateToQuizzes Callback for the "Manage Quizzes" action.
  * @param onNavigateToReports Callback for the "View Reports" action.
+ * @param hasManageUsers      Whether the "Manage Users" tile should be visible.
+ * @param hasManageQuizzes    Whether the "Manage Quizzes" tile should be visible.
+ * @param hasViewReports      Whether the "View Reports" tile should be visible.
  * @param modifier            Modifier for external layout customisation.
  */
 @Composable
@@ -642,37 +668,49 @@ private fun QuickActionsSection(
     onNavigateToUsers: () -> Unit,
     onNavigateToQuizzes: () -> Unit,
     onNavigateToReports: () -> Unit,
+    hasManageUsers: Boolean,
+    hasManageQuizzes: Boolean,
+    hasViewReports: Boolean,
     modifier: Modifier = Modifier
 ) {
+    // Hide the entire section if the admin has no navigation permissions.
+    if (!hasManageUsers && !hasManageQuizzes && !hasViewReports) return
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         SectionTitle(text = stringResource(R.string.admin_quick_actions))
 
-        QuickActionCard(
-            title = stringResource(R.string.admin_manage_users),
-            description = stringResource(R.string.admin_action_manage_users_desc),
-            icon = Icons.Default.People,
-            onClick = onNavigateToUsers,
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (hasManageUsers) {
+            QuickActionCard(
+                title = stringResource(R.string.admin_manage_users),
+                description = stringResource(R.string.admin_action_manage_users_desc),
+                icon = Icons.Default.People,
+                onClick = onNavigateToUsers,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
-        QuickActionCard(
-            title = stringResource(R.string.admin_manage_quizzes),
-            description = stringResource(R.string.admin_action_manage_quizzes_desc),
-            icon = Icons.Default.Quiz,
-            onClick = onNavigateToQuizzes,
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (hasManageQuizzes) {
+            QuickActionCard(
+                title = stringResource(R.string.admin_manage_quizzes),
+                description = stringResource(R.string.admin_action_manage_quizzes_desc),
+                icon = Icons.Default.Quiz,
+                onClick = onNavigateToQuizzes,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
-        QuickActionCard(
-            title = stringResource(R.string.admin_view_reports),
-            description = stringResource(R.string.admin_action_view_reports_desc),
-            icon = Icons.Default.Assessment,
-            onClick = onNavigateToReports,
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (hasViewReports) {
+            QuickActionCard(
+                title = stringResource(R.string.admin_view_reports),
+                description = stringResource(R.string.admin_action_view_reports_desc),
+                icon = Icons.Default.Assessment,
+                onClick = onNavigateToReports,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -885,6 +923,9 @@ private fun AdminDashboardContentLightPreview() {
             onNavigateToUsers = {},
             onNavigateToQuizzes = {},
             onNavigateToReports = {},
+            hasManageUsers = true,
+            hasManageQuizzes = true,
+            hasViewReports = true,
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -904,6 +945,9 @@ private fun AdminDashboardContentDarkPreview() {
             onNavigateToUsers = {},
             onNavigateToQuizzes = {},
             onNavigateToReports = {},
+            hasManageUsers = true,
+            hasManageQuizzes = true,
+            hasViewReports = true,
             modifier = Modifier.fillMaxSize()
         )
     }
