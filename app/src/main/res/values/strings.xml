@@ -74,6 +74,8 @@
 
     <!-- Common error/success messages (used by ViewModels) -->
     <string name="error_no_network">Không có kết nối mạng. Vui lòng kết nối internet để thực hiện thao tác quản trị.</string>
+    <string name="error_login_failed">Đăng nhập thất bại</string>
+    <string name="error_register_failed">Đăng ký thất bại</string>
     <string name="error_quiz_not_found">Không tìm thấy bài kiểm tra</string>
     <string name="error_quiz_save_failed">Không thể lưu bài kiểm tra</string>
     <string name="error_quiz_delete_failed">Không thể xóa bài kiểm tra</string>
@@ -83,7 +85,9 @@
     <string name="error_save_result_failed">Không thể lưu kết quả</string>
     <string name="error_load_stats_failed">Không thể tải thống kê</string>
     <string name="error_load_users_failed">Không thể tải danh sách người dùng</string>
+    <string name="error_load_more_users_failed">Không thể tải thêm người dùng</string>
     <string name="error_load_quizzes_failed">Không thể tải danh sách quiz</string>
+    <string name="error_load_more_quizzes_failed">Không thể tải thêm quiz</string>
     <string name="error_update_role_failed">Không thể cập nhật vai trò</string>
     <string name="error_ban_user_failed">Không thể cấm người dùng</string>
     <string name="error_unban_user_failed">Không thể bỏ cấm người dùng</string>
@@ -92,6 +96,7 @@
     <string name="error_restore_quiz_failed">Không thể khôi phục quiz</string>
     <string name="error_delete_quiz_failed">Không thể xóa quiz</string>
     <string name="error_load_data_failed">Không thể tải dữ liệu</string>
+    <string name="error_search_failed">Không thể tìm kiếm</string>
     <string name="error_load_remote_failed">Không thể tải dữ liệu từ máy chủ</string>
     <string name="error_pool_search_failed">Không thể tìm kiếm kho câu hỏi</string>
     <string name="error_pool_revoke_failed">Không thể thu hồi câu hỏi</string>

@@ -14,6 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.androidapp.QuizzezApplication
 import com.example.androidapp.databinding.FragmentAuthBinding
 import com.example.androidapp.R
+import com.example.androidapp.ui.common.UiError
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
@@ -248,7 +249,12 @@ class AuthFragment : Fragment() {
 
             is AuthUiState.Error -> {
                 setLoadingState(false)
-                Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG).show()
+                val errorMsg = when (state.error) {
+                    UiError.LOGIN_FAILED -> getString(R.string.error_login_failed)
+                    UiError.REGISTER_FAILED -> getString(R.string.error_register_failed)
+                    else -> state.error.name
+                }
+                Snackbar.make(binding.root, errorMsg, Snackbar.LENGTH_LONG).show()
                 viewModel.onEvent(AuthEvent.ClearError)
             }
 

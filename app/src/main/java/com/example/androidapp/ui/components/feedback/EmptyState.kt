@@ -1,7 +1,9 @@
 package com.example.androidapp.ui.components.feedback
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -9,7 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Displays a placeholder UI when a list or content area has no data.
@@ -25,7 +29,7 @@ import androidx.compose.ui.unit.dp
 fun EmptyState(
     message: String,
     icon: ImageVector = Icons.Default.Search,
-    actionLabel: String? = null, // Ví dụ: "Tạo mới ngay"
+    actionLabel: String? = null, // e.g., "Create new"
     onActionClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -34,7 +38,7 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Icon mờ nhạt
+        // Faded icon
         Icon(
             imageVector = icon,
             contentDescription = null,
@@ -44,7 +48,7 @@ fun EmptyState(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Thông báo
+        // Message
         Text(
             text = message,
             style = MaterialTheme.typography.titleMedium,
@@ -52,12 +56,36 @@ fun EmptyState(
             textAlign = TextAlign.Center
         )
 
-        // Nút hành động (Optional - chỉ hiện nếu có truyền vào)
+        // Action button (optional - only shown if provided)
         if (actionLabel != null && onActionClick != null) {
             Spacer(modifier = Modifier.height(24.dp))
             OutlinedButton(onClick = onActionClick) {
                 Text(actionLabel)
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun EmptyStatePreview() {
+    QuizzezTheme {
+        EmptyState(
+            message = "Khong tim thay ket qua nao",
+            icon = Icons.Default.Search,
+            actionLabel = "Tao moi",
+            onActionClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EmptyStateDarkPreview() {
+    QuizzezTheme {
+        EmptyState(
+            message = "Chua co bai quiz nao",
+            icon = Icons.Default.Inbox
+        )
     }
 }

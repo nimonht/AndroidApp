@@ -1,59 +1,20 @@
 package com.example.androidapp.ui.screens.admin.dashboard
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.repository.AdminRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
+import com.example.androidapp.ui.screens.admin.BaseAdminStatsViewModel
 
 /**
  * ViewModel for the admin dashboard screen.
+ *
+ * All stats-loading logic and UI state are provided by [BaseAdminStatsViewModel].
+ * This subclass exists so the dashboard and reports screens retain distinct
+ * ViewModel types, allowing them to diverge independently in the future.
  *
  * @param adminRepository Repository for admin operations.
  * @param networkMonitor Monitor for observing network connectivity state.
  */
 class AdminDashboardViewModel(
-    private val adminRepository: AdminRepository,
-    private val networkMonitor: NetworkMonitor
-) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(AdminDashboardUiState())
-    val uiState: StateFlow<AdminDashboardUiState> = _uiState.asStateFlow()
-
-    init {
-        loadStats()
-        viewModelScope.launch {
-            networkMonitor.isOnline.collect { online ->
-                _uiState.value = _uiState.value.copy(isOnline = online)
-            }
-        }
-    }
-
-    /**
-     * Load system statistics.
-     */
-    fun loadStats() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
-            adminRepository.getSystemStats()
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Không thể tải thống kê"
-                    )
-                }
-                .collect { stats ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        stats = stats,
-                        error = null
-                    )
-                }
-        }
-    }
-}
+    adminRepository: AdminRepository,
+    networkMonitor: NetworkMonitor
+) : BaseAdminStatsViewModel(adminRepository, networkMonitor)

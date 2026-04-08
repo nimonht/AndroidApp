@@ -32,7 +32,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -101,9 +100,10 @@ fun StatisticCard(
             // -- Large value number --
             Text(
                 text = value,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                ),
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
@@ -117,9 +117,7 @@ fun StatisticCard(
             ) {
                 Text(
                     text = title,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
@@ -129,9 +127,7 @@ fun StatisticCard(
                 if (subtitle.isNotBlank()) {
                     Text(
                         text = subtitle,
-                        fontFamily = InterFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center,
                         maxLines = 1,

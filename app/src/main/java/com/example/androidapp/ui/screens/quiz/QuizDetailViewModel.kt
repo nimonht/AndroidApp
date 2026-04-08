@@ -6,6 +6,7 @@ import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,10 +25,11 @@ sealed class QuizDetailUiState {
         val isOwner: Boolean = false,
         val isDeleting: Boolean = false,
         val isDeleted: Boolean = false,
-        val deleteError: String? = null
+        val deleteError: UiError? = null,
+        val deleteErrorDetail: String? = null
     ) : QuizDetailUiState()
 
-    data class Error(val message: String) : QuizDetailUiState()
+    data class Error(val error: UiError, val errorDetail: String? = null) : QuizDetailUiState()
 }
 
 /**
@@ -134,7 +136,8 @@ class QuizDetailViewModel(
                 onFailure = { e ->
                     _uiState.value = current.copy(
                         isDeleting = false,
-                        deleteError = e.message ?: "Không thể xóa bài kiểm tra"
+                        deleteError = UiError.DELETE_QUIZ_FAILED,
+                        deleteErrorDetail = e.message
                     )
                 }
             )
@@ -147,7 +150,7 @@ class QuizDetailViewModel(
     fun onClearDeleteError() {
         val current = _uiState.value
         if (current is QuizDetailUiState.Success) {
-            _uiState.value = current.copy(deleteError = null)
+            _uiState.value = current.copy(deleteError = null, deleteErrorDetail = null)
         }
     }
 
@@ -168,7 +171,7 @@ class QuizDetailViewModel(
                         return@launch
                     }
                 }
-                _uiState.value = QuizDetailUiState.Error("Không tìm thấy bài kiểm tra")
+                _uiState.value = QuizDetailUiState.Error(UiError.QUIZ_NOT_FOUND)
                 return@launch
             }
 
@@ -223,8 +226,8 @@ class QuizDetailViewModel(
                     _uiState.value = current.copy(isRefreshing = false)
                 } else {
                     _uiState.value = QuizDetailUiState.Error(
-                        result.exceptionOrNull()?.message
-                            ?: "Không thể tải dữ liệu từ máy chủ"
+                        error = UiError.LOAD_REMOTE_FAILED,
+                        errorDetail = result.exceptionOrNull()?.message
                     )
                 }
                 return@launch

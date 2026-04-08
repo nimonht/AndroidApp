@@ -3,7 +3,7 @@ package com.example.androidapp.data.repository
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
-import com.example.androidapp.data.remote.firebase.FirestoreCollections
+import com.example.androidapp.data.remote.firebase.FirestoreCascadeHelper
 import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
@@ -15,7 +15,6 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.example.androidapp.data.remote.toDomain
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import android.net.Uri
 import java.net.HttpURLConnection
@@ -266,67 +265,7 @@ class AuthRepositoryImpl(
 
             // Cascade-delete all user data from Firestore
             try {
-                val refsToDelete = mutableListOf<DocumentReference>()
-
-                // 1. Collect user's quizzes and their subcollections + share codes
-                val quizzes = firestore.collection(FirestoreCollections.QUIZZES)
-                    .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, uid)
-                    .get()
-                    .await()
-
-                quizzes.documents.forEach { quizDoc ->
-                    val quizRef = quizDoc.reference
-
-                    // Collect share code document if quiz has one
-                    val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
-                    if (!shareCode.isNullOrBlank()) {
-                        refsToDelete.add(
-                            firestore.collection(FirestoreCollections.SHARE_CODES)
-                                .document(shareCode)
-                        )
-                    }
-
-                    // Collect all questions and their choices
-                    val questionsSnapshot = quizRef
-                        .collection(FirestoreCollections.QUESTIONS)
-                        .get()
-                        .await()
-
-                    questionsSnapshot.documents.forEach { questionDoc ->
-                        val choicesSnapshot = questionDoc.reference
-                            .collection(FirestoreCollections.CHOICES)
-                            .get()
-                            .await()
-
-                        choicesSnapshot.documents.forEach { choiceDoc ->
-                            refsToDelete.add(choiceDoc.reference)
-                        }
-                        refsToDelete.add(questionDoc.reference)
-                    }
-
-                    refsToDelete.add(quizRef)
-                }
-
-                // 2. Collect user's attempts
-                val attempts = firestore.collection(FirestoreCollections.ATTEMPTS)
-                    .whereEqualTo(FirestoreCollections.Fields.USER_ID, uid)
-                    .get()
-                    .await()
-                attempts.documents.forEach { attemptDoc ->
-                    refsToDelete.add(attemptDoc.reference)
-                }
-
-                // 3. Collect user document
-                refsToDelete.add(
-                    firestore.collection(FirestoreCollections.USERS).document(uid)
-                )
-
-                // 4. Batch-delete in chunks of 500 (Firestore limit)
-                refsToDelete.chunked(500).forEach { chunk ->
-                    val batch = firestore.batch()
-                    chunk.forEach { ref -> batch.delete(ref) }
-                    batch.commit().await()
-                }
+                FirestoreCascadeHelper.cascadeDeleteUserData(firestore, uid)
             } catch (_: Exception) {
                 // Firestore cascade cleanup failure is non-fatal;
                 // proceed with Auth deletion so the user is not stuck

@@ -8,6 +8,7 @@ import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.ScoreCalculator
 import com.example.androidapp.domain.util.ScoreUtil
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +34,7 @@ sealed class QuizResultUiState {
         val wrongCount: Int
     ) : QuizResultUiState()
 
-    data class Error(val message: String) : QuizResultUiState()
+    data class Error(val error: UiError, val errorDetail: String? = null) : QuizResultUiState()
 }
 
 /**
@@ -69,7 +70,7 @@ class QuizResultViewModel(
             val quiz = quizRepository.getQuizById(quizId)
             val attempt = attemptRepository.getAttemptById(attemptId)
             if (quiz == null || attempt == null) {
-                _uiState.value = QuizResultUiState.Error("Không tìm thấy kết quả")
+                _uiState.value = QuizResultUiState.Error(UiError.RESULT_NOT_FOUND)
                 return@launch
             }
 

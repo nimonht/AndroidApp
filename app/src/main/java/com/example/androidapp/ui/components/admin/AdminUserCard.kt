@@ -49,7 +49,6 @@ import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
-import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -136,9 +135,7 @@ fun AdminUserCard(
                 ) {
                     Text(
                         text = user.displayName.ifBlank { user.email },
-                        fontFamily = InterFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -151,9 +148,7 @@ fun AdminUserCard(
                 // Email
                 Text(
                     text = user.email,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -167,9 +162,7 @@ fun AdminUserCard(
                     ) {
                         Text(
                             text = stringResource(R.string.admin_user_banned),
-                            fontFamily = InterFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
@@ -251,9 +244,7 @@ private fun UserAvatar(
         ) {
             Text(
                 text = initial,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                 color = textColor
             )
         }
@@ -288,9 +279,7 @@ private fun RoleBadge(
     ) {
         Text(
             text = roleText,
-            fontFamily = InterFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             color = roleColor,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
@@ -320,8 +309,7 @@ private fun UserActionsMenu(
             DropdownMenuItem(
                 text = {
                     Text(
-                        text = stringResource(R.string.admin_promote_admin),
-                        fontFamily = InterFamily
+                        text = stringResource(R.string.admin_promote_admin)
                     )
                 },
                 onClick = { onRoleChange(UserRole.ADMIN) },
@@ -339,8 +327,7 @@ private fun UserActionsMenu(
             DropdownMenuItem(
                 text = {
                     Text(
-                        text = stringResource(R.string.admin_demote_user),
-                        fontFamily = InterFamily
+                        text = stringResource(R.string.admin_demote_user)
                     )
                 },
                 onClick = { onRoleChange(UserRole.USER) },
@@ -363,8 +350,7 @@ private fun UserActionsMenu(
                         stringResource(R.string.admin_unban_user)
                     } else {
                         stringResource(R.string.admin_ban_user)
-                    },
-                    fontFamily = InterFamily
+                    }
                 )
             },
             onClick = onBanToggle,
@@ -387,7 +373,6 @@ private fun UserActionsMenu(
             text = {
                 Text(
                     text = stringResource(R.string.admin_delete_user),
-                    fontFamily = InterFamily,
                     color = MaterialTheme.colorScheme.error
                 )
             },

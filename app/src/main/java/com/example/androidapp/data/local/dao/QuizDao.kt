@@ -75,13 +75,6 @@ interface QuizDao {
     suspend fun getPublicQuizzesOnce(): List<QuizEntity>
 
     /**
-     * Get all cached quizzes not owned by the given user that are not deleted.
-     * Used to identify stale cached quizzes from other users during sync cleanup.
-     */
-    @Query("SELECT * FROM quizzes WHERE owner_id != :userId AND deleted_at IS NULL")
-    suspend fun getNonOwnedQuizzes(userId: String): List<QuizEntity>
-
-    /**
      * Get all quizzes owned by a specific user that are not deleted (one-time, non-reactive).
      * Used for comparing local cache against remote set during stale quiz cleanup.
      */

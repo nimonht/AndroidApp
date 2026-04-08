@@ -2,6 +2,7 @@ package com.example.androidapp.data.sync
 
 import android.content.Context
 import android.util.Log
+import com.example.androidapp.data.local.LocalQuizPurger
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
@@ -75,7 +76,7 @@ class QuizInvalidationManager(
             for (quizId in deletedQuizIds) {
                 val localQuiz = quizDao.getQuizById(quizId)
                 if (localQuiz != null) {
-                    purgeLocalQuiz(quizId)
+                    LocalQuizPurger.purgeLocalQuiz(quizId, quizDao, questionDao, choiceDao)
                     purgedCount++
                 }
             }
@@ -114,7 +115,7 @@ class QuizInvalidationManager(
         return try {
             val remoteQuiz = quizRemoteDataSource.getQuizById(quizId)
             if (remoteQuiz == null || remoteQuiz.deletedAt != null) {
-                purgeLocalQuiz(quizId)
+                LocalQuizPurger.purgeLocalQuiz(quizId, quizDao, questionDao, choiceDao)
                 Log.d(TAG, "Quiz $quizId no longer exists on remote; purged from local cache.")
                 false
             } else {
@@ -124,23 +125,6 @@ class QuizInvalidationManager(
             Log.w(TAG, "Failed to validate quiz $quizId; assuming still valid.", e)
             true
         }
-    }
-
-    /**
-     * Removes a quiz and all its associated questions and choices from
-     * the local Room database. Attempts are intentionally preserved
-     * because they reference the quiz by ID but have no foreign key
-     * constraint -- the user's history remains intact.
-     *
-     * @param quizId the ID of the quiz to purge.
-     */
-    private suspend fun purgeLocalQuiz(quizId: String) {
-        val questions = questionDao.getQuestionsByQuizIdOnce(quizId)
-        for (question in questions) {
-            choiceDao.deleteChoicesByQuestionId(question.id)
-            questionDao.deleteQuestion(question)
-        }
-        quizDao.deleteQuizById(quizId)
     }
 
     /**

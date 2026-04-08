@@ -16,28 +16,18 @@ fun UserDto.toDomain() = User(
     isBanned = deletedAt != null
 )
 
-fun User.toDto() = UserDto(
-    id = id,
-    email = email,
-    displayName = displayName,
-    username = username,
-    photoUrl = photoUrl,
-    role = role.toFirestoreValue(),
-    createdAt = Timestamp.now(),
-    updatedAt = Timestamp.now()
-)
-
 /**
- * Converts a [User] to a [UserDto] for an update operation,
- * preserving the original [createdAt] timestamp from the existing DTO.
+ * Converts a [User] to a [UserDto] for a create or update operation.
+ * When [existingDto] is provided, preserves the original [createdAt] timestamp.
+ * When [existingDto] is null (new user), [createdAt] defaults to now.
  */
-fun User.toDto(existingDto: UserDto?): UserDto = UserDto(
+fun User.toDto(existingDto: UserDto? = null): UserDto = UserDto(
     id = id,
     email = email,
     displayName = displayName,
     username = username,
     photoUrl = photoUrl,
-    role = role.toFirestoreValue(),
+    role = role.toStorageValue(),
     createdAt = existingDto?.createdAt ?: Timestamp.now(),
     updatedAt = Timestamp.now()
 )
@@ -80,6 +70,7 @@ fun QuizDto.toDomain() = Quiz(
     questionCount = questionCount,
     attemptCount = attemptCount,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     checksum = checksum,
     createdAt = createdAt?.toDate()?.time ?: System.currentTimeMillis(),
@@ -98,6 +89,7 @@ fun Quiz.toDto() = QuizDto(
     questionCount = questionCount,
     attemptCount = attemptCount,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     checksum = checksum,
     createdAt = Timestamp(Date(createdAt)),
@@ -180,17 +172,4 @@ fun QuestionPoolItem.toDto() = QuestionPoolItemDto(
     isActive = isActive,
     usageCount = usageCount,
     createdAt = Timestamp(Date(createdAtMillis))
-)
-
-// --- SHARE CODE ---
-fun ShareCodeDto.toDomain() = ShareCode(
-    code = code,
-    quizId = quizId,
-    expiresAtMillis = expiresAt?.toDate()?.time
-)
-
-fun ShareCode.toDto() = ShareCodeDto(
-    code = code,
-    quizId = quizId,
-    expiresAt = expiresAtMillis?.let { Timestamp(Date(it)) }
 )

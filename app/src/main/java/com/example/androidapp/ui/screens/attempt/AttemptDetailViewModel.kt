@@ -9,6 +9,7 @@ import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.ScoreCalculator
 import com.example.androidapp.domain.util.ScoreUtil
 import com.example.androidapp.domain.util.TimeFormatter
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +33,7 @@ sealed class AttemptDetailUiState {
         val wrongCount: Int
     ) : AttemptDetailUiState()
 
-    data class Error(val message: String) : AttemptDetailUiState()
+    data class Error(val error: UiError) : AttemptDetailUiState()
 }
 
 /**
@@ -66,7 +67,7 @@ class AttemptDetailViewModel(
             _uiState.value = AttemptDetailUiState.Loading
             val attempt = attemptRepository.getAttemptById(attemptId)
             if (attempt == null) {
-                _uiState.value = AttemptDetailUiState.Error("Không tìm thấy lượt làm")
+                _uiState.value = AttemptDetailUiState.Error(UiError.ATTEMPT_NOT_FOUND)
                 return@launch
             }
             val quiz = quizRepository.getQuizById(attempt.quizId)

@@ -16,6 +16,7 @@ data class Quiz(
     val questionCount: Int = 0,
     val attemptCount: Int = 0,
     val isPublic: Boolean = false,
+    val isDraft: Boolean = false,
     val shareCode: String? = null,
     val checksum: String? = null,
     val createdAt: Long = System.currentTimeMillis(),

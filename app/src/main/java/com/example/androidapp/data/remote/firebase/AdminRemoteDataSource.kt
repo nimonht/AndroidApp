@@ -24,10 +24,6 @@ class AdminRemoteDataSource(
     private val functions: FirebaseFunctions
 ) {
 
-    companion object {
-        /** Firestore batch operation limit. */
-        private const val BATCH_LIMIT = 500
-    }
 
     // ========== USER OPERATIONS ==========
 
@@ -102,68 +98,8 @@ class AdminRemoteDataSource(
      * Uses chunked batches to respect Firestore's 500-operation limit.
      */
     suspend fun deleteUserPermanently(userId: String) {
-        // Collect all document references to delete
-        val refsToDelete = mutableListOf(
-            firestore.collection(FirestoreCollections.USERS).document(userId)
-        )
-
-        // Collect user's quizzes and their subcollections (questions/choices)
-        val quizzes = firestore.collection(FirestoreCollections.QUIZZES)
-            .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
-            .get()
-            .await()
-        quizzes.documents.forEach { quizDoc ->
-            val quizRef = quizDoc.reference
-
-            // Collect share code document if quiz has one
-            val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
-            if (!shareCode.isNullOrBlank()) {
-                refsToDelete.add(
-                    firestore.collection(FirestoreCollections.SHARE_CODES)
-                        .document(shareCode)
-                )
-            }
-
-            // Collect all questions for this quiz
-            val questionsSnapshot = quizRef
-                .collection(FirestoreCollections.QUESTIONS)
-                .get()
-                .await()
-
-            questionsSnapshot.documents.forEach { questionDoc ->
-                val questionRef = questionDoc.reference
-
-                // Collect all choices for this question
-                val choicesSnapshot = questionRef
-                    .collection(FirestoreCollections.CHOICES)
-                    .get()
-                    .await()
-
-                choicesSnapshot.documents.forEach { choiceDoc ->
-                    refsToDelete.add(choiceDoc.reference)
-                }
-
-                refsToDelete.add(questionRef)
-            }
-
-            refsToDelete.add(quizRef)
-        }
-
-        // Collect user's attempts
-        val attempts = firestore.collection(FirestoreCollections.ATTEMPTS)
-            .whereEqualTo(FirestoreCollections.Fields.USER_ID, userId)
-            .get()
-            .await()
-        attempts.documents.forEach { attemptDoc ->
-            refsToDelete.add(attemptDoc.reference)
-        }
-
-        // Commit in chunks of 500 (Firestore batch limit)
-        refsToDelete.chunked(BATCH_LIMIT).forEach { chunk ->
-            val batch = firestore.batch()
-            chunk.forEach { ref -> batch.delete(ref) }
-            batch.commit().await()
-        }
+        // Cascade-delete all Firestore data owned by the user
+        FirestoreCascadeHelper.cascadeDeleteUserData(firestore, userId)
 
         // Delete user from Firebase Authentication via Cloud Function
         try {
@@ -279,7 +215,7 @@ class AdminRemoteDataSource(
         }
 
         // Commit in chunks of 500 (Firestore batch limit)
-        refsToDelete.chunked(BATCH_LIMIT).forEach { chunk ->
+        refsToDelete.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
             val batch = firestore.batch()
             chunk.forEach { ref -> batch.delete(ref) }
             batch.commit().await()

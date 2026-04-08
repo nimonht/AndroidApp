@@ -11,6 +11,7 @@ import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.util.safeCall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -26,7 +27,7 @@ class AttemptRepositoryImpl(
     private val syncManager: SyncManager
 ) : AttemptRepository {
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun getAttemptsByUser(userId: String): Flow<List<Attempt>> {
         return attemptDao.getAttemptsByUser(userId).map { entities ->

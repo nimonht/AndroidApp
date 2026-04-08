@@ -6,6 +6,7 @@ import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +34,8 @@ import kotlinx.coroutines.launch
  * @property isPublished Whether the quiz has been successfully published.
  * @property lastSavedAt Epoch millis of the last draft save, or null if never saved in this session.
  * @property shareToPool Whether to contribute each question to the community pool after publishing.
- * @property error Current error message to display, or null when there is no error.
+ * @property error Current [UiError] code to display, or null when there is no error.
+ * @property errorDetail Optional detail string for parameterised errors or raw validation messages.
  */
 data class EditQuizUiState(
     val quizId: String = "",
@@ -50,65 +52,18 @@ data class EditQuizUiState(
     val isPublished: Boolean = false,
     val lastSavedAt: Long? = null,
     val shareToPool: Boolean = false,
-    val error: String? = null
+    val error: UiError? = null,
+    val errorDetail: String? = null
 )
 
 /**
- * Events that can be dispatched to [EditQuizViewModel].
+ * Events for the Edit Quiz screen.
+ *
+ * The edit flow uses exactly the same set of form events as the create flow,
+ * so this is a direct typealias for [QuizFormEvent]. If edit-specific events
+ * are ever needed, replace this typealias with a dedicated sealed interface.
  */
-sealed class EditQuizEvent {
-    /** Updates the quiz title. */
-    data class TitleChanged(val title: String) : EditQuizEvent()
-
-    /** Updates the quiz description. */
-    data class DescriptionChanged(val description: String) : EditQuizEvent()
-
-    /** Updates the quiz cover image URL. */
-    data class ThumbnailUrlChanged(val thumbnailUrl: String) : EditQuizEvent()
-
-    /** Toggles the public visibility of the quiz. */
-    data class IsPublicChanged(val isPublic: Boolean) : EditQuizEvent()
-
-    /** Updates the raw comma-separated tags string. */
-    data class TagsChanged(val tags: String) : EditQuizEvent()
-
-    /** Appends a blank question to the end of the question list. */
-    data object AddQuestion : EditQuizEvent()
-
-    /** Replaces the question at [index] with [draft]. */
-    data class UpdateQuestion(val index: Int, val draft: QuestionDraft) : EditQuizEvent()
-
-    /** Removes the question at [index] if more than one question exists. */
-    data class RemoveQuestion(val index: Int) : EditQuizEvent()
-
-    /** Moves the question at [index] one position up in the list. */
-    data class MoveQuestionUp(val index: Int) : EditQuizEvent()
-
-    /** Moves the question at [index] one position down in the list. */
-    data class MoveQuestionDown(val index: Int) : EditQuizEvent()
-
-    /**
-     * Saves the current form as a draft without publishing.
-     * Sets [EditQuizUiState.isDraft] to true and records [EditQuizUiState.lastSavedAt].
-     * The quiz is saved with whatever [EditQuizUiState.isPublic] the user has set.
-     */
-    data object SaveDraft : EditQuizEvent()
-
-    /**
-     * Validates the quiz and saves it as a published quiz.
-     * Sets [EditQuizUiState.isPublished] to true and triggers [EditQuizUiState.isSaved].
-     */
-    data object PublishQuiz : EditQuizEvent()
-
-    /** Legacy save alias -- behaves identically to [PublishQuiz]. */
-    data object SaveQuiz : EditQuizEvent()
-
-    /** Toggles whether each question will be contributed to the community pool after publishing. */
-    data class ShareToPoolChanged(val shareToPool: Boolean) : EditQuizEvent()
-
-    /** Clears the current error message from the UI state. */
-    data object ClearError : EditQuizEvent()
-}
+typealias EditQuizEvent = QuizFormEvent
 
 /**
  * ViewModel for the Edit Quiz screen.
@@ -150,31 +105,32 @@ class EditQuizViewModel(
     }
 
     /**
-     * Dispatches an [EditQuizEvent] to update state or trigger a side effect.
+     * Dispatches a [QuizFormEvent] (aliased as [EditQuizEvent]) to update state
+     * or trigger a side effect.
      */
-    fun onEvent(event: EditQuizEvent) {
+    fun onEvent(event: QuizFormEvent) {
         when (event) {
-            is EditQuizEvent.TitleChanged ->
+            is QuizFormEvent.TitleChanged ->
                 _uiState.update { it.copy(title = event.title) }
 
-            is EditQuizEvent.DescriptionChanged ->
+            is QuizFormEvent.DescriptionChanged ->
                 _uiState.update { it.copy(description = event.description) }
 
-            is EditQuizEvent.ThumbnailUrlChanged ->
+            is QuizFormEvent.ThumbnailUrlChanged ->
                 _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
 
-            is EditQuizEvent.IsPublicChanged ->
+            is QuizFormEvent.IsPublicChanged ->
                 _uiState.update { it.copy(isPublic = event.isPublic) }
 
-            is EditQuizEvent.TagsChanged ->
+            is QuizFormEvent.TagsChanged ->
                 _uiState.update { it.copy(tags = event.tags) }
 
-            is EditQuizEvent.AddQuestion ->
+            is QuizFormEvent.AddQuestion ->
                 _uiState.update {
                     it.copy(questions = QuizFormHelper.addQuestion(it.questions))
                 }
 
-            is EditQuizEvent.UpdateQuestion ->
+            is QuizFormEvent.UpdateQuestion ->
                 _uiState.update {
                     it.copy(
                         questions = QuizFormHelper.updateQuestion(
@@ -183,41 +139,41 @@ class EditQuizViewModel(
                     )
                 }
 
-            is EditQuizEvent.RemoveQuestion ->
+            is QuizFormEvent.RemoveQuestion ->
                 _uiState.update {
                     it.copy(
                         questions = QuizFormHelper.removeQuestion(it.questions, event.index)
                     )
                 }
 
-            is EditQuizEvent.MoveQuestionUp ->
+            is QuizFormEvent.MoveQuestionUp ->
                 _uiState.update {
                     it.copy(
                         questions = QuizFormHelper.moveQuestionUp(it.questions, event.index)
                     )
                 }
 
-            is EditQuizEvent.MoveQuestionDown ->
+            is QuizFormEvent.MoveQuestionDown ->
                 _uiState.update {
                     it.copy(
                         questions = QuizFormHelper.moveQuestionDown(it.questions, event.index)
                     )
                 }
 
-            is EditQuizEvent.SaveDraft ->
+            is QuizFormEvent.SaveDraft ->
                 onSaveQuiz(publishAfterSave = false)
 
-            is EditQuizEvent.PublishQuiz ->
+            is QuizFormEvent.PublishQuiz ->
                 onSaveQuiz(publishAfterSave = true)
 
-            is EditQuizEvent.SaveQuiz ->
+            is QuizFormEvent.SaveQuiz ->
                 onSaveQuiz(publishAfterSave = true)
 
-            is EditQuizEvent.ShareToPoolChanged ->
+            is QuizFormEvent.ShareToPoolChanged ->
                 _uiState.update { it.copy(shareToPool = event.shareToPool) }
 
-            is EditQuizEvent.ClearError ->
-                _uiState.update { it.copy(error = null) }
+            is QuizFormEvent.ClearError ->
+                _uiState.update { it.copy(error = null, errorDetail = null) }
         }
     }
 
@@ -225,7 +181,7 @@ class EditQuizViewModel(
         viewModelScope.launch {
             val quiz = quizRepository.getQuizById(quizId)
             if (quiz == null) {
-                _uiState.update { it.copy(isLoading = false, error = "Không tìm thấy bài kiểm tra") }
+                _uiState.update { it.copy(isLoading = false, error = UiError.QUIZ_NOT_FOUND) }
                 return@launch
             }
             val questions = quizRepository.getQuestionsForQuizOnce(quizId)
@@ -282,7 +238,7 @@ class EditQuizViewModel(
 
             val validationError = QuizFormHelper.validateQuizForm(state.title, state.questions)
             if (validationError != null) {
-                _uiState.update { it.copy(error = validationError) }
+                _uiState.update { it.copy(errorDetail = validationError) }
                 return@launch
             }
 
@@ -359,7 +315,7 @@ class EditQuizViewModel(
                 },
                 onFailure = { e ->
                     _uiState.update {
-                        it.copy(error = e.message ?: "Không thể lưu bài kiểm tra")
+                        it.copy(error = UiError.SAVE_QUIZ_FAILED, errorDetail = e.message)
                     }
                 }
             )

@@ -2,6 +2,7 @@ package com.example.androidapp.di
 
 import android.content.Context
 import com.example.androidapp.data.local.AppDatabase
+import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
@@ -48,6 +49,13 @@ interface AppContainer {
      * maintenance tasks. Uses a lightweight tombstone-based approach.
      */
     val quizInvalidationManager: QuizInvalidationManager
+
+    /**
+     * Remote data source for quiz Firestore operations, including
+     * deletion tombstone writes. Exposed for background workers that
+     * need to write tombstones without duplicating the logic.
+     */
+    val quizRemoteDataSource: QuizRemoteDataSource
 
     val authRepository: AuthRepository
     val quizRepository: QuizRepository

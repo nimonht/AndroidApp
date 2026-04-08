@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,7 @@ data class HomeUiState(
     val myQuizzes: List<Quiz> = emptyList(),
     val trendingQuizzes: List<Quiz> = emptyList(),
     val joinCode: String = "",
-    val joinCodeError: String? = null,
+    val joinCodeError: UiError? = null,
     val isJoining: Boolean = false,
     val joinedQuizId: String? = null,
     val error: String? = null,
@@ -128,7 +129,7 @@ class HomeViewModel(
     private fun onJoinQuiz(code: String) {
         val trimmedCode = code.trim().uppercase()
         if (trimmedCode.length != 6 || !trimmedCode.all { it.isLetterOrDigit() }) {
-            _uiState.update { it.copy(joinCodeError = "Mã không hợp lệ. Vui lòng nhập 6 ký tự chữ hoặc số.") }
+            _uiState.update { it.copy(joinCodeError = UiError.INVALID_JOIN_CODE) }
             return
         }
         viewModelScope.launch {
@@ -141,7 +142,7 @@ class HomeViewModel(
                     _uiState.update {
                         it.copy(
                             isJoining = false,
-                            joinCodeError = "Không tìm thấy bài kiểm tra với mã này. Vui lòng kiểm tra lại mã."
+                            joinCodeError = UiError.JOIN_QUIZ_NOT_FOUND
                         )
                     }
                 }
@@ -149,7 +150,7 @@ class HomeViewModel(
                 _uiState.update {
                     it.copy(
                         isJoining = false,
-                        joinCodeError = "Không thể tìm kiếm bài kiểm tra. Vui lòng thử lại."
+                        joinCodeError = UiError.JOIN_QUIZ_FAILED
                     )
                 }
             }

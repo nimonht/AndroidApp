@@ -46,7 +46,7 @@ enum class UserRole {
     }
 
     /**
-     * Convert role to lowercase string for Firestore storage.
+     * Convert role to lowercase string for storage.
      */
-    fun toFirestoreValue(): String = name.lowercase()
+    fun toStorageValue(): String = name.lowercase()
 }

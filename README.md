@@ -228,7 +228,7 @@ scripts/generate-sample-data.py --help
 
 ## Version
 
-App version 7.4.2026
+App version 8.4.2026 (2026-04-08)
 
 ## License
 

@@ -42,7 +42,7 @@ class AdminRepositoryImpl(
 
     override suspend fun updateUserRole(userId: String, newRole: UserRole): Result<Unit> {
         return safeCall {
-            adminRemoteDataSource.updateUserRole(userId, newRole.toFirestoreValue())
+            adminRemoteDataSource.updateUserRole(userId, newRole.toStorageValue())
         }
     }
 

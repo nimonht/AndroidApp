@@ -6,6 +6,7 @@ import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,7 +53,7 @@ class AdminUserManagementViewModel(
     private fun requireOnline(): Boolean {
         if (!networkMonitor.isOnline.value) {
             _uiState.value = _uiState.value.copy(
-                actionError = "Khong co ket noi mang. Vui long ket noi internet de thuc hien thao tac quan tri."
+                actionError = UiError.NETWORK_UNAVAILABLE
             )
             return false
         }
@@ -77,10 +78,10 @@ class AdminUserManagementViewModel(
                     hasMore = page.hasMore,
                     error = null
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Khong the tai danh sach nguoi dung"
+                    error = UiError.LOAD_USER_LIST_FAILED
                 )
             }
         }
@@ -103,10 +104,10 @@ class AdminUserManagementViewModel(
                     users = filterUsers(allUsers, _uiState.value.searchQuery),
                     hasMore = page.hasMore
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
-                    error = e.message ?: "Khong the tai them nguoi dung"
+                    error = UiError.LOAD_MORE_USERS_FAILED
                 )
             }
         }
@@ -139,10 +140,10 @@ class AdminUserManagementViewModel(
                     // Refresh to get updated data
                     loadUsers()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the cap nhat vai tro"
+                        actionError = UiError.UPDATE_USER_ROLE_FAILED
                     )
                 }
         }
@@ -164,10 +165,10 @@ class AdminUserManagementViewModel(
                     )
                     loadUsers()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the cam nguoi dung"
+                        actionError = UiError.BAN_USER_FAILED
                     )
                 }
         }
@@ -189,10 +190,10 @@ class AdminUserManagementViewModel(
                     )
                     loadUsers()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the bo cam nguoi dung"
+                        actionError = UiError.UNBAN_USER_FAILED
                     )
                 }
         }
@@ -214,10 +215,10 @@ class AdminUserManagementViewModel(
                     )
                     loadUsers()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the xoa nguoi dung"
+                        actionError = UiError.DELETE_USER_FAILED
                     )
                 }
         }

@@ -3,6 +3,7 @@ package com.example.androidapp.ui.screens.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ import java.net.URL
  * @property isLoading Whether a save operation is in progress.
  * @property isLoadingAvatar Whether a random avatar fetch is in progress.
  * @property isSaved Whether the profile was saved successfully; used to trigger navigation back.
- * @property error An error message to display, or null when there is no error.
+ * @property error A [UiError] code to display, or null when there is no error.
+ * @property errorDetail Optional dynamic detail for parameterised errors (e.g. HTTP status code).
  */
 data class EditProfileUiState(
     val displayName: String = "",
@@ -32,7 +34,8 @@ data class EditProfileUiState(
     val isLoading: Boolean = false,
     val isLoadingAvatar: Boolean = false,
     val isSaved: Boolean = false,
-    val error: String? = null
+    val error: UiError? = null,
+    val errorDetail: String? = null
 )
 
 /**
@@ -143,7 +146,7 @@ class EditProfileViewModel(
             _uiState.update { it.copy(isLoadingAvatar = true) }
 
             try {
-                val imageUrl = withContext(Dispatchers.IO) {
+                val result = withContext(Dispatchers.IO) {
                     val url = URL(
                         "https://wallhaven.cc/api/v1/search?categories=010&purity=100&sorting=random&atleast=400x400&ratios=1x1"
                     )
@@ -155,7 +158,7 @@ class EditProfileViewModel(
                     try {
                         val responseCode = connection.responseCode
                         if (responseCode != HttpURLConnection.HTTP_OK) {
-                            throw Exception("Wallhaven API trả về lỗi HTTP $responseCode")
+                            return@withContext AvatarFetchResult.ApiError(responseCode)
                         }
 
                         val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
@@ -163,25 +166,42 @@ class EditProfileViewModel(
                         val dataArray = json.getJSONArray("data")
 
                         if (dataArray.length() == 0) {
-                            throw Exception("Không tìm thấy hình ảnh từ Wallhaven")
+                            return@withContext AvatarFetchResult.NoImages
                         }
 
                         val firstItem = dataArray.getJSONObject(0)
                         val thumbs = firstItem.getJSONObject("thumbs")
-                        thumbs.getString("small")
+                        AvatarFetchResult.Success(thumbs.getString("small"))
                     } finally {
                         connection.disconnect()
                     }
                 }
 
-                _uiState.update {
-                    it.copy(photoUrl = imageUrl, isLoadingAvatar = false)
+                when (result) {
+                    is AvatarFetchResult.Success -> _uiState.update {
+                        it.copy(photoUrl = result.url, isLoadingAvatar = false)
+                    }
+
+                    is AvatarFetchResult.ApiError -> _uiState.update {
+                        it.copy(
+                            isLoadingAvatar = false,
+                            error = UiError.WALLHAVEN_API_ERROR,
+                            errorDetail = result.httpCode.toString()
+                        )
+                    }
+
+                    is AvatarFetchResult.NoImages -> _uiState.update {
+                        it.copy(
+                            isLoadingAvatar = false,
+                            error = UiError.WALLHAVEN_NO_IMAGES
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoadingAvatar = false,
-                        error = e.localizedMessage ?: "Không thể tải ảnh đại diện ngẫu nhiên"
+                        error = UiError.RANDOM_AVATAR_FAILED
                     )
                 }
             }
@@ -194,7 +214,7 @@ class EditProfileViewModel(
             val displayName = currentState.displayName.trim()
 
             if (displayName.isBlank()) {
-                _uiState.update { it.copy(error = "Tên hiển thị không được để trống") }
+                _uiState.update { it.copy(error = UiError.DISPLAY_NAME_BLANK) }
                 return@launch
             }
 
@@ -207,11 +227,11 @@ class EditProfileViewModel(
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false, isSaved = true) }
                 }
-                .onFailure { throwable ->
+                .onFailure {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = throwable.localizedMessage ?: "Lưu hồ sơ thất bại"
+                            error = UiError.SAVE_PROFILE_FAILED
                         )
                     }
                 }
@@ -219,6 +239,21 @@ class EditProfileViewModel(
     }
 
     private fun clearError() {
-        _uiState.update { it.copy(error = null) }
+        _uiState.update { it.copy(error = null, errorDetail = null) }
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal result type
+    // -------------------------------------------------------------------------
+
+    /**
+     * Internal result type for the Wallhaven avatar fetch.
+     * Avoids raw exceptions for expected (non-exceptional) conditions so that
+     * each outcome maps cleanly to a [UiError].
+     */
+    private sealed interface AvatarFetchResult {
+        data class Success(val url: String) : AvatarFetchResult
+        data class ApiError(val httpCode: Int) : AvatarFetchResult
+        data object NoImages : AvatarFetchResult
     }
 }

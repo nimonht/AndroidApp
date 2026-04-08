@@ -4,6 +4,7 @@ import com.example.androidapp.data.local.entity.AttemptEntity
 import com.example.androidapp.data.local.entity.ChoiceEntity
 import com.example.androidapp.data.local.entity.QuestionEntity
 import com.example.androidapp.data.local.entity.QuizEntity
+import com.example.androidapp.data.local.entity.SyncStatus
 import com.example.androidapp.data.local.entity.UserEntity
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.model.Choice
@@ -30,6 +31,7 @@ fun QuizEntity.toDomain(): Quiz = Quiz(
     questionCount = questionCount,
     attemptCount = attemptCount,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     checksum = checksum,
     createdAt = createdAt,
@@ -39,7 +41,7 @@ fun QuizEntity.toDomain(): Quiz = Quiz(
 )
 
 /** Maps domain [Quiz] to [QuizEntity] for Room storage. */
-fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
+fun Quiz.toEntity(syncStatus: String = SyncStatus.SYNCED.name): QuizEntity = QuizEntity(
     id = id,
     ownerId = ownerId,
     title = title,
@@ -47,6 +49,7 @@ fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
     authorName = authorName,
     thumbnailUrl = thumbnailUrl,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     tags = tags.joinToString(","),
     checksum = checksum,
@@ -167,5 +170,5 @@ fun User.toEntity(): UserEntity = UserEntity(
     email = email,
     displayName = displayName,
     photoUrl = photoUrl,
-    role = role.toFirestoreValue()
+    role = role.toStorageValue()
 )

@@ -2,10 +2,9 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.example.androidapp.data.local.entity.UserEntity
 
 /**
@@ -22,9 +21,9 @@ interface UserDao {
     suspend fun getUserById(userId: String): UserEntity?
 
     /**
-     * Insert a user, replacing if it already exists.
+     * Insert a user, or update it if it already exists.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertUser(user: UserEntity)
 
     /**

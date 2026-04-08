@@ -52,6 +52,7 @@ import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.ui.components.admin.AdminUserCard
 import com.example.androidapp.ui.components.common.AppAlertDialog
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
@@ -123,7 +124,7 @@ fun AdminUserManagementScreen(
 
                 uiState.error != null -> {
                     ErrorState(
-                        message = uiState.error,
+                        message = uiState.error?.toMessage(),
                         onRetry = { viewModel.loadUsers() },
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -213,8 +214,9 @@ fun AdminUserManagementScreen(
 
     // Action error snackbar
     uiState.actionError?.let { error ->
+        val errorMessage = error.toMessage()
         LaunchedEffect(error) {
-            snackbarHostState.showSnackbar(error)
+            snackbarHostState.showSnackbar(errorMessage)
             viewModel.clearActionError()
         }
     }

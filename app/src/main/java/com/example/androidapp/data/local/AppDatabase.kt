@@ -2,8 +2,6 @@ package com.example.androidapp.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
-import com.example.androidapp.data.local.converter.Converters
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
@@ -38,10 +36,9 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
-@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     /**

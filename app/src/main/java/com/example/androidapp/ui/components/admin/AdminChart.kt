@@ -45,7 +45,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.androidapp.ui.theme.FullShape
-import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -250,9 +249,7 @@ fun EngagementLineChart(
             labels.forEach { label ->
                 Text(
                     text = label,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 11.sp,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                     color = onSurfaceVariantColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -304,9 +301,7 @@ fun HorizontalBarChart(
                 // Label on the left
                 Text(
                     text = item.label,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleSmall,
                     color = onSurfaceVariantColor,
                     modifier = Modifier.width(72.dp),
                     maxLines = 1,
@@ -344,9 +339,7 @@ fun HorizontalBarChart(
                 // Value on the right
                 Text(
                     text = item.value.toString(),
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = onSurfaceColor,
                     modifier = Modifier.width(40.dp),
                     textAlign = TextAlign.End,
@@ -430,16 +423,15 @@ fun EngagementRingChart(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = centerValue,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                ),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = centerLabel,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 11.sp,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

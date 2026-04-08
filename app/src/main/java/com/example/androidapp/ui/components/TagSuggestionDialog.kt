@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -14,8 +15,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Predefined quiz tag categories with their tags.
@@ -140,4 +143,30 @@ fun TagSuggestionDialog(
             }
         }
     )
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun TagSuggestionDialogPreview() {
+    QuizzezTheme {
+        TagSuggestionDialog(
+            currentTags = "Toan hoc, Vat ly",
+            availableTags = listOf("Toan hoc", "Vat ly", "Hoa hoc", "Lap trinh"),
+            onTagsConfirmed = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TagSuggestionDialogDarkPreview() {
+    QuizzezTheme {
+        TagSuggestionDialog(
+            currentTags = "Toan hoc, Vat ly",
+            availableTags = listOf("Toan hoc", "Vat ly", "Hoa hoc", "Lap trinh"),
+            onTagsConfirmed = {},
+            onDismiss = {}
+        )
+    }
 }

@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.androidapp.QuizzezApplication
+import com.example.androidapp.data.remote.firebase.FirestoreCascadeHelper
 import com.example.androidapp.data.remote.firebase.FirestoreCollections
+import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -37,14 +39,16 @@ class BackendMaintenanceWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        // Obtain Firestore from the DI container so emulator configuration is respected.
-        val firestore = (applicationContext as QuizzezApplication).appContainer.firebaseFirestore
+        // Obtain dependencies from the DI container so emulator configuration is respected.
+        val appContainer = (applicationContext as QuizzezApplication).appContainer
+        val firestore = appContainer.firebaseFirestore
+        val quizRemoteDataSource = appContainer.quizRemoteDataSource
         Log.d(TAG, "Starting backend maintenance tasks...")
 
         var hasErrors = false
 
         try {
-            cleanupOldDeletedQuizzes(firestore)
+            cleanupOldDeletedQuizzes(firestore, quizRemoteDataSource)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to cleanup old deleted quizzes", e)
             hasErrors = true
@@ -65,7 +69,7 @@ class BackendMaintenanceWorker(
         }
 
         try {
-            cleanupDeletedUsers(firestore)
+            cleanupDeletedUsers(firestore, quizRemoteDataSource)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to cleanup deleted users", e)
             hasErrors = true
@@ -90,7 +94,10 @@ class BackendMaintenanceWorker(
      * other clients can detect the removal during their next incremental
      * invalidation check (via [QuizInvalidationManager.checkForDeletedQuizzes]).
      */
-    private suspend fun cleanupOldDeletedQuizzes(firestore: FirebaseFirestore) {
+    private suspend fun cleanupOldDeletedQuizzes(
+        firestore: FirebaseFirestore,
+        quizRemoteDataSource: QuizRemoteDataSource
+    ) {
         val cutoff = Timestamp(Date(System.currentTimeMillis() - DELETION_THRESHOLD_MS))
 
         Log.d(TAG, "Cleaning up quizzes deleted before: $cutoff")
@@ -110,7 +117,7 @@ class BackendMaintenanceWorker(
             try {
                 // Write a deletion tombstone before removing the quiz document
                 // so other clients can detect the permanent removal.
-                writeSingleTombstone(firestore, quizId)
+                quizRemoteDataSource.writeDeletionTombstone(quizId)
 
                 // 1. Delete related attempts (top-level collection)
                 deleteCollectionByField(
@@ -237,7 +244,10 @@ class BackendMaintenanceWorker(
      * Writes deletion tombstones for each of the user's quizzes before removing
      * them, so other clients that cached those quizzes can detect the removal.
      */
-    private suspend fun cleanupDeletedUsers(firestore: FirebaseFirestore) {
+    private suspend fun cleanupDeletedUsers(
+        firestore: FirebaseFirestore,
+        quizRemoteDataSource: QuizRemoteDataSource
+    ) {
         Log.d(TAG, "Cleaning up deleted users...")
 
         val cutoff = Timestamp(Date(System.currentTimeMillis() - DELETION_THRESHOLD_MS))
@@ -253,56 +263,27 @@ class BackendMaintenanceWorker(
             val deletedAt = doc.getTimestamp(FirestoreCollections.Fields.DELETED_AT) ?: continue
             if (deletedAt > cutoff) continue
             try {
-                // Delete user's quizzes (including subcollections)
+                // Write deletion tombstones for the user's quizzes before
+                // the cascade helper removes them.
                 val userQuizzes = firestore.collection(FirestoreCollections.QUIZZES)
                     .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
                     .get()
                     .await()
+                quizRemoteDataSource.writeDeletionTombstones(
+                    userQuizzes.documents.map { it.id }
+                )
 
-                // Write deletion tombstones for all the user's quizzes in batches
-                // before actually deleting them.
-                writeTombstonesForQuizDocs(firestore, userQuizzes)
+                // Cascade-delete quizzes (with questions, choices, share codes),
+                // attempts, and the user document itself.
+                FirestoreCascadeHelper.cascadeDeleteUserData(firestore, userId)
 
-                for (quizDoc in userQuizzes.documents) {
-                    val quizId = quizDoc.id
-
-                    // Delete questions -> choices subcollections
-                    val questions = firestore.collection(FirestoreCollections.QUIZZES)
-                        .document(quizId)
-                        .collection(FirestoreCollections.QUESTIONS)
-                        .get()
-                        .await()
-
-                    for (qDoc in questions.documents) {
-                        val choices = firestore.collection(FirestoreCollections.QUIZZES)
-                            .document(quizId)
-                            .collection(FirestoreCollections.QUESTIONS)
-                            .document(qDoc.id)
-                            .collection(FirestoreCollections.CHOICES)
-                            .get()
-                            .await()
-                        deleteBatch(firestore, choices)
-                    }
-                    deleteBatch(firestore, questions)
-                }
-                deleteBatch(firestore, userQuizzes)
-
-                // Delete user's attempts
-                deleteCollectionByField(firestore, FirestoreCollections.ATTEMPTS, "userId", userId)
-
-                // Delete user's pool contributions
+                // Delete user's pool contributions (not part of the standard cascade)
                 deleteCollectionByField(
                     firestore,
                     FirestoreCollections.QUESTION_POOL,
                     FirestoreCollections.Fields.CONTRIBUTOR_ID,
                     userId
                 )
-
-                // Delete the user document
-                firestore.collection(FirestoreCollections.USERS)
-                    .document(userId)
-                    .delete()
-                    .await()
 
                 deletedCount++
             } catch (e: Exception) {
@@ -345,7 +326,7 @@ class BackendMaintenanceWorker(
      */
     private suspend fun deleteBatch(firestore: FirebaseFirestore, snapshot: QuerySnapshot) {
         if (snapshot.isEmpty) return
-        snapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
+        snapshot.documents.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
             val batch = firestore.batch()
             chunk.forEach { batch.delete(it.reference) }
             batch.commit().await()
@@ -368,51 +349,6 @@ class BackendMaintenanceWorker(
         deleteBatch(firestore, snapshot)
     }
 
-    /**
-     * Writes a single deletion tombstone document for the given [quizId].
-     * Used when permanently removing individual quizzes (e.g., during the
-     * 30-day cascade cleanup).
-     */
-    private suspend fun writeSingleTombstone(firestore: FirebaseFirestore, quizId: String) {
-        val tombstone = hashMapOf(
-            FirestoreCollections.Fields.QUIZ_ID to quizId,
-            FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
-        )
-        firestore.collection(FirestoreCollections.QUIZ_DELETIONS)
-            .add(tombstone)
-            .await()
-    }
-
-    /**
-     * Writes deletion tombstones for all quiz documents in the given snapshot.
-     * Uses batched writes chunked to respect Firestore's 500-operation limit.
-     *
-     * Call this before batch-deleting the quiz documents themselves so that
-     * other clients can detect the removal during their next invalidation sweep.
-     */
-    private suspend fun writeTombstonesForQuizDocs(
-        firestore: FirebaseFirestore,
-        quizSnapshot: QuerySnapshot
-    ) {
-        if (quizSnapshot.isEmpty) return
-
-        quizSnapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
-            val batch = firestore.batch()
-            chunk.forEach { quizDoc ->
-                val tombstoneRef = firestore
-                    .collection(FirestoreCollections.QUIZ_DELETIONS)
-                    .document()
-                batch.set(
-                    tombstoneRef,
-                    hashMapOf(
-                        FirestoreCollections.Fields.QUIZ_ID to quizDoc.id,
-                        FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
-                    )
-                )
-            }
-            batch.commit().await()
-        }
-    }
 
     companion object {
         private const val TAG = "BackendMaintenance"
@@ -423,7 +359,7 @@ class BackendMaintenanceWorker(
          * permanent removal. Set to 30 days for production.
          */
         private const val DELETION_THRESHOLD_MS = 30L * 24 * 60 * 60 * 1000 // 30 days
-        private const val BATCH_LIMIT = 500
+
 
         /**
          * How long deletion tombstones are retained before garbage collection.

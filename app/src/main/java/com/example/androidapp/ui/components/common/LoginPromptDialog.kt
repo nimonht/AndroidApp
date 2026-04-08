@@ -1,12 +1,15 @@
 package com.example.androidapp.ui.components.common
 
+import android.content.res.Configuration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.androidapp.R
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Dialog prompting the user to log in when they attempt a restricted action as a guest.
@@ -37,4 +40,26 @@ fun LoginPromptDialog(
             }
         }
     )
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun LoginPromptDialogPreview() {
+    QuizzezTheme {
+        LoginPromptDialog(
+            onLogin = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LoginPromptDialogDarkPreview() {
+    QuizzezTheme {
+        LoginPromptDialog(
+            onLogin = {},
+            onDismiss = {}
+        )
+    }
 }

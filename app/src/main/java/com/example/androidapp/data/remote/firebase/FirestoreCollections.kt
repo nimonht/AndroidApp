@@ -5,6 +5,9 @@ package com.example.androidapp.data.remote.firebase
  * Single source of truth for all Firestore path strings.
  */
 object FirestoreCollections {
+    /** Maximum operations per Firestore batch write. */
+    const val BATCH_LIMIT = 500
+
     const val USERS = "users"
     const val QUIZZES = "quizzes"
     const val QUESTIONS = "questions"

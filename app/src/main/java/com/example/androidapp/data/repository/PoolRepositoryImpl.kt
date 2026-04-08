@@ -51,7 +51,7 @@ class PoolRepositoryImpl(
         tags: List<String>,
         anonymize: Boolean
     ): Result<Unit> {
-        return try {
+        return safeCall {
             val effectiveContributorId = if (anonymize) null else contributorId
 
             // Use WriteBatch for atomic multi-document writes
@@ -75,11 +75,10 @@ class PoolRepositoryImpl(
             // Commit the batch atomically; await() will throw on failure
             batch.commit().await()
             Log.d(TAG, "contributeQuestions: committed ${questions.size} items for quiz $sourceQuizId")
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "contributeQuestions: batch commit failed for quiz $sourceQuizId", e)
-            Result.failure(e)
+        }.also { result ->
+            result.exceptionOrNull()?.let { e ->
+                Log.e(TAG, "contributeQuestions: batch commit failed for quiz $sourceQuizId", e)
+            }
         }
     }
 
@@ -108,14 +107,14 @@ class PoolRepositoryImpl(
 
     /** {@inheritDoc} */
     override suspend fun revokeContribution(poolItemId: String): Result<Unit> {
-        return try {
-            Log.d(TAG, "revokeContribution: revoking pool item $poolItemId")
+        Log.d(TAG, "revokeContribution: revoking pool item $poolItemId")
+        return safeCall {
             remoteDataSource.setPoolItemActive(poolItemId, false)
             Log.d(TAG, "revokeContribution: successfully revoked pool item $poolItemId")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Log.e(TAG, "revokeContribution: failed to revoke pool item $poolItemId", e)
-            Result.failure(e)
+        }.also { result ->
+            result.exceptionOrNull()?.let { e ->
+                Log.e(TAG, "revokeContribution: failed to revoke pool item $poolItemId", e)
+            }
         }
     }
 

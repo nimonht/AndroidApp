@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AdminRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +52,7 @@ class AdminQuizManagementViewModel(
     private fun requireOnline(): Boolean {
         if (!networkMonitor.isOnline.value) {
             _uiState.value = _uiState.value.copy(
-                actionError = "Khong co ket noi mang. Vui long ket noi internet de thuc hien thao tac quan tri."
+                actionError = UiError.NETWORK_UNAVAILABLE
             )
             return false
         }
@@ -87,7 +88,7 @@ class AdminQuizManagementViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Khong the tai danh sach quiz"
+                    error = UiError.LOAD_QUIZ_LIST_FAILED
                 )
             }
         }
@@ -121,7 +122,7 @@ class AdminQuizManagementViewModel(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
-                    error = e.message ?: "Khong the tai them quiz"
+                    error = UiError.LOAD_MORE_QUIZZES_FAILED
                 )
             }
         }
@@ -170,10 +171,10 @@ class AdminQuizManagementViewModel(
                     )
                     loadQuizzes()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the cap nhat trang thai quiz"
+                        actionError = UiError.UPDATE_QUIZ_STATUS_FAILED
                     )
                 }
         }
@@ -195,10 +196,10 @@ class AdminQuizManagementViewModel(
                     )
                     loadQuizzes()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the khoi phuc quiz"
+                        actionError = UiError.RESTORE_QUIZ_FAILED
                     )
                 }
         }
@@ -220,10 +221,10 @@ class AdminQuizManagementViewModel(
                     )
                     loadQuizzes()
                 }
-                .onFailure { error ->
+                .onFailure {
                     _uiState.value = _uiState.value.copy(
                         isPerformingAction = false,
-                        actionError = error.message ?: "Khong the xoa quiz"
+                        actionError = UiError.ADMIN_DELETE_QUIZ_FAILED
                     )
                 }
         }

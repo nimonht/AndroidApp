@@ -61,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import com.example.androidapp.R
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.TagSuggestionDialog
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.AppTopBar
@@ -205,7 +206,7 @@ fun CreateQuizScreen(
             currentTags = uiState.tags,
             availableTags = uiState.availableTags,
             onTagsConfirmed = { newTags ->
-                viewModel.onEvent(CreateQuizEvent.TagsChanged(newTags))
+                viewModel.onEvent(QuizFormEvent.TagsChanged(newTags))
             },
             onDismiss = { showTagDialog = false }
         )
@@ -218,11 +219,15 @@ fun CreateQuizScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Resolve UiError to a display string in composable context, falling back
+    // to raw errorDetail for validation messages that have no UiError code.
+    val errorMessage = uiState.error?.toMessage(uiState.errorDetail) ?: uiState.errorDetail
+
     // Show error snackbar.
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { msg ->
+    LaunchedEffect(uiState.error, uiState.errorDetail) {
+        errorMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
-            viewModel.onEvent(CreateQuizEvent.ClearError)
+            viewModel.onEvent(QuizFormEvent.ClearError)
         }
     }
 
@@ -259,7 +264,7 @@ fun CreateQuizScreen(
                         )
                     }
                     TextButton(
-                        onClick = { viewModel.onEvent(CreateQuizEvent.SaveDraft) },
+                        onClick = { viewModel.onEvent(QuizFormEvent.SaveDraft) },
                         enabled = !uiState.isLoading
                     ) {
                         Text(
@@ -268,7 +273,7 @@ fun CreateQuizScreen(
                         )
                     }
                     TextButton(
-                        onClick = { viewModel.onEvent(CreateQuizEvent.PublishQuiz) },
+                        onClick = { viewModel.onEvent(QuizFormEvent.PublishQuiz) },
                         enabled = !uiState.isLoading
                     ) {
                         Text(
@@ -281,7 +286,7 @@ fun CreateQuizScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.onEvent(CreateQuizEvent.AddQuestion) }
+                onClick = { viewModel.onEvent(QuizFormEvent.AddQuestion) }
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -292,25 +297,25 @@ fun CreateQuizScreen(
     ) { innerPadding ->
         QuizFormContent(
             title = uiState.title,
-            onTitleChange = { viewModel.onEvent(CreateQuizEvent.TitleChanged(it)) },
+            onTitleChange = { viewModel.onEvent(QuizFormEvent.TitleChanged(it)) },
             thumbnailUrl = uiState.thumbnailUrl,
-            onThumbnailUrlChange = { viewModel.onEvent(CreateQuizEvent.ThumbnailUrlChanged(it)) },
+            onThumbnailUrlChange = { viewModel.onEvent(QuizFormEvent.ThumbnailUrlChanged(it)) },
             description = uiState.description,
-            onDescriptionChange = { viewModel.onEvent(CreateQuizEvent.DescriptionChanged(it)) },
+            onDescriptionChange = { viewModel.onEvent(QuizFormEvent.DescriptionChanged(it)) },
             tags = uiState.tags,
-            onTagsChange = { viewModel.onEvent(CreateQuizEvent.TagsChanged(it)) },
+            onTagsChange = { viewModel.onEvent(QuizFormEvent.TagsChanged(it)) },
             onShowTagSuggestions = { showTagDialog = true },
             isPublic = uiState.isPublic,
-            onPublicToggle = { viewModel.onEvent(CreateQuizEvent.IsPublicChanged(it)) },
+            onPublicToggle = { viewModel.onEvent(QuizFormEvent.IsPublicChanged(it)) },
             shareToPool = uiState.shareToPool,
-            onShareToPoolToggle = { viewModel.onEvent(CreateQuizEvent.ShareToPoolChanged(it)) },
+            onShareToPoolToggle = { viewModel.onEvent(QuizFormEvent.ShareToPoolChanged(it)) },
             questions = uiState.questions,
             onUpdateQuestion = { index, updated ->
-                viewModel.onEvent(CreateQuizEvent.UpdateQuestion(index, updated))
+                viewModel.onEvent(QuizFormEvent.UpdateQuestion(index, updated))
             },
-            onMoveQuestionUp = { viewModel.onEvent(CreateQuizEvent.MoveQuestionUp(it)) },
-            onMoveQuestionDown = { viewModel.onEvent(CreateQuizEvent.MoveQuestionDown(it)) },
-            onRemoveQuestion = { viewModel.onEvent(CreateQuizEvent.RemoveQuestion(it)) },
+            onMoveQuestionUp = { viewModel.onEvent(QuizFormEvent.MoveQuestionUp(it)) },
+            onMoveQuestionDown = { viewModel.onEvent(QuizFormEvent.MoveQuestionDown(it)) },
+            onRemoveQuestion = { viewModel.onEvent(QuizFormEvent.RemoveQuestion(it)) },
             lastSavedAt = uiState.lastSavedAt,
             modifier = Modifier
                 .padding(innerPadding)

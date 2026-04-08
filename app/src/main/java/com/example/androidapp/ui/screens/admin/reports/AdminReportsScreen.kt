@@ -56,6 +56,7 @@ import com.example.androidapp.ui.components.admin.AdminInsightCard
 import com.example.androidapp.ui.components.admin.BarChartItem
 import com.example.androidapp.ui.components.admin.EngagementRingChart
 import com.example.androidapp.ui.components.admin.HorizontalBarChart
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.theme.InterFamily
@@ -124,7 +125,7 @@ fun AdminReportsScreen(
 
                 uiState.error != null -> {
                     ErrorState(
-                        message = uiState.error,
+                        message = uiState.error?.toMessage(),
                         onRetry = { viewModel.loadStats() },
                         modifier = Modifier.align(Alignment.Center)
                     )

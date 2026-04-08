@@ -51,6 +51,7 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.common.TagChip
 import com.example.androidapp.ui.components.feedback.ErrorState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.navigation.AppTopBar
 import com.example.androidapp.ui.theme.QuizzezTheme
 
@@ -108,7 +109,7 @@ fun QuizPreviewScreen(
 
             is QuizPreviewUiState.Error -> {
                 ErrorState(
-                    message = state.message,
+                    message = state.error.toMessage(state.errorDetail),
                     onRetry = viewModel::onRetry,
                     modifier = Modifier.padding(innerPadding)
                 )

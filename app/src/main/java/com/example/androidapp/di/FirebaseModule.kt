@@ -101,7 +101,8 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             questionRemoteDataSource,
             attemptRemoteDataSource,
             networkMonitor,
-            settingsPreferences
+            settingsPreferences,
+            lazy { quizRepository }
         )
     }
 
@@ -116,7 +117,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         )
     }
 
-    private val quizRemoteDataSource: QuizRemoteDataSource by lazy {
+    override val quizRemoteDataSource: QuizRemoteDataSource by lazy {
         QuizRemoteDataSource(firebaseFirestore)
     }
 

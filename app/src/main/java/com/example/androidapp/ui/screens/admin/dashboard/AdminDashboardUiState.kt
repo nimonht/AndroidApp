@@ -1,13 +1,11 @@
 package com.example.androidapp.ui.screens.admin.dashboard
 
-import com.example.androidapp.domain.model.SystemStats
+import com.example.androidapp.ui.screens.admin.AdminStatsUiState
 
 /**
  * UI state for the admin dashboard screen.
+ *
+ * This is a typealias for [AdminStatsUiState], which holds the shared
+ * system-statistics state used by both the dashboard and reports screens.
  */
-data class AdminDashboardUiState(
-    val isLoading: Boolean = true,
-    val stats: SystemStats? = null,
-    val error: String? = null,
-    val isOnline: Boolean = true
-)
+typealias AdminDashboardUiState = AdminStatsUiState

@@ -7,6 +7,7 @@ import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +35,7 @@ sealed class AnswerReviewUiState {
         val totalCount: Int
     ) : AnswerReviewUiState()
 
-    data class Error(val message: String) : AnswerReviewUiState()
+    data class Error(val error: UiError) : AnswerReviewUiState()
 }
 
 /**
@@ -70,7 +71,7 @@ class AnswerReviewViewModel(
             val quiz = quizRepository.getQuizById(quizId)
             val attempt = attemptRepository.getAttemptById(attemptId)
             if (attempt == null) {
-                _uiState.value = AnswerReviewUiState.Error("Không tìm thấy kết quả")
+                _uiState.value = AnswerReviewUiState.Error(UiError.RESULT_NOT_FOUND)
                 return@launch
             }
             val allQuestions = quizRepository.getQuestionsForQuizOnce(quizId)

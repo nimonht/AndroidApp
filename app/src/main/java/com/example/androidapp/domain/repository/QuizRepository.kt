@@ -177,4 +177,17 @@ interface QuizRepository {
      * Returns the total count of search results for a query.
      */
     suspend fun getSearchResultsCount(query: String): Int
+
+    /**
+     * Refreshes the local Room cache of public quizzes from Firestore.
+     *
+     * Fetches all public quizzes, upserts them into Room (including their
+     * questions and choices), and purges stale local entries that no longer
+     * exist on the remote.
+     *
+     * @param currentUserId optional ID of the current user; when provided,
+     *        stale-quiz cleanup skips quizzes owned by this user so that the
+     *        owner's local data is preserved.
+     */
+    suspend fun refreshPublicQuizzes(currentUserId: String? = null)
 }

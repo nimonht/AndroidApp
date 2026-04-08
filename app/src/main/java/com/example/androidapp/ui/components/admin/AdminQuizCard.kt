@@ -1,6 +1,5 @@
 package com.example.androidapp.ui.components.admin
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -10,19 +9,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.domain.model.Quiz
-import com.example.androidapp.ui.theme.InterFamily
-import com.example.androidapp.ui.theme.PlayfairDisplayFamily
+import com.example.androidapp.ui.components.quiz.QuizThumbnail
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -66,37 +61,13 @@ fun AdminQuizCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
-                if (!quiz.thumbnailUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = quiz.thumbnailUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = quiz.title.take(1).uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontFamily = PlayfairDisplayFamily
-                        )
-                    }
-                }
+                QuizThumbnail(
+                    thumbnailUrl = quiz.thumbnailUrl,
+                    title = quiz.title,
+                    textStyle = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.fillMaxSize()
+                )
 
                 // Status badges
                 Row(
@@ -132,9 +103,10 @@ fun AdminQuizCard(
                             Text(
                                 text = if (quiz.isPublic) stringResource(R.string.admin_quiz_status_public)
                                 else stringResource(R.string.admin_quiz_status_private),
-                                fontFamily = InterFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                ),
                                 color = if (quiz.isPublic) {
                                     MaterialTheme.colorScheme.onPrimaryContainer
                                 } else {
@@ -152,9 +124,10 @@ fun AdminQuizCard(
                         ) {
                             Text(
                                 text = stringResource(R.string.admin_quiz_status_deleted),
-                                fontFamily = InterFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.sp,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                ),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                             )
@@ -258,9 +231,9 @@ fun AdminQuizCard(
                 // Title
                 Text(
                     text = quiz.title,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
@@ -284,9 +257,9 @@ fun AdminQuizCard(
                         )
                         Text(
                             text = quiz.authorName.ifBlank { stringResource(R.string.admin_quiz_card_unknown_author) },
-                            fontFamily = InterFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 13.sp,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontSize = 13.sp
+                            ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -309,9 +282,10 @@ fun AdminQuizCard(
                             )
                             Text(
                                 text = "${quiz.questionCount}",
-                                fontFamily = InterFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
+                                ),
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -328,9 +302,10 @@ fun AdminQuizCard(
                             )
                             Text(
                                 text = "${quiz.attemptCount}",
-                                fontFamily = InterFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
+                                ),
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
@@ -349,8 +324,9 @@ fun AdminQuizCard(
                             ) {
                                 Text(
                                     text = tag,
-                                    fontFamily = InterFamily,
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 11.sp
+                                    ),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                                 )
@@ -363,9 +339,40 @@ fun AdminQuizCard(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Light")
 @Composable
 private fun AdminQuizCardPreview() {
+    QuizzezTheme {
+        AdminQuizCard(
+            quiz = Quiz(
+                id = "quiz1",
+                title = "Kiểm tra tiếng Việt lớp 10",
+                ownerId = "user1",
+                authorName = "Nguyễn Văn A",
+                tags = listOf("Tiếng Việt", "Lớp 10", "Ngữ pháp"),
+                questionCount = 20,
+                attemptCount = 145,
+                isPublic = true,
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+                deletedAt = null
+            ),
+            onClick = {},
+            onPublishToggle = {},
+            onRestore = null,
+            onDelete = {},
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name = "Dark",
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun AdminQuizCardDarkPreview() {
     QuizzezTheme {
         AdminQuizCard(
             quiz = Quiz(

@@ -8,10 +8,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.androidapp.R
 import com.example.androidapp.domain.model.UserRole
-import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -49,7 +47,6 @@ fun RoleSelector(
             label = {
                 Text(
                     text = stringResource(R.string.admin_role_label),
-                    fontFamily = InterFamily,
                     fontWeight = FontWeight.Medium
                 )
             },
@@ -57,11 +54,7 @@ fun RoleSelector(
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-            textStyle = LocalTextStyle.current.copy(
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp
-            ),
+            textStyle = MaterialTheme.typography.titleMedium,
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
@@ -75,7 +68,6 @@ fun RoleSelector(
                 text = {
                     Text(
                         text = stringResource(R.string.admin_role_admin),
-                        fontFamily = InterFamily,
                         fontWeight = FontWeight.Medium
                     )
                 },
@@ -89,7 +81,6 @@ fun RoleSelector(
                 text = {
                     Text(
                         text = stringResource(R.string.admin_role_user),
-                        fontFamily = InterFamily,
                         fontWeight = FontWeight.Medium
                     )
                 },
@@ -103,7 +94,6 @@ fun RoleSelector(
                 text = {
                     Text(
                         text = stringResource(R.string.admin_role_guest),
-                        fontFamily = InterFamily,
                         fontWeight = FontWeight.Medium
                     )
                 },
@@ -116,9 +106,21 @@ fun RoleSelector(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Light")
 @Composable
 private fun RoleSelectorPreview() {
+    QuizzezTheme {
+        RoleSelector(
+            selectedRole = UserRole.USER,
+            onRoleSelected = {},
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun RoleSelectorDarkPreview() {
     QuizzezTheme {
         RoleSelector(
             selectedRole = UserRole.USER,

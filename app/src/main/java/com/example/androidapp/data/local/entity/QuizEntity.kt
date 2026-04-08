@@ -26,6 +26,9 @@ data class QuizEntity(
     @ColumnInfo(name = "is_public")
     val isPublic: Boolean = false,
 
+    @ColumnInfo(name = "is_draft", defaultValue = "0")
+    val isDraft: Boolean = false,
+
     @ColumnInfo(name = "share_code")
     val shareCode: String? = null,
 

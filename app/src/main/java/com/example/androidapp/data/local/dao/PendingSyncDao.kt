@@ -2,8 +2,7 @@ package com.example.androidapp.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import androidx.room.Query
 import androidx.room.Update
 import com.example.androidapp.data.local.entity.PendingSyncEntity
@@ -54,9 +53,9 @@ interface PendingSyncDao {
     fun observePendingCount(): Flow<Int>
 
     /**
-     * Insert a new pending sync operation.
+     * Insert or update a pending sync operation.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertOperation(operation: PendingSyncEntity): Long
 
     /**

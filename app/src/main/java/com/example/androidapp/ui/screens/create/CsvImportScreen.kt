@@ -56,6 +56,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.navigation.AppTopBar
 import com.example.androidapp.ui.theme.QuizzezTheme
 
@@ -124,9 +125,10 @@ fun CsvImportContent(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Surface errors via Snackbar
+    val errorMessage = uiState.error?.toMessage(detail = uiState.errorDetail)
     LaunchedEffect(uiState.error) {
-        uiState.error?.let { message ->
-            snackbarHostState.showSnackbar(message)
+        if (errorMessage != null) {
+            snackbarHostState.showSnackbar(errorMessage)
             onEvent(CsvImportEvent.ClearError)
         }
     }

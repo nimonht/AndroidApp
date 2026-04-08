@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,9 +32,13 @@ sealed class QuizPreviewUiState {
     /**
      * An error occurred while loading the quiz.
      *
-     * @property message A human-readable description of the error.
+     * @property error The [UiError] code describing the error.
+     * @property errorDetail Optional dynamic detail (e.g. exception message).
      */
-    data class Error(val message: String) : QuizPreviewUiState()
+    data class Error(
+        val error: UiError,
+        val errorDetail: String? = null
+    ) : QuizPreviewUiState()
 }
 
 /**
@@ -72,7 +77,7 @@ class QuizPreviewViewModel(
 
             val quiz = quizRepository.getQuizById(quizId)
             if (quiz == null) {
-                _uiState.value = QuizPreviewUiState.Error("Không tìm thấy bài kiểm tra")
+                _uiState.value = QuizPreviewUiState.Error(UiError.QUIZ_NOT_FOUND)
                 return@launch
             }
 

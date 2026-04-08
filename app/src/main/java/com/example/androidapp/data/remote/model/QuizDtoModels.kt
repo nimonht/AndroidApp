@@ -47,6 +47,7 @@ data class QuizDto(
     val questionCount: Int = 0,
     val attemptCount: Int = 0,
     @get:PropertyName("isPublic") @set:PropertyName("isPublic") var isPublic: Boolean = false,
+    @get:PropertyName("isDraft") @set:PropertyName("isDraft") var isDraft: Boolean = false,
     val shareCode: String? = null,
     val checksum: String? = null,
     val createdAt: Timestamp? = null,

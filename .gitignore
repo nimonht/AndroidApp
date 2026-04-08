@@ -63,8 +63,6 @@ captures/
 # ==================
 # IMPORTANT: Do not commit google-services.json (contains API keys)
 google-services.json
-firebase-debug.log
-firebase-debug.*.log
 
 # ==================
 # Keystore files

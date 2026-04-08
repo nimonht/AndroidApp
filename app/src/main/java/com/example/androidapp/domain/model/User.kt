@@ -24,14 +24,4 @@ data class User(
      * Check if this user is an administrator.
      */
     fun isAdmin(): Boolean = role == UserRole.ADMIN
-
-    /**
-     * Check if this user is a guest (not authenticated).
-     */
-    fun isGuest(): Boolean = role == UserRole.GUEST
-
-    /**
-     * Check if this user is a standard authenticated user.
-     */
-    fun isRegularUser(): Boolean = role == UserRole.USER
 }

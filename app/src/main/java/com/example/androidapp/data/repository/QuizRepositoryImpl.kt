@@ -1,9 +1,11 @@
 package com.example.androidapp.data.repository
 
+import com.example.androidapp.data.local.LocalQuizPurger
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.local.entity.SyncStatus
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
@@ -12,6 +14,7 @@ import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.data.sync.SyncManager
+import kotlinx.coroutines.SupervisorJob
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.util.ChecksumUtil
@@ -43,7 +46,7 @@ class QuizRepositoryImpl(
     private val shareCodeRepository: ShareCodeRepository
 ) : QuizRepository {
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private companion object {
         /** Maximum number of user-owned quizzes shown on the home screen. */
@@ -148,7 +151,7 @@ class QuizRepositoryImpl(
             val checksum = ChecksumUtil.computeQuizChecksum(finalQuiz, questions)
 
             // Write to Room first with PENDING status
-            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = "PENDING").copy(checksum = checksum))
+            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = SyncStatus.PENDING.name).copy(checksum = checksum))
             questions.forEachIndexed { idx, question ->
                 val qId = question.id.ifBlank { UUID.randomUUID().toString() }
                 val finalQuestion = question.copy(id = qId, quizId = quizId, position = idx)
@@ -329,7 +332,7 @@ class QuizRepositoryImpl(
             if (quizDto == null || quizDto.deletedAt != null) {
                 // Quiz has been deleted or soft-deleted on remote -- purge the
                 // local copy so the user does not interact with stale content.
-                purgeLocalQuiz(quizId)
+                LocalQuizPurger.purgeLocalQuiz(quizId, quizDao, questionDao, choiceDao)
                 throw Exception("Quiz no longer available on remote")
             }
 
@@ -368,7 +371,7 @@ class QuizRepositoryImpl(
             // should be warned and allowed to delete them manually.
             val localMyQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
             val staleQuizzes = localMyQuizzes.filter { local ->
-                local.id !in remoteQuizIds && local.syncStatus != "PENDING"
+                local.id !in remoteQuizIds && local.syncStatus != SyncStatus.PENDING.name
             }
             staleQuizzes.forEach { staleQuiz ->
                 if (!staleQuiz.isRemovedFromCloud) {
@@ -379,7 +382,7 @@ class QuizRepositoryImpl(
         }
     }
 
-    private suspend fun refreshPublicQuizzes(currentUserId: String? = null) {
+    override suspend fun refreshPublicQuizzes(currentUserId: String?) {
         if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getPublicQuizzes().first()
@@ -400,37 +403,13 @@ class QuizRepositoryImpl(
                 }
                 staleQuizzes.forEach { staleQuiz ->
                     // Clean up associated questions and choices (no FK cascade)
-                    val questions = questionDao.getQuestionsByQuizIdOnce(staleQuiz.id)
-                    questions.forEach { question ->
-                        choiceDao.deleteChoicesByQuestionId(question.id)
-                        questionDao.deleteQuestion(question)
-                    }
-                    quizDao.deleteQuiz(staleQuiz)
+                    LocalQuizPurger.purgeLocalQuiz(staleQuiz.id, quizDao, questionDao, choiceDao)
                 }
             }
         } catch (_: Exception) {
         }
     }
 
-    /**
-     * Removes a quiz and all its associated questions and choices from
-     * the local Room database. Attempts are intentionally preserved
-     * because they reference the quiz by ID but have no foreign key
-     * constraint -- the user's history remains intact.
-     *
-     * Called when a remote check reveals the quiz has been permanently
-     * deleted or soft-deleted by its owner.
-     *
-     * @param quizId the ID of the quiz to purge.
-     */
-    private suspend fun purgeLocalQuiz(quizId: String) {
-        val questions = questionDao.getQuestionsByQuizIdOnce(quizId)
-        for (question in questions) {
-            choiceDao.deleteChoicesByQuestionId(question.id)
-            questionDao.deleteQuestion(question)
-        }
-        quizDao.deleteQuizById(quizId)
-    }
 
     /**
      * Fetches questions and their choices from Firestore subcollections

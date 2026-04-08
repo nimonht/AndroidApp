@@ -161,13 +161,7 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
         val tombstoneRef = firestore
             .collection(FirestoreCollections.QUIZ_DELETIONS)
             .document()
-        batch.set(
-            tombstoneRef,
-            hashMapOf(
-                FirestoreCollections.Fields.QUIZ_ID to quizId,
-                FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
-            )
-        )
+        batch.set(tombstoneRef, buildTombstoneData(quizId))
 
         // Delete the quiz document itself.
         batch.delete(
@@ -215,13 +209,7 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
                 val tombstoneRef = firestore
                     .collection(FirestoreCollections.QUIZ_DELETIONS)
                     .document()
-                batch.set(
-                    tombstoneRef,
-                    hashMapOf(
-                        FirestoreCollections.Fields.QUIZ_ID to doc.id,
-                        FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
-                    )
-                )
+                batch.set(tombstoneRef, buildTombstoneData(doc.id))
                 // Delete quiz document
                 batch.delete(doc.reference)
             }
@@ -264,13 +252,33 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
      * @param quizId the ID of the quiz being permanently deleted.
      */
     suspend fun writeDeletionTombstone(quizId: String) {
-        val tombstone = hashMapOf(
-            FirestoreCollections.Fields.QUIZ_ID to quizId,
-            FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
-        )
         firestore.collection(FirestoreCollections.QUIZ_DELETIONS)
-            .add(tombstone)
+            .add(buildTombstoneData(quizId))
             .await()
+    }
+
+    /**
+     * Writes deletion tombstones for multiple quiz IDs in batched writes,
+     * chunked to respect Firestore's 500-operation limit.
+     *
+     * Call this before batch-deleting the quiz documents themselves so that
+     * other clients can detect the removal during their next invalidation sweep.
+     *
+     * @param quizIds the IDs of the quizzes being permanently deleted.
+     */
+    suspend fun writeDeletionTombstones(quizIds: List<String>) {
+        if (quizIds.isEmpty()) return
+
+        quizIds.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
+            val batch = firestore.batch()
+            chunk.forEach { quizId ->
+                val tombstoneRef = firestore
+                    .collection(FirestoreCollections.QUIZ_DELETIONS)
+                    .document()
+                batch.set(tombstoneRef, buildTombstoneData(quizId))
+            }
+            batch.commit().await()
+        }
     }
 
     /**
@@ -293,21 +301,30 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
 
         if (snapshot.isEmpty) return
 
-        snapshot.documents.chunked(BATCH_LIMIT).forEach { chunk ->
+        snapshot.documents.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
             val batch = firestore.batch()
             chunk.forEach { batch.delete(it.reference) }
             batch.commit().await()
         }
     }
 
-    companion object {
-        /** Maximum operations per Firestore batch write. */
-        private const val BATCH_LIMIT = 500
+    /**
+     * Builds the tombstone data map for a permanently deleted quiz.
+     * Single source of truth for the tombstone document structure.
+     *
+     * @param quizId the ID of the deleted quiz.
+     * @return a [HashMap] ready to be written to [FirestoreCollections.QUIZ_DELETIONS].
+     */
+    private fun buildTombstoneData(quizId: String): HashMap<String, Any> = hashMapOf(
+        FirestoreCollections.Fields.QUIZ_ID to quizId,
+        FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
+    )
 
+    companion object {
         /**
          * When a batch pairs a tombstone write with a quiz delete (2 ops per quiz),
          * chunk at half the batch limit to stay within Firestore constraints.
          */
-        private const val TOMBSTONE_BATCH_LIMIT = 250
+        private const val TOMBSTONE_BATCH_LIMIT = FirestoreCollections.BATCH_LIMIT / 2
     }
 }

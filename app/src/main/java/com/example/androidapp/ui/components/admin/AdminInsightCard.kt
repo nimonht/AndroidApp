@@ -27,7 +27,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.androidapp.ui.theme.InterFamily
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -83,9 +82,7 @@ fun AdminInsightCard(
         ) {
             Text(
                 text = title,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -93,10 +90,10 @@ fun AdminInsightCard(
 
             Text(
                 text = description,
-                fontFamily = InterFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis

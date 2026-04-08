@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.QuestionPoolItem
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
  * @property isLoadingMore Whether a "load more" operation is in progress.
  * @property hasMoreContributions Whether more contributions can be loaded.
  * @property hasMoreBrowse Whether more browse results can be loaded.
- * @property error Current error message, or null.
+ * @property error Current error code, or null.
  * @property successMessage Transient success message, or null.
  */
 data class QuestionPoolUiState(
@@ -34,7 +35,7 @@ data class QuestionPoolUiState(
     val isLoadingMore: Boolean = false,
     val hasMoreContributions: Boolean = true,
     val hasMoreBrowse: Boolean = true,
-    val error: String? = null,
+    val error: UiError? = null,
     val successMessage: String? = null
 )
 
@@ -151,7 +152,7 @@ class QuestionPoolViewModel(
 
             val user = authRepository.getCurrentUser()
             if (user == null) {
-                _uiState.update { it.copy(isLoading = false, isLoadingMore = false, error = "Vui long dang nhap") }
+                _uiState.update { it.copy(isLoading = false, isLoadingMore = false, error = UiError.LOGIN_REQUIRED) }
                 return@launch
             }
 
@@ -177,12 +178,12 @@ class QuestionPoolViewModel(
                         )
                     }
                 },
-                onFailure = { e ->
+                onFailure = {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isLoadingMore = false,
-                            error = e.message ?: "Khong the tai du lieu"
+                            error = UiError.LOAD_DATA_FAILED
                         )
                     }
                 }
@@ -202,7 +203,7 @@ class QuestionPoolViewModel(
             .filter { it.isNotBlank() }
 
         if (tags.isEmpty()) {
-            _uiState.update { it.copy(error = "Vui long nhap it nhat mot tu khoa") }
+            _uiState.update { it.copy(error = UiError.POOL_SEARCH_TAGS_EMPTY) }
             return
         }
 
@@ -238,12 +239,12 @@ class QuestionPoolViewModel(
                         )
                     }
                 },
-                onFailure = { e ->
+                onFailure = {
                     _uiState.update {
                         it.copy(
                             isLoading = false,
                             isLoadingMore = false,
-                            error = e.message ?: "Khong the tim kiem"
+                            error = UiError.SEARCH_FAILED
                         )
                     }
                 }
@@ -260,9 +261,9 @@ class QuestionPoolViewModel(
                     // Reload from Firestore to confirm the write persisted
                     loadMyContributions(loadMore = false)
                 },
-                onFailure = { e ->
+                onFailure = {
                     _uiState.update {
-                        it.copy(error = e.message ?: "Khong the thu hoi cau hoi")
+                        it.copy(error = UiError.POOL_REVOKE_FAILED)
                     }
                 }
             )

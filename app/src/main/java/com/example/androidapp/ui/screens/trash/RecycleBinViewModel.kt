@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,7 @@ data class RecycleBinUiState(
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = true,
-    val error: String? = null,
+    val error: UiError? = null,
     val successMessage: String? = null
 )
 
@@ -137,8 +138,8 @@ class RecycleBinViewModel(
                 onSuccess = {
                     _uiState.update { it.copy(successMessage = "Da khoi phuc bai kiem tra") }
                 },
-                onFailure = { e ->
-                    _uiState.update { it.copy(error = e.message) }
+                onFailure = {
+                    _uiState.update { it.copy(error = UiError.RESTORE_QUIZ_FAILED) }
                 }
             )
         }
@@ -156,8 +157,8 @@ class RecycleBinViewModel(
                 onSuccess = {
                     _uiState.update { it.copy(successMessage = "Da xoa vinh vien") }
                 },
-                onFailure = { e ->
-                    _uiState.update { it.copy(error = e.message) }
+                onFailure = {
+                    _uiState.update { it.copy(error = UiError.DELETE_QUIZ_FAILED) }
                 }
             )
         }
@@ -172,7 +173,7 @@ class RecycleBinViewModel(
             val userId = cachedUserId ?: authRepository.getCurrentUser()?.id
             if (userId == null) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "Nguoi dung chua dang nhap")
+                    it.copy(isLoading = false, error = UiError.USER_NOT_LOGGED_IN)
                 }
                 return@launch
             }
@@ -183,8 +184,8 @@ class RecycleBinViewModel(
                         it.copy(isLoading = false, successMessage = "Da don sach thung rac")
                     }
                 },
-                onFailure = { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message) }
+                onFailure = {
+                    _uiState.update { it.copy(isLoading = false, error = UiError.DELETE_QUIZ_FAILED) }
                 }
             )
         }
