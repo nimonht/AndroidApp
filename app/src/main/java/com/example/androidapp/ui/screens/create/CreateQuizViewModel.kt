@@ -374,6 +374,7 @@ class CreateQuizViewModel(
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,
+                isDraft = !publishAfterSave,
                 shareCode = shareCode,
                 questionCount = state.questions.size
             )

@@ -4,6 +4,8 @@ import com.example.androidapp.data.remote.model.AttemptDto
 import com.example.androidapp.data.remote.model.QuizDto
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
@@ -21,7 +23,8 @@ import kotlinx.coroutines.channels.awaitClose
  */
 class AdminRemoteDataSource(
     private val firestore: FirebaseFirestore,
-    private val functions: FirebaseFunctions
+    private val functions: FirebaseFunctions,
+    private val firebaseAuth: FirebaseAuth
 ) {
 
 
@@ -54,11 +57,45 @@ class AdminRemoteDataSource(
             .document(userId)
             .update(
                 mapOf(
-                    "role" to role,
+                    FirestoreCollections.Fields.ROLE to role,
                     FirestoreCollections.Fields.UPDATED_AT to Timestamp.now()
                 )
             )
             .await()
+    }
+
+    /**
+     * Updates the permissions list for a user in Firestore.
+     * Only the superuser should call this to grant or revoke admin permissions.
+     *
+     * @param userId The ID of the user whose permissions are being updated
+     * @param permissions List of permission name strings (lowercase) to store
+     */
+    suspend fun updateUserPermissions(userId: String, permissions: List<String>) {
+        firestore.collection(FirestoreCollections.USERS)
+            .document(userId)
+            .update(
+                mapOf(
+                    FirestoreCollections.Fields.PERMISSIONS to permissions,
+                    FirestoreCollections.Fields.UPDATED_AT to Timestamp.now()
+                )
+            )
+            .await()
+    }
+
+    /**
+     * Fetches the currently authenticated user's [UserDto] from Firestore.
+     *
+     * @return The [UserDto] for the current user, or null if not authenticated
+     *   or the document does not exist
+     */
+    suspend fun getCurrentUser(): UserDto? {
+        val uid = firebaseAuth.currentUser?.uid ?: return null
+        val snapshot = firestore.collection(FirestoreCollections.USERS)
+            .document(uid)
+            .get()
+            .await()
+        return snapshot.toObject(UserDto::class.java)
     }
 
     /**
@@ -168,14 +205,20 @@ class AdminRemoteDataSource(
 
     /**
      * Permanently delete a quiz and all its questions/choices.
+     * Writes a deletion tombstone so other clients can detect the removal
+     * via [com.example.androidapp.data.sync.QuizInvalidationManager].
+     * Attempts are intentionally preserved -- they are the user's history
+     * and should only be removed during account deletion.
      * Uses chunked batches to respect Firestore's 500-operation limit.
      */
     suspend fun deleteQuizPermanently(quizId: String) {
-        // Collect all document references to delete
         val quizRef = firestore.collection(FirestoreCollections.QUIZZES).document(quizId)
-        val refsToDelete = mutableListOf(quizRef)
+        val refsToDelete = mutableListOf<DocumentReference>()
 
-        // Read quiz document to retrieve its share code
+        // Collect subcollection refs (questions + choices) via shared helper
+        refsToDelete.addAll(FirestoreCascadeHelper.collectQuizSubcollectionRefs(quizRef))
+
+        // Collect share-code document if the quiz has one
         val quizDoc = quizRef.get().await()
         val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
         if (!shareCode.isNullOrBlank()) {
@@ -185,37 +228,25 @@ class AdminRemoteDataSource(
             )
         }
 
-        // Collect all questions and their choices
-        val questions = quizRef
-            .collection(FirestoreCollections.QUESTIONS)
-            .get()
-            .await()
+        // The quiz document itself
+        refsToDelete.add(quizRef)
 
-        questions.documents.forEach { questionDoc ->
-            refsToDelete.add(questionDoc.reference)
+        // First batch includes the tombstone write, so reserve 1 operation
+        val firstChunkLimit = FirestoreCollections.BATCH_LIMIT - 1
+        val firstChunk = refsToDelete.take(firstChunkLimit)
+        val remaining = refsToDelete.drop(firstChunkLimit)
 
-            // Collect choices for each question
-            val choices = questionDoc.reference
-                .collection(FirestoreCollections.CHOICES)
-                .get()
-                .await()
+        // First batch: tombstone + initial deletes
+        val firstBatch = firestore.batch()
+        val tombstoneRef = firestore
+            .collection(FirestoreCollections.QUIZ_DELETIONS)
+            .document()
+        firstBatch.set(tombstoneRef, FirestoreCascadeHelper.buildTombstoneData(quizId))
+        firstChunk.forEach { ref -> firstBatch.delete(ref) }
+        firstBatch.commit().await()
 
-            choices.documents.forEach { choiceDoc ->
-                refsToDelete.add(choiceDoc.reference)
-            }
-        }
-
-        // Collect all attempts for this quiz
-        val attempts = firestore.collection(FirestoreCollections.ATTEMPTS)
-            .whereEqualTo(FirestoreCollections.Fields.QUIZ_ID, quizId)
-            .get()
-            .await()
-        attempts.documents.forEach { attemptDoc ->
-            refsToDelete.add(attemptDoc.reference)
-        }
-
-        // Commit in chunks of 500 (Firestore batch limit)
-        refsToDelete.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
+        // Remaining batches: pure deletes
+        remaining.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
             val batch = firestore.batch()
             chunk.forEach { ref -> batch.delete(ref) }
             batch.commit().await()
@@ -246,7 +277,7 @@ class AdminRemoteDataSource(
             .update(
                 mapOf(
                     FirestoreCollections.Fields.IS_PUBLIC to true,
-                    "isDraft" to false,
+                    FirestoreCollections.Fields.IS_DRAFT to false,
                     FirestoreCollections.Fields.UPDATED_AT to Timestamp.now()
                 )
             )

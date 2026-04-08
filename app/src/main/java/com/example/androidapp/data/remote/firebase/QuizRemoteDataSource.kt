@@ -3,6 +3,7 @@ package com.example.androidapp.data.remote.firebase
 import com.example.androidapp.data.remote.model.QuestionDto
 import com.example.androidapp.data.remote.model.QuizDto
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
@@ -146,29 +147,55 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Permanently deletes a quiz document and writes a deletion tombstone
-     * in an atomic batch so other clients can detect the removal.
+     * Permanently deletes a quiz document, its questions/choices subcollections,
+     * and its associated share-code document. Writes a deletion tombstone so
+     * other clients can detect the removal.
      *
-     * The tombstone is a lightweight document in the
-     * [FirestoreCollections.QUIZ_DELETIONS] collection containing only
-     * the quiz ID and the deletion timestamp.
+     * All document references are collected first, then deleted via batched
+     * writes chunked at [FirestoreCollections.BATCH_LIMIT] to stay within
+     * Firestore limits. The tombstone is included in the first batch.
+     *
+     * @param quizId the ID of the quiz to permanently delete.
      */
     suspend fun permanentlyDeleteQuiz(quizId: String) {
-        val batch = firestore.batch()
+        val quizRef = firestore.collection(FirestoreCollections.QUIZZES).document(quizId)
 
-        // Write tombstone so other clients detect the removal during
-        // their next incremental invalidation check.
+        // Collect subcollection refs (questions + choices)
+        val refsToDelete = collectQuizSubcollectionRefs(quizRef).toMutableList()
+
+        // Check for an associated share-code document
+        val quizDoc = quizRef.get().await()
+        val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
+        if (!shareCode.isNullOrBlank()) {
+            refsToDelete.add(
+                firestore.collection(FirestoreCollections.SHARE_CODES)
+                    .document(shareCode)
+            )
+        }
+
+        // The quiz document itself
+        refsToDelete.add(quizRef)
+
+        // First batch includes the tombstone write, so reserve 1 operation for it
+        val firstChunkLimit = FirestoreCollections.BATCH_LIMIT - 1
+        val firstChunk = refsToDelete.take(firstChunkLimit)
+        val remaining = refsToDelete.drop(firstChunkLimit)
+
+        // First batch: tombstone + initial deletes
+        val firstBatch = firestore.batch()
         val tombstoneRef = firestore
             .collection(FirestoreCollections.QUIZ_DELETIONS)
             .document()
-        batch.set(tombstoneRef, buildTombstoneData(quizId))
+        firstBatch.set(tombstoneRef, buildTombstoneData(quizId))
+        firstChunk.forEach { ref -> firstBatch.delete(ref) }
+        firstBatch.commit().await()
 
-        // Delete the quiz document itself.
-        batch.delete(
-            firestore.collection(FirestoreCollections.QUIZZES).document(quizId)
-        )
-
-        batch.commit().await()
+        // Remaining batches (pure deletes)
+        remaining.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
+            val batch = firestore.batch()
+            chunk.forEach { ref -> batch.delete(ref) }
+            batch.commit().await()
+        }
     }
 
     /**
@@ -185,10 +212,13 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Deletes all soft-deleted quizzes owned by the user permanently from Firestore.
-     * Uses batch writes for efficiency. Each batch atomically pairs a deletion
-     * tombstone write with the quiz document delete (2 operations per quiz),
-     * so batches are chunked at 250 to stay within the 500-operation limit.
+     * Deletes all soft-deleted quizzes owned by the user permanently from Firestore,
+     * including each quiz's questions/choices subcollections and associated share-code
+     * documents. Writes a deletion tombstone per quiz so other clients can detect
+     * the removals.
+     *
+     * All document references and tombstone data are collected first, then committed
+     * via batched writes chunked at [FirestoreCollections.BATCH_LIMIT].
      */
     suspend fun emptyTrash(userId: String) {
         val deletedQuizzesQuery = firestore.collection(FirestoreCollections.QUIZZES)
@@ -199,19 +229,63 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
 
         if (deletedQuizzesQuery.isEmpty) return
 
-        // Each quiz needs 2 operations (tombstone + delete), so chunk at 250
-        // to stay within Firestore's 500-operation batch limit.
-        val chunks = deletedQuizzesQuery.documents.chunked(TOMBSTONE_BATCH_LIMIT)
-        for (chunk in chunks) {
+        // Collect every ref that needs deleting and every tombstone that needs writing.
+        val refsToDelete = mutableListOf<DocumentReference>()
+        val tombstones = mutableListOf<HashMap<String, Any>>()
+
+        for (quizDoc in deletedQuizzesQuery.documents) {
+            val quizRef = quizDoc.reference
+
+            // Subcollection refs (questions + choices)
+            refsToDelete.addAll(collectQuizSubcollectionRefs(quizRef))
+
+            // Associated share-code document
+            val shareCode = quizDoc.getString(FirestoreCollections.Fields.SHARE_CODE)
+            if (!shareCode.isNullOrBlank()) {
+                refsToDelete.add(
+                    firestore.collection(FirestoreCollections.SHARE_CODES)
+                        .document(shareCode)
+                )
+            }
+
+            // The quiz document itself
+            refsToDelete.add(quizRef)
+
+            // Tombstone data for this quiz
+            tombstones.add(buildTombstoneData(quizDoc.id))
+        }
+
+        // Interleave tombstone writes and deletes into a flat operation list,
+        // then chunk at BATCH_LIMIT.
+        data class BatchOp(
+            val ref: DocumentReference,
+            val tombstoneData: HashMap<String, Any>? = null
+        )
+
+        val ops = mutableListOf<BatchOp>()
+
+        // Tombstone writes first (each targets a new document)
+        tombstones.forEach { data ->
+            val tombstoneRef = firestore
+                .collection(FirestoreCollections.QUIZ_DELETIONS)
+                .document()
+            ops.add(BatchOp(ref = tombstoneRef, tombstoneData = data))
+        }
+
+        // Then all deletes
+        refsToDelete.forEach { ref ->
+            ops.add(BatchOp(ref = ref))
+        }
+
+        // Commit in chunks
+        ops.chunked(FirestoreCollections.BATCH_LIMIT).forEach { chunk ->
             val batch = firestore.batch()
-            for (doc in chunk) {
-                // Write tombstone
-                val tombstoneRef = firestore
-                    .collection(FirestoreCollections.QUIZ_DELETIONS)
-                    .document()
-                batch.set(tombstoneRef, buildTombstoneData(doc.id))
-                // Delete quiz document
-                batch.delete(doc.reference)
+            chunk.forEach { op ->
+                if (op.tombstoneData != null) {
+                    batch.set(op.ref, op.tombstoneData)
+                } else {
+                    batch.delete(op.ref)
+                }
             }
             batch.commit().await()
         }
@@ -309,16 +383,20 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     }
 
     /**
-     * Builds the tombstone data map for a permanently deleted quiz.
-     * Single source of truth for the tombstone document structure.
-     *
-     * @param quizId the ID of the deleted quiz.
-     * @return a [HashMap] ready to be written to [FirestoreCollections.QUIZ_DELETIONS].
+     * Collects all subcollection document references (questions + choices)
+     * under the given quiz document. Delegates to [FirestoreCascadeHelper].
      */
-    private fun buildTombstoneData(quizId: String): HashMap<String, Any> = hashMapOf(
-        FirestoreCollections.Fields.QUIZ_ID to quizId,
-        FirestoreCollections.Fields.DELETED_AT to Timestamp.now()
-    )
+    private suspend fun collectQuizSubcollectionRefs(
+        quizRef: DocumentReference
+    ): List<DocumentReference> =
+        FirestoreCascadeHelper.collectQuizSubcollectionRefs(quizRef)
+
+    /**
+     * Builds the tombstone data map for a permanently deleted quiz.
+     * Delegates to [FirestoreCascadeHelper] (single source of truth).
+     */
+    private fun buildTombstoneData(quizId: String): HashMap<String, Any> =
+        FirestoreCascadeHelper.buildTombstoneData(quizId)
 
     companion object {
         /**

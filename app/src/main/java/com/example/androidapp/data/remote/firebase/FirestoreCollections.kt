@@ -32,11 +32,14 @@ object FirestoreCollections {
         const val USER_ID = "userId"
         const val QUIZ_ID = "quizId"
         const val IS_PUBLIC = "isPublic"
+        const val IS_DRAFT = "isDraft"
         const val DELETED_AT = "deletedAt"
         const val SHARE_CODE = "shareCode"
         const val ATTEMPT_COUNT = "attemptCount"
         const val UPDATED_AT = "updatedAt"
         const val IS_ACTIVE = "isActive"
         const val CONTRIBUTOR_ID = "contributorId"
+        const val ROLE = "role"
+        const val PERMISSIONS = "permissions"
     }
 }

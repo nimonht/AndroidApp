@@ -22,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.components.navigation.CreateQuizFAB
@@ -213,7 +214,7 @@ fun QuizzezNavHost(
                             } else {
                                 Toast.makeText(
                                     navController.context,
-                                    "Cần kết nối mạng để truy cập bảng điều khiển quản trị",
+                                    navController.context.getString(R.string.admin_network_required),
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -502,7 +503,11 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminUserManagementViewModel(container.adminRepository, container.networkMonitor) as T
+                            AdminUserManagementViewModel(
+                                container.adminRepository,
+                                container.networkMonitor,
+                                container.authRepository
+                            ) as T
                     }
                 )
 
@@ -523,7 +528,11 @@ fun QuizzezNavHost(
                     factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
                         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                            AdminQuizManagementViewModel(container.adminRepository, container.networkMonitor) as T
+                            AdminQuizManagementViewModel(
+                                container.adminRepository,
+                                container.authRepository,
+                                container.networkMonitor
+                            ) as T
                     }
                 )
 

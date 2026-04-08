@@ -20,6 +20,12 @@ import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
 import com.example.androidapp.ui.theme.QuizzezTheme
 
+/** Internal keys used by [QuizTags.categories] — not displayed to users. */
+private const val CAT_STUDY = "study"
+private const val CAT_ENTERTAINMENT = "entertainment"
+private const val CAT_GENERAL = "general_knowledge"
+private const val CAT_PROFESSIONAL = "professional"
+
 /**
  * Predefined quiz tag categories with their tags.
  * These are the suggested tags available to users when creating or editing quizzes.
@@ -27,20 +33,20 @@ import com.example.androidapp.ui.theme.QuizzezTheme
 object QuizTags {
     /** All available predefined tags grouped by category. */
     val categories: Map<String, List<String>> = linkedMapOf(
-        "Học tập" to listOf(
+        CAT_STUDY to listOf(
             "Toan hoc", "Vat ly", "Hoa hoc", "Sinh hoc",
             "Lich su", "Dia ly", "Ngu van", "Tieng Anh",
             "Tin hoc", "Khoa hoc", "Cong nghe"
         ),
-        "Giải trí" to listOf(
+        CAT_ENTERTAINMENT to listOf(
             "Phim anh", "Am nhac", "The thao", "Game",
             "Anime", "Truyen tranh", "Nghe thuat"
         ),
-        "Kiến thức chung" to listOf(
+        CAT_GENERAL to listOf(
             "Van hoa", "Xa hoi", "Kinh te", "Phap luat",
             "Y te", "Moi truong", "Am thuc", "Du lich"
         ),
-        "Chuyên nghành" to listOf(
+        CAT_PROFESSIONAL to listOf(
             "Lap trinh", "Thiet ke", "Marketing", "Quan ly",
             "Tai chinh", "Y hoc", "Ky thuat", "Ngoai ngu"
         )
@@ -88,18 +94,26 @@ fun TagSuggestionDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
+                val categoryDisplayNames = mapOf(
+                    CAT_STUDY to stringResource(R.string.tag_category_study),
+                    CAT_ENTERTAINMENT to stringResource(R.string.tag_category_entertainment),
+                    CAT_GENERAL to stringResource(R.string.tag_category_general_knowledge),
+                    CAT_PROFESSIONAL to stringResource(R.string.tag_category_professional)
+                )
+                val communityLabel = stringResource(R.string.tag_category_community)
+
                 val otherTags =
                     availableTags.map { it.trim() }.filter { it.isNotBlank() && !QuizTags.allTags.contains(it) }
                         .distinct()
                 val displayCategories = QuizTags.categories.toMutableMap()
                 if (otherTags.isNotEmpty()) {
-                    displayCategories["Các Tag của cộng đồng"] = otherTags
+                    displayCategories[communityLabel] = otherTags
                 }
 
                 displayCategories.forEach { (category, tags) ->
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = category,
+                            text = categoryDisplayNames[category] ?: category,
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary
                         )

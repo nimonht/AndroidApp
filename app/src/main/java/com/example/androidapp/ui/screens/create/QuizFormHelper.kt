@@ -241,6 +241,7 @@ object QuizFormHelper {
      * @param authorName       The display name of the author.
      * @param tags             Parsed list of tag strings.
      * @param isPublic         Whether the quiz is publicly discoverable.
+     * @param isDraft          Whether the quiz should be saved as a draft.
      * @param shareCode        Optional share code for the quiz.
      * @param questionCount    Number of questions in the quiz.
      * @param updatedAt        Epoch millis for the update timestamp; defaults to current time.
@@ -255,6 +256,7 @@ object QuizFormHelper {
         authorName: String,
         tags: List<String>,
         isPublic: Boolean,
+        isDraft: Boolean,
         shareCode: String?,
         questionCount: Int,
         updatedAt: Long = System.currentTimeMillis()
@@ -267,6 +269,7 @@ object QuizFormHelper {
         authorName = authorName,
         tags = tags,
         isPublic = isPublic,
+        isDraft = isDraft,
         shareCode = shareCode,
         questionCount = questionCount,
         updatedAt = updatedAt

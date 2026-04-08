@@ -3,8 +3,10 @@ package com.example.androidapp.ui.screens.admin.quizzes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AdminRepository
+import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,11 +20,17 @@ import kotlinx.coroutines.launch
  * Pages are accumulated in [allQuizzes] and client-side filtering is applied
  * on the accumulated set.
  *
+ * Loads the current admin's permissions on init so the UI can conditionally
+ * display destructive actions (delete, publish, restore). Actions that require
+ * a missing permission are rejected with [UiError.INSUFFICIENT_PERMISSIONS].
+ *
  * @param adminRepository Repository for admin operations.
+ * @param authRepository Repository for authentication and current-user queries.
  * @param networkMonitor Monitor for observing network connectivity state.
  */
 class AdminQuizManagementViewModel(
     private val adminRepository: AdminRepository,
+    private val authRepository: AuthRepository,
     private val networkMonitor: NetworkMonitor
 ) : ViewModel() {
 
@@ -37,10 +45,29 @@ class AdminQuizManagementViewModel(
     }
 
     init {
+        loadPermissions()
         loadQuizzes()
         viewModelScope.launch {
             networkMonitor.isOnline.collect { online ->
                 _uiState.value = _uiState.value.copy(isOnline = online)
+            }
+        }
+    }
+
+    /**
+     * Loads the current admin user's permissions and superuser status into UI state.
+     */
+    private fun loadPermissions() {
+        viewModelScope.launch {
+            try {
+                val user = authRepository.getCurrentUser()
+                val perms = adminRepository.getCurrentAdminPermissions()
+                _uiState.value = _uiState.value.copy(
+                    currentPermissions = perms,
+                    isSuperuser = user?.isSuperuser() == true
+                )
+            } catch (_: Exception) {
+                // Non-critical: permissions default to empty, actions will be rejected.
             }
         }
     }
@@ -57,6 +84,19 @@ class AdminQuizManagementViewModel(
             return false
         }
         return true
+    }
+
+    /**
+     * Returns `true` if the current user holds [permission] or is a superuser.
+     * Sets [UiError.INSUFFICIENT_PERMISSIONS] and returns `false` otherwise.
+     */
+    private fun requirePermission(permission: AdminPermission): Boolean {
+        val state = _uiState.value
+        if (state.isSuperuser || state.currentPermissions.contains(permission)) {
+            return true
+        }
+        _uiState.value = state.copy(actionError = UiError.INSUFFICIENT_PERMISSIONS)
+        return false
     }
 
     /**
@@ -77,11 +117,7 @@ class AdminQuizManagementViewModel(
                 allQuizzes = page.items
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    quizzes = filterQuizzes(
-                        allQuizzes,
-                        _uiState.value.searchQuery,
-                        _uiState.value.showDeleted
-                    ),
+                    quizzes = applyFilters(allQuizzes),
                     hasMore = page.hasMore,
                     error = null
                 )
@@ -112,11 +148,7 @@ class AdminQuizManagementViewModel(
                 allQuizzes = allQuizzes + page.items
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
-                    quizzes = filterQuizzes(
-                        allQuizzes,
-                        _uiState.value.searchQuery,
-                        _uiState.value.showDeleted
-                    ),
+                    quizzes = applyFilters(allQuizzes),
                     hasMore = page.hasMore
                 )
             } catch (e: Exception) {
@@ -128,32 +160,79 @@ class AdminQuizManagementViewModel(
         }
     }
 
+    // -- Filter / sort event handlers -------------------------------------------
+
     /**
-     * Update search query and filter quizzes.
+     * Update search query and re-filter quizzes.
      */
     fun onSearchQueryChanged(query: String) {
-        _uiState.value = _uiState.value.copy(
-            searchQuery = query,
-            quizzes = filterQuizzes(allQuizzes, query, _uiState.value.showDeleted)
-        )
+        _uiState.value = _uiState.value.copy(searchQuery = query)
+        refilter()
     }
 
     /**
-     * Toggle show deleted quizzes filter.
+     * Update the quiz status filter and re-filter quizzes.
+     *
+     * @param filter The new [QuizStatusFilter] to apply.
      */
-    fun toggleShowDeleted() {
-        val newShowDeleted = !_uiState.value.showDeleted
-        _uiState.value = _uiState.value.copy(
-            showDeleted = newShowDeleted,
-            quizzes = filterQuizzes(allQuizzes, _uiState.value.searchQuery, newShowDeleted)
-        )
+    fun onStatusFilterChanged(filter: QuizStatusFilter) {
+        _uiState.value = _uiState.value.copy(statusFilter = filter)
+        refilter()
     }
+
+    /**
+     * Update the tag filter text and re-filter quizzes.
+     *
+     * @param tag The tag substring to filter by.
+     */
+    fun onTagFilterChanged(tag: String) {
+        _uiState.value = _uiState.value.copy(tagFilter = tag)
+        refilter()
+    }
+
+    /**
+     * Update the sort field and re-sort quizzes.
+     *
+     * @param field The new [QuizSortField] to sort by.
+     */
+    fun onSortFieldChanged(field: QuizSortField) {
+        _uiState.value = _uiState.value.copy(sortField = field)
+        refilter()
+    }
+
+    /**
+     * Toggle the sort direction (ascending / descending) and re-sort quizzes.
+     */
+    fun onToggleSortOrder() {
+        _uiState.value = _uiState.value.copy(sortAscending = !_uiState.value.sortAscending)
+        refilter()
+    }
+
+    /**
+     * Reset all filters and sort options to their default values.
+     */
+    fun clearFilters() {
+        _uiState.value = _uiState.value.copy(
+            searchQuery = "",
+            statusFilter = QuizStatusFilter.ALL,
+            tagFilter = "",
+            sortField = QuizSortField.DATE,
+            sortAscending = false
+        )
+        refilter()
+    }
+
+    // -- Quiz actions -----------------------------------------------------------
 
     /**
      * Publish or unpublish a quiz.
+     *
+     * Requires [AdminPermission.PUBLISH_QUIZZES].
      */
     fun togglePublishQuiz(quizId: String, currentlyPublic: Boolean) {
         if (!requireOnline()) return
+        if (!requirePermission(AdminPermission.PUBLISH_QUIZZES)) return
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -182,9 +261,13 @@ class AdminQuizManagementViewModel(
 
     /**
      * Restore a soft-deleted quiz.
+     *
+     * Requires [AdminPermission.MANAGE_QUIZZES].
      */
     fun restoreQuiz(quizId: String) {
         if (!requireOnline()) return
+        if (!requirePermission(AdminPermission.MANAGE_QUIZZES)) return
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -207,9 +290,13 @@ class AdminQuizManagementViewModel(
 
     /**
      * Delete a quiz permanently.
+     *
+     * Requires [AdminPermission.DELETE_QUIZZES].
      */
     fun deleteQuiz(quizId: String) {
         if (!requireOnline()) return
+        if (!requirePermission(AdminPermission.DELETE_QUIZZES)) return
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isPerformingAction = true, actionError = null)
 
@@ -237,30 +324,98 @@ class AdminQuizManagementViewModel(
         _uiState.value = _uiState.value.copy(actionError = null)
     }
 
+    // -- Internal helpers -------------------------------------------------------
+
     /**
-     * Filter quizzes based on search query and deleted status.
+     * Convenience wrapper that reads filter/sort params from the current UI state.
      */
-    private fun filterQuizzes(
+    private fun applyFilters(quizzes: List<Quiz>): List<Quiz> {
+        val state = _uiState.value
+        return filterAndSortQuizzes(
+            quizzes = quizzes,
+            query = state.searchQuery,
+            statusFilter = state.statusFilter,
+            tagFilter = state.tagFilter,
+            sortField = state.sortField,
+            sortAscending = state.sortAscending
+        )
+    }
+
+    /**
+     * Re-applies the current filters and sort to [allQuizzes] and updates UI state.
+     */
+    private fun refilter() {
+        _uiState.value = _uiState.value.copy(quizzes = applyFilters(allQuizzes))
+    }
+
+    /**
+     * Filter and sort quizzes based on all active filter criteria.
+     *
+     * @param quizzes The full accumulated list of quizzes from Firestore.
+     * @param query Free-text search query matched against title, author name, and tags.
+     * @param statusFilter Restricts quizzes to a specific publication status.
+     * @param tagFilter Substring matched against quiz tags.
+     * @param sortField The field to sort by.
+     * @param sortAscending `true` for ascending order, `false` for descending.
+     * @return The filtered and sorted list.
+     */
+    private fun filterAndSortQuizzes(
         quizzes: List<Quiz>,
         query: String,
-        showDeleted: Boolean
+        statusFilter: QuizStatusFilter,
+        tagFilter: String,
+        sortField: QuizSortField,
+        sortAscending: Boolean
     ): List<Quiz> {
         var filtered = quizzes
 
-        // Filter by deleted status
-        filtered = if (showDeleted) {
-            filtered.filter { it.deletedAt != null }
-        } else {
-            filtered.filter { it.deletedAt == null }
+        // Status filter
+        filtered = when (statusFilter) {
+            QuizStatusFilter.ALL -> filtered
+            QuizStatusFilter.PUBLIC -> filtered.filter { it.isPublic && it.deletedAt == null && !it.isDraft }
+            QuizStatusFilter.PRIVATE -> filtered.filter { !it.isPublic && it.deletedAt == null && !it.isDraft }
+            QuizStatusFilter.DRAFT -> filtered.filter { it.isDraft && it.deletedAt == null }
+            QuizStatusFilter.DELETED -> filtered.filter { it.deletedAt != null }
         }
 
-        // Filter by search query
+        // Tag filter
+        if (tagFilter.isNotBlank()) {
+            val lowerTag = tagFilter.lowercase()
+            filtered = filtered.filter { quiz ->
+                quiz.tags.any { it.lowercase().contains(lowerTag) }
+            }
+        }
+
+        // Search query
         if (query.isNotBlank()) {
             val lowerQuery = query.lowercase()
             filtered = filtered.filter { quiz ->
                 quiz.title.lowercase().contains(lowerQuery) ||
                         quiz.authorName.lowercase().contains(lowerQuery) ||
                         quiz.tags.any { it.lowercase().contains(lowerQuery) }
+            }
+        }
+
+        // Sort
+        filtered = when (sortField) {
+            QuizSortField.DATE -> {
+                if (sortAscending) filtered.sortedBy { it.createdAt }
+                else filtered.sortedByDescending { it.createdAt }
+            }
+
+            QuizSortField.NAME -> {
+                if (sortAscending) filtered.sortedBy { it.title.lowercase() }
+                else filtered.sortedByDescending { it.title.lowercase() }
+            }
+
+            QuizSortField.ATTEMPTS -> {
+                if (sortAscending) filtered.sortedBy { it.attemptCount }
+                else filtered.sortedByDescending { it.attemptCount }
+            }
+
+            QuizSortField.QUESTIONS -> {
+                if (sortAscending) filtered.sortedBy { it.questionCount }
+                else filtered.sortedByDescending { it.questionCount }
             }
         }
 

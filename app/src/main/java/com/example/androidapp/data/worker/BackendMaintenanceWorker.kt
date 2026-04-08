@@ -20,7 +20,8 @@ import java.util.Date
  *
  * Responsibilities:
  * 1. Cascade-delete quizzes soft-deleted more than 30 days ago
- *    (including subcollections: questions, choices, and related attempts).
+ *    (including subcollections: questions, choices, and share codes).
+ *    Attempts are preserved as user history.
  *    Writes a deletion tombstone for each permanently removed quiz so that
  *    other clients can detect the removal incrementally.
  * 2. Aggregate quiz statistics (attempt counts) from the attempts collection.
@@ -88,7 +89,8 @@ class BackendMaintenanceWorker(
 
     /**
      * Deletes quizzes that have been in the recycle bin for more than 30 days,
-     * along with all their subcollections (questions -> choices) and related attempts.
+     * along with all their subcollections (questions -> choices) and share codes.
+     * Attempts are intentionally preserved as user history.
      *
      * Writes a deletion tombstone for each permanently removed quiz so that
      * other clients can detect the removal during their next incremental
@@ -119,15 +121,7 @@ class BackendMaintenanceWorker(
                 // so other clients can detect the permanent removal.
                 quizRemoteDataSource.writeDeletionTombstone(quizId)
 
-                // 1. Delete related attempts (top-level collection)
-                deleteCollectionByField(
-                    firestore,
-                    FirestoreCollections.ATTEMPTS,
-                    "quizId",
-                    quizId
-                )
-
-                // 2. Delete related share codes
+                // 1. Delete related share codes
                 deleteCollectionByField(
                     firestore,
                     FirestoreCollections.SHARE_CODES,
@@ -135,7 +129,7 @@ class BackendMaintenanceWorker(
                     quizId
                 )
 
-                // 3. Delete questions subcollection (each question has a choices subcollection)
+                // 2. Delete questions subcollection (each question has a choices subcollection)
                 val questionsSnapshot = firestore.collection(FirestoreCollections.QUIZZES)
                     .document(quizId)
                     .collection(FirestoreCollections.QUESTIONS)
@@ -158,7 +152,7 @@ class BackendMaintenanceWorker(
                 // Delete all question documents
                 deleteBatch(firestore, questionsSnapshot)
 
-                // 4. Delete the quiz document itself
+                // 3. Delete the quiz document itself
                 firestore.collection(FirestoreCollections.QUIZZES)
                     .document(quizId)
                     .delete()

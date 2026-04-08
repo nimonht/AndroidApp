@@ -193,7 +193,9 @@ class SearchViewModel(
                         featuredQuizzes = discoverData.featured,
                         trendingQuizzes = discoverData.trending,
                         allTimeTopQuizzes = discoverData.allTimeTop,
+                        browseAllQuizzes = discoverData.browseAll,
                         isLoadingDiscover = false,
+                        isLoadingBrowseAll = false,
                         isLoadingMore = false,
                         hasMoreDiscover = quizzes.size < totalCount
                     )
@@ -324,7 +326,8 @@ class SearchViewModel(
                 todayTopQuizzes = discoverData.todayTop,
                 featuredQuizzes = discoverData.featured,
                 trendingQuizzes = discoverData.trending,
-                allTimeTopQuizzes = discoverData.allTimeTop
+                allTimeTopQuizzes = discoverData.allTimeTop,
+                browseAllQuizzes = discoverData.browseAll
             )
         }
     }
@@ -476,7 +479,8 @@ class SearchViewModel(
         val todayTop: List<QuizCardDraft>,
         val featured: List<QuizCardDraft>,
         val trending: List<QuizCardDraft>,
-        val allTimeTop: List<QuizCardDraft>
+        val allTimeTop: List<QuizCardDraft>,
+        val browseAll: List<QuizCardDraft>
     )
 
     /**
@@ -512,6 +516,9 @@ class SearchViewModel(
             allTimeTop = filtered
                 .sortedByDescending { it.attemptCount }
                 .take(10)
+                .map { it.toCardDraft() },
+            browseAll = filtered
+                .sortedByDescending { it.createdAt }
                 .map { it.toCardDraft() }
         )
     }

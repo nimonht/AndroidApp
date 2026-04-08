@@ -209,7 +209,7 @@ class EditQuizViewModel(
                     description = quiz.description ?: "",
                     thumbnailUrl = quiz.thumbnailUrl ?: "",
                     isPublic = quiz.isPublic,
-                    isDraft = !quiz.isPublic,
+                    isDraft = quiz.isDraft,
                     tags = quiz.tags.joinToString(", "),
                     questions = drafts
                 )
@@ -269,6 +269,7 @@ class EditQuizViewModel(
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,
+                isDraft = !publishAfterSave,
                 shareCode = shareCode,
                 questionCount = state.questions.size,
                 updatedAt = System.currentTimeMillis()

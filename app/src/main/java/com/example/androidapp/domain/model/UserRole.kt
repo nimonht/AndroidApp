@@ -6,7 +6,8 @@ package com.example.androidapp.domain.model
  * Role hierarchy (from lowest to highest privilege):
  * - [GUEST]: Anonymous users who can only take public quizzes
  * - [USER]: Authenticated users with full app features (create quizzes, take quizzes, etc.)
- * - [ADMIN]: Administrators with access to admin panel and management features
+ * - [ADMIN]: Administrators with configurable permissions assigned by the superuser
+ * - [SUPERUSER]: App owner with ALL permissions; cannot be modified by admins
  */
 enum class UserRole {
     /**
@@ -22,10 +23,17 @@ enum class UserRole {
     USER,
 
     /**
-     * Administrator with elevated permissions.
-     * Can access admin panel to manage all users, quizzes, and system settings.
+     * Administrator with configurable elevated permissions.
+     * Can access admin panel with permissions granted by the superuser.
      */
-    ADMIN;
+    ADMIN,
+
+    /**
+     * Superuser (app owner) with ALL permissions.
+     * Has unrestricted access to every admin feature.
+     * Cannot be modified or demoted by regular admins.
+     */
+    SUPERUSER;
 
     companion object {
         /**
@@ -40,6 +48,7 @@ enum class UserRole {
                 "GUEST" -> GUEST
                 "USER" -> USER
                 "ADMIN" -> ADMIN
+                "SUPERUSER" -> SUPERUSER
                 else -> USER  // Default to USER for safety
             }
         }

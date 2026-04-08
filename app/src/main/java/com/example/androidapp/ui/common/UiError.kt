@@ -125,6 +125,14 @@ enum class UiError {
     /** AdminQuizManagementViewModel — permanent delete */
     ADMIN_DELETE_QUIZ_FAILED,
 
+    // -- Admin: permissions ------------------------------------------------------
+
+    /** Admin ViewModels — action blocked by missing permission */
+    INSUFFICIENT_PERMISSIONS,
+
+    /** AdminUserManagementViewModel — permission update failed */
+    UPDATE_PERMISSIONS_FAILED,
+
     // -- Admin: user management --------------------------------------------------
 
     /** AdminUserManagementViewModel — initial page load */
@@ -144,6 +152,12 @@ enum class UiError {
 
     /** AdminUserManagementViewModel — delete action */
     DELETE_USER_FAILED,
+
+    /** AdminUserManagementViewModel — admin attempted action on themselves */
+    SELF_ACTION_NOT_ALLOWED,
+
+    /** AdminUserManagementViewModel — non-superuser tried to act on a superuser */
+    TARGET_IS_SUPERUSER,
 
     // -- Question pool -----------------------------------------------------------
 
@@ -224,6 +238,9 @@ fun UiError.toMessage(detail: String? = null): String = when (this) {
     UiError.UPDATE_QUIZ_STATUS_FAILED -> stringResource(R.string.error_update_quiz_status_failed)
     UiError.RESTORE_QUIZ_FAILED -> stringResource(R.string.error_restore_quiz_failed)
     UiError.ADMIN_DELETE_QUIZ_FAILED -> stringResource(R.string.error_delete_quiz_failed)
+    // Admin: permissions
+    UiError.INSUFFICIENT_PERMISSIONS -> stringResource(R.string.error_insufficient_permissions)
+    UiError.UPDATE_PERMISSIONS_FAILED -> stringResource(R.string.error_update_permissions_failed)
 
     // Admin: user management
     UiError.LOAD_USER_LIST_FAILED -> stringResource(R.string.error_load_users_failed)
@@ -232,6 +249,8 @@ fun UiError.toMessage(detail: String? = null): String = when (this) {
     UiError.BAN_USER_FAILED -> stringResource(R.string.error_ban_user_failed)
     UiError.UNBAN_USER_FAILED -> stringResource(R.string.error_unban_user_failed)
     UiError.DELETE_USER_FAILED -> stringResource(R.string.error_delete_user_failed)
+    UiError.SELF_ACTION_NOT_ALLOWED -> stringResource(R.string.error_self_action_not_allowed)
+    UiError.TARGET_IS_SUPERUSER -> stringResource(R.string.error_target_is_superuser)
 
     // Question pool
     UiError.POOL_SEARCH_FAILED -> stringResource(R.string.error_pool_search_failed)

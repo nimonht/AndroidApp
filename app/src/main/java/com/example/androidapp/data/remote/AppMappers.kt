@@ -2,6 +2,7 @@ package com.example.androidapp.data.remote
 
 import com.example.androidapp.data.remote.model.*
 import com.example.androidapp.domain.model.*
+import com.example.androidapp.domain.model.AdminPermission
 import com.google.firebase.Timestamp
 import java.util.Date
 
@@ -13,7 +14,8 @@ fun UserDto.toDomain() = User(
     username = username,
     photoUrl = photoUrl,
     role = UserRole.fromString(role),
-    isBanned = deletedAt != null
+    isBanned = deletedAt != null,
+    permissions = permissions.mapNotNull { AdminPermission.fromString(it) }.toSet()
 )
 
 /**
@@ -28,6 +30,7 @@ fun User.toDto(existingDto: UserDto? = null): UserDto = UserDto(
     username = username,
     photoUrl = photoUrl,
     role = role.toStorageValue(),
+    permissions = permissions.map { it.toStorageValue() },
     createdAt = existingDto?.createdAt ?: Timestamp.now(),
     updatedAt = Timestamp.now()
 )

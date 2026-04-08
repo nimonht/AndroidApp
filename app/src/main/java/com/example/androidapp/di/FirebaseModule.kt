@@ -142,7 +142,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
     }
 
     private val adminRemoteDataSource: AdminRemoteDataSource by lazy {
-        AdminRemoteDataSource(firebaseFirestore, firebaseFunctions)
+        AdminRemoteDataSource(firebaseFirestore, firebaseFunctions, firebaseAuth)
     }
 
     override val authRepository: AuthRepository by lazy {

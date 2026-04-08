@@ -1,5 +1,6 @@
 package com.example.androidapp.domain.repository
 
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Quiz
@@ -180,4 +181,26 @@ interface AdminRepository {
         includeDeleted: Boolean = false,
         loadMore: Boolean = false
     ): PaginatedResult<Quiz>
+
+    // ========== PERMISSION MANAGEMENT ==========
+
+    /**
+     * Update admin permissions for a user. Only the superuser can call this.
+     *
+     * @param userId The ID of the user whose permissions are being updated
+     * @param permissions The new set of permissions to assign
+     * @return [Result.success] on success, or [Result.failure] with error
+     */
+    suspend fun updateAdminPermissions(
+        userId: String,
+        permissions: Set<AdminPermission>
+    ): Result<Unit>
+
+    /**
+     * Get the current admin user's effective permissions.
+     * Returns all permissions for superuser, or the assigned permission set for admin.
+     *
+     * @return The set of [AdminPermission] the current admin holds
+     */
+    suspend fun getCurrentAdminPermissions(): Set<AdminPermission>
 }

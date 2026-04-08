@@ -10,8 +10,9 @@ Android quiz app (Kotlin + Jetpack Compose + Firebase) named **Quizzez**. Users 
 
 ```
 domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/Firebase imports.
-            model/      ← Domain models (Quiz, Question, Choice, Attempt, User, ShareCode,
-                          QuestionPoolItem, UserRole, SystemStats)
+            model/      ← Domain models (Quiz, Question, Choice, Attempt, User,
+                          QuestionPoolItem, UserRole, SystemStats, AdminPermission,
+                          PaginatedResult)
             repository/ ← Repository interfaces (QuizRepository, AttemptRepository, AuthRepository,
                           ShareCodeRepository, PoolRepository,
                           AdminRepository, SearchRepository)
@@ -108,12 +109,12 @@ Use `sealed class` for states with distinct phases (e.g., `TakeQuizUiState`); us
 
 Reusable components live in `ui/components/` organized by category:
 - Standalone — `ShareCodeSection`, `TagSuggestionDialog`
-- `admin/` — StatisticCard, AdminUserCard, AdminQuizCard, RoleSelector
+- `admin/` — AdminChart, AdminInsightCard, AdminQuizCard, AdminUserCard, RoleSelector, StatisticCard
 - `common/` — AlertDialog, BottomSheet, MediaDisplay, TagChip, LoginPromptDialog
 - `feedback/` — EmptyState, ErrorState, LoadingSpinner, ScoreCard, SkeletonLoader (`shimmerEffect()` Modifier extension)
 - `forms/` — CodeInputField, DropdownSelector, SwitchToggle, TextInputField, QuizSearchBar
 - `navigation/` — AppTopBar, BottomNavBar, CreateQuizFAB
-- `quiz/` — ChoiceButton, DynamicChoiceList, QuizCard, QuizProgressIndicator, TimerDisplay
+- `quiz/` — ChoiceButton, DynamicChoiceList, QuizCard, QuizProgressIndicator, QuizThumbnail, TimerDisplay
 
 Use **Coil** (`AsyncImage` from `coil.compose`) for all network image loading.
 
@@ -151,7 +152,7 @@ Existing screen directories under `ui/screens/`:
   Events: `AvatarUrlChanged(url: String)`, `FetchRandomAvatar` (replaced the old `AvatarSelected(uri: Uri)`).
   `EditProfileUiState` includes `isLoadingAvatar: Boolean` for tracking Wallhaven fetch progress.
 - `quiz/` — `QuizDetailScreen`/`ViewModel`, `TakeQuizScreen`/`ViewModel`, `QuizResultScreen`/`ViewModel`
-- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`.
+- `create/` — `CreateQuizScreen`/`ViewModel`, `EditQuizScreen`/`EditQuizViewModel`, `CsvImportScreen`/`CsvImportViewModel`, `QuizPreviewScreen`/`QuizPreviewViewModel`, `QuizFormContent`, `QuizFormEvent`, `QuizFormHelper` (shared form helpers).
   Quiz lifecycle uses a 3-state model:
     - **Draft**: `isDraft=true`, `isPublic=false` (forced) — work-in-progress, not visible to others.
     - **Published (Private)**: `isDraft=false`, `isPublic=false` (toggle off) — finalized but only accessible via share code.
@@ -164,10 +165,12 @@ Existing screen directories under `ui/screens/`:
 - `settings/` — `SettingsScreen`, `SettingsViewModel`
 - `pool/` — `QuestionPoolScreen`, `QuestionPoolViewModel`
 - `admin/` — Admin panel (accessed from Profile, not bottom nav); role-guarded in NavHost + Firestore rules.
+  Root: `BaseAdminStatsViewModel.kt` (shared base class for admin sub-ViewModels).
   Sub-packages: `dashboard/` (`AdminDashboardScreen`/`ViewModel`/`UiState`),
   `users/` (`AdminUserManagementScreen`/`ViewModel`/`UiState`),
   `quizzes/` (`AdminQuizManagementScreen`/`ViewModel`/`UiState`),
   `reports/` (`AdminReportsScreen`/`ViewModel`/`UiState`).
+  Note: `users/` and `quizzes/` management screens have collapsible filter/search sections (collapsed by default, toggled via `AnimatedVisibility`).
   Admin routes: `admin/dashboard`, `admin/users`, `admin/quizzes`, `admin/reports`.
 
 ## Build & Test Commands

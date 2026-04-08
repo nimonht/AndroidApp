@@ -2,6 +2,7 @@ package com.example.androidapp.data.repository
 
 import com.example.androidapp.data.remote.firebase.AdminRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Quiz
@@ -185,5 +186,28 @@ class AdminRepositoryImpl(
             items = dtos.map { it.toDomain() },
             hasMore = dtos.size >= pageSize
         )
+    }
+
+    // ========== PERMISSION MANAGEMENT ==========
+
+    override suspend fun updateAdminPermissions(
+        userId: String,
+        permissions: Set<AdminPermission>
+    ): Result<Unit> {
+        return safeCall {
+            adminRemoteDataSource.updateUserPermissions(
+                userId,
+                permissions.map { it.toStorageValue() }
+            )
+        }
+    }
+
+    override suspend fun getCurrentAdminPermissions(): Set<AdminPermission> {
+        return try {
+            val user = adminRemoteDataSource.getCurrentUser()?.toDomain() ?: return emptySet()
+            user.effectivePermissions()
+        } catch (_: Exception) {
+            emptySet()
+        }
     }
 }

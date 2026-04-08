@@ -46,6 +46,12 @@ data class SearchUiState(
     /** Top 10 quiz mọi thời đại (theo attemptCount giảm dần toàn bộ). */
     val allTimeTopQuizzes: List<QuizCardDraft> = emptyList(),
 
+    /** Tat ca quiz cong khai hien thi trong muc Duyet tat ca. */
+    val browseAllQuizzes: List<QuizCardDraft> = emptyList(),
+
+    /** Dang tai du lieu muc Duyet tat ca. */
+    val isLoadingBrowseAll: Boolean = false,
+
     /** Đang tải dữ liệu khám phá. */
     val isLoadingDiscover: Boolean = false,
 

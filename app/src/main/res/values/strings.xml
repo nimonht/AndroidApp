@@ -92,6 +92,8 @@
     <string name="error_ban_user_failed">Không thể cấm người dùng</string>
     <string name="error_unban_user_failed">Không thể bỏ cấm người dùng</string>
     <string name="error_delete_user_failed">Không thể xóa người dùng</string>
+    <string name="error_self_action_not_allowed">Không thể thực hiện hành động này trên chính mình</string>
+    <string name="error_target_is_superuser">Không thể thực hiện hành động này trên tài khoản siêu quản trị</string>
     <string name="error_update_quiz_status_failed">Không thể cập nhật trạng thái quiz</string>
     <string name="error_restore_quiz_failed">Không thể khôi phục quiz</string>
     <string name="error_delete_quiz_failed">Không thể xóa quiz</string>
@@ -654,5 +656,73 @@
     <string name="admin_stats_summary">Tổng quan hệ thống</string>
     <string name="admin_pool_questions_short">Kho câu hỏi</string>
     <string name="admin_admin_count">Quản trị viên</string>
+
+    <!-- Search: Browse All Public Quizzes -->
+    <string name="search_section_browse_all">Tất cả quiz công khai</string>
+
+    <!-- Superuser Role -->
+    <string name="admin_role_superuser">Superuser</string>
+    <string name="admin_user_role_superuser">Superuser</string>
+    <string name="admin_superuser_protected">Tài khoản Superuser được bảo vệ</string>
+    <string name="admin_cannot_modify_superuser">Bạn không thể chỉnh sửa tài khoản Superuser</string>
+    <string name="admin_no_permission">Bạn không có quyền thực hiện hành động này</string>
+    <string name="error_insufficient_permissions">Không đủ quyền. Vui lòng liên hệ Superuser.</string>
+
+    <!-- Admin Permissions -->
+    <string name="admin_permissions_title">Quản lý quyền hạn</string>
+    <string name="admin_permissions_edit">Chỉnh sửa quyền hạn</string>
+    <string name="admin_permissions_save">Lưu quyền hạn</string>
+    <string name="admin_permissions_saved">Đã cập nhật quyền hạn</string>
+    <string name="admin_permission_manage_users">Quản lý người dùng</string>
+    <string name="admin_permission_change_user_roles">Thay đổi vai trò người dùng</string>
+    <string name="admin_permission_delete_users">Xóa người dùng vĩnh viễn</string>
+    <string name="admin_permission_ban_users">Cấm và bỏ cấm người dùng</string>
+    <string name="admin_permission_manage_quizzes">Quản lý tất cả quiz</string>
+    <string name="admin_permission_delete_quizzes">Xóa quiz vĩnh viễn</string>
+    <string name="admin_permission_publish_quizzes">Xuất bản và hủy xuất bản quiz</string>
+    <string name="admin_permission_view_reports">Xem báo cáo và phân tích</string>
+    <string name="error_update_permissions_failed">Không thể cập nhật quyền hạn</string>
+
+    <!-- Admin Filtering -->
+    <string name="admin_filter_by_tag">Lọc theo thẻ</string>
+    <string name="admin_filter_by_status">Lọc theo trạng thái</string>
+    <string name="admin_filter_by_role">Lọc theo vai trò</string>
+    <string name="admin_filter_by_type">Lọc theo loại</string>
+    <string name="admin_sort_order">Thứ tự sắp xếp</string>
+    <string name="admin_sort_asc">Tăng dần</string>
+    <string name="admin_sort_desc">Giảm dần</string>
+    <string name="admin_sort_by_name">Sắp xếp theo tên</string>
+    <string name="admin_sort_by_date">Sắp xếp theo ngày tạo</string>
+    <string name="admin_sort_by_attempts">Sắp xếp theo lượt làm</string>
+    <string name="admin_sort_by_questions">Sắp xếp theo số câu hỏi</string>
+    <string name="admin_sort_by_email">Sắp xếp theo email</string>
+    <string name="admin_sort_by_role">Sắp xếp theo vai trò</string>
+    <string name="admin_filter_status_all">Tất cả trạng thái</string>
+    <string name="admin_filter_status_public">Công khai</string>
+    <string name="admin_filter_status_private">Riêng tư</string>
+    <string name="admin_filter_status_draft">Nháp</string>
+    <string name="admin_filter_status_deleted">Đã xóa</string>
+    <string name="admin_filter_role_all">Tất cả vai trò</string>
+    <string name="admin_filter_role_superuser">Superuser</string>
+    <string name="admin_filter_role_admin">Quản trị viên</string>
+    <string name="admin_filter_role_user">Người dùng</string>
+    <string name="admin_filter_role_banned">Bị cấm</string>
+    <string name="admin_clear_filters">Xóa bộ lọc</string>
+    <string name="admin_active_filters">%1$d bộ lọc đang áp dụng</string>
+    <string name="admin_filter_tag_hint">Nhập thẻ để lọc…</string>
+
+    <!-- Filter Toggle -->
+    <string name="admin_show_filters">Hiển thị bộ lọc</string>
+    <string name="admin_hide_filters">Ẩn bộ lọc</string>
+
+    <!-- Tag Categories (TagSuggestionDialog) -->
+    <string name="tag_category_study">Học tập</string>
+    <string name="tag_category_entertainment">Giải trí</string>
+    <string name="tag_category_general_knowledge">Kiến thức chung</string>
+    <string name="tag_category_professional">Chuyên ngành</string>
+    <string name="tag_category_community">Các Tag của cộng đồng</string>
+
+    <!-- Admin Network -->
+    <string name="admin_network_required">Cần kết nối mạng để truy cập bảng điều khiển quản trị</string>
 
 </resources>
