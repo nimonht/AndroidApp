@@ -4,128 +4,236 @@
 
 ```
 app/src/main/java/com/example/androidapp/
-├── di/                          # Dependency Injection (Manual DI)
-│   ├── AppModule.kt
-│   ├── DatabaseModule.kt
-│   ├── FirebaseModule.kt
-│   └── RepositoryModule.kt
+├── di/                              # Dependency Injection (Manual DI)
+│   ├── AppModule.kt                 # DI container interface
+│   ├── FirebaseModule.kt           # DI container implementation
+│   └── AppContainerExt.kt          # LocalAppContainer CompositionLocal
 │
-├── domain/                      # Business logic layer (pure Kotlin)
-│   ├── model/                   # Domain models
-│   │   ├── Quiz.kt
-│   │   ├── Question.kt
-│   │   ├── Choice.kt
-│   │   ├── User.kt
+├── domain/                          # Business logic layer (pure Kotlin)
+│   ├── model/                       # Domain models
 │   │   ├── Attempt.kt
-│   │   └── PoolQuestion.kt
+│   │   ├── Choice.kt
+│   │   ├── Question.kt
+│   │   ├── QuestionPoolItem.kt
+│   │   ├── Quiz.kt
+│   │   ├── ShareCode.kt
+│   │   ├── SystemStats.kt
+│   │   ├── User.kt
+│   │   └── UserRole.kt
 │   │
-│   ├── usecase/                 # Business logic use cases
-│   │   ├── quiz/
-│   │   │   ├── CreateQuizUseCase.kt
-│   │   │   ├── GetQuizByCodeUseCase.kt
-│   │   │   └── ...
-│   │   ├── auth/
-│   │   │   ├── LoginUseCase.kt
-│   │   │   └── ...
-│   │   └── ...
+│   ├── repository/                  # Repository interfaces
+│   │   ├── AdminRepository.kt
+│   │   ├── AttemptRepository.kt
+│   │   ├── AuthRepository.kt
+│   │   ├── PoolRepository.kt
+│   │   ├── QuizRepository.kt
+│   │   ├── SearchRepository.kt
+│   │   └── ShareCodeRepository.kt
 │   │
-│   └── util/                    # Pure utility functions
+│   └── util/                        # Pure utility functions
 │       ├── ChecksumUtil.kt
-│       ├── ShareCodeGenerator.kt
+│       ├── CsvParser.kt
+│       ├── CsvValidator.kt
+│       ├── InputSanitizer.kt
 │       ├── QuestionShuffler.kt
-│       └── ScoreCalculator.kt
+│       ├── QuizValidator.kt
+│       ├── SafeCall.kt
+│       ├── ScoreCalculator.kt
+│       ├── ScoreUtil.kt
+│       ├── SearchFilterLogic.kt
+│       ├── ShareCodeUtil.kt
+│       ├── TagValidator.kt
+│       └── TimeFormatter.kt
 │
-├── data/                        # Data layer
-│   ├── local/                   # Room database
-│   │   ├── dao/                 # Data Access Objects
-│   │   │   ├── QuizDao.kt
+├── data/                            # Data layer
+│   ├── local/                       # Room database
+│   │   ├── dao/                     # Data Access Objects
+│   │   │   ├── AttemptDao.kt
+│   │   │   ├── ChoiceDao.kt
+│   │   │   ├── PendingSyncDao.kt
 │   │   │   ├── QuestionDao.kt
-│   │   │   └── ...
-│   │   ├── entity/              # Room entities
+│   │   │   ├── QuizDao.kt
+│   │   │   └── UserDao.kt
+│   │   ├── entity/                  # Room entities
+│   │   │   ├── AttemptEntity.kt
+│   │   │   ├── ChoiceEntity.kt
+│   │   │   ├── PendingSyncEntity.kt
+│   │   │   ├── QuestionEntity.kt
 │   │   │   ├── QuizEntity.kt
-│   │   │   └── ...
-│   │   ├── converter/           # Type converters
+│   │   │   └── UserEntity.kt
+│   │   ├── converter/               # Type converters
 │   │   │   └── Converters.kt
-│   │   └── AppDatabase.kt
+│   │   ├── AppDatabase.kt
+│   │   └── EntityMappers.kt        # Entity <-> Domain mappers
 │   │
-│   ├── remote/                  # Firebase
-│   │   ├── firebase/            # Firebase service wrappers
-│   │   │   ├── FirebaseAuthService.kt
-│   │   │   ├── FirestoreService.kt
-│   │   │   └── StorageService.kt
-│   │   └── model/               # Firebase DTOs
-│   │       ├── QuizDto.kt
-│   │       └── ...
+│   ├── remote/                      # Firebase
+│   │   ├── firebase/                # Remote data sources
+│   │   │   ├── AdminRemoteDataSource.kt
+│   │   │   ├── AttemptRemoteDataSource.kt
+│   │   │   ├── FirestoreCollections.kt
+│   │   │   ├── PoolRemoteDataSource.kt
+│   │   │   ├── QuestionRemoteDataSource.kt
+│   │   │   ├── QuizRemoteDataSource.kt
+│   │   │   ├── ShareCodeRemoteDataSource.kt
+│   │   │   └── UserRemoteDataSource.kt
+│   │   ├── model/                   # Firebase DTOs
+│   │   │   ├── AttemptDto.kt
+│   │   │   ├── QuestionPoolItemDto.kt
+│   │   │   ├── QuizDtoModels.kt
+│   │   │   ├── ShareCodeDto.kt
+│   │   │   └── UserDto.kt
+│   │   └── AppMappers.kt           # DTO <-> Domain mappers
 │   │
-│   └── repository/              # Repository implementations
-│       ├── QuizRepositoryImpl.kt
-│       ├── AuthRepositoryImpl.kt
-│       └── ...
+│   ├── repository/                  # Repository implementations
+│   │   ├── AdminRepositoryImpl.kt
+│   │   ├── AttemptRepositoryImpl.kt
+│   │   ├── AuthRepositoryImpl.kt
+│   │   ├── PoolRepositoryImpl.kt
+│   │   ├── QuizRepositoryImpl.kt
+│   │   ├── SearchRepositoryImpl.kt
+│   │   └── ShareCodeRepositoryImpl.kt
+│   │
+│   ├── network/
+│   │   └── NetworkMonitor.kt       # Connectivity state
+│   │
+│   ├── preferences/
+│   │   └── SettingsPreferences.kt   # Local app settings
+│   │
+│   ├── sync/
+│   │   └── SyncManager.kt          # Offline sync coordinator
+│   │
+│   └── worker/                      # WorkManager background tasks
+│       ├── BackendMaintenanceWorker.kt
+│       └── BackgroundSyncWorker.kt
 │
-└── ui/                          # Presentation layer
-    ├── theme/                   # Material Design theme
+└── ui/                              # Presentation layer
+    ├── theme/                       # Material Design theme
     │   ├── Color.kt
-    │   ├── Typography.kt
     │   ├── Shape.kt
-    │   └── Theme.kt
+    │   ├── Theme.kt
+    │   └── Type.kt
     │
-    ├── components/              # Reusable UI components
-    │   ├── common/              # General components
-    │   │   ├── LoadingSpinner.kt
+    ├── navigation/                  # App navigation
+    │   ├── Routes.kt
+    │   └── QuizzezNavHost.kt
+    │
+    ├── util/                        # UI-layer utilities
+    │   └── QrCodeUtil.kt
+    │
+    ├── components/                  # Reusable UI components
+    │   ├── ShareCodeSection.kt
+    │   ├── TagSuggestionDialog.kt
+    │   ├── admin/                   # Admin panel components
+    │   │   ├── AdminChart.kt
+    │   │   ├── AdminInsightCard.kt
+    │   │   ├── AdminQuizCard.kt
+    │   │   ├── AdminUserCard.kt
+    │   │   ├── RoleSelector.kt
+    │   │   └── StatisticCard.kt
+    │   ├── common/                  # General components
+    │   │   ├── AlertDialog.kt
+    │   │   ├── BottomSheet.kt
+    │   │   ├── LoginPromptDialog.kt
+    │   │   ├── MediaDisplay.kt
+    │   │   └── TagChip.kt
+    │   ├── feedback/                # Feedback components
+    │   │   ├── EmptyState.kt
     │   │   ├── ErrorState.kt
-    │   │   └── EmptyState.kt
-    │   ├── quiz/                # Quiz-specific components
-    │   │   ├── QuizCard.kt
-    │   │   ├── QuestionCard.kt
-    │   │   ├── ChoiceButton.kt
-    │   │   └── DynamicChoiceList.kt
-    │   ├── forms/               # Form components
-    │   │   ├── TextInputField.kt
+    │   │   ├── LoadingSpinner.kt
+    │   │   ├── ScoreCard.kt
+    │   │   └── SkeletonLoader.kt
+    │   ├── forms/                   # Form components
     │   │   ├── CodeInputField.kt
-    │   │   └── DropdownSelector.kt
-    │   ├── feedback/            # Feedback components
-    │   │   ├── SkeletonLoader.kt
-    │   │   └── ScoreCard.kt
-    │   └── navigation/          # Navigation components
-    │       ├── BottomNavBar.kt
-    │       ├── TopAppBar.kt
-    │       └── QuizzezNavHost.kt
+    │   │   ├── DropdownSelector.kt
+    │   │   ├── QuizSearchBar.kt
+    │   │   ├── SwitchToggle.kt
+    │   │   └── TextInputField.kt
+    │   ├── navigation/              # Navigation components
+    │   │   ├── AppTopBar.kt
+    │   │   ├── BottomNavBar.kt
+    │   │   └── CreateQuizFAB.kt
+    │   └── quiz/                    # Quiz-specific components
+    │       ├── ChoiceButton.kt
+    │       ├── DynamicChoiceList.kt
+    │       ├── QuizCard.kt
+    │       ├── QuizProgressIndicator.kt
+    │       └── TimerDisplay.kt
     │
-    └── screens/                 # Screen composables + ViewModels
-        ├── home/
-        │   ├── HomeScreen.kt
-        │   └── HomeViewModel.kt
-        ├── search/
-        │   ├── SearchScreen.kt
-        │   └── SearchViewModel.kt
-        ├── profile/
-        │   ├── ProfileScreen.kt
-        │   └── ProfileViewModel.kt
-        ├── quiz/
-        │   ├── detail/
-        │   │   ├── QuizDetailScreen.kt
-        │   │   └── QuizDetailViewModel.kt
-        │   ├── take/
-        │   │   ├── TakeQuizScreen.kt
-        │   │   └── TakeQuizViewModel.kt
-        │   ├── result/
-        │   │   ├── QuizResultScreen.kt
-        │   │   └── QuizResultViewModel.kt
-        │   └── create/
-        │       ├── CreateQuizScreen.kt
-        │       └── CreateQuizViewModel.kt
+    └── screens/                     # Screen composables + ViewModels
+        ├── admin/                   # Admin panel screens
+        │   ├── dashboard/
+        │   │   ├── AdminDashboardScreen.kt
+        │   │   ├── AdminDashboardUiState.kt
+        │   │   └── AdminDashboardViewModel.kt
+        │   ├── users/
+        │   │   ├── AdminUserManagementScreen.kt
+        │   │   ├── AdminUserManagementUiState.kt
+        │   │   └── AdminUserManagementViewModel.kt
+        │   ├── quizzes/
+        │   │   ├── AdminQuizManagementScreen.kt
+        │   │   ├── AdminQuizManagementUiState.kt
+        │   │   └── AdminQuizManagementViewModel.kt
+        │   └── reports/
+        │       ├── AdminReportsScreen.kt
+        │       ├── AdminReportsUiState.kt
+        │       └── AdminReportsViewModel.kt
+        ├── attempt/
+        │   ├── AttemptDetailScreen.kt
+        │   └── AttemptDetailViewModel.kt
         ├── auth/
+        │   ├── AuthFragment.kt
+        │   ├── AuthViewModel.kt
         │   ├── LoginScreen.kt
-        │   ├── SignupScreen.kt
-        │   └── AuthViewModel.kt
-        ├── settings/
-        │   ├── SettingsScreen.kt
-        │   └── SettingsViewModel.kt
+        │   └── RegisterScreen.kt
+        ├── create/
+        │   ├── CreateQuizScreen.kt
+        │   ├── CreateQuizViewModel.kt
+        │   ├── CsvImportScreen.kt
+        │   ├── CsvImportViewModel.kt
+        │   ├── EditQuizScreen.kt
+        │   ├── EditQuizViewModel.kt
+        │   ├── QuizPreviewScreen.kt
+        │   └── QuizPreviewViewModel.kt
         ├── history/
         │   ├── HistoryScreen.kt
         │   └── HistoryViewModel.kt
+        ├── home/
+        │   ├── HomeScreen.kt
+        │   └── HomeViewModel.kt
+        ├── pool/
+        │   ├── QuestionPoolScreen.kt
+        │   └── QuestionPoolViewModel.kt
+        ├── profile/
+        │   ├── EditProfileScreen.kt
+        │   ├── EditProfileViewModel.kt
+        │   ├── ProfileScreen.kt
+        │   └── ProfileViewModel.kt
+        ├── quiz/
+        │   ├── QuizDetailScreen.kt
+        │   ├── QuizDetailViewModel.kt
+        │   ├── QuizResultScreen.kt
+        │   ├── QuizResultViewModel.kt
+        │   ├── TakeQuizScreen.kt
+        │   └── TakeQuizViewModel.kt
+        ├── review/
+        │   ├── AnswerReviewScreen.kt
+        │   └── AnswerReviewViewModel.kt
+        ├── search/
+        │   ├── DiscoverSection.kt
+        │   ├── QuizCardDraft.kt
+        │   ├── SearchControlsRow.kt
+        │   ├── SearchEvent.kt
+        │   ├── SearchResultsGrid.kt
+        │   ├── SearchResultsList.kt
+        │   ├── SearchScreen.kt
+        │   ├── SearchUiState.kt
+        │   ├── SearchViewModel.kt
+        │   └── TagFilterRow.kt
+        ├── settings/
+        │   ├── SettingsScreen.kt
+        │   └── SettingsViewModel.kt
         └── trash/
-            ├── RecycleBinScreen.kt
+            ├── TrashScreen.kt
             └── RecycleBinViewModel.kt
 ```
 

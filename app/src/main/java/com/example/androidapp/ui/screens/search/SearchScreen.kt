@@ -1,19 +1,25 @@
 package com.example.androidapp.ui.screens.search
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +34,8 @@ import com.example.androidapp.ui.components.common.TagChip
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.forms.QuizSearchBar
+import com.example.androidapp.ui.components.quiz.QuizCard
+import com.example.androidapp.domain.model.Quiz
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 
@@ -51,6 +59,7 @@ import androidx.compose.foundation.layout.FlowRow
 @Composable
 fun SearchScreen(
     onNavigateToQuiz: (String) -> Unit,
+    initialTag: String? = null,
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -62,6 +71,14 @@ fun SearchScreen(
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Khi nguoi dung dieu huong den man hinh Tim kiem voi tag cho truoc,
+    // tu dong kich hoat tim kiem theo tag do.
+    LaunchedEffect(initialTag) {
+        if (!initialTag.isNullOrBlank()) {
+            viewModel.onEvent(SearchEvent.OnTagFilterFromNavigation(initialTag))
+        }
+    }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -127,6 +144,9 @@ fun SearchScreen(
                     SearchResultsGrid(
                         results = uiState.searchResults,
                         onQuizClick = onNavigateToQuiz,
+                        hasMoreSearchResults = uiState.hasMoreSearchResults,
+                        isLoadingMore = uiState.isLoadingMore,
+                        onLoadMore = { viewModel.onEvent(SearchEvent.LoadMoreSearchResults) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -135,6 +155,9 @@ fun SearchScreen(
                     SearchResultsList(
                         results = uiState.searchResults,
                         onQuizClick = onNavigateToQuiz,
+                        hasMoreSearchResults = uiState.hasMoreSearchResults,
+                        isLoadingMore = uiState.isLoadingMore,
+                        onLoadMore = { viewModel.onEvent(SearchEvent.LoadMoreSearchResults) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -150,6 +173,7 @@ fun SearchScreen(
                         viewModel.onEvent(SearchEvent.OnDiscoverTagToggle(tag))
                     },
                     onQuizClick = onNavigateToQuiz,
+                    onEvent = viewModel::onEvent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
@@ -174,6 +198,7 @@ private fun DiscoverContent(
     uiState: SearchUiState,
     onTagClick: (String) -> Unit,
     onQuizClick: (String) -> Unit,
+    onEvent: (SearchEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (uiState.isLoadingDiscover) {
@@ -218,6 +243,7 @@ private fun DiscoverContent(
                             )
                         }
                     }
+
                 }
             }
         }
@@ -269,5 +295,77 @@ private fun DiscoverContent(
                 )
             }
         }
+
+        // --- Duyet tat ca quiz cong khai ---
+        if (uiState.browseAllQuizzes.isNotEmpty()) {
+            item(key = "section_browse_all_header") {
+                Text(
+                    text = stringResource(R.string.search_section_browse_all),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+
+            val chunkedQuizzes = uiState.browseAllQuizzes.chunked(2)
+            items(chunkedQuizzes.size, key = { "browse_all_row_$it" }) { index ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    chunkedQuizzes[index].forEach { quiz ->
+                        QuizCard(
+                            quiz = quiz.toBrowseQuiz(),
+                            onClick = { onQuizClick(quiz.id) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (chunkedQuizzes[index].size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+
+        // Pagination: load more discover quizzes
+        if (uiState.hasMoreDiscover) {
+            item(key = "discover_load_more") {
+                LaunchedEffect(Unit) {
+                    onEvent(SearchEvent.LoadMoreDiscover)
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (uiState.isLoadingMore) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
+            }
+        }
     }
 }
+
+/**
+ * Chuyen doi [QuizCardDraft] sang domain [Quiz] de truyen cho [QuizCard]
+ * trong muc Duyet tat ca.
+ */
+private fun QuizCardDraft.toBrowseQuiz() = Quiz(
+    id = id,
+    ownerId = "",
+    title = title,
+    authorName = authorName,
+    thumbnailUrl = coverImageUrl,
+    questionCount = questionCount,
+    attemptCount = attemptCount,
+    isPublic = true,
+    tags = tags
+)

@@ -11,25 +11,27 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.remote.firebase.AdminRemoteDataSource
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.firebase.PoolRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.firebase.ShareCodeRemoteDataSource
 import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
+import com.example.androidapp.data.repository.AdminRepositoryImpl
 import com.example.androidapp.data.repository.AttemptRepositoryImpl
 import com.example.androidapp.data.repository.AuthRepositoryImpl
 import com.example.androidapp.data.repository.PoolRepositoryImpl
-import com.example.androidapp.data.repository.QuestionRepositoryImpl
 import com.example.androidapp.data.repository.QuizRepositoryImpl
+import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
-import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.repository.SearchRepository
@@ -38,6 +40,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.functions
 
 class AppContainerImpl(override val context: Context) : AppContainer {
 
@@ -55,6 +59,14 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         Firebase.firestore.also { firestore ->
             if (BuildConfig.USE_FIREBASE_EMULATOR) {
                 firestore.useEmulator(emulatorHost, 8080)
+            }
+        }
+    }
+
+    private val firebaseFunctions: FirebaseFunctions by lazy {
+        Firebase.functions.also { functions ->
+            if (BuildConfig.USE_FIREBASE_EMULATOR) {
+                functions.useEmulator(emulatorHost, 5001)
             }
         }
     }
@@ -89,11 +101,23 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             questionRemoteDataSource,
             attemptRemoteDataSource,
             networkMonitor,
-            settingsPreferences
+            settingsPreferences,
+            lazy { quizRepository }
         )
     }
 
-    private val quizRemoteDataSource: QuizRemoteDataSource by lazy {
+    override val quizInvalidationManager: QuizInvalidationManager by lazy {
+        QuizInvalidationManager(
+            context,
+            quizDao,
+            questionDao,
+            choiceDao,
+            quizRemoteDataSource,
+            networkMonitor
+        )
+    }
+
+    override val quizRemoteDataSource: QuizRemoteDataSource by lazy {
         QuizRemoteDataSource(firebaseFirestore)
     }
 
@@ -117,8 +141,12 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         PoolRemoteDataSource(firebaseFirestore)
     }
 
+    private val adminRemoteDataSource: AdminRemoteDataSource by lazy {
+        AdminRemoteDataSource(firebaseFirestore, firebaseFunctions, firebaseAuth)
+    }
+
     override val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(firebaseAuth, userDao, userRemoteDataSource)
+        AuthRepositoryImpl(firebaseAuth, userDao, userRemoteDataSource, firebaseFirestore)
     }
 
     override val quizRepository: QuizRepository by lazy {
@@ -137,16 +165,16 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         AttemptRepositoryImpl(attemptDao, syncManager)
     }
 
-    override val questionRepository: QuestionRepository by lazy {
-        QuestionRepositoryImpl(questionDao, choiceDao, questionRemoteDataSource, syncManager)
-    }
-
     override val shareCodeRepository: ShareCodeRepository by lazy {
         ShareCodeRepositoryImpl(shareCodeRemoteDataSource)
     }
 
     override val poolRepository: PoolRepository by lazy {
         PoolRepositoryImpl(poolRemoteDataSource, firebaseFirestore)
+    }
+
+    override val adminRepository: AdminRepository by lazy {
+        AdminRepositoryImpl(adminRemoteDataSource)
     }
 
     override val searchRepository: SearchRepository by lazy {

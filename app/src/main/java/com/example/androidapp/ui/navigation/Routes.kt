@@ -1,5 +1,7 @@
 package com.example.androidapp.ui.navigation
 
+import android.net.Uri
+
 /**
  * Defines all navigation routes for the Quizzez application.
  * Routes follow the pattern defined in the frontend design document.
@@ -8,6 +10,7 @@ object Routes {
     // Bottom Navigation Routes
     const val HOME = "home"
     const val SEARCH = "search"
+    const val SEARCH_WITH_TAG = "search?tag={tag}"
     const val PROFILE = "profile"
 
     // Quiz Routes
@@ -36,10 +39,17 @@ object Routes {
     const val REGISTER = "register"
     const val QUESTION_POOL = "question_pool"
 
+    // Admin Routes
+    const val ADMIN_DASHBOARD = "admin/dashboard"
+    const val ADMIN_USERS = "admin/users"
+    const val ADMIN_QUIZZES = "admin/quizzes"
+    const val ADMIN_REPORTS = "admin/reports"
+
     // Helper functions to build routes with arguments
     object Args {
         const val QUIZ_ID = "quizId"
         const val ATTEMPT_ID = "attemptId"
+        const val TAG = "tag"
     }
 
     /**
@@ -76,6 +86,11 @@ object Routes {
      * Build the attempt detail route with an attempt ID.
      */
     fun attemptDetail(attemptId: String): String = "attempt/$attemptId"
+
+    /**
+     * Build the search route pre-filtered by a specific tag.
+     */
+    fun searchWithTag(tag: String): String = "search?tag=${Uri.encode(tag)}"
 }
 
 /**
@@ -86,6 +101,7 @@ sealed class NavigationDestination(val route: String) {
     // Bottom Navigation Destinations
     data object Home : NavigationDestination(Routes.HOME)
     data object Search : NavigationDestination(Routes.SEARCH)
+    data class SearchWithTag(val tag: String) : NavigationDestination(Routes.searchWithTag(tag))
     data object Profile : NavigationDestination(Routes.PROFILE)
 
     // Quiz Destinations
@@ -120,4 +136,10 @@ sealed class NavigationDestination(val route: String) {
     // Auth Destinations
     data object Login : NavigationDestination(Routes.LOGIN)
     data object Register : NavigationDestination(Routes.REGISTER)
+
+    // Admin Destinations
+    data object AdminDashboard : NavigationDestination(Routes.ADMIN_DASHBOARD)
+    data object AdminUsers : NavigationDestination(Routes.ADMIN_USERS)
+    data object AdminQuizzes : NavigationDestination(Routes.ADMIN_QUIZZES)
+    data object AdminReports : NavigationDestination(Routes.ADMIN_REPORTS)
 }

@@ -9,6 +9,7 @@ import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.QuestionShuffler
 import com.example.androidapp.domain.util.ScoreCalculator
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,7 @@ sealed class TakeQuizUiState {
     ) : TakeQuizUiState()
 
     data class Finished(val attemptId: String) : TakeQuizUiState()
-    data class Error(val message: String) : TakeQuizUiState()
+    data class Error(val error: UiError, val errorDetail: String? = null) : TakeQuizUiState()
 }
 
 /** Events that can be dispatched to [TakeQuizViewModel]. */
@@ -102,7 +103,7 @@ class TakeQuizViewModel(
         viewModelScope.launch {
             val quiz = quizRepository.getQuizById(quizId)
             if (quiz == null) {
-                _uiState.value = TakeQuizUiState.Error("Không tìm thấy bài kiểm tra")
+                _uiState.value = TakeQuizUiState.Error(UiError.QUIZ_NOT_FOUND)
                 return@launch
             }
             quizTitle = quiz.title
@@ -112,7 +113,7 @@ class TakeQuizViewModel(
                 copyWithNewChoices = { q, newChoices -> q.copy(choices = newChoices) }
             )
             if (questions.isEmpty()) {
-                _uiState.value = TakeQuizUiState.Error("Bài kiểm tra chưa có câu hỏi")
+                _uiState.value = TakeQuizUiState.Error(UiError.QUIZ_HAS_NO_QUESTIONS)
                 return@launch
             }
             startTimer()
@@ -188,17 +189,14 @@ class TakeQuizViewModel(
         }
     }
 
-    /** Whether exit has been confirmed (used by screen to trigger navigation). */
-    var exitConfirmed: Boolean = false
-        private set
-
     private fun onSubmitQuiz() {
         viewModelScope.launch {
             val active = _uiState.value as? TakeQuizUiState.Active ?: return@launch
             _uiState.value = active.copy(isSubmitting = true)
             timerJob?.cancel()
 
-            val score = calculateScore()
+            val userAnswers = answers.mapValues { (_, v) -> v.toSet() }
+            val scoreResult = ScoreCalculator.calculatePointScore(questions, userAnswers)
             val answerMap = answers.mapValues { (_, v) -> v.toList() }
             val userId = authRepository.getCurrentUser()?.id ?: "guest_${UUID.randomUUID()}"
 
@@ -206,8 +204,8 @@ class TakeQuizViewModel(
                 id = attemptId,
                 userId = userId,
                 quizId = quizId,
-                score = score,
-                totalQuestions = questions.size,
+                score = scoreResult.earnedScore,
+                totalQuestions = scoreResult.maxScore,
                 answers = answerMap,
                 startTimeMillis = startTimeMillis,
                 endTimeMillis = System.currentTimeMillis(),
@@ -220,17 +218,9 @@ class TakeQuizViewModel(
                     quizRepository.incrementAttemptCount(quizId)
                     TakeQuizUiState.Finished(attemptId)
                 },
-                onFailure = { e -> TakeQuizUiState.Error(e.message ?: "Không thể lưu kết quả") }
+                onFailure = { e -> TakeQuizUiState.Error(UiError.SAVE_RESULT_FAILED, e.message) }
             )
         }
-    }
-
-    private fun calculateScore(): Int {
-        val correctAnswers: Map<String, Set<String>> = questions.associate { question ->
-            question.id to question.choices.filter { it.isCorrect }.map { it.id }.toSet()
-        }
-        val userAnswers: Map<String, Set<String>> = answers.mapValues { (_, v) -> v.toSet() }
-        return ScoreCalculator.calculateCorrectCount(correctAnswers, userAnswers)
     }
 
     private fun emitActiveState() {

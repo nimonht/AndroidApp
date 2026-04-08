@@ -1,7 +1,6 @@
 package com.example.androidapp.ui.screens.create
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,25 +12,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material3.Button
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,16 +57,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import com.example.androidapp.R
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.TagSuggestionDialog
 import com.example.androidapp.di.LocalAppContainer
-import com.example.androidapp.ui.components.forms.SwitchToggle
-import com.example.androidapp.ui.components.forms.TextInputField
 import com.example.androidapp.ui.components.navigation.AppTopBar
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.google.gson.Gson
+import kotlinx.coroutines.flow.MutableStateFlow
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -108,18 +104,18 @@ fun CreateQuizScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val owner = androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
-    val savedStateHandle = (owner as? androidx.navigation.NavBackStackEntry)?.savedStateHandle
-    val importedJsonFlow = androidx.compose.runtime.remember(savedStateHandle) {
+    val owner = LocalViewModelStoreOwner.current
+    val savedStateHandle = (owner as? NavBackStackEntry)?.savedStateHandle
+    val importedJsonFlow = remember(savedStateHandle) {
         savedStateHandle?.getStateFlow<String?>("imported_questions_json", null)
-            ?: kotlinx.coroutines.flow.MutableStateFlow(null)
+            ?: MutableStateFlow(null)
     }
     val importedJson by importedJsonFlow.collectAsStateWithLifecycle()
 
-    androidx.compose.runtime.LaunchedEffect(importedJson) {
+    LaunchedEffect(importedJson) {
         if (!importedJson.isNullOrBlank()) {
             try {
-                val questions = com.google.gson.Gson().fromJson(
+                val questions = Gson().fromJson(
                     importedJson,
                     Array<QuestionDraft>::class.java
                 ).toList()
@@ -138,13 +134,13 @@ fun CreateQuizScreen(
     if (uiState.showPoolDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.onEvent(CreateQuizEvent.DismissPoolDialog) },
-            title = { Text("Ngân hàng câu hỏi") },
+            title = { Text(stringResource(R.string.pool_dialog_title)) },
             text = {
                 Column {
                     OutlinedTextField(
                         value = uiState.poolSearchTags,
                         onValueChange = { viewModel.onEvent(CreateQuizEvent.PoolSearchTagsChanged(it)) },
-                        label = { Text("Nhập thẻ (cách nhau dấu phẩy)") },
+                        label = { Text(stringResource(R.string.pool_dialog_tag_input_label)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -153,7 +149,7 @@ fun CreateQuizScreen(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isPoolLoading
                     ) {
-                        Text("Tìm kiếm")
+                        Text(stringResource(R.string.pool_dialog_search))
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     if (uiState.isPoolLoading) {
@@ -194,12 +190,12 @@ fun CreateQuizScreen(
                     onClick = { viewModel.onEvent(CreateQuizEvent.ImportFromPool) },
                     enabled = uiState.selectedPoolItemIds.isNotEmpty()
                 ) {
-                    Text("Thêm đã chọn")
+                    Text(stringResource(R.string.pool_dialog_add_selected))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onEvent(CreateQuizEvent.DismissPoolDialog) }) {
-                    Text("Đóng")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -210,7 +206,7 @@ fun CreateQuizScreen(
             currentTags = uiState.tags,
             availableTags = uiState.availableTags,
             onTagsConfirmed = { newTags ->
-                viewModel.onEvent(CreateQuizEvent.TagsChanged(newTags))
+                viewModel.onEvent(QuizFormEvent.TagsChanged(newTags))
             },
             onDismiss = { showTagDialog = false }
         )
@@ -223,11 +219,15 @@ fun CreateQuizScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Resolve UiError to a display string in composable context, falling back
+    // to raw errorDetail for validation messages that have no UiError code.
+    val errorMessage = uiState.error?.toMessage(uiState.errorDetail) ?: uiState.errorDetail
+
     // Show error snackbar.
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { msg ->
+    LaunchedEffect(uiState.error, uiState.errorDetail) {
+        errorMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
-            viewModel.onEvent(CreateQuizEvent.ClearError)
+            viewModel.onEvent(QuizFormEvent.ClearError)
         }
     }
 
@@ -264,7 +264,7 @@ fun CreateQuizScreen(
                         )
                     }
                     TextButton(
-                        onClick = { viewModel.onEvent(CreateQuizEvent.SaveDraft) },
+                        onClick = { viewModel.onEvent(QuizFormEvent.SaveDraft) },
                         enabled = !uiState.isLoading
                     ) {
                         Text(
@@ -273,7 +273,7 @@ fun CreateQuizScreen(
                         )
                     }
                     TextButton(
-                        onClick = { viewModel.onEvent(CreateQuizEvent.PublishQuiz) },
+                        onClick = { viewModel.onEvent(QuizFormEvent.PublishQuiz) },
                         enabled = !uiState.isLoading
                     ) {
                         Text(
@@ -285,8 +285,8 @@ fun CreateQuizScreen(
             )
         },
         floatingActionButton = {
-            androidx.compose.material3.FloatingActionButton(
-                onClick = { viewModel.onEvent(CreateQuizEvent.AddQuestion) }
+            FloatingActionButton(
+                onClick = { viewModel.onEvent(QuizFormEvent.AddQuestion) }
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -295,168 +295,45 @@ fun CreateQuizScreen(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
+        QuizFormContent(
+            title = uiState.title,
+            onTitleChange = { viewModel.onEvent(QuizFormEvent.TitleChanged(it)) },
+            thumbnailUrl = uiState.thumbnailUrl,
+            onThumbnailUrlChange = { viewModel.onEvent(QuizFormEvent.ThumbnailUrlChanged(it)) },
+            description = uiState.description,
+            onDescriptionChange = { viewModel.onEvent(QuizFormEvent.DescriptionChanged(it)) },
+            tags = uiState.tags,
+            onTagsChange = { viewModel.onEvent(QuizFormEvent.TagsChanged(it)) },
+            onShowTagSuggestions = { showTagDialog = true },
+            isPublic = uiState.isPublic,
+            onPublicToggle = { viewModel.onEvent(QuizFormEvent.IsPublicChanged(it)) },
+            shareToPool = uiState.shareToPool,
+            onShareToPoolToggle = { viewModel.onEvent(QuizFormEvent.ShareToPoolChanged(it)) },
+            questions = uiState.questions,
+            onUpdateQuestion = { index, updated ->
+                viewModel.onEvent(QuizFormEvent.UpdateQuestion(index, updated))
+            },
+            onMoveQuestionUp = { viewModel.onEvent(QuizFormEvent.MoveQuestionUp(it)) },
+            onMoveQuestionDown = { viewModel.onEvent(QuizFormEvent.MoveQuestionDown(it)) },
+            onRemoveQuestion = { viewModel.onEvent(QuizFormEvent.RemoveQuestion(it)) },
+            lastSavedAt = uiState.lastSavedAt,
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { Spacer(modifier = Modifier.height(4.dp)) }
-
-            // Last-saved indicator
-            item {
-                uiState.lastSavedAt?.let { savedAt ->
-                    val formatted = remember(savedAt) {
-                        SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(savedAt))
-                    }
-                    Text(
-                        text = stringResource(R.string.create_last_saved, formatted),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-
-            // Title
-            item {
-                TextInputField(
-                    value = uiState.title,
-                    onValueChange = { viewModel.onEvent(CreateQuizEvent.TitleChanged(it)) },
-                    label = stringResource(R.string.create_quiz_title_label),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
-
-            // Thumbnail URL
-            item {
-                TextInputField(
-                    value = uiState.thumbnailUrl,
-                    onValueChange = { viewModel.onEvent(CreateQuizEvent.ThumbnailUrlChanged(it)) },
-                    label = stringResource(R.string.create_quiz_thumbnail_url_label),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
-
-            // Description
-            item {
-                TextInputField(
-                    value = uiState.description,
-                    onValueChange = { viewModel.onEvent(CreateQuizEvent.DescriptionChanged(it)) },
-                    label = stringResource(R.string.create_quiz_description_label),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp),
-                    singleLine = false
-                )
-            }
-
-            // Tags
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize(),
+            questionsHeaderTrailingContent = {
+                TextButton(
+                    onClick = { viewModel.onEvent(CreateQuizEvent.ShowPoolDialog) }
                 ) {
-                    TextInputField(
-                        value = uiState.tags,
-                        onValueChange = { viewModel.onEvent(CreateQuizEvent.TagsChanged(it)) },
-                        label = stringResource(R.string.create_quiz_tags_label),
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
                     )
-                    FilledTonalIconButton(
-                        onClick = { showTagDialog = true }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalOffer,
-                            contentDescription = stringResource(R.string.create_quiz_pick_tags)
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.pool_add_from_pool))
                 }
             }
-
-            // Public toggle
-            item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.create_quiz_public),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Switch(
-                            checked = uiState.isPublic,
-                            onCheckedChange = { viewModel.onEvent(CreateQuizEvent.IsPublicChanged(it)) }
-                        )
-                    }
-                    if (uiState.isPublic) {
-                        Text(
-                            text = stringResource(R.string.create_quiz_public_warning),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
-                        )
-                    }
-                }
-            }
-
-            // Share to pool toggle
-            item {
-                SwitchToggle(
-                    checked = uiState.shareToPool,
-                    onCheckedChange = { viewModel.onEvent(CreateQuizEvent.ShareToPoolChanged(it)) },
-                    label = stringResource(R.string.create_quiz_share_to_pool),
-                    description = stringResource(R.string.create_quiz_share_to_pool_desc),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Section header
-            item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.create_questions_header, uiState.questions.size),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    TextButton(
-                        onClick = { viewModel.onEvent(CreateQuizEvent.ShowPoolDialog) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Thêm từ Kho")
-                    }
-                }
-            }
-
-            // Question cards
-            itemsIndexed(uiState.questions) { index, question ->
-                QuestionEditorCard(
-                    questionNumber = index + 1,
-                    question = question,
-                    totalQuestions = uiState.questions.size,
-                    onQuestionChange = { updated ->
-                        viewModel.onEvent(CreateQuizEvent.UpdateQuestion(index, updated))
-                    },
-                    onMoveUp = { viewModel.onEvent(CreateQuizEvent.MoveQuestionUp(index)) },
-                    onMoveDown = { viewModel.onEvent(CreateQuizEvent.MoveQuestionDown(index)) },
-                    onRemove = { viewModel.onEvent(CreateQuizEvent.RemoveQuestion(index)) }
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(80.dp)) }
-        }
+        )
     }
 }
 
@@ -642,6 +519,32 @@ internal fun QuestionEditorCard(
             HorizontalDivider()
             Spacer(modifier = Modifier.height(8.dp))
 
+            // ---- Multi-select toggle ----
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.create_question_multi_select),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = question.isMultiSelect,
+                    onCheckedChange = { isMulti ->
+                        // When switching from multi to single, keep only the first correct index
+                        val newIndices = if (!isMulti && question.correctIndices.size > 1) {
+                            setOf(question.correctIndices.first())
+                        } else {
+                            question.correctIndices
+                        }
+                        onQuestionChange(question.copy(isMultiSelect = isMulti, correctIndices = newIndices))
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // ---- Choices ----
             question.choices.forEachIndexed { cIdx, choice ->
                 Row(
@@ -649,20 +552,25 @@ internal fun QuestionEditorCard(
                     modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     // Tap to mark as correct answer
-                    RadioButton(
-                        selected = cIdx in question.correctIndices,
-                        onClick = {
-                            val newIndices = if (question.isMultiSelect) {
-                                if (cIdx in question.correctIndices)
+                    if (question.isMultiSelect) {
+                        Checkbox(
+                            checked = cIdx in question.correctIndices,
+                            onCheckedChange = {
+                                val newIndices = if (cIdx in question.correctIndices)
                                     question.correctIndices - cIdx
                                 else
                                     question.correctIndices + cIdx
-                            } else {
-                                setOf(cIdx)
+                                onQuestionChange(question.copy(correctIndices = newIndices))
                             }
-                            onQuestionChange(question.copy(correctIndices = newIndices))
-                        }
-                    )
+                        )
+                    } else {
+                        RadioButton(
+                            selected = cIdx in question.correctIndices,
+                            onClick = {
+                                onQuestionChange(question.copy(correctIndices = setOf(cIdx)))
+                            }
+                        )
+                    }
 
                     OutlinedTextField(
                         value = choice.content,

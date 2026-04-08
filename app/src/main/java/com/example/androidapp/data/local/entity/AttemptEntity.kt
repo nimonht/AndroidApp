@@ -2,7 +2,6 @@ package com.example.androidapp.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -26,11 +25,6 @@ data class AttemptEntity(
 
     @ColumnInfo(name = "question_order")
     val questionOrder: String = "", // Stored as comma-separated IDs
-
-    @ColumnInfo(name = "choice_orders")
-    val choiceOrders: String = "", // Stored as JSON
-
-    val answers: String = "", // Stored as JSON: Map<questionId, choiceId>
 
     @ColumnInfo(name = "multi_answers")
     val multiAnswers: String = "", // Stored as JSON: Map<questionId, List<choiceId>>

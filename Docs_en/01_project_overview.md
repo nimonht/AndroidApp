@@ -28,7 +28,7 @@
 | Backend | Firebase (serverless) |
 | Cloud Database | Cloud Firestore |
 | Authentication | Firebase Auth |
-| Storage | Firebase Storage (quiz media); profile avatars are URL-based |
+| Storage | Firebase Storage (quiz media) — **not currently implemented**; `storage.rules` exists for future use but no SDK dependency or app code references Firebase Storage. Profile avatars are URL-based (external URLs / Wallhaven API). |
 
 ---
 
@@ -144,25 +144,11 @@ The quiz system supports **dynamic number of answer choices** (2 to 10 per quest
 
 ## 6. Sync Algorithm (Cloud Backup)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Upload Flow                              │
-├─────────────────────────────────────────────────────────────┤
-│  1. Client computes SHA-256 checksum of quiz data           │
-│  2. Upload quiz + metadata + checksum to Firestore          │
-│  3. Firestore stores data with checksum field               │
-│  4. Client verifies by reading back and comparing checksum  │
-│  5. Compare checksums:                                      │
-│     ├─ Match → Mark sync complete ✓                         │
-│     └─ Mismatch → Delete corrupted data, client retries     │
-└─────────────────────────────────────────────────────────────┘
-```
+The app uses a local-first sync strategy: writes go to Room immediately (with `syncStatus = PENDING`), then sync to Firestore in the background. A SHA-256 checksum is computed over quiz content and verified after upload to detect corruption or partial writes.
 
-### Benefits
-- **Data Integrity**: Detects corruption from network errors
-- **Retry Safety**: Client can safely re-upload on failure
-- **Clean Storage**: No partial/corrupted data persists
-- **Offline First**: Firestore handles offline caching automatically
+> See [02_backend_database_design.md, Section 5](02_backend_database_design.md#5-sync-with-checksum-verification) for the full `ChecksumUtil` and `SyncManager` implementation code.
+>
+> See [04_application_behavior.md, Section 3.4](04_application_behavior.md#34-cloud-sync-with-checksum-verification) for the behavioral flow diagram and rationale.
 
 ---
 
@@ -188,24 +174,21 @@ graph TD
 
 ---
 
-## 8. Project Modules
+## 8. Project Structure
 
-| Module | Responsibility |
-|--------|----------------|
-| `app` | Main Android application entry |
-| `ui` | Compose screens and components |
-| `data` | Room entities, Firebase models, repositories |
-| `firebase` | Firebase Auth, Firestore, Storage wrappers |
-| `sync` | Background sync logic, checksum verification |
-| `utils` | Helpers, extensions, constants |
+Quizzez is a **single-module** Android app (`:app`). Code is organized into packages under `com.example.androidapp`:
+
+| Package | Responsibility |
+|---------|----------------|
+| `ui/` | Compose screens, ViewModels, components, theme, navigation |
+| `data/` | Room entities & DAOs, Firebase DTOs & remote data sources, repository implementations, network monitor, sync manager, WorkManager workers |
+| `domain/` | Pure Kotlin models, repository interfaces, utility classes (checksum, CSV parsing, scoring, shuffling, validation) |
+| `di/` | Manual DI container (`AppContainer` interface + `AppContainerImpl`) |
+
+There are no separate `firebase`, `sync`, or `utils` Gradle modules — all Firebase SDK access, sync logic, and utilities live within the packages above inside the single `:app` module.
 
 ---
 
 ## 9. Firebase Services Summary
 
-| Service | Usage |
-|---------|-------|
-| **Firebase Auth** | Email/password login, Google Sign-In |
-| **Cloud Firestore** | Quiz, questions, attempts, user data |
-| **Firebase Storage** | Image/video uploads for quiz questions (profile avatars use external URLs) |
-| **Cloud Functions** (optional) | Share code generation, 30-day cleanup job |
+> See [Section 2 (Tech Stack)](#2-tech-stack) above for the Firebase services used. For backend-specific details (Firestore schema, security rules, Cloud Functions), see [02_backend_database_design.md](02_backend_database_design.md).

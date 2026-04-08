@@ -2,57 +2,19 @@ package com.example.androidapp.ui.screens.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.androidapp.domain.model.Choice
-import com.example.androidapp.domain.model.Question
-import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.model.QuestionPoolItem
 import android.util.Log
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
-import com.example.androidapp.domain.util.QuizValidator
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-
-/**
- * Draft model for creating/editing a question.
- * Kept in the ViewModel layer, not in the domain.
- *
- * @property id Unique identifier for this draft, used to track identity across recompositions.
- * @property content The question text.
- * @property choices The list of answer choices (min 2, max 10).
- * @property correctIndices Set of indices that mark the correct choice(s).
- * @property isMultiSelect Whether the question allows multiple correct answers.
- * @property explanation Optional explanation shown after answering.
- * @property mediaUrl Optional URL for an image or video attached to the question.
- * @property points The point value awarded for a correct answer (1–10).
- */
-data class QuestionDraft(
-    val id: String = UUID.randomUUID().toString(),
-    val content: String = "",
-    val choices: List<ChoiceDraft> = List(4) { ChoiceDraft() },
-    val correctIndices: Set<Int> = setOf(0),
-    val isMultiSelect: Boolean = false,
-    val explanation: String = "",
-    val mediaUrl: String = "",
-    val points: Int = 1
-)
-
-/**
- * Draft model for a choice within a [QuestionDraft].
- *
- * @property id Unique identifier for this choice draft.
- * @property content The display text for this choice.
- */
-data class ChoiceDraft(
-    val id: String = UUID.randomUUID().toString(),
-    val content: String = ""
-)
 
 /**
  * UI state for the Create Quiz screen.
@@ -74,7 +36,8 @@ data class ChoiceDraft(
  * @property isPublished Whether the quiz has been successfully published.
  * @property lastSavedAt Epoch millis of the last draft save, or null if never saved.
  * @property shareToPool Whether to contribute each question to the community pool after publishing.
- * @property error Current error message to display, or null when there is no error.
+ * @property error Current [UiError] code to display, or null when there is no error.
+ * @property errorDetail Optional detail string for parameterised error messages (e.g. exception text).
  */
 data class CreateQuizUiState(
     val title: String = "",
@@ -90,100 +53,57 @@ data class CreateQuizUiState(
     val isPublished: Boolean = false,
     val lastSavedAt: Long? = null,
     val shareToPool: Boolean = false,
-    val error: String? = null,
+    val error: UiError? = null,
+    val errorDetail: String? = null,
     val showPoolDialog: Boolean = false,
     val poolSearchTags: String = "",
     val poolResults: List<QuestionPoolItem> = emptyList(),
     val selectedPoolItemIds: Set<String> = emptySet(),
     val isPoolLoading: Boolean = false,
-    val poolError: String? = null
+    val poolError: UiError? = null
 )
 
 /**
- * Events that can be dispatched to [CreateQuizViewModel].
+ * Create-specific events that are **not** shared with the edit flow.
+ *
+ * Shared form events (title, description, questions, save/publish, etc.) live in
+ * [QuizFormEvent]. [CreateQuizViewModel] exposes two `onEvent` overloads so that
+ * both [QuizFormEvent] and [CreateQuizEvent] funnel through the same method name.
  */
-sealed class CreateQuizEvent {
-    /** Updates the quiz title. */
-    data class TitleChanged(val title: String) : CreateQuizEvent()
-
-    /** Updates the quiz description. */
-    data class DescriptionChanged(val description: String) : CreateQuizEvent()
-
-    /** Updates the quiz cover image URL. */
-    data class ThumbnailUrlChanged(val thumbnailUrl: String) : CreateQuizEvent()
-
-    /** Toggles the public visibility of the quiz. */
-    data class IsPublicChanged(val isPublic: Boolean) : CreateQuizEvent()
-
-    /** Updates the raw comma-separated tags string. */
-    data class TagsChanged(val tags: String) : CreateQuizEvent()
-
-    /** Appends a blank question to the end of the question list. */
-    data object AddQuestion : CreateQuizEvent()
-
-    /** Replaces the question at [index] with [draft]. */
-    data class UpdateQuestion(val index: Int, val draft: QuestionDraft) : CreateQuizEvent()
-
-    /** Removes the question at [index] if more than one question exists. */
-    data class RemoveQuestion(val index: Int) : CreateQuizEvent()
-
-    /** Moves the question at [index] one position up in the list. */
-    data class MoveQuestionUp(val index: Int) : CreateQuizEvent()
-
-    /** Moves the question at [index] one position down in the list. */
-    data class MoveQuestionDown(val index: Int) : CreateQuizEvent()
-
-    /**
-     * Saves the current form as a draft without publishing.
-     * Sets [CreateQuizUiState.isDraft] to true and records [CreateQuizUiState.lastSavedAt].
-     * The quiz is saved with whatever [CreateQuizUiState.isPublic] the user has set.
-     */
-    data object SaveDraft : CreateQuizEvent()
-
-    /**
-     * Validates the quiz and saves it as a published quiz.
-     * Sets [CreateQuizUiState.isPublished] to true and triggers [CreateQuizUiState.isSaved].
-     */
-    data object PublishQuiz : CreateQuizEvent()
-
-    /** Legacy save alias — behaves identically to [PublishQuiz]. */
-    data object SaveQuiz : CreateQuizEvent()
-
-    /** Toggles whether each question will be contributed to the community pool after publishing. */
-    data class ShareToPoolChanged(val shareToPool: Boolean) : CreateQuizEvent()
-
-    /** Clears the current error message from the UI state. */
-    data object ClearError : CreateQuizEvent()
-
+sealed interface CreateQuizEvent {
     /** Imports a list of questions, appending them to the current list or replacing the initial blank question. */
-    data class ImportQuestions(val questions: List<QuestionDraft>) : CreateQuizEvent()
+    data class ImportQuestions(val questions: List<QuestionDraft>) : CreateQuizEvent
 
     /** Opens the pool import dialog. */
-    data object ShowPoolDialog : CreateQuizEvent()
+    data object ShowPoolDialog : CreateQuizEvent
 
     /** Dismisses the pool import dialog and resets pool-related state. */
-    data object DismissPoolDialog : CreateQuizEvent()
+    data object DismissPoolDialog : CreateQuizEvent
 
     /** Updates the comma-separated tag string used to search the community pool. */
-    data class PoolSearchTagsChanged(val tags: String) : CreateQuizEvent()
+    data class PoolSearchTagsChanged(val tags: String) : CreateQuizEvent
 
     /** Triggers a search of the community pool using [CreateQuizUiState.poolSearchTags]. */
-    data object SearchPool : CreateQuizEvent()
+    data object SearchPool : CreateQuizEvent
 
     /** Toggles the selection state of a pool item by its [poolItemId]. */
-    data class TogglePoolItemSelection(val poolItemId: String) : CreateQuizEvent()
+    data class TogglePoolItemSelection(val poolItemId: String) : CreateQuizEvent
 
     /** Imports the currently selected pool items as [QuestionDraft] entries and closes the dialog. */
-    data object ImportFromPool : CreateQuizEvent()
+    data object ImportFromPool : CreateQuizEvent
 }
 
 /**
  * ViewModel for the Create Quiz screen.
  * Owns the multi-step form state and coordinates draft saving and publishing via the repository.
  *
+ * Question CRUD, validation, and domain-mapping logic is delegated to [QuizFormHelper]
+ * to avoid duplication with [EditQuizViewModel].
+ *
  * @param quizRepository Repository for persisting quizzes and questions.
  * @param authRepository Repository for retrieving the currently authenticated user.
  * @param poolRepository Repository for contributing questions to the community pool.
+ * @param shareCodeRepository Repository for generating share codes.
  */
 class CreateQuizViewModel(
     private val quizRepository: QuizRepository,
@@ -209,92 +129,93 @@ class CreateQuizViewModel(
     }
 
     /**
-     * Dispatches a [CreateQuizEvent] to update state or trigger a side effect.
+     * Dispatches a shared [QuizFormEvent] to update state or trigger a side effect.
+     *
+     * This overload handles form events that are common to both the create and
+     * edit flows (title, description, questions, save/publish, etc.).
+     */
+    fun onEvent(event: QuizFormEvent) {
+        when (event) {
+            is QuizFormEvent.TitleChanged ->
+                _uiState.update { it.copy(title = event.title) }
+
+            is QuizFormEvent.DescriptionChanged ->
+                _uiState.update { it.copy(description = event.description) }
+
+            is QuizFormEvent.ThumbnailUrlChanged ->
+                _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
+
+            is QuizFormEvent.IsPublicChanged ->
+                _uiState.update { it.copy(isPublic = event.isPublic) }
+
+            is QuizFormEvent.TagsChanged ->
+                _uiState.update { it.copy(tags = event.tags) }
+
+            is QuizFormEvent.AddQuestion ->
+                _uiState.update {
+                    it.copy(questions = QuizFormHelper.addQuestion(it.questions))
+                }
+
+            is QuizFormEvent.UpdateQuestion ->
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.updateQuestion(
+                            it.questions, event.index, event.draft
+                        )
+                    )
+                }
+
+            is QuizFormEvent.RemoveQuestion ->
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.removeQuestion(it.questions, event.index)
+                    )
+                }
+
+            is QuizFormEvent.MoveQuestionUp ->
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.moveQuestionUp(it.questions, event.index)
+                    )
+                }
+
+            is QuizFormEvent.MoveQuestionDown ->
+                _uiState.update {
+                    it.copy(
+                        questions = QuizFormHelper.moveQuestionDown(it.questions, event.index)
+                    )
+                }
+
+            is QuizFormEvent.SaveDraft ->
+                onSaveQuiz(publishAfterSave = false)
+
+            is QuizFormEvent.PublishQuiz ->
+                onSaveQuiz(publishAfterSave = true)
+
+            is QuizFormEvent.SaveQuiz ->
+                onSaveQuiz(publishAfterSave = true)
+
+            is QuizFormEvent.ShareToPoolChanged ->
+                _uiState.update { it.copy(shareToPool = event.shareToPool) }
+
+            is QuizFormEvent.ClearError ->
+                _uiState.update { it.copy(error = null, errorDetail = null) }
+        }
+    }
+
+    /**
+     * Dispatches a [CreateQuizEvent] to handle create-specific actions
+     * (pool import, CSV import, etc.).
      */
     fun onEvent(event: CreateQuizEvent) {
         when (event) {
-            is CreateQuizEvent.TitleChanged ->
-                _uiState.update { it.copy(title = event.title) }
-
-            is CreateQuizEvent.DescriptionChanged ->
-                _uiState.update { it.copy(description = event.description) }
-
-            is CreateQuizEvent.ThumbnailUrlChanged ->
-                _uiState.update { it.copy(thumbnailUrl = event.thumbnailUrl) }
-
-            is CreateQuizEvent.IsPublicChanged ->
-                _uiState.update { it.copy(isPublic = event.isPublic) }
-
-            is CreateQuizEvent.TagsChanged ->
-                _uiState.update { it.copy(tags = event.tags) }
-
-            is CreateQuizEvent.AddQuestion ->
-                _uiState.update { it.copy(questions = it.questions + QuestionDraft()) }
-
-            is CreateQuizEvent.UpdateQuestion ->
-                _uiState.update { state ->
-                    state.copy(questions = state.questions.toMutableList().apply {
-                        this[event.index] = event.draft
-                    })
-                }
-
-            is CreateQuizEvent.RemoveQuestion ->
-                _uiState.update { state ->
-                    if (state.questions.size > 1) {
-                        state.copy(
-                            questions = state.questions.toMutableList().apply {
-                                removeAt(event.index)
-                            }
-                        )
-                    } else state
-                }
-
-            is CreateQuizEvent.MoveQuestionUp ->
-                _uiState.update { state ->
-                    val idx = event.index
-                    if (idx <= 0 || idx >= state.questions.size) return@update state
-                    val list = state.questions.toMutableList()
-                    val temp = list[idx - 1]
-                    list[idx - 1] = list[idx]
-                    list[idx] = temp
-                    state.copy(questions = list)
-                }
-
-            is CreateQuizEvent.MoveQuestionDown ->
-                _uiState.update { state ->
-                    val idx = event.index
-                    if (idx < 0 || idx >= state.questions.size - 1) return@update state
-                    val list = state.questions.toMutableList()
-                    val temp = list[idx + 1]
-                    list[idx + 1] = list[idx]
-                    list[idx] = temp
-                    state.copy(questions = list)
-                }
-
-            is CreateQuizEvent.SaveDraft ->
-                onSaveQuiz(publishAfterSave = false)
-
-            is CreateQuizEvent.PublishQuiz ->
-                onSaveQuiz(publishAfterSave = true)
-
-            is CreateQuizEvent.SaveQuiz ->
-                onSaveQuiz(publishAfterSave = true)
-
-            is CreateQuizEvent.ShareToPoolChanged ->
-                _uiState.update { it.copy(shareToPool = event.shareToPool) }
-
-            is CreateQuizEvent.ClearError ->
-                _uiState.update { it.copy(error = null) }
-
             is CreateQuizEvent.ImportQuestions ->
                 _uiState.update { state ->
-                    val current = state.questions
-                    val merged = if (current.size == 1 && current.first().content.isBlank()) {
-                        event.questions
-                    } else {
-                        current + event.questions
-                    }
-                    state.copy(questions = merged)
+                    state.copy(
+                        questions = QuizFormHelper.mergeImportedQuestions(
+                            state.questions, event.questions
+                        )
+                    )
                 }
 
             is CreateQuizEvent.ShowPoolDialog ->
@@ -340,13 +261,10 @@ class CreateQuizViewModel(
      */
     private fun onSearchPool() {
         viewModelScope.launch {
-            val tags = _uiState.value.poolSearchTags
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
+            val tags = QuizFormHelper.parseTags(_uiState.value.poolSearchTags)
 
             if (tags.isEmpty()) {
-                _uiState.update { it.copy(poolError = "Vui long nhap tu khoa tim kiem") }
+                _uiState.update { it.copy(poolError = UiError.POOL_SEARCH_EMPTY) }
                 return@launch
             }
 
@@ -368,7 +286,7 @@ class CreateQuizViewModel(
                         _uiState.update {
                             it.copy(
                                 isPoolLoading = false,
-                                poolError = e.message ?: "Khong the tim kiem kho cau hoi"
+                                poolError = UiError.POOL_SEARCH_FAILED
                             )
                         }
                     }
@@ -377,46 +295,31 @@ class CreateQuizViewModel(
     }
 
     /**
-     * Maps the selected [QuestionPoolItem]s to [QuestionDraft] entries, dispatches
-     * [CreateQuizEvent.ImportQuestions], increments usage counts, and closes the dialog.
+     * Maps the selected [QuestionPoolItem]s to [QuestionDraft] entries, merges
+     * them into the current question list, and closes the dialog.
+     *
+     * Usage-count increments are deferred to [onSaveQuiz] so that only questions
+     * still present at publish time are counted.
      */
     private fun onImportFromPool() {
         val state = _uiState.value
         val selectedItems = state.poolResults.filter { it.id in state.selectedPoolItemIds }
         if (selectedItems.isEmpty()) return
 
-        val drafts = selectedItems.map { poolItem ->
-            QuestionDraft(
-                id = UUID.randomUUID().toString(),
-                content = poolItem.question.content,
-                choices = poolItem.question.choices.map { choice ->
-                    ChoiceDraft(
-                        id = UUID.randomUUID().toString(),
-                        content = choice.content
-                    )
-                },
-                correctIndices = poolItem.question.choices
-                    .mapIndexedNotNull { idx, c -> if (c.isCorrect) idx else null }
-                    .toSet(),
-                isMultiSelect = poolItem.question.isMultiSelect,
-                explanation = poolItem.question.explanation ?: "",
-                mediaUrl = poolItem.question.mediaUrl ?: "",
-                points = poolItem.question.points
+        val drafts = QuizFormHelper.mapPoolItemsToDrafts(selectedItems)
+
+        // Append imported questions and close the dialog in a single update.
+        _uiState.update { s ->
+            s.copy(
+                questions = QuizFormHelper.mergeImportedQuestions(s.questions, drafts),
+                showPoolDialog = false,
+                poolSearchTags = "",
+                poolResults = emptyList(),
+                selectedPoolItemIds = emptySet(),
+                isPoolLoading = false,
+                poolError = null
             )
         }
-
-        // Append imported questions via the existing ImportQuestions handler.
-        onEvent(CreateQuizEvent.ImportQuestions(drafts))
-
-        // Increment usage counts in the background.
-        viewModelScope.launch {
-            for (item in selectedItems) {
-                poolRepository.incrementUsageCount(item.id)
-            }
-        }
-
-        // Close the dialog and reset pool state.
-        onEvent(CreateQuizEvent.DismissPoolDialog)
     }
 
     /**
@@ -426,9 +329,10 @@ class CreateQuizViewModel(
      * [CreateQuizUiState.isSaved] is set to `true` to trigger back navigation.
      * The [CreateQuizUiState.isPublic] toggle is respected so the user can
      * publish a quiz as either **private** (share-code only) or **public**
-     * (searchable by anyone). Pool contribution only runs on the publish path.
+     * (searchable by anyone). Pool contribution and pool usage-count increments
+     * only run on the publish path.
      *
-     * When [publishAfterSave] is `false` the quiz is saved as a draft —
+     * When [publishAfterSave] is `false` the quiz is saved as a draft --
      * [CreateQuizUiState.isPublic] is forced to `false` (drafts must never be
      * public) and [CreateQuizUiState.lastSavedAt] is updated.
      *
@@ -438,22 +342,9 @@ class CreateQuizViewModel(
         viewModelScope.launch {
             val state = _uiState.value
 
-            if (state.title.isBlank()) {
-                _uiState.update { it.copy(error = "Vui lòng nhập tiêu đề bài kiểm tra") }
-                return@launch
-            }
-
-            val validationResult = QuizValidator.validate(
-                questions = state.questions,
-                getChoices = { draft ->
-                    draft.choices.mapIndexed { idx, choice ->
-                        Pair(choice, idx in draft.correctIndices)
-                    }
-                },
-                isCorrect = { (_, correct) -> correct }
-            )
-            if (!validationResult.isValid) {
-                _uiState.update { it.copy(error = validationResult.errorMessage) }
+            val validationError = QuizFormHelper.validateQuizForm(state.title, state.questions)
+            if (validationError != null) {
+                _uiState.update { it.copy(errorDetail = validationError) }
                 return@launch
             }
 
@@ -461,13 +352,10 @@ class CreateQuizViewModel(
 
             val user = authRepository.getCurrentUser()
             val quizId = UUID.randomUUID().toString()
-            val tags = state.tags
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
+            val tags = QuizFormHelper.parseTags(state.tags)
 
             // On publish, respect the user's explicit isPublic toggle choice.
-            // On draft save, force isPublic = false — drafts must never be public.
+            // On draft save, force isPublic = false -- drafts must never be public.
             val effectiveIsPublic = if (publishAfterSave) state.isPublic else false
 
             var shareCode: String? = null
@@ -477,39 +365,21 @@ class CreateQuizViewModel(
                 }
             }
 
-            val quiz = Quiz(
-                id = quizId,
+            val quiz = QuizFormHelper.buildQuizFromForm(
+                quizId = quizId,
                 ownerId = user?.id ?: "",
                 title = state.title,
-                description = state.description.takeIf { it.isNotBlank() },
-                thumbnailUrl = state.thumbnailUrl.takeIf { it.isNotBlank() },
+                description = state.description,
+                thumbnailUrl = state.thumbnailUrl,
                 authorName = user?.displayName ?: "",
                 tags = tags,
                 isPublic = effectiveIsPublic,
-                questionCount = state.questions.size,
-                shareCode = shareCode
+                isDraft = !publishAfterSave,
+                shareCode = shareCode,
+                questionCount = state.questions.size
             )
 
-            val questions = state.questions.mapIndexed { idx, draft ->
-                Question(
-                    id = draft.id,
-                    quizId = quizId,
-                    content = draft.content,
-                    choices = draft.choices.mapIndexed { cIdx, choice ->
-                        Choice(
-                            id = choice.id,
-                            content = choice.content,
-                            isCorrect = cIdx in draft.correctIndices,
-                            position = cIdx
-                        )
-                    },
-                    isMultiSelect = draft.isMultiSelect,
-                    explanation = draft.explanation.takeIf { it.isNotBlank() },
-                    mediaUrl = draft.mediaUrl.takeIf { it.isNotBlank() },
-                    points = draft.points,
-                    position = idx
-                )
-            }
+            val questions = QuizFormHelper.mapQuestionsToEntities(quizId, state.questions)
 
             val result = quizRepository.saveQuiz(quiz, questions)
             _uiState.update { it.copy(isLoading = false) }
@@ -520,18 +390,24 @@ class CreateQuizViewModel(
                         // Contribute each question to the community pool if opted in.
                         // Pool contribution only runs on publish, never on draft saves.
                         if (state.shareToPool) {
-                            questions.forEach { question ->
-                                poolRepository.contributeQuestion(
-                                    QuestionPoolItem(
-                                        id = question.id,
-                                        question = question,
-                                        contributorId = user?.id,
-                                        sourceQuizId = quizId,
-                                        tags = tags,
-                                        usageCount = 0
-                                    )
-                                )
+                            val contributions = QuizFormHelper.buildPoolContributions(
+                                questions = questions,
+                                contributorId = user?.id,
+                                sourceQuizId = quizId,
+                                tags = tags
+                            )
+                            contributions.forEach { poolItem ->
+                                poolRepository.contributeQuestion(poolItem)
                             }
+                        }
+                        // Increment usage counts for questions imported from the
+                        // community pool. Only drafts still present at publish time
+                        // are counted, so removals before publishing are respected.
+                        val poolItemIds = state.questions
+                            .mapNotNull { draft -> draft.sourcePoolItemId }
+                            .distinct()
+                        for (poolItemId in poolItemIds) {
+                            poolRepository.incrementUsageCount(poolItemId)
                         }
                         _uiState.update {
                             it.copy(
@@ -553,7 +429,7 @@ class CreateQuizViewModel(
                 },
                 onFailure = { e ->
                     _uiState.update {
-                        it.copy(error = e.message ?: "Không thể lưu bài kiểm tra")
+                        it.copy(error = UiError.SAVE_QUIZ_FAILED, errorDetail = e.message)
                     }
                 }
             )

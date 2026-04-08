@@ -4,44 +4,15 @@
 
 ### 1.1 Firebase Services Used
 
-| Service | Purpose |
-|---------|---------|
-| **Firebase Authentication** | User login/signup (Email, Google) |
-| **Cloud Firestore** | NoSQL database for quizzes, users, attempts |
-| **Firebase Storage** | Media files (images, videos) |
-| **Cloud Functions** (optional) | Server-side logic (share code generation, cleanup) |
+The app uses Firebase Authentication, Cloud Firestore, and (optionally) Cloud Functions. Firebase Storage rules exist as scaffolding but the SDK is not yet integrated.
+
+> See [01_project_overview.md, Section 2](01_project_overview.md#2-tech-stack) for the full tech stack table including all Firebase services and their usage.
 
 ### 1.2 Architecture Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Quizzez Android App                       │
-│                       (Kotlin)                              │
-├─────────────────────────────────────────────────────────────┤
-│  UI Layer (Jetpack Compose)                                 │
-│         ↓                                                   │
-│  ViewModel Layer                                            │
-│         ↓                                                   │
-│  Repository Layer                                           │
-│         ↓                                                   │
-│  ┌──────────────────┐    ┌──────────────────┐               │
-│  │    Room DB       │    │  Firebase SDK    │               │
-│  │  (Offline Cache) │    │  (Cloud Sync)    │               │
-│  └────────┬─────────┘    └────────┬─────────┘               │
-└───────────┼───────────────────────┼─────────────────────────┘
-            │                       │
-    ┌───────▼───────┐       ┌───────▼───────┐
-    │  Local SQLite │       │   Firebase    │
-    │    Storage    │       │    Cloud      │
-    └───────────────┘       └───────────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-              ┌──────────┐   ┌──────────┐   ┌──────────┐
-              │Firestore │   │  Auth    │   │ Storage  │
-              │(Database)│   │(Login)   │   │(Media)   │
-              └──────────┘   └──────────┘   └──────────┘
-```
+The app follows a Clean Architecture + MVVM pattern: UI (Compose) -> ViewModel -> Repository -> Data Sources (Room offline cache + Firebase SDK cloud sync).
+
+> See [01_project_overview.md, Section 3](01_project_overview.md#3-system-architecture) for the architecture diagram.
 
 ---
 
@@ -125,64 +96,19 @@ firestore-root/
 
 ### 2.2 Firestore Security Rules
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    
-    // Users collection
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId;
-    }
-    
-    // Quizzes collection
-    match /quizzes/{quizId} {
-      // Anyone can read public quizzes
-      allow read: if resource.data.isPublic == true 
-                  || request.auth.uid == resource.data.ownerId;
-      
-      // Only owner can write
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.ownerId;
-      
-      // Questions subcollection
-      match /questions/{questionId} {
-        allow read: if get(/databases/$(database)/documents/quizzes/$(quizId)).data.isPublic == true
-                    || request.auth.uid == get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId;
-        allow write: if request.auth.uid == get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId;
-        
-        // Choices subcollection
-        match /choices/{choiceId} {
-          allow read: if true; // Inherit from parent
-          allow write: if request.auth.uid == get(/databases/$(database)/documents/quizzes/$(quizId)).data.ownerId;
-        }
-      }
-    }
-    
-    // Attempts collection
-    match /attempts/{attemptId} {
-      allow read: if request.auth.uid == resource.data.userId 
-                  || request.auth.uid == get(/databases/$(database)/documents/quizzes/$(resource.data.quizId)).data.ownerId;
-      allow create: if true; // Allow guests to create attempts
-      allow update: if request.auth.uid == resource.data.userId || resource.data.userId.matches('guest_.*');
-    }
-    
-    // Share codes lookup (read-only for clients)
-    match /shareCodes/{code} {
-      allow read: if true;
-      allow write: if false; // Only Cloud Functions can write
-    }
-    
-    // Question pool
-    match /questionPool/{poolId} {
-      allow read: if resource.data.isActive == true;
-      allow create: if request.auth != null;
-      allow update: if request.auth.uid == resource.data.contributorId;
-    }
-  }
-}
-```
+> **Source of truth:** [`firestore.rules`](../firestore.rules) in the repository root.
+> Do not duplicate the full rules here -- they will drift. Always consult the file directly for the authoritative version.
+
+Key points of the current security rules:
+
+- **Helper functions** -- reusable checks (`isSignedIn`, `isOwner`, `isAdmin`, `isQuizOwner`, `notDeleted`, `isQuizAccessible`) keep the rules DRY. The `isAdmin()` helper reads the caller's Firestore user document and verifies `role == 'admin'` and that the account is not soft-deleted.
+- **Admin role** -- admins have elevated read/write access across all collections (users, quizzes, questions, choices, attempts). Admin checks are enforced in the rules themselves, not only in application code.
+- **Users** -- any authenticated user can read profiles. Users can create their own profile and update it, but **cannot** change their own `role` or `deletedAt` fields (prevents self-escalation). Admins can update or delete any user profile.
+- **Quizzes** -- owners can always read their quizzes (including soft-deleted ones for trash/restore). Non-owners can read non-deleted quizzes that are public or shared via share code. Only the owner can create (must set `ownerId` to their own UID), update, or delete. An exception allows **any** authenticated user to increment `attemptCount` by exactly 1 (for quiz-taking). Admins can update/delete any quiz but `ownerId` remains immutable.
+- **Questions & Choices** (subcollections of quizzes) -- readable by the quiz owner, anyone with access to an accessible quiz, or admins. Writable only by the quiz owner or admins.
+- **Attempts** -- readable by the attempt owner, the quiz owner, or admins. Authenticated users create attempts for themselves; guest attempts (UID matching `guest_*`) are also allowed. Only the attempt owner can update. Deletion is allowed for the attempt owner, quiz owner, or admins.
+- **Share codes** -- readable by anyone (for quiz joining). **Any authenticated user** can create, update, or delete share codes. Share codes are generated client-side by `ShareCodeUtil`, not by Cloud Functions.
+- **Question pool** -- readable by anyone. Authenticated users can contribute (create). Only the contributor can update or delete their own entries; anonymous contributions (no `contributorId`) can be modified by any authenticated user.
 
 ---
 
@@ -202,7 +128,7 @@ dependencies {
     // Firebase services
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")  // NOTE: not in actual build.gradle.kts — Firebase Storage is not currently implemented
     
     // Coroutines support
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
@@ -642,67 +568,31 @@ enum class SyncStatus {
 
 ---
 
-## 6. Cloud Functions (Optional - for server-side logic)
+## 6. Cloud Functions
 
-### 6.1 Auto-cleanup deleted quizzes (30 days)
+The project uses a single Cloud Function defined in `functions/src/index.ts`.
 
-```javascript
-// functions/index.js
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-admin.initializeApp();
+### 6.1 `deleteUserAuth` (Callable)
 
-// Run daily at midnight
-exports.cleanupDeletedQuizzes = functions.pubsub
-  .schedule('0 0 * * *')
-  .onRun(async (context) => {
-    const db = admin.firestore();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const snapshot = await db.collection('quizzes')
-      .where('deletedAt', '<', thirtyDaysAgo)
-      .get();
-    
-    const batch = db.batch();
-    snapshot.docs.forEach(doc => {
-      // Delete quiz and subcollections
-      batch.delete(doc.ref);
-      // Note: Subcollections require recursive delete
-    });
-    
-    await batch.commit();
-    console.log(`Cleaned up ${snapshot.size} quizzes`);
-  });
+An HTTPS callable function that deletes a user from Firebase Authentication. This exists because Firestore security rules cannot trigger Auth account deletion -- only server-side code with the Admin SDK can do that.
 
-// Generate unique share code
-exports.generateShareCode = functions.firestore
-  .document('quizzes/{quizId}')
-  .onCreate(async (snap, context) => {
-    const db = admin.firestore();
-    let code;
-    let isUnique = false;
-    
-    while (!isUnique) {
-      code = generateCode();
-      const existing = await db.collection('shareCodes').doc(code).get();
-      isUnique = !existing.exists;
-    }
-    
-    await db.collection('shareCodes').doc(code).set({
-      quizId: context.params.quizId
-    });
-    
-    await snap.ref.update({ shareCode: code });
-  });
+**Caller requirements:**
+- Must be authenticated.
+- Must have `role == "admin"` in their Firestore `/users/{uid}` document.
 
-function generateCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  return Array.from({ length: 6 }, () => 
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join('');
-}
-```
+**Input:** `{ userId: string }` -- the UID of the user to remove from Firebase Auth.
+
+**Behavior:**
+1. Verifies the caller is authenticated; throws `unauthenticated` otherwise.
+2. Reads the caller's Firestore user document and checks `role == "admin"`; throws `permission-denied` if not.
+3. Validates that `userId` is a non-empty string; throws `invalid-argument` if missing.
+4. Prevents self-deletion (caller cannot delete their own account via this function).
+5. Calls `admin.auth().deleteUser(targetUserId)`.
+6. If the target user is already absent from Auth (`auth/user-not-found`), returns success anyway.
+
+**Returns:** `{ success: true }` on success, or throws an `HttpsError`.
+
+> **Note:** Share code generation and soft-deleted quiz cleanup are handled client-side (via `ShareCodeUtil` and the recycle bin UI), not by Cloud Functions. There are no scheduled or Firestore-triggered functions in this project.
 
 ---
 

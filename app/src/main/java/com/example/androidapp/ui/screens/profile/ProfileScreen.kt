@@ -1,13 +1,39 @@
 package com.example.androidapp.ui.screens.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +60,8 @@ import com.example.androidapp.ui.theme.QuizzezTheme
  * @param onNavigateToHistory Callback to navigate to attempt history.
  * @param onNavigateToTrash Callback to navigate to the recycle bin.
  * @param onNavigateToEditProfile Callback to navigate to the edit-profile screen.
+ * @param onNavigateToQuestionPool Callback to navigate to the question pool.
+ * @param onNavigateToAdminPanel Callback to navigate to the admin panel.
  * @param modifier Modifier for styling.
  */
 @Composable
@@ -44,6 +72,7 @@ fun ProfileScreen(
     onNavigateToTrash: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
     onNavigateToQuestionPool: () -> Unit = {},
+    onNavigateToAdminPanel: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -85,7 +114,9 @@ fun ProfileScreen(
                 onHistoryClick = onNavigateToHistory,
                 onTrashClick = onNavigateToTrash,
                 onSettingsClick = onNavigateToSettings,
-                onQuestionPoolClick = onNavigateToQuestionPool
+                onQuestionPoolClick = onNavigateToQuestionPool,
+                onAdminPanelClick = onNavigateToAdminPanel,
+                isAdmin = user.isAdmin()
             )
 
             Button(
@@ -273,9 +304,27 @@ private fun ProfileMenuSection(
     onTrashClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onQuestionPoolClick: () -> Unit,
+    onAdminPanelClick: () -> Unit,
+    isAdmin: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Admin section (only for admins)
+        if (isAdmin) {
+            Text(
+                text = stringResource(R.string.profile_section_admin),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.error
+            )
+            ProfileMenuItem(
+                icon = Icons.Default.AdminPanelSettings,
+                title = stringResource(R.string.admin_dashboard_title),
+                onClick = onAdminPanelClick
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Text(
             text = stringResource(R.string.profile_section_general),
             style = MaterialTheme.typography.titleSmall,

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,8 +23,8 @@ sealed class AuthUiState {
     /** Auth succeeded with the given [user]. */
     data class Authenticated(val user: User) : AuthUiState()
 
-    /** Auth failed with the given [message]. */
-    data class Error(val message: String) : AuthUiState()
+    /** Auth failed with the given [error] code. */
+    data class Error(val error: UiError) : AuthUiState()
 
     /** Session has expired and user needs to re-authenticate. */
     data object SessionExpired : AuthUiState()
@@ -79,7 +80,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             val result = authRepository.login(email, password)
             _uiState.value = result.fold(
                 onSuccess = { user -> AuthUiState.Authenticated(user) },
-                onFailure = { e -> AuthUiState.Error(e.message ?: "Đăng nhập thất bại") }
+                onFailure = { AuthUiState.Error(UiError.LOGIN_FAILED) }
             )
         }
     }
@@ -90,7 +91,7 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
             val result = authRepository.register(email, password, username)
             _uiState.value = result.fold(
                 onSuccess = { user -> AuthUiState.Authenticated(user) },
-                onFailure = { e -> AuthUiState.Error(e.message ?: "Đăng ký thất bại") }
+                onFailure = { AuthUiState.Error(UiError.REGISTER_FAILED) }
             )
         }
     }
@@ -102,4 +103,3 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 }
-

@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.components.feedback
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
@@ -10,8 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Displays a full-screen error state with an icon, message, and retry button.
@@ -36,7 +39,7 @@ fun ErrorState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Icon cảnh báo màu đỏ
+        // Red warning icon
         Icon(
             imageVector = icon,
             contentDescription = null,
@@ -46,7 +49,7 @@ fun ErrorState(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Dòng thông báo lỗi
+        // Error message text
         Text(
             text = displayMessage,
             style = MaterialTheme.typography.bodyLarge,
@@ -56,9 +59,31 @@ fun ErrorState(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Nút thử lại
+        // Retry button
         Button(onClick = onRetry) {
             Text(stringResource(R.string.retry))
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun ErrorStatePreview() {
+    QuizzezTheme {
+        ErrorState(
+            message = "Khong the tai du lieu. Vui long kiem tra ket noi mang.",
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ErrorStateDarkPreview() {
+    QuizzezTheme {
+        ErrorState(
+            message = "Khong the tai du lieu. Vui long kiem tra ket noi mang.",
+            onRetry = {}
+        )
     }
 }

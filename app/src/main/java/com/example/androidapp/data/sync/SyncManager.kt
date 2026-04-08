@@ -9,12 +9,14 @@ import com.example.androidapp.data.local.entity.PendingSyncEntity
 import com.example.androidapp.data.local.entity.PendingSyncStatus
 import com.example.androidapp.data.local.entity.SyncEntityType
 import com.example.androidapp.data.local.entity.SyncOperation
+import com.example.androidapp.data.local.entity.SyncStatus
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
+import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.ChecksumUtil
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
@@ -45,8 +47,11 @@ class SyncManager(
     private val questionRemoteDataSource: QuestionRemoteDataSource,
     private val attemptRemoteDataSource: AttemptRemoteDataSource,
     private val networkMonitor: NetworkMonitor,
-    private val settingsPreferences: SettingsPreferences
+    private val settingsPreferences: SettingsPreferences,
+    private val quizRepositoryLazy: Lazy<QuizRepository>
 ) {
+    private val quizRepository: QuizRepository get() = quizRepositoryLazy.value
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _syncState = MutableStateFlow(SyncState.IDLE)
@@ -174,7 +179,7 @@ class SyncManager(
                     quiz.toDto(),
                     questionDtos
                 )
-                quizDao.updateSyncStatus(operation.entityId, "SYNCED")
+                quizDao.updateSyncStatus(operation.entityId, SyncStatus.SYNCED.name)
             }
 
             SyncOperation.DELETE.name -> {
@@ -339,6 +344,20 @@ class SyncManager(
                 }
             }
 
+            // Detect owner's quizzes that no longer exist on Firestore.
+            // Instead of deleting them (they may have been removed by an admin),
+            // mark them so the user is warned and can decide to delete manually.
+            val remoteQuizIds = quizDtos.map { it.id }.toSet()
+            val localUserQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
+            val staleQuizzes = localUserQuizzes.filter { local ->
+                local.id !in remoteQuizIds && local.syncStatus != SyncStatus.PENDING.name
+            }
+            staleQuizzes.forEach { staleQuiz ->
+                if (!staleQuiz.isRemovedFromCloud) {
+                    quizDao.markRemovedFromCloud(staleQuiz.id, true)
+                }
+            }
+
             _syncState.value = SyncState.IDLE
         } catch (e: Exception) {
             _syncState.value = SyncState.ERROR
@@ -347,19 +366,12 @@ class SyncManager(
 
     /**
      * Download (pull) public quizzes from Firebase and save to Room cache.
+     *
+     * Delegates to [QuizRepository.refreshPublicQuizzes] which owns the
+     * canonical fetch-insert-purge logic (including question/choice refresh).
      */
-    suspend fun downloadPublicQuizzes() {
-        if (!isSyncAllowed()) return
-        try {
-            val quizDtos = quizRemoteDataSource.getPublicQuizzes().first()
-
-            quizDtos.forEach { quizDto ->
-                val quiz = quizDto.toDomain()
-                quizDao.insertQuiz(quiz.toEntity())
-            }
-        } catch (_: Exception) {
-            // Silently fail for public quiz refresh
-        }
+    suspend fun downloadPublicQuizzes(currentUserId: String? = null) {
+        quizRepository.refreshPublicQuizzes(currentUserId)
     }
 
     /**
@@ -400,7 +412,7 @@ class SyncManager(
             // Then, download updates from Firebase
             downloadQuizzes(userId)
             downloadAttempts(userId)
-            downloadPublicQuizzes()
+            downloadPublicQuizzes(currentUserId = userId)
         }
     }
 }

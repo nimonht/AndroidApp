@@ -2,9 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [master, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [master, develop]
 
 permissions:
   contents: read
@@ -20,8 +20,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -39,32 +39,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create dummy google-services.json
+      - name: Decode google-services.json
         run: |
-          cat > app/google-services.json << 'EOF'
-          {
-            "project_info": {
-              "project_number": "000000000000",
-              "project_id": "dummy-project",
-              "storage_bucket": "dummy-project.appspot.com"
-            },
-            "client": [
-              {
-                "client_info": {
-                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
-                  "android_client_info": {
-                    "package_name": "com.example.androidapp"
-                  }
-                },
-                "api_key": [
-                  {
-                    "current_key": "dummy-api-key"
-                  }
-                ]
-              }
-            ]
-          }
-          EOF
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+          else
+            echo '{"project_info":{"project_number":"0","project_id":"placeholder","storage_bucket":""},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:placeholder","android_client_info":{"package_name":"com.example.androidapp"}},"api_key":[{"current_key":"placeholder"}]}],"configuration_version":"1"}' > app/google-services.json
+          fi
 
       - name: Run Lint
         run: ./gradlew lint --continue

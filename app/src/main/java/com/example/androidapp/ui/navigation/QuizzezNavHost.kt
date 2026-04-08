@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.navigation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -16,12 +17,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.components.navigation.BottomNavBar
 import com.example.androidapp.ui.components.navigation.CreateQuizFAB
 import com.example.androidapp.ui.components.common.LoginPromptDialog
 import com.example.androidapp.ui.navigation.Routes.Args
+import com.example.androidapp.ui.screens.admin.dashboard.AdminDashboardScreen
+import com.example.androidapp.ui.screens.admin.dashboard.AdminDashboardViewModel
+import com.example.androidapp.ui.screens.admin.users.AdminUserManagementScreen
+import com.example.androidapp.ui.screens.admin.users.AdminUserManagementViewModel
+import com.example.androidapp.ui.screens.admin.quizzes.AdminQuizManagementScreen
+import com.example.androidapp.ui.screens.admin.quizzes.AdminQuizManagementViewModel
+import com.example.androidapp.ui.screens.admin.reports.AdminReportsScreen
+import com.example.androidapp.ui.screens.admin.reports.AdminReportsViewModel
 import com.example.androidapp.ui.screens.auth.LoginScreen
 import com.example.androidapp.ui.screens.auth.RegisterScreen
 import com.example.androidapp.ui.screens.attempt.AttemptDetailScreen
@@ -58,6 +72,13 @@ fun QuizzezNavHost(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Normalize the route pattern for BottomNavBar so the Search tab stays
+    // selected even when the route includes optional query parameters.
+    val bottomBarRoute = when {
+        currentRoute?.startsWith("search") == true -> Routes.SEARCH
+        else -> currentRoute
+    }
+
     val currentUser by LocalAppContainer.authRepository.currentUser
         .collectAsStateWithLifecycle(initialValue = null)
 
@@ -78,7 +99,7 @@ fun QuizzezNavHost(
             // Show bottom navigation bar only on main screens
             if (shouldShowBottomBar(currentRoute)) {
                 BottomNavBar(
-                    currentRoute = currentRoute,
+                    currentRoute = bottomBarRoute,
                     onNavigate = { route ->
                         navController.navigate(route) {
                             popUpTo(Routes.HOME) { saveState = true }
@@ -117,23 +138,44 @@ fun QuizzezNavHost(
                         navController.navigate(Routes.quizDetail(quizId))
                     },
                     onNavigateToSearch = {
-                        navController.navigate(Routes.SEARCH)
+                        navController.navigate(Routes.SEARCH) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     },
                     onNavigateToEditQuiz = { quizId ->
                         navController.navigate(Routes.quizEdit(quizId))
+                    },
+                    onNavigateToSearchWithTag = { tag ->
+                        navController.navigate(Routes.searchWithTag(tag)) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
 
-            composable(Routes.SEARCH) {
+            composable(
+                route = Routes.SEARCH_WITH_TAG,
+                arguments = listOf(
+                    navArgument(Args.TAG) {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { backStackEntry ->
+                val initialTag = backStackEntry.arguments?.getString(Args.TAG)
                 SearchScreen(
                     onNavigateToQuiz = { quizId ->
                         navController.navigate(Routes.quizDetail(quizId))
-                    }
+                    },
+                    initialTag = initialTag?.ifBlank { null }
                 )
             }
 
             composable(Routes.PROFILE) {
+                val container = LocalAppContainer
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
@@ -164,6 +206,19 @@ fun QuizzezNavHost(
                         } else {
                             showLoginPrompt = true
                         }
+                    },
+                    onNavigateToAdminPanel = {
+                        if (currentUser != null && currentUser!!.isAdmin()) {
+                            if (container.networkMonitor.isOnline.value) {
+                                navController.navigate(Routes.ADMIN_DASHBOARD)
+                            } else {
+                                Toast.makeText(
+                                    navController.context,
+                                    navController.context.getString(R.string.admin_network_required),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
                     }
                 )
             }
@@ -189,7 +244,13 @@ fun QuizzezNavHost(
                     quizId = quizId,
                     onNavigateBack = { navController.popBackStack() },
                     onStartQuiz = { navController.navigate(Routes.quizPlay(quizId)) },
-                    onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) }
+                    onEditQuiz = { id -> navController.navigate(Routes.quizEdit(id)) },
+                    onTagClick = { tag ->
+                        navController.navigate(Routes.searchWithTag(tag)) {
+                            popUpTo(Routes.HOME) { saveState = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
@@ -404,6 +465,112 @@ fun QuizzezNavHost(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
+
+            // ==================== Admin Screens ====================
+            composable(Routes.ADMIN_DASHBOARD) {
+                // Guard: redirect non-admin users back
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
+                val container = LocalAppContainer
+                val viewModel: AdminDashboardViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            AdminDashboardViewModel(
+                                container.adminRepository,
+                                container.authRepository,
+                                container.networkMonitor
+                            ) as T
+                    }
+                )
+
+                AdminDashboardScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToUsers = { navController.navigate(Routes.ADMIN_USERS) },
+                    onNavigateToQuizzes = { navController.navigate(Routes.ADMIN_QUIZZES) },
+                    onNavigateToReports = { navController.navigate(Routes.ADMIN_REPORTS) }
+                )
+            }
+
+            composable(Routes.ADMIN_USERS) {
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
+                val container = LocalAppContainer
+                val viewModel: AdminUserManagementViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            AdminUserManagementViewModel(
+                                container.adminRepository,
+                                container.networkMonitor,
+                                container.authRepository
+                            ) as T
+                    }
+                )
+
+                AdminUserManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.ADMIN_QUIZZES) {
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
+                val container = LocalAppContainer
+                val viewModel: AdminQuizManagementViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            AdminQuizManagementViewModel(
+                                container.adminRepository,
+                                container.authRepository,
+                                container.networkMonitor
+                            ) as T
+                    }
+                )
+
+                AdminQuizManagementScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onQuizClick = { quizId -> navController.navigate(Routes.quizDetail(quizId)) }
+                )
+            }
+
+            composable(Routes.ADMIN_REPORTS) {
+                if (currentUser?.isAdmin() != true) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    return@composable
+                }
+
+                val container = LocalAppContainer
+                val viewModel: AdminReportsViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                            AdminReportsViewModel(
+                                container.adminRepository,
+                                container.authRepository,
+                                container.networkMonitor
+                            ) as T
+                    }
+                )
+
+                AdminReportsScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -412,5 +579,5 @@ fun QuizzezNavHost(
  * Determines whether the bottom navigation bar should be visible for the current route.
  */
 private fun shouldShowBottomBar(currentRoute: String?): Boolean {
-    return currentRoute in listOf(Routes.HOME, Routes.SEARCH, Routes.PROFILE)
+    return currentRoute in listOf(Routes.HOME, Routes.SEARCH_WITH_TAG, Routes.PROFILE)
 }

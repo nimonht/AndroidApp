@@ -2,7 +2,18 @@ package com.example.androidapp.ui.screens.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -11,7 +22,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.forms.CodeInputField
 import com.example.androidapp.ui.components.quiz.QuizCard
@@ -55,6 +79,7 @@ fun HomeScreen(
     onNavigateToQuiz: (String) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToEditQuiz: (String) -> Unit = {},
+    onNavigateToSearchWithTag: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -115,7 +140,7 @@ fun HomeScreen(
                     onCodeChange = { viewModel.onEvent(HomeEvent.JoinCodeChanged(it)) },
                     onJoin = { viewModel.onEvent(HomeEvent.JoinQuiz(uiState.joinCode)) },
                     isJoining = uiState.isJoining,
-                    errorMessage = uiState.joinCodeError
+                    errorMessage = uiState.joinCodeError?.toMessage()
                 )
             }
 
@@ -137,7 +162,8 @@ fun HomeScreen(
             } else {
                 RecentlyPlayedRow(
                     quizzes = uiState.recentQuizzes,
-                    onQuizClick = onNavigateToQuiz
+                    onQuizClick = onNavigateToQuiz,
+                    onTagClick = onNavigateToSearchWithTag
                 )
             }
 
@@ -151,6 +177,14 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            if (uiState.adminRemovedQuizCount > 0) {
+                AdminRemovedWarningBanner(
+                    count = uiState.adminRemovedQuizCount,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
             if (uiState.myQuizzes.isEmpty()) {
                 EmptyState(
                     message = stringResource(R.string.home_my_quizzes_empty),
@@ -163,11 +197,37 @@ fun HomeScreen(
                     ) {
                         QuizCard(
                             quiz = quiz,
-                            onClick = { onNavigateToQuiz(quiz.id) }
+                            onClick = { onNavigateToQuiz(quiz.id) },
+                            onTagClick = onNavigateToSearchWithTag
                         )
 
-                        // Floating edit button for draft quizzes only (not published)
-                        if (quiz.shareCode == null && !quiz.isPublic) {
+                        if (quiz.isRemovedFromCloud) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = MaterialTheme.shapes.small,
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.CloudOff,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.home_quiz_removed_from_cloud),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        } else if (quiz.shareCode == null && !quiz.isPublic) {
                             SmallFloatingActionButton(
                                 onClick = { onNavigateToEditQuiz(quiz.id) },
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -205,7 +265,8 @@ fun HomeScreen(
             } else {
                 RecentlyPlayedRow(
                     quizzes = uiState.trendingQuizzes,
-                    onQuizClick = onNavigateToQuiz
+                    onQuizClick = onNavigateToQuiz,
+                    onTagClick = onNavigateToSearchWithTag
                 )
             }
 
@@ -419,6 +480,7 @@ private fun SectionHeader(
 private fun RecentlyPlayedRow(
     quizzes: List<Quiz>,
     onQuizClick: (String) -> Unit,
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyRow(
@@ -430,7 +492,38 @@ private fun RecentlyPlayedRow(
             QuizCard(
                 quiz = quiz,
                 onClick = { onQuizClick(quiz.id) },
+                onTagClick = onTagClick,
                 modifier = Modifier.width(280.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AdminRemovedWarningBanner(
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = stringResource(R.string.home_admin_removed_warning, count),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
             )
         }
     }

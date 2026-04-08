@@ -2,6 +2,7 @@ package com.example.androidapp.di
 
 import android.content.Context
 import com.example.androidapp.data.local.AppDatabase
+import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
@@ -9,11 +10,12 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
-import com.example.androidapp.domain.repository.QuestionRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
@@ -41,12 +43,26 @@ interface AppContainer {
     val networkMonitor: NetworkMonitor
     val syncManager: SyncManager
 
+    /**
+     * Manages incremental invalidation of locally-cached quizzes that
+     * have been permanently deleted from Firestore by other users or
+     * maintenance tasks. Uses a lightweight tombstone-based approach.
+     */
+    val quizInvalidationManager: QuizInvalidationManager
+
+    /**
+     * Remote data source for quiz Firestore operations, including
+     * deletion tombstone writes. Exposed for background workers that
+     * need to write tombstones without duplicating the logic.
+     */
+    val quizRemoteDataSource: QuizRemoteDataSource
+
     val authRepository: AuthRepository
     val quizRepository: QuizRepository
     val attemptRepository: AttemptRepository
-    val questionRepository: QuestionRepository
     val shareCodeRepository: ShareCodeRepository
     val poolRepository: PoolRepository
+    val adminRepository: AdminRepository
     val searchRepository: SearchRepository
     val settingsPreferences: SettingsPreferences
 }

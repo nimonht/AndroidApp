@@ -27,23 +27,19 @@ class ShareCodeRepositoryImpl(
 
     /** {@inheritDoc} */
     override suspend fun generateShareCode(quizId: String): Result<String> {
-        return try {
+        return safeCall {
             val maxAttempts = 10
 
             repeat(maxAttempts) {
                 val code = ShareCodeUtil.generateCode()
                 val created = remoteDataSource.createShareCodeIfNotExists(code, quizId)
                 if (created) {
-                    return Result.success(code)
+                    return@safeCall code
                 }
             }
 
             // All attempts exhausted without finding unique code
-            Result.failure(
-                IllegalStateException("Failed to generate unique share code after $maxAttempts attempts")
-            )
-        } catch (e: Exception) {
-            Result.failure(e)
+            throw IllegalStateException("Failed to generate unique share code after $maxAttempts attempts")
         }
     }
 
@@ -59,41 +55,33 @@ class ShareCodeRepositoryImpl(
         quizId: String,
         oldShareCode: String
     ): Result<String> {
-        return try {
+        return safeCall {
             // Create the new code first; only delete the old one after the new one is persisted.
             val newCodeResult = generateShareCode(quizId)
             if (newCodeResult.isSuccess) {
                 remoteDataSource.deleteShareCode(oldShareCode)
             }
-            newCodeResult
-        } catch (e: Exception) {
-            Result.failure(e)
+            newCodeResult.getOrThrow()
         }
     }
 
     /** {@inheritDoc} */
     override suspend fun validateShareCode(shareCode: String): Result<String> {
-        return try {
+        return safeCall {
             // Validate format locally first to avoid unnecessary network calls
             val normalizedCode = shareCode.trim().uppercase()
             val pattern = Regex("^[A-Z0-9]{6}$")
 
             if (!pattern.matches(normalizedCode)) {
-                return Result.failure(
-                    IllegalArgumentException("Invalid share code format: must be 6 alphanumeric characters")
-                )
+                throw IllegalArgumentException("Invalid share code format: must be 6 alphanumeric characters")
             }
 
             val dto = remoteDataSource.lookupShareCode(normalizedCode)
             if (dto != null && dto.quizId.isNotBlank()) {
-                Result.success(dto.quizId)
+                dto.quizId
             } else {
-                Result.failure(
-                    IllegalArgumentException("Share code does not exist or is not associated with a quiz")
-                )
+                throw IllegalArgumentException("Share code does not exist or is not associated with a quiz")
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 }

@@ -1,6 +1,5 @@
 package com.example.androidapp.ui.components.quiz
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -11,18 +10,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.domain.model.Quiz
-import com.example.androidapp.ui.theme.InterFamily
-import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 
 /**
  * Quiz card component with vibrant Material 3 aesthetics.
@@ -37,6 +31,7 @@ import com.example.androidapp.ui.theme.PlayfairDisplayFamily
 fun QuizCard(
     quiz: Quiz,
     onClick: () -> Unit,
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -56,39 +51,13 @@ fun QuizCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
-                if (!quiz.thumbnailUrl.isNullOrEmpty()) {
-                    AsyncImage(
-                        model = quiz.thumbnailUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    // Placeholder when no image is available
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = quiz.title.take(1).uppercase(),
-                            style = MaterialTheme.typography.displayMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontFamily = PlayfairDisplayFamily
-                        )
-                    }
-                }
-                
+                QuizThumbnail(
+                    thumbnailUrl = quiz.thumbnailUrl,
+                    title = quiz.title,
+                    modifier = Modifier.fillMaxSize()
+                )
+
                 // Attempt count badge floating on top right of the image
                 Surface(
                     shape = MaterialTheme.shapes.small,
@@ -125,9 +94,10 @@ fun QuizCard(
                 // Title
                 Text(
                     text = quiz.title,
-                    fontFamily = InterFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
@@ -146,9 +116,7 @@ fun QuizCard(
                     )
                     Text(
                         text = stringResource(R.string.quiz_by_author, quiz.authorName.ifBlank { "..." }),
-                        fontFamily = InterFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -171,8 +139,8 @@ fun QuizCard(
                     ) {
                         items(quiz.tags) { tag ->
                             SuggestionChip(
-                                onClick = { },
-                                label = { Text(tag, fontSize = 12.sp) },
+                                onClick = { onTagClick(tag) },
+                                label = { Text(tag, style = MaterialTheme.typography.bodySmall) },
                                 colors = SuggestionChipDefaults.suggestionChipColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                     labelColor = MaterialTheme.colorScheme.onSurfaceVariant

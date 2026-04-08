@@ -68,10 +68,32 @@ interface QuizDao {
     fun getPublicQuizzes(): Flow<List<QuizEntity>>
 
     /**
-     * Get quizzes that need to be synced.
+     * Get all public quizzes that are not deleted (one-time, non-reactive).
+     * Used for comparing local cache against remote set during stale quiz cleanup.
      */
-    @Query("SELECT * FROM quizzes WHERE sync_status IN ('PENDING', 'FAILED')")
-    suspend fun getUnsyncedQuizzes(): List<QuizEntity>
+    @Query("SELECT * FROM quizzes WHERE is_public = 1 AND deleted_at IS NULL")
+    suspend fun getPublicQuizzesOnce(): List<QuizEntity>
+
+    /**
+     * Get all quizzes owned by a specific user that are not deleted (one-time, non-reactive).
+     * Used for comparing local cache against remote set during stale quiz cleanup.
+     */
+    @Query("SELECT * FROM quizzes WHERE owner_id = :userId AND deleted_at IS NULL")
+    suspend fun getQuizzesByOwnerOnce(userId: String): List<QuizEntity>
+
+    /**
+     * Marks a quiz as removed from the cloud (or clears the flag).
+     * Used when a sync detects an owner's quiz no longer exists on Firestore
+     * (e.g. deleted by an admin) so the user can be warned.
+     */
+    @Query("UPDATE quizzes SET is_removed_from_cloud = :isRemoved WHERE id = :quizId")
+    suspend fun markRemovedFromCloud(quizId: String, isRemoved: Boolean)
+
+    /**
+     * Permanently delete a quiz by its ID.
+     */
+    @Query("DELETE FROM quizzes WHERE id = :quizId")
+    suspend fun deleteQuizById(quizId: String)
 
     /**
      * Get deleted quizzes (recycle bin) for a user.
@@ -90,12 +112,6 @@ interface QuizDao {
      */
     @Upsert
     suspend fun insertQuiz(quiz: QuizEntity)
-
-    /**
-     * Insert multiple quizzes.
-     */
-    @Upsert
-    suspend fun insertQuizzes(quizzes: List<QuizEntity>)
 
     /**
      * Update an existing quiz.
@@ -134,13 +150,6 @@ interface QuizDao {
     suspend fun deleteQuiz(quiz: QuizEntity)
 
     /**
-     * Permanently delete quizzes older than 30 days in recycle bin.
-     */
-    @Query("DELETE FROM quizzes WHERE deleted_at IS NOT NULL AND deleted_at < :threshold")
-    suspend fun deleteOldQuizzes(threshold: Long)
-
-
-    /**
      * Search quizzes by title or tags.
      */
     @Query(
@@ -158,4 +167,84 @@ interface QuizDao {
      */
     @Query("UPDATE quizzes SET attempt_count = attempt_count + 1 WHERE id = :quizId")
     suspend fun incrementAttemptCount(quizId: String)
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Get public quizzes with a dynamic limit for pagination.
+     * Used by search/discover screens to incrementally load public quizzes.
+     */
+    @Query("SELECT * FROM quizzes WHERE is_public = 1 AND deleted_at IS NULL ORDER BY attempt_count DESC LIMIT :limit")
+    fun getPublicQuizzesLimited(limit: Int): Flow<List<QuizEntity>>
+
+    /**
+     * Get quizzes owned by a user with a dynamic limit for pagination.
+     */
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE owner_id = :userId AND deleted_at IS NULL
+        ORDER BY updated_at DESC
+        LIMIT :limit
+    """
+    )
+    fun getQuizzesByOwnerLimited(userId: String, limit: Int): Flow<List<QuizEntity>>
+
+    /**
+     * Search quizzes with a dynamic limit for pagination.
+     */
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE deleted_at IS NULL
+        AND (title LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%')
+        ORDER BY updated_at DESC
+        LIMIT :limit
+    """
+    )
+    fun searchQuizzesLimited(query: String, limit: Int): Flow<List<QuizEntity>>
+
+    /**
+     * Get deleted quizzes (recycle bin) with a dynamic limit for pagination.
+     */
+    @Query(
+        """
+        SELECT * FROM quizzes
+        WHERE owner_id = :userId AND deleted_at IS NOT NULL
+        ORDER BY deleted_at DESC
+        LIMIT :limit
+    """
+    )
+    fun getDeletedQuizzesLimited(userId: String, limit: Int): Flow<List<QuizEntity>>
+
+    /**
+     * Get the total count of public non-deleted quizzes.
+     * Used by pagination to determine if more items are available.
+     */
+    @Query("SELECT COUNT(*) FROM quizzes WHERE is_public = 1 AND deleted_at IS NULL")
+    suspend fun getPublicQuizzesCount(): Int
+
+    /**
+     * Get the total count of quizzes owned by a user.
+     */
+    @Query("SELECT COUNT(*) FROM quizzes WHERE owner_id = :userId AND deleted_at IS NULL")
+    suspend fun getQuizzesByOwnerCount(userId: String): Int
+
+    /**
+     * Get the total count of search results.
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM quizzes
+        WHERE deleted_at IS NULL
+        AND (title LIKE '%' || :query || '%' OR tags LIKE '%' || :query || '%')
+    """
+    )
+    suspend fun searchQuizzesCount(query: String): Int
+
+    /**
+     * Get the total count of deleted quizzes for a user.
+     */
+    @Query("SELECT COUNT(*) FROM quizzes WHERE owner_id = :userId AND deleted_at IS NOT NULL")
+    suspend fun getDeletedQuizzesCount(userId: String): Int
 }

@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.components.feedback
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -7,7 +8,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Full-screen centered loading indicator with an optional message.
@@ -18,26 +21,26 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LoadingSpinner(
     modifier: Modifier = Modifier,
-    message: String? = null // Dòng thông báo tùy chọn (VD: "Đang đăng nhập...")
+    message: String? = null // Optional message (e.g., "Logging in...")
 ) {
-    // Box giúp căn giữa nội dung theo cả chiều dọc và ngang
+    // Box centers content both vertically and horizontally
     Box(
-        modifier = modifier.fillMaxSize(), // Mặc định chiếm toàn bộ không gian cha
+        modifier = modifier.fillMaxSize(), // Fills the entire parent space by default
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // 1. Vòng xoay chính
+            // 1. Main spinner
             CircularProgressIndicator(
                 color = MaterialTheme.colorScheme.primary,
                 strokeWidth = 4.dp
             )
 
-            // 2. Dòng thông báo (chỉ hiện nếu có truyền vào)
+            // 2. Message text (only shown if provided)
             if (message != null) {
-                Spacer(modifier = Modifier.height(16.dp)) // Khoảng cách giữa vòng xoay và chữ
+                Spacer(modifier = Modifier.height(16.dp)) // Spacing between spinner and text
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyMedium,
@@ -45,5 +48,25 @@ fun LoadingSpinner(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun LoadingSpinnerPreview() {
+    QuizzezTheme {
+        LoadingSpinner(
+            message = "Dang tai du lieu..."
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LoadingSpinnerDarkPreview() {
+    QuizzezTheme {
+        LoadingSpinner(
+            message = "Dang tai du lieu..."
+        )
     }
 }

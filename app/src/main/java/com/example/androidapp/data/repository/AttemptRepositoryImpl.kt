@@ -11,8 +11,10 @@ import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.util.safeCall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -25,11 +27,19 @@ class AttemptRepositoryImpl(
     private val syncManager: SyncManager
 ) : AttemptRepository {
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun getAttemptsByUser(userId: String): Flow<List<Attempt>> {
         return attemptDao.getAttemptsByUser(userId).map { entities ->
             entities.map { it.toDomain() }
+        }.onStart {
+            // Refresh attempts from Firebase in the background so that
+            // history is available when logging in on a new device.
+            try {
+                syncManager.downloadAttempts(userId)
+            } catch (_: Exception) {
+                // Silently fail; local data is still emitted by the Flow
+            }
         }
     }
 
@@ -98,5 +108,23 @@ class AttemptRepositoryImpl(
         return safeCall {
             attemptDao.updateUserId(guestId, userId)
         }
+    }
+
+    // ==================== Paginated query implementations ====================
+
+    override fun getAttemptsByUserLimited(userId: String, limit: Int): Flow<List<Attempt>> {
+        return attemptDao.getAttemptsByUserLimited(userId, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart {
+            try {
+                syncManager.downloadAttempts(userId)
+            } catch (_: Exception) {
+                // Silently fail; local data is still emitted by the Flow
+            }
+        }
+    }
+
+    override suspend fun getAttemptCountByUser(userId: String): Int {
+        return attemptDao.getAttemptCountByUserOnce(userId)
     }
 }

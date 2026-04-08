@@ -3,6 +3,7 @@ package com.example.androidapp.ui.screens.create
 import androidx.lifecycle.ViewModel
 import com.example.androidapp.domain.util.CsvParser
 import com.example.androidapp.domain.util.CsvValidator
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,6 +68,7 @@ data class CsvPreviewRow(
  * @property isLoading True while an async operation is running.
  * @property isImported True once questions have been handed off via the callback.
  * @property error Non-null when an unexpected error should be surfaced to the user.
+ * @property errorDetail Optional dynamic detail for parameterised error messages (e.g. exception text).
  */
 data class CsvImportUiState(
     val phase: CsvImportPhase = CsvImportPhase.FilePicker,
@@ -76,7 +78,8 @@ data class CsvImportUiState(
     val validationErrors: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val isImported: Boolean = false,
-    val error: String? = null
+    val error: UiError? = null,
+    val errorDetail: String? = null
 )
 
 // ---------------------------------------------------------------------------
@@ -144,7 +147,7 @@ class CsvImportViewModel(
         when (event) {
             is CsvImportEvent.FileSelected -> handleFileSelected(event.fileName, event.content)
             is CsvImportEvent.ConfirmImport -> handleConfirmImport()
-            is CsvImportEvent.ClearError -> _uiState.update { it.copy(error = null) }
+            is CsvImportEvent.ClearError -> _uiState.update { it.copy(error = null, errorDetail = null) }
             is CsvImportEvent.Reset -> _uiState.update { CsvImportUiState() }
         }
     }
@@ -167,7 +170,7 @@ class CsvImportViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = "Tệp CSV không chứa dữ liệu hợp lệ."
+                        error = UiError.CSV_NO_VALID_DATA
                     )
                 }
                 return
@@ -217,7 +220,8 @@ class CsvImportViewModel(
             _uiState.update {
                 it.copy(
                     isLoading = false,
-                    error = "Không thể đọc tệp CSV: ${e.message}"
+                    error = UiError.CSV_READ_FAILED,
+                    errorDetail = e.message
                 )
             }
         }
@@ -253,7 +257,8 @@ class CsvImportViewModel(
                 it.copy(
                     phase = CsvImportPhase.Preview,
                     isLoading = false,
-                    error = "Không thể nhập dữ liệu: ${e.message}"
+                    error = UiError.CSV_IMPORT_FAILED,
+                    errorDetail = e.message
                 )
             }
         }

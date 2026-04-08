@@ -17,6 +17,46 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Get the current user's document data (cached per request).
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Check if user is a superuser (app owner, highest privilege).
+    // Uses a single get() call; returns false for unauthenticated or missing docs.
+    function isSuperuser() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getUserData().role == 'superuser'
+        && (!('deletedAt' in getUserData()) || getUserData().deletedAt == null);
+    }
+
+    // Check if user is an administrator (and not soft-deleted/banned).
+    // Returns true for both 'admin' and 'superuser' roles.
+    function isAdmin() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (getUserData().role == 'admin' || getUserData().role == 'superuser')
+        && (!('deletedAt' in getUserData()) || getUserData().deletedAt == null);
+    }
+
+    // Check if a target user document has superuser role.
+    function isTargetSuperuser(userId) {
+      let target = get(/databases/$(database)/documents/users/$(userId)).data;
+      return target != null && target.role == 'superuser';
+    }
+
+    // Check if admin (non-superuser) has a specific permission.
+    function adminHasPermission(permission) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (getUserData().role == 'superuser'
+            || (getUserData().role == 'admin'
+                && 'permissions' in getUserData()
+                && getUserData().permissions is list
+                && permission in getUserData().permissions));
+    }
+
     // Get quiz data from database
     function getQuiz(quizId) {
       return get(/databases/$(database)/documents/quizzes/$(quizId)).data;
@@ -54,10 +94,28 @@ service cloud.firestore {
       // Any authenticated user can read user profiles
       allow read: if isSignedIn();
 
-      // Users can only create/update/delete their own profile
+      // Users can only create their own profile
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+
+      // Owners can update their profile EXCEPT role, permissions, and deletedAt
+      // (prevents self-escalation).
+      // Superusers can update any profile (including role and permissions).
+      // Admins can update non-superuser profiles (role changes for user management),
+      // but CANNOT modify superuser accounts or change anyone's permissions field
+      // (only superuser can assign permissions).
+      allow update: if
+        // Owner self-update: cannot change role, permissions, or deletedAt
+        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'deletedAt']))
+        // Superuser can update anyone
+        || isSuperuser()
+        // Admin can update non-superuser users, but cannot change permissions field
+        || (isAdmin() && !isTargetSuperuser(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['permissions']));
+
+      // Superusers can delete any user. Owners can delete themselves.
+      // Admins with delete_users permission can delete non-superuser users.
+      allow delete: if isOwner(userId)
+        || isSuperuser()
+        || (adminHasPermission('delete_users') && !isTargetSuperuser(userId));
     }
 
     // ============================================================================
@@ -66,15 +124,16 @@ service cloud.firestore {
     // Local-first sync: the client saves to Room first with local timestamps,
     // then syncs the full quiz graph to Firestore in the background. Therefore
     // we do NOT enforce request.time equality or zero-count constraints on
-    // create – these would block every sync attempt.
+    // create -- these would block every sync attempt.
     // ============================================================================
 
     match /quizzes/{quizId} {
       // Owner can always read their quizzes (including soft-deleted ones for
       // trash / restore). Non-owners can read non-deleted quizzes that are
-      // either public or shared via share code.
+      // either public or shared via share code. Admins can read all quizzes.
       allow read: if isOwner(resource.data.ownerId)
-        || isQuizAccessible();
+        || isQuizAccessible()
+        || isAdmin();
 
       // Authenticated users can create quizzes they own
       allow create: if isSignedIn()
@@ -82,38 +141,72 @@ service cloud.firestore {
 
       // Only the owner can update; ownerId is immutable
       // Or anyone can update IF they are ONLY incrementing the attemptCount by 1
+      // Or admins can update any quiz but ownerId must remain immutable
       allow update: if (isOwner(resource.data.ownerId) && request.resource.data.ownerId == resource.data.ownerId)
         || (
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attemptCount'])
           && request.resource.data.attemptCount == resource.data.attemptCount + 1
-        );
+        )
+        || (isAdmin() && request.resource.data.ownerId == resource.data.ownerId);
 
-      // Only the owner can delete
-      allow delete: if isOwner(resource.data.ownerId);
+      // Only the owner can delete, or admins with delete_quizzes permission
+      allow delete: if isOwner(resource.data.ownerId) || adminHasPermission('delete_quizzes');
 
       // ========================================================================
       // QUESTIONS SUBCOLLECTION
       // ========================================================================
 
       match /questions/{questionId} {
-        // Quiz owner or readers of accessible quizzes (public or share-code)
-        allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId);
+        // Quiz owner or readers of accessible quizzes (public or share-code) or admins
+        allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId) || isAdmin();
 
-        // Only quiz owner can write questions
-        allow write: if isQuizOwner(quizId);
+        // Only quiz owner can create/update questions, or admins with manage_quizzes permission
+        allow create, update: if isQuizOwner(quizId) || adminHasPermission('manage_quizzes');
+
+        // Quiz owner or admins with manage_quizzes or delete_quizzes can delete questions
+        // (delete_quizzes is needed so admin permanent-delete can cascade into subcollections)
+        allow delete: if isQuizOwner(quizId)
+          || adminHasPermission('manage_quizzes')
+          || adminHasPermission('delete_quizzes');
 
         // ======================================================================
         // CHOICES SUBCOLLECTION
         // ======================================================================
 
         match /choices/{choiceId} {
-          // Quiz owner or readers of accessible quizzes (public or share-code)
-          allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId);
+          // Quiz owner or readers of accessible quizzes (public or share-code) or admins
+          allow read: if isQuizOwner(quizId) || isQuizAccessibleById(quizId) || isAdmin();
 
-          // Only quiz owner can write choices
-          allow write: if isQuizOwner(quizId);
+          // Only quiz owner can create/update choices, or admins with manage_quizzes permission
+          allow create, update: if isQuizOwner(quizId) || adminHasPermission('manage_quizzes');
+
+          // Quiz owner or admins with manage_quizzes or delete_quizzes can delete choices
+          allow delete: if isQuizOwner(quizId)
+            || adminHasPermission('manage_quizzes')
+            || adminHasPermission('delete_quizzes');
         }
       }
+    }
+
+    // ============================================================================
+    // QUIZ DELETIONS (TOMBSTONES) COLLECTION
+    //
+    // Lightweight tombstone documents that record permanent quiz deletions.
+    // Clients query this collection incrementally to detect quizzes removed
+    // from Firestore without re-fetching all quizzes.
+    //
+    // Document schema: { quizId: String, deletedAt: Timestamp }
+    // ============================================================================
+
+    match /quizDeletions/{tombstoneId} {
+      // Any authenticated user can read tombstones (needed for sync invalidation)
+      allow read: if isSignedIn();
+
+      // Any authenticated user can create tombstones (written during permanent delete)
+      allow create: if isSignedIn();
+
+      // Only admins can update or delete tombstones (maintenance cleanup)
+      allow update, delete: if isAdmin();
     }
 
     // ============================================================================
@@ -121,11 +214,11 @@ service cloud.firestore {
     // ============================================================================
 
     match /attempts/{attemptId} {
-      // Attempt owner or quiz owner can read
+      // Attempt owner or quiz owner can read, or admins can read all
       allow read: if isSignedIn() && (
         isOwner(resource.data.userId)
         || isQuizOwner(resource.data.quizId)
-      );
+      ) || isAdmin();
 
       // Authenticated users create attempts for themselves; guests can also create
       allow create: if (isSignedIn() && request.resource.data.userId == request.auth.uid)
@@ -135,11 +228,11 @@ service cloud.firestore {
       allow update: if (isSignedIn() && isOwner(resource.data.userId))
         || resource.data.userId.matches('guest_.*');
 
-      // Attempt owner or quiz owner can delete
-      allow delete: if isSignedIn() && (
-        isOwner(resource.data.userId)
-        || isQuizOwner(resource.data.quizId)
-      );
+      // Only the attempt owner or admins can delete.
+      // Quiz owners cannot delete other users' attempts -- attempts are
+      // a trusted record of user history, only removed during account deletion.
+      allow delete: if (isSignedIn() && isOwner(resource.data.userId))
+        || isAdmin();
     }
 
     // ============================================================================

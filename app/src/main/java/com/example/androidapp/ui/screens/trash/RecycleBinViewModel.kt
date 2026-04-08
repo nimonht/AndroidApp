@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -17,7 +21,9 @@ import kotlinx.coroutines.launch
 data class RecycleBinUiState(
     val deletedQuizzes: List<Quiz> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
+    val isLoadingMore: Boolean = false,
+    val hasMore: Boolean = true,
+    val error: UiError? = null,
     val successMessage: String? = null
 )
 
@@ -28,12 +34,17 @@ sealed class RecycleBinEvent {
     data object EmptyTrash : RecycleBinEvent()
     data object ClearMessage : RecycleBinEvent()
     data object ClearError : RecycleBinEvent()
+    data object LoadMore : RecycleBinEvent()
 }
 
 /**
  * ViewModel for the Recycle Bin (Trash) screen.
- * Loads soft-deleted quizzes and supports restore and permanent delete actions.
+ * Loads soft-deleted quizzes with pagination and supports restore and permanent delete actions.
+ *
+ * Uses a dynamic LIMIT Room query that increases when the user scrolls near
+ * the bottom. Room re-emits the full list up to the new limit whenever data changes.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class RecycleBinViewModel(
     private val quizRepository: QuizRepository,
     private val authRepository: AuthRepository
@@ -43,6 +54,20 @@ class RecycleBinViewModel(
 
     /** Current UI state for the Trash screen. */
     val uiState: StateFlow<RecycleBinUiState> = _uiState.asStateFlow()
+
+    /** Dynamic limit for paginated loading. */
+    private val _trashLimit = MutableStateFlow(INITIAL_PAGE_SIZE)
+
+    /** Cached user ID to avoid repeated auth lookups. */
+    private var cachedUserId: String? = null
+
+    private companion object {
+        /** Initial number of deleted quizzes to load. */
+        const val INITIAL_PAGE_SIZE = 20
+
+        /** Number of additional quizzes to load on each "load more". */
+        const val PAGE_SIZE = 20
+    }
 
     init {
         loadDeletedQuizzes()
@@ -58,9 +83,24 @@ class RecycleBinViewModel(
             is RecycleBinEvent.EmptyTrash -> onEmptyTrash()
             is RecycleBinEvent.ClearMessage -> _uiState.update { it.copy(successMessage = null) }
             is RecycleBinEvent.ClearError -> _uiState.update { it.copy(error = null) }
+            is RecycleBinEvent.LoadMore -> handleLoadMore()
         }
     }
 
+    /**
+     * Increases the trash limit to load more deleted quizzes.
+     */
+    private fun handleLoadMore() {
+        if (!_uiState.value.hasMore || _uiState.value.isLoadingMore) return
+        _uiState.update { it.copy(isLoadingMore = true) }
+        _trashLimit.value += PAGE_SIZE
+    }
+
+    /**
+     * Loads deleted quizzes using a dynamic LIMIT query.
+     * Uses [flatMapLatest] on [_trashLimit] so that increasing the limit
+     * triggers a new Room query automatically.
+     */
     private fun loadDeletedQuizzes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -69,46 +109,85 @@ class RecycleBinViewModel(
                 _uiState.update { it.copy(isLoading = false) }
                 return@launch
             }
-            quizRepository.getDeletedQuizzes(user.id).collect { quizzes ->
-                _uiState.update { it.copy(isLoading = false, deletedQuizzes = quizzes) }
+            cachedUserId = user.id
+
+            _trashLimit.flatMapLatest { limit ->
+                quizRepository.getDeletedQuizzesLimited(user.id, limit)
+            }.collectLatest { quizzes ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isLoadingMore = false,
+                        deletedQuizzes = quizzes,
+                        hasMore = quizzes.size >= _trashLimit.value
+                    )
+                }
             }
         }
     }
 
+    /**
+     * Restores a soft-deleted quiz from the recycle bin.
+     *
+     * @param quizId The ID of the quiz to restore.
+     */
     private fun onRestoreQuiz(quizId: String) {
         viewModelScope.launch {
             val result = quizRepository.restoreQuiz(quizId)
             result.fold(
-                onSuccess = { _uiState.update { it.copy(successMessage = "Đã khôi phục bài kiểm tra") } },
-                onFailure = { e -> _uiState.update { it.copy(error = e.message) } }
+                onSuccess = {
+                    _uiState.update { it.copy(successMessage = "Da khoi phuc bai kiem tra") }
+                },
+                onFailure = {
+                    _uiState.update { it.copy(error = UiError.RESTORE_QUIZ_FAILED) }
+                }
             )
         }
     }
 
+    /**
+     * Permanently deletes a quiz from both Room and Firestore.
+     *
+     * @param quizId The ID of the quiz to permanently delete.
+     */
     private fun onDeletePermanently(quizId: String) {
         viewModelScope.launch {
             val result = quizRepository.permanentlyDeleteQuiz(quizId)
             result.fold(
-                onSuccess = { _uiState.update { it.copy(successMessage = "Đã xóa vĩnh viễn") } },
-                onFailure = { e -> _uiState.update { it.copy(error = e.message) } }
+                onSuccess = {
+                    _uiState.update { it.copy(successMessage = "Da xoa vinh vien") }
+                },
+                onFailure = {
+                    _uiState.update { it.copy(error = UiError.DELETE_QUIZ_FAILED) }
+                }
             )
         }
     }
 
+    /**
+     * Permanently deletes all soft-deleted quizzes for the current user.
+     */
     private fun onEmptyTrash() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val user = authRepository.getCurrentUser()
-            if (user == null) {
-                _uiState.update { it.copy(isLoading = false, error = "Người dùng chưa đăng nhập") }
+            val userId = cachedUserId ?: authRepository.getCurrentUser()?.id
+            if (userId == null) {
+                _uiState.update {
+                    it.copy(isLoading = false, error = UiError.USER_NOT_LOGGED_IN)
+                }
                 return@launch
             }
-            val result = quizRepository.emptyTrash(user.id)
+            val result = quizRepository.emptyTrash(userId)
             result.fold(
-                onSuccess = { _uiState.update { it.copy(isLoading = false, successMessage = "Đã dọn sạch thùng rác") } },
-                onFailure = { e -> _uiState.update { it.copy(isLoading = false, error = e.message) } }
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(isLoading = false, successMessage = "Da don sach thung rac")
+                    }
+                },
+                onFailure = {
+                    _uiState.update { it.copy(isLoading = false, error = UiError.DELETE_QUIZ_FAILED) }
+                }
             )
         }
     }
 }
-

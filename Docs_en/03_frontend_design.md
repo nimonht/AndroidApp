@@ -27,7 +27,7 @@ graph TD
 ```
 
 <details>
-<summary>📊 View as Text Diagram (if Mermaid doesn't render)</summary>
+<summary>View as Text Diagram (if Mermaid doesn't render)</summary>
 
 ```
 App Entry
@@ -300,10 +300,10 @@ fun ChoiceButton(
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [←]              Quizzez                           [👤]   │
+│  [←]              Quizzez                          [User]  │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Hello, Thanh! 👋                                           │
+│  Hello, Thanh!                                              │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │  Enter quiz code    [______]  [Join →]              │    │
@@ -316,16 +316,16 @@ fun ChoiceButton(
 │                                                             │
 │  My Quizzes                                    [See All →]  │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │ [📷] Math Quiz 101          10 Qs   │   45 plays   │     │
+│  │ [img] Math Quiz 101         10 Qs   │   45 plays   │     │
 │  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 │  Trending Quizzes                              [See All →]  │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │ [📷] Science Trivia          ★4.5   │   500+ plays │     │
+│  │ [img] Science Trivia         ★4.5   │   500+ plays │     │
 │  └─────────────────────────────────────────────────────┘    │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
-│        [🔍]              [🏠]              [👤]             │
+│      [Search]           [Home]           [User]             │
 │       Search             Home             Profile           │
 │                          [+]                                │
 │                         (FAB)                               │
@@ -339,7 +339,7 @@ fun ChoiceButton(
 │  [✕]                                           [Submit]     │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  Question 4 of 10                        ⏱ 12:45           │
+│  Question 4 of 10                        Time: 12:45       │
 │  ████████████░░░░░░░░░░░░░░░░░░░                            │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
@@ -375,16 +375,16 @@ fun ChoiceButton(
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [←]              Quiz Complete                      [📤]   │
+│  [←]              Quiz Complete                    [Share]  │
 ├─────────────────────────────────────────────────────────────┤
-│                         🎉                                  │
+│                    Congratulations!                          │
 │                    Your Score                               │
 │                      8/10                                   │
 │                      80%                                    │
 │                    ★★★★☆                                    │
 │                                                             │
 │  ┌──────────────────────────────────────────────────────┐   │
-│  │  ✅ Correct: 8       ❌ Wrong: 2       ⏱ 8:32       │   │
+│  │  Correct: 8         Wrong: 2         Time: 8:32    │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐    │
@@ -572,119 +572,17 @@ sealed class TakeQuizUiState {
 
 ### 5.1 Firebase Setup (Manual DI)
 
-```kotlin
-// In AppContainer interface
-interface AppContainer {
-    val firebaseAuth: FirebaseAuth
-    val firebaseFirestore: FirebaseFirestore
-    val firebaseStorage: FirebaseStorage
-    // ... other dependencies
-}
+The app uses manual dependency injection (no Hilt/Dagger) with an `AppContainer` interface and a lazy `AppContainerImpl` singleton held by `QuizzezApplication`.
 
-// In AppContainerImpl
-class AppContainerImpl(override val context: Context) : AppContainer {
-    override val firebaseAuth: FirebaseAuth by lazy {
-        Firebase.auth
-    }
-    
-    override val firebaseFirestore: FirebaseFirestore by lazy {
-        Firebase.firestore
-    }
-    
-    override val firebaseStorage: FirebaseStorage by lazy {
-        Firebase.storage
-    }
-    // ... other implementations
-}
-```
+> See [Dependency_injection.md](Dependency_injection.md) for the full DI setup, including the `AppContainer` interface, `AppContainerImpl` implementation, how to access dependencies from Composables/Activities/ViewModels, how to add new dependencies, and the complete list of available dependencies.
 
 ### 5.2 Repository with Firebase
 
-```kotlin
-class QuizRepository(
-    private val firestore: FirebaseFirestore,
-    private val quizDao: QuizDao // Room for offline cache
-) {
-    private val quizzesRef = firestore.collection("quizzes")
-    
-    // Real-time updates with offline cache
-    fun getMyQuizzes(userId: String): Flow<List<Quiz>> = callbackFlow {
-        val listener = quizzesRef
-            .whereEqualTo("ownerId", userId)
-            .whereEqualTo("deletedAt", null)
-            .orderBy("updatedAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) { close(error); return@addSnapshotListener }
-                val quizzes = snapshot?.toObjects(Quiz::class.java) ?: emptyList()
-                trySend(quizzes)
-                
-                // Cache to Room for offline
-                launch { quizDao.insertAll(quizzes.map { it.toEntity() }) }
-            }
-        awaitClose { listener.remove() }
-    }.catch {
-        // Fallback to Room cache when offline
-        emitAll(quizDao.getAllQuizzes().map { it.map { e -> e.toDomain() } })
-    }
-    
-    // Get quiz by share code
-    suspend fun getQuizByShareCode(code: String): Quiz? {
-        val codeDoc = firestore.collection("shareCodes")
-            .document(code).get().await()
-        if (!codeDoc.exists()) return null
-        
-        val quizId = codeDoc.getString("quizId") ?: return null
-        return quizzesRef.document(quizId).get().await().toObject(Quiz::class.java)
-    }
-    
-    // Create quiz with all questions
-    suspend fun createQuiz(quiz: Quiz, questions: List<QuestionDraft>): Result<String> {
-        return try {
-            val batch = firestore.batch()
-            val quizRef = quizzesRef.document()
-            
-            // Compute checksum
-            val checksum = ChecksumUtil.computeChecksum(quiz.title, questions)
-            
-            val quizData = quiz.copy(
-                id = quizRef.id,
-                shareCode = generateShareCode(),
-                checksum = checksum,
-                questionCount = questions.size
-            )
-            batch.set(quizRef, quizData)
-            
-            // Create share code lookup
-            quizData.shareCode?.let { code ->
-                val codeRef = firestore.collection("shareCodes").document(code)
-                batch.set(codeRef, mapOf("quizId" to quizRef.id))
-            }
-            
-            // Create questions
-            questions.forEachIndexed { idx, q ->
-                val qRef = quizRef.collection("questions").document()
-                batch.set(qRef, q.copy(id = qRef.id, position = idx))
-                
-                // Create choices
-                q.choices.forEachIndexed { cIdx, c ->
-                    val cRef = qRef.collection("choices").document()
-                    batch.set(cRef, c.copy(id = cRef.id, position = cIdx))
-                }
-            }
-            
-            batch.commit().await()
-            Result.success(quizRef.id)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    
-    private fun generateShareCode(): String {
-        val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        return (1..6).map { chars.random() }.joinToString("")
-    }
-}
-```
+Repositories combine Firestore real-time listeners (`callbackFlow` + `addSnapshotListener`) with Room offline caching. Key patterns include falling back to Room when the network is unavailable, batch writes for multi-document mutations (quiz + questions + choices + share code in one atomic commit), and checksum verification after upload.
+
+> See [02_backend_database_design.md, Section 4](02_backend_database_design.md#4-repository-implementation) for the full repository implementations (AuthRepository, QuizRepository, AttemptRepository) including share code lookup, quiz CRUD, soft-delete/restore, and offline cache fallback.
+>
+> For the share code behavioral flow (visibility rules, code regeneration), see [04_application_behavior.md, Section 3.2](04_application_behavior.md#32-quiz-sharing-share-code).
 
 ---
 
@@ -749,93 +647,11 @@ class SyncPreferences(
 
 ## 7. CSV/Excel Import
 
-### 7.1 Import Flow
+The CSV import feature allows users to bulk-create quiz questions from a CSV file. The UI flow is: select file, parse and validate, preview results (with per-row error reporting), enter quiz metadata, then confirm import.
 
-```mermaid
-sequenceDiagram
-    User->>UI: Select file
-    UI->>Importer: Parse file
-    Importer->>Validator: Validate rows
-    Validator-->>Importer: Validation result
-    Importer-->>UI: Preview (success/errors)
-    User->>UI: Enter quiz metadata
-    User->>UI: Confirm import
-    UI->>Firestore: Create quiz + questions
-    Firestore-->>UI: Success
-    UI-->>User: Show summary
-```
+> See [04_application_behavior.md, Section 5](04_application_behavior.md#5-excelcsv-import-logic) for the CSV format specification, required/optional columns, validation rules, and error handling behavior.
 
-<details>
-<summary>📊 View as Text Diagram (if Mermaid doesn't render)</summary>
-
-```
-User          UI           Importer       Validator       Firestore
-  │            │               │              │               │
-  │──Select────►               │              │               │
-  │  file      │               │              │               │
-  │            │──Parse file──►│              │               │
-  │            │               │──Validate───►│               │
-  │            │               │◄──Result─────│               │
-  │            │◄──Preview─────│              │               │
-  │──Enter─────►               │              │               │
-  │  metadata  │               │              │               │
-  │──Confirm───►               │              │               │
-  │            │──────────Create quiz────────►│               │
-  │            │◄─────────Success─────────────│               │
-  │◄──Summary──│               │              │               │
-```
-
-</details>
-    Importer->>Validator: Validate rows
-    Validator-->>Importer: Validation result
-    Importer-->>UI: Preview (success/errors)
-    User->>UI: Enter quiz metadata
-    User->>UI: Confirm import
-    UI->>Firestore: Create quiz + questions
-    Firestore-->>UI: Success
-    UI-->>User: Show summary
-```
-
-### 7.2 CSV Parser
-
-```kotlin
-class CsvImporter(
-    private val context: Context
-) {
-    private val requiredColumns = setOf(
-        "question", "option_0", "option_1", "option_2", "option_3", "correct_option"
-    )
-    
-    suspend fun import(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
-        val questions = mutableListOf<QuestionDraft>()
-        val errors = mutableListOf<ImportError>()
-        
-        context.contentResolver.openInputStream(uri)?.use { stream ->
-            val reader = BufferedReader(InputStreamReader(stream))
-            val headers = reader.readLine()?.split(",") ?: return@use
-            
-            val missingHeaders = requiredColumns - headers.toSet()
-            if (missingHeaders.isNotEmpty()) {
-                return@withContext ImportResult(
-                    emptyList(),
-                    listOf(ImportError(0, "Missing columns: $missingHeaders"))
-                )
-            }
-            
-            var lineNumber = 1
-            reader.forEachLine { line ->
-                lineNumber++
-                try {
-                    questions.add(parseQuestion(headers, line.split(",")))
-                } catch (e: Exception) {
-                    errors.add(ImportError(lineNumber, e.message ?: "Parse error"))
-                }
-            }
-        }
-        ImportResult(questions, errors)
-    }
-}
-```
+The frontend implementation lives in `ui/screens/create/CsvImportScreen` and `CsvImportViewModel`. The domain-layer parser and validator are `domain/util/CsvParser` and `domain/util/CsvValidator`.
 
 ---
 

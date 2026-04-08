@@ -12,10 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
@@ -266,4 +266,58 @@ private enum class ImageLoadState {
     Loading,
     Success,
     Error
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun MediaDisplayImagePreview() {
+    QuizzezTheme {
+        MediaDisplay(
+            mediaUrl = "https://example.com/hinh-anh-cau-hoi.png",
+            mediaType = MediaType.IMAGE,
+            contentDescription = "Hinh minh hoa cau hoi",
+            modifier = Modifier.height(200.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun MediaDisplayImageDarkPreview() {
+    QuizzezTheme {
+        MediaDisplay(
+            mediaUrl = "https://example.com/hinh-anh-cau-hoi.png",
+            mediaType = MediaType.IMAGE,
+            contentDescription = "Hinh minh hoa cau hoi",
+            modifier = Modifier.height(200.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Light - Video")
+@Composable
+private fun MediaDisplayVideoPreview() {
+    QuizzezTheme {
+        MediaDisplay(
+            mediaUrl = "https://youtube.com/watch?v=abc123",
+            mediaType = MediaType.VIDEO,
+            contentDescription = "Video bai giang",
+            onVideoClick = {},
+            modifier = Modifier.height(200.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark - Video", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun MediaDisplayVideoDarkPreview() {
+    QuizzezTheme {
+        MediaDisplay(
+            mediaUrl = "https://youtube.com/watch?v=abc123",
+            mediaType = MediaType.VIDEO,
+            contentDescription = "Video bai giang",
+            onVideoClick = {},
+            modifier = Modifier.height(200.dp)
+        )
+    }
 }

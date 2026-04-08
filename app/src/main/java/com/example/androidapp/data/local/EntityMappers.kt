@@ -4,12 +4,15 @@ import com.example.androidapp.data.local.entity.AttemptEntity
 import com.example.androidapp.data.local.entity.ChoiceEntity
 import com.example.androidapp.data.local.entity.QuestionEntity
 import com.example.androidapp.data.local.entity.QuizEntity
+import com.example.androidapp.data.local.entity.SyncStatus
 import com.example.androidapp.data.local.entity.UserEntity
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.model.Choice
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.model.UserRole
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -29,15 +32,17 @@ fun QuizEntity.toDomain(): Quiz = Quiz(
     questionCount = questionCount,
     attemptCount = attemptCount,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     checksum = checksum,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    deletedAt = deletedAt
+    deletedAt = deletedAt,
+    isRemovedFromCloud = isRemovedFromCloud
 )
 
 /** Maps domain [Quiz] to [QuizEntity] for Room storage. */
-fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
+fun Quiz.toEntity(syncStatus: String = SyncStatus.SYNCED.name): QuizEntity = QuizEntity(
     id = id,
     ownerId = ownerId,
     title = title,
@@ -45,6 +50,7 @@ fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
     authorName = authorName,
     thumbnailUrl = thumbnailUrl,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     tags = tags.joinToString(","),
     checksum = checksum,
@@ -53,7 +59,8 @@ fun Quiz.toEntity(syncStatus: String = "SYNCED"): QuizEntity = QuizEntity(
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt,
-    syncStatus = syncStatus
+    syncStatus = syncStatus,
+    isRemovedFromCloud = isRemovedFromCloud
 )
 
 // --- QUESTION ---
@@ -146,20 +153,29 @@ fun Attempt.toEntity(): AttemptEntity = AttemptEntity(
 
 // --- USER ---
 
-/** Maps [UserEntity] to domain [User]. */
+/** Maps [UserEntity] to domain [User]. Parses permissions from comma-separated string. */
 fun UserEntity.toDomain(): User = User(
     id = id,
     email = email,
     displayName = displayName ?: username,
     username = username,
-    photoUrl = photoUrl
+    photoUrl = photoUrl,
+    role = UserRole.fromString(role),
+    isBanned = deletedAt != null,
+    permissions = if (permissions.isBlank()) {
+        emptySet()
+    } else {
+        permissions.split(",").mapNotNull { AdminPermission.fromString(it.trim()) }.toSet()
+    }
 )
 
-/** Maps domain [User] to [UserEntity] for Room storage. */
+/** Maps domain [User] to [UserEntity] for Room storage. Serializes permissions as comma-separated string. */
 fun User.toEntity(): UserEntity = UserEntity(
     id = id,
     username = username,
     email = email,
     displayName = displayName,
-    photoUrl = photoUrl
+    photoUrl = photoUrl,
+    role = role.toStorageValue(),
+    permissions = permissions.joinToString(",") { it.toStorageValue() }
 )

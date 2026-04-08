@@ -3,21 +3,21 @@ package com.example.androidapp.domain.repository
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Interface chịu trách nhiệm quản lý dữ liệu tìm kiếm, bao gồm lịch sử tìm kiếm.
+ * Repository interface responsible for managing search data, including search history.
  */
 interface SearchRepository {
     /**
-     * Lấy danh sách các từ khóa tìm kiếm gần đây.
+     * Retrieves the list of recent search keywords.
      */
     fun getRecentSearches(): Flow<List<String>>
 
     /**
-     * Lưu từ khóa tìm kiếm mới vào lịch sử.
+     * Saves a new search keyword to the search history.
      */
     suspend fun addRecentSearch(query: String)
 
     /**
-     * Xóa toàn bộ lịch sử tìm kiếm.
+     * Clears all search history.
      */
     suspend fun clearRecentSearches()
 }

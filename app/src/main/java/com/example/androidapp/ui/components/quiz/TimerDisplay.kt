@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.components.quiz
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.androidapp.R
 import com.example.androidapp.ui.theme.FullShape
+import com.example.androidapp.ui.theme.QuizzezTheme
 import java.util.Locale
 
 /**
@@ -60,6 +63,28 @@ fun TimerDisplay(
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun TimerDisplayPreview() {
+    QuizzezTheme {
+        TimerDisplay(
+            secondsElapsed = 754,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TimerDisplayDarkPreview() {
+    QuizzezTheme {
+        TimerDisplay(
+            secondsElapsed = 754,
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.example.androidapp.domain.repository
 
+import com.example.androidapp.domain.model.PaginatedResult
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +26,13 @@ interface QuizRepository {
      * Refreshes from Firestore when online.
      */
     fun getHomeQuizzes(userId: String): Flow<HomeQuizzes>
+
+    /**
+     * Triggers a background refresh of home screen data from Firestore.
+     * Suspends until the refresh is complete (or fails).
+     * Does nothing when sync is not allowed (offline, wifi-only, etc.).
+     */
+    suspend fun refreshHomeData(userId: String)
 
     /**
      * Emits quizzes owned by the user that are not deleted.
@@ -123,4 +131,63 @@ interface QuizRepository {
      *         or [Result.failure] if the quiz does not exist remotely or the fetch fails.
      */
     suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz>
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Emits public quizzes with a dynamic limit for incremental loading.
+     * The limit increases as the user scrolls, and Room re-emits the full
+     * list up to the new limit whenever data changes.
+     *
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun getPublicQuizzesLimited(limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Emits quizzes owned by the user with a dynamic limit.
+     *
+     * @param userId The owner's user ID.
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun getMyQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Emits search results with a dynamic limit.
+     *
+     * @param query The search query.
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun searchQuizzesLimited(query: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Emits soft-deleted quizzes with a dynamic limit.
+     *
+     * @param userId The owner's user ID.
+     * @param limit Maximum number of quizzes to return.
+     */
+    fun getDeletedQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Returns the total count of public non-deleted quizzes.
+     * Used by pagination to determine if more items are available.
+     */
+    suspend fun getPublicQuizzesCount(): Int
+
+    /**
+     * Returns the total count of search results for a query.
+     */
+    suspend fun getSearchResultsCount(query: String): Int
+
+    /**
+     * Refreshes the local Room cache of public quizzes from Firestore.
+     *
+     * Fetches all public quizzes, upserts them into Room (including their
+     * questions and choices), and purges stale local entries that no longer
+     * exist on the remote.
+     *
+     * @param currentUserId optional ID of the current user; when provided,
+     *        stale-quiz cleanup skips quizzes owned by this user so that the
+     *        owner's local data is preserved.
+     */
+    suspend fun refreshPublicQuizzes(currentUserId: String? = null)
 }

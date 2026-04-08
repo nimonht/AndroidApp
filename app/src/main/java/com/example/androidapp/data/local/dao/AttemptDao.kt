@@ -47,30 +47,6 @@ interface AttemptDao {
     suspend fun getLatestAttempt(userId: String, quizId: String): AttemptEntity?
 
     /**
-     * Get in-progress attempts (not finished) for a user.
-     */
-    @Query("SELECT * FROM attempts WHERE user_id = :userId AND finished_at IS NULL")
-    suspend fun getInProgressAttempts(userId: String): List<AttemptEntity>
-
-    /**
-     * Get the count of completed attempts for a quiz.
-     */
-    @Query("SELECT COUNT(*) FROM attempts WHERE quiz_id = :quizId AND finished_at IS NOT NULL")
-    suspend fun getAttemptCount(quizId: String): Int
-
-    /**
-     * Get the average score for a quiz.
-     */
-    @Query(
-        """
-        SELECT AVG(CAST(score AS FLOAT) / max_score * 100)
-        FROM attempts
-        WHERE quiz_id = :quizId AND finished_at IS NOT NULL AND max_score > 0
-    """
-    )
-    suspend fun getAverageScore(quizId: String): Float?
-
-    /**
      * Insert an attempt, or update it if it already exists.
      */
     @Upsert
@@ -89,15 +65,26 @@ interface AttemptDao {
     suspend fun deleteAttempt(attempt: AttemptEntity)
 
     /**
-     * Delete all attempts for a quiz.
-     */
-    @Query("DELETE FROM attempts WHERE quiz_id = :quizId")
-    suspend fun deleteAttemptsByQuizId(quizId: String)
-
-    /**
      * Update the userId for all attempts belonging to a guest.
      * Returns the number of rows affected.
      */
     @Query("UPDATE attempts SET user_id = :newUserId WHERE user_id = :guestId")
     suspend fun updateUserId(guestId: String, newUserId: String): Int
+
+    // ==================== Paginated queries ====================
+
+    /**
+     * Get attempts for a user with a dynamic limit for pagination.
+     * Used by the History screen to incrementally load attempt history.
+     */
+    @Query("SELECT * FROM attempts WHERE user_id = :userId ORDER BY started_at DESC LIMIT :limit")
+    fun getAttemptsByUserLimited(userId: String, limit: Int): Flow<List<AttemptEntity>>
+
+    /**
+     * Get the total count of attempts for a user.
+     * Used by pagination to determine if more items are available.
+     * This is a one-shot suspend query (not a Flow).
+     */
+    @Query("SELECT COUNT(*) FROM attempts WHERE user_id = :userId")
+    suspend fun getAttemptCountByUserOnce(userId: String): Int
 }

@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.androidapp.R
 import com.example.androidapp.ui.navigation.Routes
-import com.example.androidapp.ui.theme.InterFamily
 
 /**
  * Represents a bottom navigation item with its route and icons.
@@ -91,9 +90,10 @@ fun BottomNavBar(
                 label = {
                     Text(
                         text = stringResource(id = item.labelResId),
-                        fontFamily = InterFamily,
-                        fontSize = 10.sp,
-                        letterSpacing = 0.5.sp
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 10.sp,
+                            letterSpacing = 0.5.sp
+                        )
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(

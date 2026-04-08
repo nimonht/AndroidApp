@@ -2,20 +2,37 @@ package com.example.androidapp.ui.screens.attempt
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import com.example.androidapp.ui.common.toMessage
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -84,7 +101,7 @@ fun AttemptDetailScreen(
             )
 
             is AttemptDetailUiState.Error -> ErrorState(
-                message = state.message,
+                message = state.error.toMessage(),
                 onRetry = { viewModel.onRetry() },
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
@@ -190,7 +207,7 @@ private fun AttemptDetailContent(
         ) {
             StatColumn(
                 icon = Icons.Default.Check,
-                value = state.attempt.score.toString(),
+                value = state.correctCount.toString(),
                 label = stringResource(R.string.quiz_result_stat_correct),
                 modifier = Modifier.weight(1f)
             )
@@ -200,7 +217,7 @@ private fun AttemptDetailContent(
             )
             StatColumn(
                 icon = Icons.Default.Close,
-                value = (state.attempt.totalQuestions - state.attempt.score).toString(),
+                value = state.wrongCount.toString(),
                 label = stringResource(R.string.quiz_result_stat_wrong),
                 modifier = Modifier.weight(1f)
             )

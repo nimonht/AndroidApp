@@ -49,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.forms.TextInputField
 import com.example.androidapp.ui.theme.QuizzezTheme
 
@@ -93,10 +94,10 @@ fun EditProfileScreen(
     }
 
     // Show error in a Snackbar and then clear it from state
+    val errorMessage = uiState.error?.toMessage(detail = uiState.errorDetail)
     LaunchedEffect(uiState.error) {
-        val error = uiState.error
-        if (error != null) {
-            snackbarHostState.showSnackbar(error)
+        if (errorMessage != null) {
+            snackbarHostState.showSnackbar(errorMessage)
             viewModel.onEvent(EditProfileEvent.ClearError)
         }
     }

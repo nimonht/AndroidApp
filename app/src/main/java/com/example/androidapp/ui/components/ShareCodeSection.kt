@@ -3,6 +3,7 @@ package com.example.androidapp.ui.components
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -22,8 +23,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
+import com.example.androidapp.ui.theme.QuizzezTheme
 import com.example.androidapp.ui.util.QrCodeUtil
 
 /**
@@ -88,7 +91,8 @@ fun ShareCodeSection(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("Share Code", shareCode))
-                        Toast.makeText(context, context.getString(R.string.share_code_copied), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.share_code_copied), Toast.LENGTH_SHORT)
+                            .show()
                     }
                 ) {
                     Icon(
@@ -137,5 +141,27 @@ fun ShareCodeSection(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun ShareCodeSectionPreview() {
+    QuizzezTheme {
+        ShareCodeSection(
+            shareCode = "AB3K7X",
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ShareCodeSectionDarkPreview() {
+    QuizzezTheme {
+        ShareCodeSection(
+            shareCode = "AB3K7X",
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

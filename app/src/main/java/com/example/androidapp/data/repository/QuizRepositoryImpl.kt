@@ -1,9 +1,11 @@
 package com.example.androidapp.data.repository
 
+import com.example.androidapp.data.local.LocalQuizPurger
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.entity.SyncEntityType
+import com.example.androidapp.data.local.entity.SyncStatus
 import com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource
 import com.example.androidapp.data.local.entity.SyncOperation
 import com.example.androidapp.data.local.toDomain
@@ -12,6 +14,7 @@ import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.remote.toDomain
 import com.example.androidapp.data.remote.toDto
 import com.example.androidapp.data.sync.SyncManager
+import kotlinx.coroutines.SupervisorJob
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.util.ChecksumUtil
@@ -19,7 +22,6 @@ import com.example.androidapp.domain.util.safeCall
 import com.example.androidapp.domain.repository.HomeQuizzes
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +30,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import java.util.Date
 import java.util.UUID
 
 /**
@@ -45,16 +46,24 @@ class QuizRepositoryImpl(
     private val shareCodeRepository: ShareCodeRepository
 ) : QuizRepository {
 
-    private val ioScope = CoroutineScope(Dispatchers.IO)
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private companion object {
+        /** Maximum number of user-owned quizzes shown on the home screen. */
+        const val HOME_MY_QUIZZES_LIMIT = 20
+
+        /** Maximum number of trending (public) quizzes shown on the home screen. */
+        const val HOME_TRENDING_LIMIT = 20
+    }
 
     override fun getHomeQuizzes(userId: String): Flow<HomeQuizzes> {
         val recentQuizzesFlow = quizDao.getRecentAttemptQuizzes(userId).map { entities ->
             entities.map { it.toDomain() }
         }
-        val myQuizzesFlow = quizDao.getQuizzesByOwner(userId).map { entities ->
+        val myQuizzesFlow = quizDao.getQuizzesByOwnerLimited(userId, HOME_MY_QUIZZES_LIMIT).map { entities ->
             entities.map { it.toDomain() }
         }
-        val publicQuizzesFlow = quizDao.getPublicQuizzes().map { entities ->
+        val publicQuizzesFlow = quizDao.getPublicQuizzesLimited(HOME_TRENDING_LIMIT).map { entities ->
             entities.map { it.toDomain() }
         }
         // Refresh from Firestore in background when flow starts
@@ -62,11 +71,18 @@ class QuizRepositoryImpl(
             HomeQuizzes(
                 recentAttemptQuizzes = recent,
                 myQuizzes = mine,
-                trendingQuizzes = public.sortedByDescending { it.attemptCount }.take(10)
+                // publicQuizzesFlow is already sorted by attempt_count DESC and limited
+                trendingQuizzes = public
             )
         }.onStart {
             refreshFromFirestore(userId)
         }
+    }
+
+    override suspend fun refreshHomeData(userId: String) {
+        if (!syncManager.isSyncAllowed()) return
+        refreshMyQuizzes(userId)
+        refreshPublicQuizzes(currentUserId = userId)
     }
 
     override fun getMyQuizzes(userId: String): Flow<List<Quiz>> {
@@ -135,7 +151,7 @@ class QuizRepositoryImpl(
             val checksum = ChecksumUtil.computeQuizChecksum(finalQuiz, questions)
 
             // Write to Room first with PENDING status
-            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = "PENDING").copy(checksum = checksum))
+            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = SyncStatus.PENDING.name).copy(checksum = checksum))
             questions.forEachIndexed { idx, question ->
                 val qId = question.id.ifBlank { UUID.randomUUID().toString() }
                 val finalQuestion = question.copy(id = qId, quizId = quizId, position = idx)
@@ -261,27 +277,64 @@ class QuizRepositoryImpl(
                 }
             }
 
-            // Delete them from local Room DB
+            // Delete from local Room DB and enqueue a Firestore sync for each
+            // quiz so the deletion is retried automatically when connectivity
+            // returns (instead of a fire-and-forget that silently drops offline).
             deletedQuizzes.forEach { entity ->
                 quizDao.deleteQuiz(entity)
+                syncManager.enqueueSync(
+                    SyncEntityType.QUIZ,
+                    entity.id,
+                    SyncOperation.DELETE
+                )
             }
-
-            // Sync deletion to Firestore in background
-            ioScope.launch {
-                try {
-                    remoteDataSource.emptyTrash(userId)
-                } catch (_: Exception) {
-                    // Failures here are swallowed as this is background sync
-                }
-            }
-            Unit
         }
+    }
+
+    // ==================== Paginated query implementations ====================
+
+    override fun getPublicQuizzesLimited(limit: Int): Flow<List<Quiz>> {
+        return quizDao.getPublicQuizzesLimited(limit).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart { refreshPublicQuizzes() }
+    }
+
+    override fun getMyQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>> {
+        return quizDao.getQuizzesByOwnerLimited(userId, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart { refreshMyQuizzes(userId) }
+    }
+
+    override fun searchQuizzesLimited(query: String, limit: Int): Flow<List<Quiz>> {
+        return quizDao.searchQuizzesLimited(query, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override fun getDeletedQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>> {
+        return quizDao.getDeletedQuizzesLimited(userId, limit).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getPublicQuizzesCount(): Int {
+        return quizDao.getPublicQuizzesCount()
+    }
+
+    override suspend fun getSearchResultsCount(query: String): Int {
+        return quizDao.searchQuizzesCount(query)
     }
 
     override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {
         return safeCall {
             val quizDto = remoteDataSource.getQuizById(quizId)
-                ?: throw Exception("Quiz not found on remote")
+
+            if (quizDto == null || quizDto.deletedAt != null) {
+                // Quiz has been deleted or soft-deleted on remote -- purge the
+                // local copy so the user does not interact with stale content.
+                LocalQuizPurger.purgeLocalQuiz(quizId, quizDao, questionDao, choiceDao)
+                throw Exception("Quiz no longer available on remote")
+            }
 
             val quiz = quizDto.toDomain()
             quizDao.insertQuiz(quiz.toEntity())
@@ -297,7 +350,7 @@ class QuizRepositoryImpl(
         ioScope.launch {
             if (!syncManager.isSyncAllowed()) return@launch
             refreshMyQuizzes(userId)
-            refreshPublicQuizzes()
+            refreshPublicQuizzes(currentUserId = userId)
         }
     }
 
@@ -305,27 +358,58 @@ class QuizRepositoryImpl(
         if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
+            val remoteQuizIds = dtos.map { it.id }.toSet()
+
             dtos.forEach { dto ->
                 val quiz = dto.toDomain()
                 quizDao.insertQuiz(quiz.toEntity())
                 refreshQuestionsAndChoices(quiz.id)
+            }
+
+            // Mark owner's quizzes absent from Firestore instead of deleting
+            // them outright. They may have been removed by an admin; the user
+            // should be warned and allowed to delete them manually.
+            val localMyQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
+            val staleQuizzes = localMyQuizzes.filter { local ->
+                local.id !in remoteQuizIds && local.syncStatus != SyncStatus.PENDING.name
+            }
+            staleQuizzes.forEach { staleQuiz ->
+                if (!staleQuiz.isRemovedFromCloud) {
+                    quizDao.markRemovedFromCloud(staleQuiz.id, true)
+                }
             }
         } catch (_: Exception) {
         }
     }
 
-    private suspend fun refreshPublicQuizzes() {
+    override suspend fun refreshPublicQuizzes(currentUserId: String?) {
         if (!syncManager.isSyncAllowed()) return
         try {
             val dtos = remoteDataSource.getPublicQuizzes().first()
+            val remoteQuizIds = dtos.map { it.id }.toSet()
+
             dtos.forEach { dto ->
                 val quiz = dto.toDomain()
                 quizDao.insertQuiz(quiz.toEntity())
                 refreshQuestionsAndChoices(quiz.id)
             }
+
+            // Clean up stale local public quizzes that no longer exist on remote.
+            // Only remove quizzes not owned by the current user to preserve their own data.
+            if (currentUserId != null) {
+                val localPublicQuizzes = quizDao.getPublicQuizzesOnce()
+                val staleQuizzes = localPublicQuizzes.filter { local ->
+                    local.id !in remoteQuizIds && local.ownerId != currentUserId
+                }
+                staleQuizzes.forEach { staleQuiz ->
+                    // Clean up associated questions and choices (no FK cascade)
+                    LocalQuizPurger.purgeLocalQuiz(staleQuiz.id, quizDao, questionDao, choiceDao)
+                }
+            }
         } catch (_: Exception) {
         }
     }
+
 
     /**
      * Fetches questions and their choices from Firestore subcollections

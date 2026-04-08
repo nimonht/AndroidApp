@@ -1,8 +1,5 @@
 package com.example.androidapp.domain.util
 
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
@@ -32,22 +29,5 @@ object TimeFormatter {
         } else {
             String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
         }
-    }
-
-    /**
-     * Formats a Unix timestamp (in milliseconds) into a readable date and time string.
-     *
-     * @param timestampMillis The Unix timestamp in milliseconds (e.g., from System.currentTimeMillis()).
-     * @param pattern The desired date/time pattern (default is "dd/MM/yyyy HH:mm").
-     * @return A formatted date string.
-     */
-    fun formatTimestamp(timestampMillis: Long, pattern: String = "dd/MM/yyyy HH:mm"): String {
-        if (timestampMillis <= 0) return ""
-
-        val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
-        val instant = Instant.ofEpochMilli(timestampMillis)
-        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
-
-        return formatter.format(zonedDateTime)
     }
 }

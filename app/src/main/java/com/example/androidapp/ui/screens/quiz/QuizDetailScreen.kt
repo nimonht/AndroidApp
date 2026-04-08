@@ -2,7 +2,16 @@ package com.example.androidapp.ui.screens.quiz
 
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -12,7 +21,22 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +62,7 @@ import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.ShareCodeSection
 import com.example.androidapp.ui.components.common.AppAlertDialog
 import com.example.androidapp.ui.components.feedback.ErrorState
@@ -65,6 +90,7 @@ fun QuizDetailScreen(
     onNavigateBack: () -> Unit,
     onStartQuiz: () -> Unit,
     onEditQuiz: (String) -> Unit = {},
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -83,16 +109,20 @@ fun QuizDetailScreen(
 
     // Navigate back after successful deletion
     val successState = uiState as? QuizDetailUiState.Success
+    val deletedMessage = stringResource(R.string.quiz_deleted_success)
     LaunchedEffect(successState?.isDeleted) {
         if (successState?.isDeleted == true) {
-            snackbarHostState.showSnackbar("Đã chuyển Quizz vào thùng rác")
+            snackbarHostState.showSnackbar(deletedMessage)
             onNavigateBack()
         }
     }
 
+    // Resolve delete error to a display string in composable context.
+    val deleteErrorMessage = successState?.deleteError?.toMessage(successState.deleteErrorDetail)
+
     // Show delete error as snackbar
     LaunchedEffect(successState?.deleteError) {
-        successState?.deleteError?.let { msg ->
+        deleteErrorMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
             viewModel.onClearDeleteError()
         }
@@ -201,7 +231,7 @@ fun QuizDetailScreen(
             )
 
             is QuizDetailUiState.Error -> ErrorState(
-                message = state.message,
+                message = state.error.toMessage(state.errorDetail),
                 onRetry = { viewModel.onRetry() },
                 modifier = Modifier
                     .padding(innerPadding)
@@ -211,6 +241,7 @@ fun QuizDetailScreen(
             is QuizDetailUiState.Success -> QuizDetailContent(
                 quiz = state.quiz,
                 questions = state.questions,
+                onTagClick = onTagClick,
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -237,6 +268,7 @@ fun QuizDetailScreen(
 private fun QuizDetailContent(
     quiz: Quiz,
     questions: List<Question>,
+    onTagClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -317,7 +349,7 @@ private fun QuizDetailContent(
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(quiz.tags) { tag ->
                             SuggestionChip(
-                                onClick = { },
+                                onClick = { onTagClick(tag) },
                                 label = { Text(tag) }
                             )
                         }

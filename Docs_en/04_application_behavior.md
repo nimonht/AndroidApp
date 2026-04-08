@@ -344,26 +344,7 @@ questions.forEach { question ->
 - Checksum ensures ALL data transferred correctly
 - If mismatch: delete corrupted data, client retries fresh
 
-**Checksum Computation:**
-```kotlin
-fun computeChecksum(quiz: Quiz, questions: List<Question>): String {
-    val data = buildString {
-        append(quiz.title)
-        append(quiz.description ?: "")
-        questions.sortedBy { it.position }.forEach { q ->
-            append(q.content)
-            append(q.mediaUrl ?: "")
-            q.choices.sortedBy { it.position }.forEach { c ->
-                append(c.content)
-                append(c.isCorrect)
-            }
-        }
-    }
-    return MessageDigest.getInstance("SHA-256")
-        .digest(data.toByteArray())
-        .joinToString("") { "%02x".format(it) }
-}
-```
+> For the full `ChecksumUtil` and `SyncManager` implementation (including `verifySyncStatus()`, `uploadQuiz()`, and the `SyncStatus` enum), see [02_backend_database_design.md, Section 5](02_backend_database_design.md#5-sync-with-checksum-verification).
 
 ---
 
@@ -592,14 +573,22 @@ val networkConstraint = if (dataSaverEnabled) {
 
 ## 6. Security Rules Summary
 
-| Collection | Read | Write |
-|------------|------|-------|
-| `users` | Authenticated users | Own document only |
-| `quizzes` | Public OR owner | Owner only |
-| `quizzes/{id}/questions` | Same as parent quiz | Owner only |
-| `attempts` | Own attempts OR quiz owner | Creator (including guests) |
-| `shareCodes` | Anyone | Cloud Functions only |
-| `questionPool` | Active entries only | Authenticated (contribute), Contributor (revoke) |
+> **Source of truth:** [`firestore.rules`](../firestore.rules) in the repository root.
+> Do not duplicate the full rules here -- refer to that file for the complete, up-to-date definitions.
+
+Key points of the current security rules:
+
+| Collection | Read | Write | Notes |
+|------------|------|-------|-------|
+| `users` | Any authenticated user | Owner (except `role` and `deletedAt` fields); admins can update any profile | Prevents self-escalation of roles |
+| `quizzes` | Owner, public/shared quizzes, or admin | Owner (create/update/delete); any user can increment `attemptCount` by 1; admins can update/delete | `ownerId` is immutable on update |
+| `quizzes/{id}/questions` | Quiz owner, accessible quizzes, or admin | Quiz owner or admin | Accessibility = public OR has share code |
+| `quizzes/{id}/questions/{id}/choices` | Same as questions | Quiz owner or admin | |
+| `attempts` | Attempt owner, quiz owner, or admin | Creator (authenticated or `guest_*`); owner can update | Admins can delete any attempt |
+| `shareCodes` | Anyone | Any authenticated user | Client-managed via `ShareCodeUtil`, **not** Cloud Functions |
+| `questionPool` | Anyone (unauthenticated included) | Authenticated (create); contributor or anonymous entries (update/delete) | |
+
+Helper functions defined in the rules file: `isSignedIn()`, `isOwner()`, `isAdmin()`, `isQuizOwner()`, `isQuizAccessible()`, `notDeleted()`, among others.
 
 ---
 

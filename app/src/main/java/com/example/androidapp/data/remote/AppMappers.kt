@@ -2,32 +2,35 @@ package com.example.androidapp.data.remote
 
 import com.example.androidapp.data.remote.model.*
 import com.example.androidapp.domain.model.*
+import com.example.androidapp.domain.model.AdminPermission
 import com.google.firebase.Timestamp
 import java.util.Date
 
 // --- USER ---
-fun UserDto.toDomain() = User(id, email, displayName, username, photoUrl)
-
-fun User.toDto() = UserDto(
+fun UserDto.toDomain() = User(
     id = id,
     email = email,
     displayName = displayName,
     username = username,
     photoUrl = photoUrl,
-    createdAt = Timestamp.now(),
-    updatedAt = Timestamp.now()
+    role = UserRole.fromString(role),
+    isBanned = deletedAt != null,
+    permissions = permissions.mapNotNull { AdminPermission.fromString(it) }.toSet()
 )
 
 /**
- * Converts a [User] to a [UserDto] for an update operation,
- * preserving the original [createdAt] timestamp from the existing DTO.
+ * Converts a [User] to a [UserDto] for a create or update operation.
+ * When [existingDto] is provided, preserves the original [createdAt] timestamp.
+ * When [existingDto] is null (new user), [createdAt] defaults to now.
  */
-fun User.toDto(existingDto: UserDto?): UserDto = UserDto(
+fun User.toDto(existingDto: UserDto? = null): UserDto = UserDto(
     id = id,
     email = email,
     displayName = displayName,
     username = username,
     photoUrl = photoUrl,
+    role = role.toStorageValue(),
+    permissions = permissions.map { it.toStorageValue() },
     createdAt = existingDto?.createdAt ?: Timestamp.now(),
     updatedAt = Timestamp.now()
 )
@@ -70,6 +73,7 @@ fun QuizDto.toDomain() = Quiz(
     questionCount = questionCount,
     attemptCount = attemptCount,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     checksum = checksum,
     createdAt = createdAt?.toDate()?.time ?: System.currentTimeMillis(),
@@ -88,6 +92,7 @@ fun Quiz.toDto() = QuizDto(
     questionCount = questionCount,
     attemptCount = attemptCount,
     isPublic = isPublic,
+    isDraft = isDraft,
     shareCode = shareCode,
     checksum = checksum,
     createdAt = Timestamp(Date(createdAt)),
@@ -170,17 +175,4 @@ fun QuestionPoolItem.toDto() = QuestionPoolItemDto(
     isActive = isActive,
     usageCount = usageCount,
     createdAt = Timestamp(Date(createdAtMillis))
-)
-
-// --- SHARE CODE ---
-fun ShareCodeDto.toDomain() = ShareCode(
-    code = code,
-    quizId = quizId,
-    expiresAtMillis = expiresAt?.toDate()?.time
-)
-
-fun ShareCode.toDto() = ShareCodeDto(
-    code = code,
-    quizId = quizId,
-    expiresAt = expiresAtMillis?.let { Timestamp(Date(it)) }
 )

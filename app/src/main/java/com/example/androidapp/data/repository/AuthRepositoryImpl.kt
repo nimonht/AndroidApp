@@ -3,6 +3,7 @@ package com.example.androidapp.data.repository
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.local.toDomain
 import com.example.androidapp.data.local.toEntity
+import com.example.androidapp.data.remote.firebase.FirestoreCascadeHelper
 import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
@@ -13,15 +14,21 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.example.androidapp.data.remote.toDomain
+import com.google.firebase.firestore.FirebaseFirestore
 import android.net.Uri
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -38,8 +45,15 @@ import org.json.JSONObject
 class AuthRepositoryImpl(
     private val firebaseAuth: FirebaseAuth,
     private val userDao: UserDao,
-    private val userRemoteDataSource: UserRemoteDataSource
+    private val userRemoteDataSource: UserRemoteDataSource,
+    private val firestore: FirebaseFirestore
 ) : AuthRepository {
+
+    /**
+     * Coroutine scope for background operations triggered by listeners.
+     * Uses [SupervisorJob] so individual failures don't cancel siblings.
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
      * Backing mutable state that holds the currently authenticated [User].
@@ -48,16 +62,7 @@ class AuthRepositoryImpl(
      * 2. [updateProfile] — fires after a successful display-name or photo-URL change.
      * 3. [register] — fires after account creation (includes auto-fetched avatar).
      */
-    private val _currentUser = MutableStateFlow(
-        firebaseAuth.currentUser?.let { firebaseUser ->
-            User(
-                id = firebaseUser.uid,
-                email = firebaseUser.email ?: "",
-                displayName = firebaseUser.displayName ?: "",
-                photoUrl = firebaseUser.photoUrl?.toString()
-            )
-        }
-    )
+    private val _currentUser = MutableStateFlow<User?>(null)
 
     /**
      * When true, the [FirebaseAuth.AuthStateListener] skips updating [_currentUser].
@@ -79,13 +84,21 @@ class AuthRepositoryImpl(
 
             val firebaseUser = auth.currentUser
             if (firebaseUser != null) {
-                val user = User(
-                    id = firebaseUser.uid,
-                    email = firebaseUser.email ?: "",
-                    displayName = firebaseUser.displayName ?: "",
-                    photoUrl = firebaseUser.photoUrl?.toString()
-                )
-                _currentUser.value = user
+                val capturedUid = firebaseUser.uid
+                // Fetch full profile (including role) from Firestore/Room
+                scope.launch {
+                    val user = fetchFullUserProfile(capturedUid, firebaseUser)
+                    // Guard against stale writes: the user may have signed out
+                    // (or switched accounts) while the coroutine was in-flight.
+                    if (firebaseAuth.currentUser?.uid != capturedUid) return@launch
+                    // If user was banned while app was closed, force sign-out
+                    if (user.isBanned) {
+                        firebaseAuth.signOut()
+                        _currentUser.value = null
+                        return@launch
+                    }
+                    _currentUser.value = user
+                }
             } else {
                 _currentUser.value = null
             }
@@ -108,18 +121,19 @@ class AuthRepositoryImpl(
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
                 ?: return Result.failure(Exception("Đăng nhập thất bại"))
-            val user = User(
-                id = firebaseUser.uid,
-                email = firebaseUser.email ?: email,
-                displayName = firebaseUser.displayName ?: "",
-                photoUrl = firebaseUser.photoUrl?.toString()
-            )
-            // Attempt to load full profile from Firestore/Room
-            val cached = userDao.getUserById(firebaseUser.uid)
-            val enriched = if (cached != null) cached.toDomain() else user
+
+            // Fetch full profile (including role) from Firestore, falling back to Room
+            val user = fetchFullUserProfile(firebaseUser.uid, firebaseUser)
+
+            // Reject banned users — sign out immediately so they cannot use the app
+            if (user.isBanned) {
+                firebaseAuth.signOut()
+                return Result.failure(Exception("Tài khoản của bạn đã bị cấm sử dụng ứng dụng. Vui lòng liên hệ quản trị viên để biết thêm chi tiết."))
+            }
+
             // Update the shared flow so all collectors get the latest data
-            _currentUser.value = enriched
-            return Result.success(enriched)
+            _currentUser.value = user
+            return Result.success(user)
         } catch (e: FirebaseAuthInvalidCredentialsException) {
             return Result.failure(Exception("Email hoặc mật khẩu không đúng"))
         } catch (e: Exception) {
@@ -166,27 +180,44 @@ class AuthRepositoryImpl(
                 photoUrl = avatarUrl
             )
 
-            // Immediately propagate new user (with avatar) to all UI collectors
+            // Persist to Room and Firestore BEFORE emitting _currentUser.
+            // The _currentUser emission triggers the AuthViewModel init collector
+            // which sets AuthUiState.Authenticated. When the XML AuthFragment
+            // observes that state it navigates away and the Fragment (plus its
+            // ViewModel scope) is destroyed. If the Firestore write has not
+            // finished by then the coroutine is cancelled and the user document
+            // never lands in the 'users' collection.
+            //
+            // withContext(NonCancellable) ensures the writes run to completion
+            // even if the caller's scope is cancelled mid-flight (e.g. Fragment
+            // removal racing with coroutine dispatch).
+            withContext(NonCancellable) {
+                // Cache locally
+                userDao.insertUser(user.toEntity())
+                // Persist to Firestore
+                try {
+                    userRemoteDataSource.saveUser(
+                        UserDto(
+                            id = user.id,
+                            email = email,
+                            displayName = username,
+                            username = username,
+                            photoUrl = avatarUrl,
+                            createdAt = Timestamp.now(),
+                            updatedAt = Timestamp.now()
+                        )
+                    )
+                } catch (_: Exception) {
+                    // Firestore sync failure is non-fatal; fetchFullUserProfile
+                    // will back-fill the document on the next login / app start.
+                }
+            }
+
+            // NOW propagate the authenticated user to all UI collectors.
+            // All persistence is already done, so it is safe for the UI to
+            // navigate away (destroying the Fragment / ViewModel scope).
             _currentUser.value = user
 
-            // Cache locally
-            userDao.insertUser(user.toEntity())
-            // Persist to Firestore in background
-            try {
-                userRemoteDataSource.saveUser(
-                    UserDto(
-                        id = user.id,
-                        email = email,
-                        displayName = username,
-                        username = username,
-                        photoUrl = avatarUrl,
-                        createdAt = Timestamp.now(),
-                        updatedAt = Timestamp.now()
-                    )
-                )
-            } catch (_: Exception) {
-                // Firestore sync failure is non-fatal
-            }
             return Result.success(user)
         } catch (e: FirebaseAuthUserCollisionException) {
             return Result.failure(Exception("Email này đã được sử dụng"))
@@ -206,14 +237,7 @@ class AuthRepositoryImpl(
 
     override suspend fun getCurrentUser(): User? {
         val firebaseUser = firebaseAuth.currentUser ?: return null
-        val cached = userDao.getUserById(firebaseUser.uid)
-        if (cached != null) return cached.toDomain()
-        return User(
-            id = firebaseUser.uid,
-            email = firebaseUser.email ?: "",
-            displayName = firebaseUser.displayName ?: "",
-            photoUrl = firebaseUser.photoUrl?.toString()
-        )
+        return fetchFullUserProfile(firebaseUser.uid, firebaseUser)
     }
 
     /**
@@ -238,14 +262,18 @@ class AuthRepositoryImpl(
             val firebaseUser = firebaseAuth.currentUser
                 ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
             val uid = firebaseUser.uid
-            // Remove from Firestore
+
+            // Cascade-delete all user data from Firestore
             try {
-                userRemoteDataSource.deleteUser(uid)
+                FirestoreCascadeHelper.cascadeDeleteUserData(firestore, uid)
             } catch (_: Exception) {
-                // Firestore cleanup failure is non-fatal
+                // Firestore cascade cleanup failure is non-fatal;
+                // proceed with Auth deletion so the user is not stuck
             }
-            // Remove local cache
+
+            // Remove local Room cache
             userDao.deleteUserById(uid)
+
             // Delete Firebase Auth account
             firebaseUser.delete().await()
             Result.success(Unit)
@@ -323,8 +351,10 @@ class AuthRepositoryImpl(
                         displayName = displayName,
                         username = currentDto?.username ?: "",
                         photoUrl = updatedPhotoUrl,
+                        role = currentDto?.role ?: "user",
                         createdAt = currentDto?.createdAt ?: Timestamp.now(),
-                        updatedAt = Timestamp.now()
+                        updatedAt = Timestamp.now(),
+                        deletedAt = currentDto?.deletedAt
                     )
                 )
             } catch (_: Exception) {
@@ -340,7 +370,9 @@ class AuthRepositoryImpl(
                 email = previousUser?.email ?: firebaseUser.email ?: "",
                 displayName = displayName,
                 username = previousUser?.username ?: existing?.username ?: "",
-                photoUrl = updatedPhotoUrl
+                photoUrl = updatedPhotoUrl,
+                role = previousUser?.role ?: com.example.androidapp.domain.model.UserRole.USER,
+                isBanned = previousUser?.isBanned ?: false
             )
 
             return Result.success(Unit)
@@ -354,6 +386,65 @@ class AuthRepositoryImpl(
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Fetches the full user profile (including role) from Firestore first,
+     * falling back to the local Room cache, and finally to Firebase Auth data.
+     * Also updates the Room cache when Firestore data is successfully fetched.
+     *
+     * @param uid The user's unique identifier.
+     * @param firebaseUser The Firebase Auth user (for fallback data).
+     * @return A [User] with the correct role and profile information.
+     */
+    private suspend fun fetchFullUserProfile(
+        uid: String,
+        firebaseUser: com.google.firebase.auth.FirebaseUser
+    ): User {
+        // 1. Try Firestore (authoritative source for role)
+        try {
+            val userDto = userRemoteDataSource.getUserById(uid)
+            if (userDto != null) {
+                val domainUser = userDto.toDomain()
+                // Cache to Room for offline access
+                userDao.insertUser(domainUser.toEntity())
+                return domainUser
+            }
+
+            // Firestore is reachable but no user document exists.
+            // This happens when the registration Firestore write failed, or
+            // the account was created before the users collection was
+            // introduced. Create the missing document so the profile is
+            // discoverable by other features (admin panel, quiz author
+            // display, etc.).
+            val newUserDto = UserDto(
+                id = uid,
+                email = firebaseUser.email ?: "",
+                displayName = firebaseUser.displayName ?: "",
+                username = firebaseUser.displayName ?: "",
+                photoUrl = firebaseUser.photoUrl?.toString(),
+                createdAt = Timestamp.now(),
+                updatedAt = Timestamp.now()
+            )
+            userRemoteDataSource.saveUser(newUserDto)
+            val domainUser = newUserDto.toDomain()
+            userDao.insertUser(domainUser.toEntity())
+            return domainUser
+        } catch (_: Exception) {
+            // Firestore unavailable (offline) — fall through to Room
+        }
+
+        // 2. Try Room cache
+        val cached = userDao.getUserById(uid)
+        if (cached != null) return cached.toDomain()
+
+        // 3. Fallback to Firebase Auth data (role defaults to USER)
+        return User(
+            id = uid,
+            email = firebaseUser.email ?: "",
+            displayName = firebaseUser.displayName ?: "",
+            photoUrl = firebaseUser.photoUrl?.toString()
+        )
+    }
 
     /**
      * Fetches a random anime/artwork image URL from the Wallhaven API.

@@ -16,9 +16,16 @@ data class Quiz(
     val questionCount: Int = 0,
     val attemptCount: Int = 0,
     val isPublic: Boolean = false,
+    val isDraft: Boolean = false,
     val shareCode: String? = null,
     val checksum: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val deletedAt: Long? = null
+    val deletedAt: Long? = null,
+    /**
+     * True when the quiz was removed from Firestore by an external action
+     * (e.g. admin deletion) but still exists locally. The owner should be
+     * warned and may delete the quiz manually.
+     */
+    val isRemovedFromCloud: Boolean = false
 )

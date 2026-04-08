@@ -67,10 +67,67 @@
     <string name="correct_label">Đúng</string>
     <string name="wrong_label">Sai</string>
     <string name="time_label">Thời gian</string>
-    <string name="score_celebrate_high">🎉</string>
-    <string name="score_celebrate_medium">👏</string>
-    <string name="score_celebrate_low">💪</string>
-    <string name="score_celebrate_min">📚</string>
+    <string name="score_celebrate_high">Tuyệt vời!</string>
+    <string name="score_celebrate_medium">Rất giỏi!</string>
+    <string name="score_celebrate_low">Cố lên!</string>
+    <string name="score_celebrate_min">Ôn luyện thêm!</string>
+
+    <!-- Common error/success messages (used by ViewModels) -->
+    <string name="error_no_network">Không có kết nối mạng. Vui lòng kết nối internet để thực hiện thao tác quản trị.</string>
+    <string name="error_login_failed">Đăng nhập thất bại</string>
+    <string name="error_register_failed">Đăng ký thất bại</string>
+    <string name="error_quiz_not_found">Không tìm thấy bài kiểm tra</string>
+    <string name="error_quiz_save_failed">Không thể lưu bài kiểm tra</string>
+    <string name="error_quiz_delete_failed">Không thể xóa bài kiểm tra</string>
+    <string name="error_result_not_found">Không tìm thấy kết quả</string>
+    <string name="error_attempt_not_found">Không tìm thấy lượt làm</string>
+    <string name="error_quiz_no_questions">Bài kiểm tra chưa có câu hỏi</string>
+    <string name="error_save_result_failed">Không thể lưu kết quả</string>
+    <string name="error_load_stats_failed">Không thể tải thống kê</string>
+    <string name="error_load_users_failed">Không thể tải danh sách người dùng</string>
+    <string name="error_load_more_users_failed">Không thể tải thêm người dùng</string>
+    <string name="error_load_quizzes_failed">Không thể tải danh sách quiz</string>
+    <string name="error_load_more_quizzes_failed">Không thể tải thêm quiz</string>
+    <string name="error_update_role_failed">Không thể cập nhật vai trò</string>
+    <string name="error_ban_user_failed">Không thể cấm người dùng</string>
+    <string name="error_unban_user_failed">Không thể bỏ cấm người dùng</string>
+    <string name="error_delete_user_failed">Không thể xóa người dùng</string>
+    <string name="error_self_action_not_allowed">Không thể thực hiện hành động này trên chính mình</string>
+    <string name="error_target_is_superuser">Không thể thực hiện hành động này trên tài khoản siêu quản trị</string>
+    <string name="error_update_quiz_status_failed">Không thể cập nhật trạng thái quiz</string>
+    <string name="error_restore_quiz_failed">Không thể khôi phục quiz</string>
+    <string name="error_delete_quiz_failed">Không thể xóa quiz</string>
+    <string name="error_load_data_failed">Không thể tải dữ liệu</string>
+    <string name="error_search_failed">Không thể tìm kiếm</string>
+    <string name="error_load_remote_failed">Không thể tải dữ liệu từ máy chủ</string>
+    <string name="error_pool_search_failed">Không thể tìm kiếm kho câu hỏi</string>
+    <string name="error_pool_revoke_failed">Không thể thu hồi câu hỏi</string>
+    <string name="error_pool_search_empty">Vui lòng nhập từ khóa tìm kiếm</string>
+    <string name="error_pool_search_tags_empty">Vui lòng nhập ít nhất một từ khóa</string>
+    <string name="error_login_required">Vui lòng đăng nhập</string>
+    <string name="error_join_code_invalid">Mã không hợp lệ. Vui lòng nhập 6 ký tự chữ hoặc số.</string>
+    <string name="error_join_quiz_not_found">Không tìm thấy bài kiểm tra với mã này. Vui lòng kiểm tra lại mã.</string>
+    <string name="error_join_quiz_failed">Không thể tìm kiếm bài kiểm tra. Vui lòng thử lại.</string>
+    <string name="error_csv_no_data">Tệp CSV không chứa dữ liệu hợp lệ.</string>
+    <string name="error_csv_read_failed">Không thể đọc tệp CSV: %1$s</string>
+    <string name="error_csv_import_failed">Không thể nhập dữ liệu: %1$s</string>
+    <string name="error_wallhaven_http">Wallhaven API trả về lỗi HTTP %1$d</string>
+    <string name="error_wallhaven_no_image">Không tìm thấy hình ảnh từ Wallhaven</string>
+    <string name="error_random_avatar_failed">Không thể tải ảnh đại diện ngẫu nhiên</string>
+    <string name="error_display_name_blank">Tên hiển thị không được để trống</string>
+    <string name="error_save_profile_failed">Lưu hồ sơ thất bại</string>
+    <string name="error_validate_title_blank">Vui lòng nhập tiêu đề bài kiểm tra</string>
+    <string name="error_validate_too_few_questions">Bài kiểm tra phải có ít nhất %1$d câu hỏi</string>
+    <string name="error_validate_question_blank">Câu hỏi %1$d phải có nội dung</string>
+    <string name="error_validate_invalid_choice_count">Câu hỏi %1$d phải có từ %2$d đến %3$d đáp án</string>
+    <string name="error_validate_choice_blank">Đáp án %1$d trong câu hỏi %2$d phải có nội dung</string>
+    <string name="error_validate_no_correct_choice">Câu hỏi %1$d phải có ít nhất 1 đáp án đúng</string>
+    <string name="error_user_not_logged_in">Người dùng chưa đăng nhập</string>
+    <string name="success_trash_restored">Đã khôi phục bài kiểm tra</string>
+    <string name="success_trash_deleted">Đã xóa vĩnh viễn</string>
+    <string name="success_trash_emptied">Đã dọn sạch thùng rác</string>
+    <string name="success_pool_revoked">Đã thu hồi câu hỏi</string>
+    <string name="admin_quiz_card_unknown_author">Không rõ</string>
 
     <!-- Auth -->
     <string name="login">Đăng nhập</string>
@@ -91,6 +148,7 @@
 
     <!-- Profile -->
     <string name="profile_section_general">Chung</string>
+    <string name="profile_section_admin">Quản trị</string>
     <string name="profile_menu_attempt_history">Lịch sử làm bài</string>
     <string name="profile_menu_recycle_bin">Thùng rác</string>
     <string name="profile_menu_settings">Cài đặt</string>
@@ -107,6 +165,11 @@
     <string name="profile_stats_label">Thống kê</string>
     <string name="profile_edit_button_cd">Chỉnh sửa hồ sơ</string>
 
+    <!-- Pagination -->
+    <string name="load_more">Tải thêm</string>
+    <string name="loading_more">Đang tải thêm…</string>
+    <string name="no_more_items">Đã hiển thị tất cả</string>
+
     <!-- Trash -->
     <string name="trash_title">Thùng rác</string>
     <string name="trash_empty">Thùng rác trống</string>
@@ -116,6 +179,7 @@
     <string name="trash_empty_confirm_title">Dọn sạch thùng rác?</string>
     <string name="trash_empty_confirm_message">Hành động này sẽ xóa vĩnh viễn tất cả bài kiểm tra trong thùng rác và không thể hoàn tác.</string>
     <string name="trash_days_remaining">Còn %1$d ngày</string>
+    <string name="trash_delete_permanently_confirm_message">Bạn có chắc chắn muốn xóa vĩnh viễn bài kiểm tra này không? Hành động này không thể hoàn tác.</string>
 
     <!-- Settings -->
     <string name="settings_title">Cài đặt</string>
@@ -142,7 +206,7 @@
     <string name="search_placeholder">Tìm Quizz...</string>
 
     <!-- Home -->
-    <string name="home_greeting">Xin chào! 👋</string>
+    <string name="home_greeting">Xin chào!</string>
     <string name="home_recently_played">Đã chơi gần đây</string>
     <string name="home_recently_played_empty">Chưa có Quizz đã chơi</string>
     <string name="home_my_quizzes">Quizz của tôi</string>
@@ -156,6 +220,8 @@
     <string name="home_join_session_label">THAM GIA</string>
     <string name="home_join_button">THAM GIA</string>
     <string name="home_code_placeholder">e.g. ABC123</string>
+    <string name="home_admin_removed_warning">Có %1$d bài kiểm tra đã bị xóa khỏi đám mây bởi quản trị viên. Chỉ bạn có thể xem chúng trên thiết bị này. Hãy xóa thủ công nếu không cần nữa.</string>
+    <string name="home_quiz_removed_from_cloud">Đã bị xóa khỏi đám mây</string>
 
     <!-- Dialogs -->
     <string name="loading_processing">Đang xử lý…</string>
@@ -184,6 +250,7 @@
     <string name="auth_or_divider">hoặc</string>
     <string name="auth_password_toggle_cd">Hiện/ẩn mật khẩu</string>
     <string name="auth_password_mismatch">Mật khẩu xác nhận không khớp</string>
+    <string name="auth_account_banned">Tài khoản của bạn đã bị cấm sử dụng ứng dụng. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.</string>
 
     <!-- Quiz Detail -->
     <string name="quiz_detail_title">Chi tiết Quizz</string>
@@ -289,6 +356,8 @@
     <string name="create_question_move_down">Di chuyển xuống</string>
     <string name="create_question_remove">Xóa câu hỏi</string>
     <string name="create_question_points_label">Điểm: %1$d</string>
+    <string name="create_question_multi_select">Nhiều đáp án đúng</string>
+    <string name="create_question_multi_select_desc">Cho phép chọn nhiều đáp án đúng cho câu hỏi này</string>
     <string name="create_last_saved">Lưu lúc %1$s</string>
 
     <!-- Share to Pool -->
@@ -357,6 +426,13 @@
     <string name="quiz_delete_confirm_message">Quizz sẽ được chuyển vào thùng rác. Bạn có thể khôi phục trong 30 ngày.</string>
     <string name="quiz_deleted_success">Đã chuyển Quizz vào thùng rác</string>
 
+    <!-- Pool Dialog (Create Quiz) -->
+    <string name="pool_dialog_title">Ngân hàng câu hỏi</string>
+    <string name="pool_dialog_tag_input_label">Nhập thẻ (cách nhau dấu phẩy)</string>
+    <string name="pool_dialog_search">Tìm kiếm</string>
+    <string name="pool_dialog_add_selected">Thêm đã chọn</string>
+    <string name="pool_add_from_pool">Thêm từ Kho</string>
+
     <!-- Pool Import -->
     <string name="pool_import_title">Nhập câu hỏi từ kho cộng đồng</string>
     <string name="pool_import_search_hint">Nhập từ khóa tìm kiếm…</string>
@@ -366,4 +442,287 @@
     <string name="pool_import_button">Nhập câu hỏi đã chọn</string>
     <string name="pool_import_cd">Nhập từ kho câu hỏi</string>
     <string name="pool_import_success">Đã nhập %1$d câu hỏi từ kho cộng đồng</string>
+
+    <!-- Admin Panel -->
+    <string name="admin_dashboard_title">Bảng điều khiển quản trị</string>
+    <string name="admin_users_title">Quản lý người dùng</string>
+    <string name="admin_quizzes_title">Quản lý câu đố</string>
+    <string name="admin_reports_title">Báo cáo</string>
+    <string name="admin_panel_entry">Bảng điều khiển quản trị</string>
+
+    <!-- Admin Dashboard -->
+    <string name="admin_dashboard_statistics">Thống kê hệ thống</string>
+    <string name="admin_dashboard_quick_actions">Hành động nhanh</string>
+    <string name="admin_overview">Tổng quan</string>
+    <string name="admin_insights">Phân tích</string>
+    <string name="admin_quick_actions">Hành động nhanh</string>
+    <string name="admin_total_users">Tổng số người dùng</string>
+    <string name="admin_total_quizzes">Tổng số câu đố</string>
+    <string name="admin_total_attempts">Tổng số lượt làm</string>
+    <string name="admin_total_questions_pool">Tổng số câu hỏi trong kho</string>
+    <string name="admin_active_users">Người dùng hoạt động</string>
+    <string name="admin_public_quizzes">Câu đố công khai</string>
+    <string name="admin_private_quizzes">Câu đố riêng tư</string>
+
+    <string name="admin_deleted_quizzes">Câu đố đã xóa</string>
+    <string name="admin_card_manage_users">Quản lý người dùng</string>
+    <string name="admin_card_manage_quizzes">Quản lý câu đố</string>
+    <string name="admin_card_view_reports">Xem báo cáo</string>
+    <string name="admin_stat_total_users">Tổng số người dùng</string>
+    <string name="admin_stat_total_quizzes">Tổng số quiz</string>
+    <string name="admin_stat_total_attempts">Tổng số lượt chơi</string>
+    <string name="admin_stat_active_users">Người dùng hoạt động</string>
+    <string name="admin_stat_public_quizzes">Quiz công khai</string>
+    <string name="admin_stat_private_quizzes">Quiz riêng tư</string>
+
+    <string name="admin_stat_deleted_quizzes">Quiz đã xóa</string>
+    <string name="admin_stat_question_pool">Kho câu hỏi cộng đồng</string>
+    <string name="admin_stat_avg_attempts_per_quiz">Trung bình lượt chơi/quiz</string>
+    <string name="admin_stat_active_user_percentage">Tỷ lệ người dùng hoạt động</string>
+    <string name="admin_stat_public_quiz_percentage">Tỷ lệ quiz công khai</string>
+    <string name="admin_stat_total_questions">Tổng số câu hỏi</string>
+    <string name="admin_manage_users">Quản lý người dùng</string>
+    <string name="admin_manage_quizzes">Quản lý quiz</string>
+    <string name="admin_view_reports">Xem báo cáo</string>
+
+    <!-- Admin User Management -->
+    <string name="admin_search_users">Tìm kiếm người dùng…</string>
+    <string name="admin_search_users_placeholder">Nhập email hoặc tên người dùng…</string>
+    <string name="admin_user_count">%1$d người dùng</string>
+    <string name="admin_no_users">Không có người dùng nào</string>
+    <string name="admin_no_users_search">Không tìm thấy người dùng phù hợp</string>
+    <string name="admin_user_role_guest">Khách</string>
+    <string name="admin_user_role_user">Người dùng</string>
+    <string name="admin_user_role_admin">Quản trị viên</string>
+    <string name="admin_promote_admin">Thăng cấp quản trị viên</string>
+    <string name="admin_demote_user">Hạ cấp người dùng</string>
+    <string name="admin_ban_user">Cấm người dùng</string>
+    <string name="admin_unban_user">Bỏ cấm người dùng</string>
+    <string name="admin_delete_user">Xóa người dùng</string>
+    <string name="admin_user_banned">Đã cấm</string>
+    <string name="admin_user_actions">Hành động</string>
+    <string name="admin_user_email">Email: %1$s</string>
+    <string name="admin_user_created">Tạo: %1$s</string>
+    <string name="admin_ban_confirm">Xác nhận cấm người dùng?</string>
+    <string name="admin_ban_message">Người dùng sẽ không thể truy cập ứng dụng.</string>
+    <string name="admin_delete_confirm">Xác nhận xóa người dùng?</string>
+    <string name="admin_delete_message">Hành động này không thể hoàn tác. Tất cả dữ liệu của người dùng sẽ bị xóa vĩnh viễn.</string>
+    <string name="admin_role_updated">Đã cập nhật vai trò người dùng</string>
+    <string name="admin_user_banned_success">Đã cấm người dùng</string>
+    <string name="admin_user_unbanned_success">Đã bỏ cấm người dùng</string>
+    <string name="admin_user_deleted_success">Đã xóa người dùng</string>
+    <string name="admin_delete_user_title">Xóa người dùng vĩnh viễn</string>
+    <string name="admin_delete_user_message">Bạn có chắc muốn xóa vĩnh viễn %1$s? Hành động này không thể hoàn tác.</string>
+    <string name="admin_ban_user_title">Cấm người dùng</string>
+    <string name="admin_ban_user_message">Bạn có chắc muốn cấm %1$s? Người dùng sẽ không thể truy cập ứng dụng.</string>
+    <string name="admin_unban_user_title">Bỏ cấm người dùng</string>
+    <string name="admin_unban_user_message">Bạn có chắc muốn bỏ cấm %1$s?</string>
+    <string name="admin_ban">Cấm</string>
+    <string name="admin_unban">Bỏ cấm</string>
+    <string name="admin_role_label">Vai trò</string>
+    <string name="admin_role_admin">Quản trị viên</string>
+    <string name="admin_role_user">Người dùng</string>
+    <string name="admin_role_guest">Khách</string>
+
+    <!-- Admin Quiz Management -->
+    <string name="admin_search_quizzes">Tìm kiếm câu đố…</string>
+    <string name="admin_search_quizzes_placeholder">Nhập tên quiz hoặc tác giả…</string>
+    <string name="admin_quiz_count">%1$d quiz</string>
+    <string name="admin_show_deleted">Hiển thị đã xóa</string>
+    <string name="admin_no_quizzes">Không có quiz nào</string>
+    <string name="admin_no_deleted_quizzes">Không có quiz đã xóa</string>
+    <string name="admin_no_quizzes_search">Không tìm thấy quiz phù hợp</string>
+    <string name="admin_quiz_owner">Chủ sở hữu: %1$s</string>
+    <string name="admin_quiz_status_public">Công khai</string>
+    <string name="admin_quiz_status_private">Riêng tư</string>
+    <string name="admin_quiz_status_draft">Nháp</string>
+    <string name="admin_quiz_status_deleted">Đã xóa</string>
+    <string name="admin_quiz_publish">Xuất bản</string>
+    <string name="admin_quiz_unpublish">Hủy xuất bản</string>
+    <string name="admin_quiz_restore">Khôi phục</string>
+    <string name="admin_quiz_delete_permanent">Xóa vĩnh viễn</string>
+    <string name="admin_quiz_actions">Hành động</string>
+    <string name="admin_quiz_include_deleted">Bao gồm đã xóa</string>
+    <string name="admin_publish_confirm">Xác nhận xuất bản?</string>
+    <string name="admin_publish_message">Câu đố sẽ được công khai và xuất hiện trong tìm kiếm.</string>
+    <string name="admin_unpublish_confirm">Xác nhận hủy xuất bản?</string>
+    <string name="admin_unpublish_message">Câu đố sẽ trở thành riêng tư.</string>
+    <string name="admin_delete_permanent_confirm">Xác nhận xóa vĩnh viễn?</string>
+    <string name="admin_delete_permanent_message">Hành động này không thể hoàn tác. Câu đố và tất cả câu hỏi sẽ bị xóa vĩnh viễn.</string>
+    <string name="admin_quiz_published">Đã xuất bản câu đố</string>
+    <string name="admin_quiz_unpublished">Đã hủy xuất bản câu đố</string>
+    <string name="admin_quiz_restored">Đã khôi phục câu đố</string>
+    <string name="admin_quiz_deleted_permanent">Đã xóa vĩnh viễn câu đố</string>
+    <string name="admin_delete_quiz_permanent_title">Xóa quiz vĩnh viễn</string>
+    <string name="admin_delete_quiz_title">Xóa quiz</string>
+    <string name="admin_delete_quiz_permanent_message">Bạn có chắc muốn xóa vĩnh viễn \"%1$s\"? Hành động này không thể hoàn tác.</string>
+    <string name="admin_delete_quiz_message">Bạn có chắc muốn xóa \"%1$s\"?</string>
+
+    <!-- Admin Reports -->
+    <string name="admin_reports_overview">Tổng quan</string>
+    <string name="admin_reports_user_analytics">Phân tích người dùng</string>
+    <string name="admin_reports_content_analytics">Phân tích nội dung</string>
+    <string name="admin_reports_engagement_analytics">Phân tích tương tác</string>
+    <string name="admin_reports_community_content">Nội dung cộng đồng</string>
+    <string name="admin_reports_user_growth">Tăng trưởng người dùng</string>
+    <string name="admin_reports_quiz_popularity">Câu đố phổ biến</string>
+    <string name="admin_reports_activity">Hoạt động</string>
+    <string name="admin_reports_last_30_days">30 ngày qua</string>
+    <string name="admin_reports_export">Xuất báo cáo</string>
+
+    <!-- Admin Insight/Report Descriptions -->
+    <string name="admin_insight_avg_attempts_desc">Trung bình số lượt chơi trên mỗi quiz</string>
+    <string name="admin_insight_active_user_desc">Tỷ lệ người dùng hoạt động trong 30 ngày qua</string>
+    <string name="admin_insight_public_quiz_desc">Tỷ lệ quiz công khai so với tổng quiz</string>
+    <string name="admin_action_manage_users_desc">Quản lý tài khoản, vai trò và trạng thái người dùng</string>
+    <string name="admin_action_manage_quizzes_desc">Quản lý quiz, xuất bản và xóa nội dung</string>
+    <string name="admin_action_view_reports_desc">Xem báo cáo chi tiết và phân tích hệ thống</string>
+    <string name="admin_reports_active_user_desc">Tỷ lệ người dùng hoạt động trong 30 ngày qua. Cho biết mức độ tương tác của cộng đồng người dùng.</string>
+    <string name="admin_reports_public_quiz_desc">Tỷ lệ quiz công khai so với tổng số quiz. Tỷ lệ cao cho thấy nhiều nội dung được chia sẻ công khai.</string>
+    <string name="admin_reports_avg_attempts_desc">Trung bình số lượt chơi trên mỗi quiz. Chỉ số này phản ánh mức độ phổ biến của các quiz.</string>
+    <string name="admin_reports_deleted_quizzes_desc">Số quiz đã bị xóa mềm. Có thể khôi phục hoặc xóa vĩnh viễn từ quản lý quiz.</string>
+
+    <!-- Admin Errors -->
+    <string name="admin_error_unauthorized">Bạn không có quyền truy cập trang này</string>
+    <string name="admin_error_load_failed">Không thể tải dữ liệu quản trị</string>
+    <string name="admin_error_action_failed">Hành động quản trị thất bại</string>
+
+    <!-- Admin Dashboard Chart Labels -->
+    <string name="admin_chart_weekday_mon">T2</string>
+    <string name="admin_chart_weekday_tue">T3</string>
+    <string name="admin_chart_weekday_wed">T4</string>
+    <string name="admin_chart_weekday_thu">T5</string>
+    <string name="admin_chart_weekday_fri">T6</string>
+    <string name="admin_chart_weekday_sat">T7</string>
+    <string name="admin_chart_weekday_sun">CN</string>
+
+    <!-- Admin Dashboard Redesign -->
+    <string name="admin_greeting">Chào bạn, %1$s!</string>
+    <string name="admin_search_placeholder">Tìm kiếm…</string>
+    <string name="admin_quick_stats">Thống kê nhanh</string>
+    <string name="admin_users_subtitle">người dùng</string>
+    <string name="admin_current_subtitle">hiện tại</string>
+    <string name="admin_quizzes_subtitle">câu đố</string>
+    <string name="admin_attempts_subtitle">lượt chơi</string>
+    <string name="admin_engagement_chart">Biểu đồ tương tác</string>
+    <string name="admin_active_users_weekly">Người dùng hoạt động (Tuần qua)</string>
+    <string name="admin_trend_increase">Tăng %1$s%%</string>
+    <string name="admin_recent_activity">Hoạt động gần đây</string>
+
+
+    <!-- Admin Quiz Distribution Chart -->
+    <string name="admin_quiz_distribution">Phân bố quiz theo trạng thái</string>
+    <string name="admin_public_label">Công khai</string>
+    <string name="admin_private_label">Riêng tư</string>
+
+    <string name="admin_deleted_label">Đã xóa</string>
+
+    <!-- Admin User Engagement -->
+    <string name="admin_user_engagement">Mức độ tương tác</string>
+    <string name="admin_active_ratio">Tỷ lệ hoạt động</string>
+    <string name="admin_active_of_total">%1$d / %2$d người dùng</string>
+
+    <!-- Admin Reports Redesign -->
+    <string name="admin_advanced_analytics">Báo cáo phân tích nâng cao</string>
+    <string name="admin_total_plays">Tổng lượt chơi</string>
+    <string name="admin_completion_rate">Tỷ lệ hoàn thành</string>
+    <string name="admin_increase_this_month">+%1$s%% tháng này</string>
+    <string name="admin_avg_duration">Thời gian trung bình: %1$s</string>
+    <string name="admin_quizzes_by_status">Quiz theo trạng thái</string>
+    <string name="admin_created_vs_played">Quiz đã tạo và đã chơi</string>
+    <string name="admin_created_label">Đã tạo</string>
+    <string name="admin_played_label">Đã chơi</string>
+
+    <!-- Admin AI Insights -->
+    <string name="admin_ai_insights">Phân tích thông minh</string>
+    <string name="admin_insight_engagement_title">Tương tác người dùng</string>
+    <string name="admin_insight_engagement_desc">Trung bình %1$s lượt chơi mỗi quiz cho thấy mức độ tương tác tốt từ cộng đồng.</string>
+    <string name="admin_insight_growth_title">Tăng trưởng tốt</string>
+    <string name="admin_insight_growth_desc">%1$s người dùng đang hoạt động, chiếm %2$s%% tổng số người dùng.</string>
+    <string name="admin_insight_content_title">Nội dung phong phú</string>
+    <string name="admin_insight_content_desc">%1$s quiz công khai giúp cộng đồng tiếp cận nội dung dễ dàng hơn.</string>
+    <string name="admin_insight_community_title">Cộng đồng đóng góp</string>
+    <string name="admin_insight_community_desc">%1$s câu hỏi trong kho cộng đồng, tạo nguồn tài nguyên phong phú.</string>
+
+    <!-- Admin User Management Redesign -->
+    <string name="admin_filter_all">Tất cả</string>
+    <string name="admin_filter_admins">Quản trị viên</string>
+    <string name="admin_filter_users">Người dùng</string>
+    <string name="admin_filter_banned">Bị cấm</string>
+    <string name="admin_user_joined">Tham gia: %1$s</string>
+    <string name="admin_no_avatar">Không có ảnh</string>
+
+    <!-- Admin Stats Summary -->
+    <string name="admin_stats_summary">Tổng quan hệ thống</string>
+    <string name="admin_pool_questions_short">Kho câu hỏi</string>
+    <string name="admin_admin_count">Quản trị viên</string>
+
+    <!-- Search: Browse All Public Quizzes -->
+    <string name="search_section_browse_all">Tất cả quiz công khai</string>
+
+    <!-- Superuser Role -->
+    <string name="admin_role_superuser">Superuser</string>
+    <string name="admin_user_role_superuser">Superuser</string>
+    <string name="admin_superuser_protected">Tài khoản Superuser được bảo vệ</string>
+    <string name="admin_cannot_modify_superuser">Bạn không thể chỉnh sửa tài khoản Superuser</string>
+    <string name="admin_no_permission">Bạn không có quyền thực hiện hành động này</string>
+    <string name="error_insufficient_permissions">Không đủ quyền. Vui lòng liên hệ Superuser.</string>
+
+    <!-- Admin Permissions -->
+    <string name="admin_permissions_title">Quản lý quyền hạn</string>
+    <string name="admin_permissions_edit">Chỉnh sửa quyền hạn</string>
+    <string name="admin_permissions_save">Lưu quyền hạn</string>
+    <string name="admin_permissions_saved">Đã cập nhật quyền hạn</string>
+    <string name="admin_permission_manage_users">Quản lý người dùng</string>
+    <string name="admin_permission_change_user_roles">Thay đổi vai trò người dùng</string>
+    <string name="admin_permission_delete_users">Xóa người dùng vĩnh viễn</string>
+    <string name="admin_permission_ban_users">Cấm và bỏ cấm người dùng</string>
+    <string name="admin_permission_manage_quizzes">Quản lý tất cả quiz</string>
+    <string name="admin_permission_delete_quizzes">Xóa quiz vĩnh viễn</string>
+    <string name="admin_permission_publish_quizzes">Xuất bản và hủy xuất bản quiz</string>
+    <string name="admin_permission_view_reports">Xem báo cáo và phân tích</string>
+    <string name="error_update_permissions_failed">Không thể cập nhật quyền hạn</string>
+
+    <!-- Admin Filtering -->
+    <string name="admin_filter_by_tag">Lọc theo thẻ</string>
+    <string name="admin_filter_by_status">Lọc theo trạng thái</string>
+    <string name="admin_filter_by_role">Lọc theo vai trò</string>
+    <string name="admin_filter_by_type">Lọc theo loại</string>
+    <string name="admin_sort_order">Thứ tự sắp xếp</string>
+    <string name="admin_sort_asc">Tăng dần</string>
+    <string name="admin_sort_desc">Giảm dần</string>
+    <string name="admin_sort_by_name">Sắp xếp theo tên</string>
+    <string name="admin_sort_by_date">Sắp xếp theo ngày tạo</string>
+    <string name="admin_sort_by_attempts">Sắp xếp theo lượt làm</string>
+    <string name="admin_sort_by_questions">Sắp xếp theo số câu hỏi</string>
+    <string name="admin_sort_by_email">Sắp xếp theo email</string>
+    <string name="admin_sort_by_role">Sắp xếp theo vai trò</string>
+    <string name="admin_filter_status_all">Tất cả trạng thái</string>
+    <string name="admin_filter_status_public">Công khai</string>
+    <string name="admin_filter_status_private">Riêng tư</string>
+    <string name="admin_filter_status_draft">Nháp</string>
+    <string name="admin_filter_status_deleted">Đã xóa</string>
+    <string name="admin_filter_role_all">Tất cả vai trò</string>
+    <string name="admin_filter_role_superuser">Superuser</string>
+    <string name="admin_filter_role_admin">Quản trị viên</string>
+    <string name="admin_filter_role_user">Người dùng</string>
+    <string name="admin_filter_role_banned">Bị cấm</string>
+    <string name="admin_clear_filters">Xóa bộ lọc</string>
+    <string name="admin_active_filters">%1$d bộ lọc đang áp dụng</string>
+    <string name="admin_filter_tag_hint">Nhập thẻ để lọc…</string>
+
+    <!-- Filter Toggle -->
+    <string name="admin_show_filters">Hiển thị bộ lọc</string>
+    <string name="admin_hide_filters">Ẩn bộ lọc</string>
+
+    <!-- Tag Categories (TagSuggestionDialog) -->
+    <string name="tag_category_study">Học tập</string>
+    <string name="tag_category_entertainment">Giải trí</string>
+    <string name="tag_category_general_knowledge">Kiến thức chung</string>
+    <string name="tag_category_professional">Chuyên ngành</string>
+    <string name="tag_category_community">Các Tag của cộng đồng</string>
+
+    <!-- Admin Network -->
+    <string name="admin_network_required">Cần kết nối mạng để truy cập bảng điều khiển quản trị</string>
+
 </resources>

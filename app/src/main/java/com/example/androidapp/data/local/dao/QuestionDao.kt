@@ -46,12 +46,6 @@ interface QuestionDao {
     suspend fun insertQuestion(question: QuestionEntity)
 
     /**
-     * Insert multiple questions, or update those that already exist.
-     */
-    @Upsert
-    suspend fun insertQuestions(questions: List<QuestionEntity>)
-
-    /**
      * Update an existing question.
      */
     @Update
@@ -68,10 +62,4 @@ interface QuestionDao {
      */
     @Delete
     suspend fun deleteQuestion(question: QuestionEntity)
-
-    /**
-     * Delete all questions for a quiz.
-     */
-    @Query("DELETE FROM questions WHERE quiz_id = :quizId")
-    suspend fun deleteQuestionsByQuizId(quizId: String)
 }

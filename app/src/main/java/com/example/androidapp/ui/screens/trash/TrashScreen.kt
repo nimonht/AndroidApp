@@ -1,13 +1,31 @@
 package com.example.androidapp.ui.screens.trash
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Restore
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +41,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.common.AppAlertDialog
@@ -63,9 +82,10 @@ fun TrashScreen(
             viewModel.onEvent(RecycleBinEvent.ClearMessage)
         }
     }
+    val errorMessage = uiState.error?.toMessage()
     LaunchedEffect(uiState.error) {
-        uiState.error?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
+        if (errorMessage != null) {
+            snackbarHostState.showSnackbar(errorMessage)
             viewModel.onEvent(RecycleBinEvent.ClearError)
         }
     }
@@ -95,11 +115,13 @@ fun TrashScreen(
             uiState.isLoading -> LoadingSpinner(
                 modifier = Modifier.padding(innerPadding).fillMaxSize()
             )
+
             uiState.deletedQuizzes.isEmpty() -> EmptyState(
                 message = stringResource(R.string.trash_empty),
                 icon = Icons.Default.Delete,
                 modifier = Modifier.padding(innerPadding).fillMaxWidth()
             )
+
             else -> LazyColumn(
                 modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
@@ -111,6 +133,26 @@ fun TrashScreen(
                         onRestore = { viewModel.onEvent(RecycleBinEvent.RestoreQuiz(quiz.id)) },
                         onDeletePermanently = { quizToDeletePermanently = quiz.id }
                     )
+                }
+
+                // Pagination: load more trigger
+                if (uiState.hasMore) {
+                    item {
+                        LaunchedEffect(Unit) {
+                            viewModel.onEvent(RecycleBinEvent.LoadMore)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -132,7 +174,7 @@ fun TrashScreen(
         quizToDeletePermanently?.let { quizId ->
             AppAlertDialog(
                 title = stringResource(R.string.delete_confirm_title),
-                message = "Bạn có chắc chắn muốn xóa vĩnh viễn bài kiểm tra này không? Hành động này không thể hoàn tác.",
+                message = stringResource(R.string.trash_delete_permanently_confirm_message),
                 confirmText = stringResource(R.string.delete),
                 dismissText = stringResource(R.string.cancel),
                 onConfirm = {

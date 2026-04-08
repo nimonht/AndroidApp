@@ -1,15 +1,26 @@
 package com.example.androidapp.domain.model
 
+/**
+ * Domain model representing a single quiz attempt by a user.
+ *
+ * @property id Unique identifier for this attempt.
+ * @property userId Identifier of the user who took the quiz.
+ * @property quizId Identifier of the quiz that was attempted.
+ * @property score Number of correctly answered questions.
+ * @property totalQuestions Total number of questions in the quiz.
+ * @property answers Map of answers: key is the question ID, value is a list of selected choice IDs (supports multi-select).
+ * @property startTimeMillis Timestamp in milliseconds when the attempt started.
+ * @property endTimeMillis Timestamp in milliseconds when the attempt ended, or null if not yet finished.
+ * @property questionOrder Ordered list of question IDs as they were presented during the quiz attempt.
+ */
 data class Attempt(
     val id: String,
     val userId: String,
     val quizId: String,
     val score: Int,
     val totalQuestions: Int,
-    // Map lưu đáp án: Key là ID câu hỏi, Value là danh sách ID đáp án (hỗ trợ multi-select)
     val answers: Map<String, List<String>>,
     val startTimeMillis: Long,
     val endTimeMillis: Long?,
-    // Ordered list of question IDs as they were presented during the quiz attempt
     val questionOrder: List<String> = emptyList()
 )

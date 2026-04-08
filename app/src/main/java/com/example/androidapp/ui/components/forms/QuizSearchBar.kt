@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.components.forms
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,13 +29,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.androidapp.R
 import com.example.androidapp.ui.screens.search.SearchEvent
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
- * Component thanh tìm kiếm phi trạng thái (stateless).
- * Hỗ trợ nhập liệu, nút xóa (clear button) và hiển thị danh sách tìm kiếm gần đây.
+ * Stateless search bar component.
+ * Supports text input, a clear button, and displaying a recent searches list.
  */
 @Composable
 fun QuizSearchBar(
@@ -46,23 +49,23 @@ fun QuizSearchBar(
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = query,
-            onValueChange = { onEvent(SearchEvent.OnQueryChange(it)) }, // Đã sửa tên Event
+            onValueChange = { onEvent(SearchEvent.OnQueryChange(it)) }, // Updated event name
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text(stringResource(R.string.search_placeholder)) }, // Đã sửa tên String
+            placeholder = { Text(stringResource(R.string.search_placeholder)) }, // Updated string resource name
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search_icon_cd) // Đã sửa tên String
+                    contentDescription = stringResource(R.string.search_icon_cd) // Updated string resource name
                 )
             },
             trailingIcon = {
                 if (query.isNotEmpty()) {
-                    IconButton(onClick = { onEvent(SearchEvent.OnClearSearch) }) { // Đã sửa tên Event
+                    IconButton(onClick = { onEvent(SearchEvent.OnClearSearch) }) { // Updated event name
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = stringResource(R.string.search_clear_cd) // Đã sửa tên String
+                            contentDescription = stringResource(R.string.search_clear_cd) // Updated string resource name
                         )
                     }
                 }
@@ -71,7 +74,7 @@ fun QuizSearchBar(
             keyboardActions = KeyboardActions(
                 onSearch = {
                     if (query.isNotBlank()) {
-                        onEvent(SearchEvent.OnSearchClicked(query)) // Đã sửa tên Event
+                        onEvent(SearchEvent.OnSearchClicked(query)) // Updated event name
                     }
                 }
             ),
@@ -83,12 +86,12 @@ fun QuizSearchBar(
             )
         )
 
-        // Hiển thị lịch sử tìm kiếm khi thanh tìm kiếm trống
+        // Show search history when the search bar is empty
         if (query.isEmpty() && recentSearches.isNotEmpty()) {
             RecentSearchesList(
                 recentSearches = recentSearches,
-                onRecentClick = { onEvent(SearchEvent.OnRecentSearchClicked(it)) }, // Đã sửa tên Event
-                onClearAllClick = { onEvent(SearchEvent.OnClearRecentSearches) }    // Đã sửa tên Event
+                onRecentClick = { onEvent(SearchEvent.OnRecentSearchClicked(it)) }, // Updated event name
+                onClearAllClick = { onEvent(SearchEvent.OnClearRecentSearches) }    // Updated event name
             )
         }
     }
@@ -108,12 +111,12 @@ private fun RecentSearchesList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.search_recent_title), // Đã sửa tên String
+                text = stringResource(R.string.search_recent_title), // Updated string resource name
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             TextButton(onClick = onClearAllClick) {
-                Text(stringResource(R.string.search_clear_all)) // Đã sửa tên String
+                Text(stringResource(R.string.search_clear_all)) // Updated string resource name
             }
         }
         LazyColumn {
@@ -139,5 +142,41 @@ private fun RecentSearchesList(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun QuizSearchBarPreview() {
+    QuizzezTheme {
+        QuizSearchBar(
+            query = "",
+            recentSearches = listOf(
+                "Toan hoc lop 10",
+                "Lich su Viet Nam",
+                "Tieng Anh giao tiep"
+            ),
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    name = "Dark",
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun QuizSearchBarDarkPreview() {
+    QuizzezTheme {
+        QuizSearchBar(
+            query = "",
+            recentSearches = listOf(
+                "Toan hoc lop 10",
+                "Lich su Viet Nam",
+                "Tieng Anh giao tiep"
+            ),
+            onEvent = {}
+        )
     }
 }

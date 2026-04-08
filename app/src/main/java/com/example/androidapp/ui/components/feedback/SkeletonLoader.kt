@@ -1,5 +1,6 @@
 package com.example.androidapp.ui.components.feedback
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,7 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
  * Modifier extension that applies a shimmer loading animation.
@@ -83,5 +86,21 @@ fun QuizCardSkeleton(modifier: Modifier = Modifier) {
                     .shimmerEffect()
             )
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Light")
+@Composable
+private fun QuizCardSkeletonPreview() {
+    QuizzezTheme {
+        QuizCardSkeleton()
+    }
+}
+
+@Preview(showBackground = true, name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun QuizCardSkeletonDarkPreview() {
+    QuizzezTheme {
+        QuizCardSkeleton()
     }
 }

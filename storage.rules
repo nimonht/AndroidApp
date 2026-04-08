@@ -1,3 +1,32 @@
+// ============================================================================
+// VESTIGIAL / CURRENTLY UNUSED
+//
+// This file defines Firebase Storage security rules for a media upload path
+// (users/{userId}/media/{filename}), but Firebase Storage is NOT currently
+// used by the Quizzez Android app:
+//
+//   - No firebase-storage-ktx dependency in app/build.gradle.kts
+//   - No StorageRepository or FirebaseStorage references in Kotlin source
+//   - Profile avatars are URL-based (external links / Wallhaven API),
+//     not uploaded to Firebase Storage
+//   - Quiz media_url fields exist in the data model but are populated with
+//     external URLs, not Storage download links
+//
+// This file is kept because:
+//   1. firebase.json and firebase.docker.json reference it for
+//      Firebase CLI deploys and emulator startup (storage emulator on
+//      port 9199). Removing it would break `firebase deploy` and
+//      `firebase emulators:start`.
+//   2. Firebase Storage support for quiz media uploads may be added in the
+//      future — these rules provide a reasonable starting point.
+//
+// If Storage is implemented later, also add:
+//   - com.google.firebase:firebase-storage-ktx to build.gradle.kts
+//   - A StorageRepository (domain/) + StorageRepositoryImpl (data/)
+//   - A StorageRemoteDataSource in data/remote/firebase/
+//   - File-size and content-type validations in the rules below
+// ============================================================================
+
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
@@ -10,4 +39,3 @@ service firebase.storage {
     }
   }
 }
-

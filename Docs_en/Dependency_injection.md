@@ -111,7 +111,6 @@ Access it through the container as shown in the examples above.
 ### Firebase
 - `firebaseAuth: FirebaseAuth` - Authentication service
 - `firebaseFirestore: FirebaseFirestore` - Firestore database
-- `firebaseStorage: FirebaseStorage` - Cloud storage
 
 ### Room Database
 - `appDatabase: AppDatabase` - Room database instance
@@ -128,11 +127,13 @@ Access it through the container as shown in the examples above.
 - `authRepository: AuthRepository` - Authentication and user profile operations
 - `quizRepository: QuizRepository` - Quiz CRUD operations
 - `attemptRepository: AttemptRepository` - Quiz attempt tracking
-- `questionRepository: QuestionRepository` - Question operations
 - `shareCodeRepository: ShareCodeRepository` - Share code management
 - `poolRepository: PoolRepository` - Community question pool
-- `storageRepository: StorageRepository` - Media file storage (quiz media only; profile avatars use external URLs)
 - `searchRepository: SearchRepository` - Search history and recent searches
+- `adminRepository: AdminRepository` - Admin panel operations (user/quiz management, reports)
+
+### Preferences
+- `settingsPreferences: SettingsPreferences` - Local app settings (theme, notifications, etc.)
 
 ### Network & Sync
 - `networkMonitor: NetworkMonitor` - Network connectivity state
