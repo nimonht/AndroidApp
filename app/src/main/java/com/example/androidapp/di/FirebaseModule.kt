@@ -10,6 +10,7 @@ import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
+import com.example.androidapp.data.logging.LogCollector
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.data.remote.firebase.AdminRemoteDataSource
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
@@ -28,6 +29,13 @@ import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandExecutor
+import com.example.androidapp.domain.console.CommandRegistry
+import com.example.androidapp.domain.console.RepositoryBundle
+import com.example.androidapp.domain.console.ServiceBundle
+import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
@@ -42,6 +50,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.functions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
 
 class AppContainerImpl(override val context: Context) : AppContainer {
 
@@ -183,5 +195,87 @@ class AppContainerImpl(override val context: Context) : AppContainer {
 
     override val settingsPreferences: SettingsPreferences by lazy {
         SettingsPreferences(context)
+    }
+
+    override val logCollector: LogCollector by lazy {
+        LogCollector(CoroutineScope(SupervisorJob() + Dispatchers.IO))
+    }
+
+    override val commandRegistry: CommandRegistry by lazy {
+        CommandRegistry().apply {
+            // Register all commands
+            registerAll(
+                com.example.androidapp.domain.console.commands.HelpCommand(this@apply),
+                com.example.androidapp.domain.console.commands.WhoamiCommand(),
+                com.example.androidapp.domain.console.commands.PingCommand(),
+                com.example.androidapp.domain.console.commands.EchoCommand(),
+                com.example.androidapp.domain.console.commands.ClearCommand(),
+                com.example.androidapp.domain.console.commands.HistoryCommand(),
+                com.example.androidapp.domain.console.commands.ConfigCommand(),
+                com.example.androidapp.domain.console.commands.CacheCommand(),
+                com.example.androidapp.domain.console.commands.SyncCommand(),
+                com.example.androidapp.domain.console.commands.MyCommand(),
+                com.example.androidapp.domain.console.commands.LogCommand(),
+                com.example.androidapp.domain.console.commands.GrepCommand(),
+                com.example.androidapp.domain.console.commands.SortCommand(),
+                com.example.androidapp.domain.console.commands.HeadTailCommand(isHead = true),
+                com.example.androidapp.domain.console.commands.HeadTailCommand(isHead = false),
+                com.example.androidapp.domain.console.commands.CountCommand(),
+                com.example.androidapp.domain.console.commands.AliasCommand(),
+                com.example.androidapp.domain.console.commands.BanCommand(),
+                com.example.androidapp.domain.console.commands.UnbanCommand(),
+                com.example.androidapp.domain.console.commands.RoleCommand(),
+                com.example.androidapp.domain.console.commands.PermCommand(),
+                com.example.androidapp.domain.console.commands.UserInfoCommand(),
+                com.example.androidapp.domain.console.commands.DeleteCommand(
+                    com.example.androidapp.domain.console.commands.DeleteUserCommand(),
+                    com.example.androidapp.domain.console.commands.DeleteQuizCommand(),
+                    com.example.androidapp.domain.console.commands.DeleteAttemptCommand(),
+                    com.example.androidapp.domain.console.commands.DeletePoolItemCommand()
+                ),
+                com.example.androidapp.domain.console.commands.QuizInfoCommand(),
+                com.example.androidapp.domain.console.commands.PublishCommand(),
+                com.example.androidapp.domain.console.commands.UnpublishCommand(),
+                com.example.androidapp.domain.console.commands.RestoreCommand(),
+                com.example.androidapp.domain.console.commands.LsCommand(),
+                com.example.androidapp.domain.console.commands.StatsCommand(),
+                com.example.androidapp.domain.console.commands.SearchCommand(),
+                com.example.androidapp.domain.console.commands.ExportCommand(),
+                com.example.androidapp.domain.console.commands.PurgeCommand()
+            )
+        }
+    }
+
+    override val commandExecutor: CommandExecutor by lazy {
+        CommandExecutor(
+            registry = commandRegistry,
+            contextProvider = {
+                val user = runBlocking {
+                    authRepository.getCurrentUser()
+                } ?: User(
+                    id = "guest",
+                    email = "",
+                    displayName = "Guest",
+                    role = UserRole.GUEST
+                )
+                CommandContext(
+                    currentUser = user,
+                    repositories = RepositoryBundle(
+                        adminRepository = adminRepository,
+                        authRepository = authRepository,
+                        quizRepository = quizRepository,
+                        attemptRepository = attemptRepository,
+                        shareCodeRepository = shareCodeRepository,
+                        poolRepository = poolRepository
+                    ),
+                    services = ServiceBundle(
+                        syncManager = syncManager,
+                        networkMonitor = networkMonitor,
+                        settingsPreferences = settingsPreferences,
+                        logCollector = logCollector
+                    )
+                )
+            }
+        )
     }
 }

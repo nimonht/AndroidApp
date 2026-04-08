@@ -39,6 +39,7 @@ class QuizzezApplication : Application() {
         super.onCreate()
         // Initialize manual dependency injection container
         appContainer = AppContainerImpl(this)
+        appContainer.logCollector.install()
 
         scheduleBackendMaintenance()
         scheduleBackgroundSync()

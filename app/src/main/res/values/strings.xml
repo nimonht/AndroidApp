@@ -725,4 +725,39 @@
     <!-- Admin Network -->
     <string name="admin_network_required">Cần kết nối mạng để truy cập bảng điều khiển quản trị</string>
 
+    <!-- Developer Tools / Console -->
+    <string name="advanced_title">Cong cu nang cao</string>
+    <string name="advanced_tab_console">Bang dieu khien</string>
+    <string name="advanced_tab_logs">Nhat ky</string>
+    <string name="profile_menu_developer_tools">Cong cu nang cao</string>
+
+    <!-- Log Viewer -->
+    <string name="log_viewer_search_hint">Tim kiem nhat ky...</string>
+    <string name="log_viewer_regex_toggle">Regex</string>
+    <string name="log_viewer_clear">Xoa</string>
+    <string name="log_viewer_export">Xuat</string>
+    <string name="log_viewer_pause">Tam dung</string>
+    <string name="log_viewer_resume">Tiep tuc</string>
+    <string name="log_viewer_scroll_bottom">Cuon xuong cuoi</string>
+    <string name="log_viewer_status">Hien thi %1$d / %2$d muc</string>
+    <string name="log_viewer_tag_filter_hint">Loc theo tag...</string>
+    <string name="log_viewer_no_logs">Chua co nhat ky nao</string>
+    <string name="log_viewer_expanded_thread">Luong: %1$s</string>
+    <string name="log_viewer_expanded_id">ID: %1$d</string>
+
+    <!-- Console -->
+    <string name="console_input_hint">Nhap lenh...</string>
+    <string name="console_executing">Dang thuc thi...</string>
+    <string name="console_welcome">Chao mung den bang dieu khien Quizzez. Go \'help\' de bat dau.</string>
+    <string name="console_network_online">Truc tuyen</string>
+    <string name="console_network_offline">Ngoai tuyen</string>
+
+    <!-- Console Error strings -->
+    <string name="error_command_permission_denied">Quyen han khong du de thuc thi lenh nay</string>
+    <string name="error_command_role_insufficient">Vai tro cua ban khong du de thuc thi lenh nay</string>
+    <string name="error_command_not_found">Khong tim thay lenh</string>
+    <string name="error_command_execution_failed">Loi khi thuc thi lenh</string>
+    <string name="error_command_confirmation_required">Lenh nay yeu cau xac nhan. Them --confirm de tiep tuc.</string>
+    <string name="error_log_collector_failed">Khong the doc nhat ky ung dung</string>
+
 </resources>

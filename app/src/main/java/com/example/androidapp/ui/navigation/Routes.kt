@@ -45,6 +45,9 @@ object Routes {
     const val ADMIN_QUIZZES = "admin/quizzes"
     const val ADMIN_REPORTS = "admin/reports"
 
+    // Advanced / Developer Tools
+    const val ADVANCED = "advanced"
+
     // Helper functions to build routes with arguments
     object Args {
         const val QUIZ_ID = "quizId"
@@ -142,4 +145,7 @@ sealed class NavigationDestination(val route: String) {
     data object AdminUsers : NavigationDestination(Routes.ADMIN_USERS)
     data object AdminQuizzes : NavigationDestination(Routes.ADMIN_QUIZZES)
     data object AdminReports : NavigationDestination(Routes.ADMIN_REPORTS)
+
+    // Advanced Destination
+    data object Advanced : NavigationDestination(Routes.ADVANCED)
 }
