@@ -5,10 +5,15 @@ package com.example.androidapp.domain.util
  *
  * @property isValid True if the quiz meets all business requirements, false otherwise.
  * @property errorMessage A clear description of the validation failure, or null if valid.
+ *   Messages are English-language codes intended for developer diagnostics.
+ *   For user-facing display, callers should map [errorCode] to localised string resources.
+ * @property errorCode A machine-readable key identifying the specific validation failure.
+ *   UI code can `when` on this value to select a `stringResource`. Null when valid.
  */
 data class QuizValidationResult(
     val isValid: Boolean,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val errorCode: String? = null
 )
 
 /**
@@ -45,7 +50,8 @@ object QuizValidator {
         if (questions.size < MIN_QUESTIONS) {
             return QuizValidationResult(
                 isValid = false,
-                errorMessage = "A quiz must have at least $MIN_QUESTIONS question."
+                errorMessage = "A quiz must have at least $MIN_QUESTIONS question.",
+                errorCode = "QUIZ_TOO_FEW_QUESTIONS"
             )
         }
 
@@ -59,7 +65,8 @@ object QuizValidator {
                 if (content.isBlank()) {
                     return QuizValidationResult(
                         isValid = false,
-                        errorMessage = "Question $questionNumber must have content."
+                        errorMessage = "Question $questionNumber must have content.",
+                        errorCode = "QUESTION_BLANK"
                     )
                 }
             }
@@ -67,7 +74,8 @@ object QuizValidator {
             if (choices.size !in MIN_CHOICES..MAX_CHOICES) {
                 return QuizValidationResult(
                     isValid = false,
-                    errorMessage = "Question $questionNumber must have between $MIN_CHOICES and $MAX_CHOICES choices."
+                    errorMessage = "Question $questionNumber must have between $MIN_CHOICES and $MAX_CHOICES choices.",
+                    errorCode = "QUESTION_INVALID_CHOICE_COUNT"
                 )
             }
 
@@ -77,7 +85,8 @@ object QuizValidator {
                     if (getChoiceContent(choice).isBlank()) {
                         return QuizValidationResult(
                             isValid = false,
-                            errorMessage = "Choice ${choiceIndex + 1} in question $questionNumber must have content."
+                            errorMessage = "Choice ${choiceIndex + 1} in question $questionNumber must have content.",
+                            errorCode = "CHOICE_BLANK"
                         )
                     }
                 }
@@ -87,7 +96,8 @@ object QuizValidator {
             if (correctCount < 1) {
                 return QuizValidationResult(
                     isValid = false,
-                    errorMessage = "Question $questionNumber must have at least 1 correct choice."
+                    errorMessage = "Question $questionNumber must have at least 1 correct choice.",
+                    errorCode = "QUESTION_NO_CORRECT_CHOICE"
                 )
             }
         }

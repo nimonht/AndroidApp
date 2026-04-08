@@ -54,8 +54,8 @@ fun SearchResultsGrid(
         // Pagination: load more search results
         if (hasMoreSearchResults) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                LaunchedEffect(Unit) {
-                    onLoadMore()
+                LaunchedEffect(isLoadingMore) {
+                    if (!isLoadingMore) onLoadMore()
                 }
                 Box(
                     modifier = Modifier

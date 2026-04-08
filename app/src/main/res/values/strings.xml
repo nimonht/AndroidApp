@@ -115,6 +115,11 @@
     <string name="error_display_name_blank">Tên hiển thị không được để trống</string>
     <string name="error_save_profile_failed">Lưu hồ sơ thất bại</string>
     <string name="error_validate_title_blank">Vui lòng nhập tiêu đề bài kiểm tra</string>
+    <string name="error_validate_too_few_questions">Bài kiểm tra phải có ít nhất %1$d câu hỏi</string>
+    <string name="error_validate_question_blank">Câu hỏi %1$d phải có nội dung</string>
+    <string name="error_validate_invalid_choice_count">Câu hỏi %1$d phải có từ %2$d đến %3$d đáp án</string>
+    <string name="error_validate_choice_blank">Đáp án %1$d trong câu hỏi %2$d phải có nội dung</string>
+    <string name="error_validate_no_correct_choice">Câu hỏi %1$d phải có ít nhất 1 đáp án đúng</string>
     <string name="error_user_not_logged_in">Người dùng chưa đăng nhập</string>
     <string name="success_trash_restored">Đã khôi phục bài kiểm tra</string>
     <string name="success_trash_deleted">Đã xóa vĩnh viễn</string>

@@ -130,12 +130,14 @@ class HistoryViewModel(
             val totalCount = try {
                 attemptRepository.getAttemptCountByUser(user.id)
             } catch (_: Exception) {
-                Int.MAX_VALUE
+                // Count query failed; fall back to limit-based detection below
+                -1
             }
 
             _historyLimit.flatMapLatest { limit ->
                 attemptRepository.getAttemptsByUserLimited(user.id, limit)
             }.collectLatest { attempts ->
+                val currentLimit = _historyLimit.value
                 val enriched = attempts.map { attempt ->
                     val (title, isDeleted) = quizTitleCache.getOrPut(attempt.quizId) {
                         val quiz = quizRepository.getQuizById(attempt.quizId)
@@ -149,12 +151,19 @@ class HistoryViewModel(
                         isQuizDeleted = isDeleted
                     )
                 }
+                // If totalCount is available use it; otherwise infer from
+                // whether the query returned a full page (limit-based detection).
+                val hasMore = if (totalCount >= 0) {
+                    attempts.size < totalCount
+                } else {
+                    attempts.size >= currentLimit
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         isLoadingMore = false,
                         attempts = enriched,
-                        hasMore = attempts.size < totalCount
+                        hasMore = hasMore
                     )
                 }
             }

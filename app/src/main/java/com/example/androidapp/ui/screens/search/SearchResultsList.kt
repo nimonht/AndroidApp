@@ -50,8 +50,8 @@ fun SearchResultsList(
         // Pagination: load more search results
         if (hasMoreSearchResults) {
             item(key = "load_more_search_results") {
-                LaunchedEffect(Unit) {
-                    onLoadMore()
+                LaunchedEffect(isLoadingMore) {
+                    if (!isLoadingMore) onLoadMore()
                 }
                 Box(
                     modifier = Modifier

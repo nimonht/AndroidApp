@@ -252,7 +252,9 @@ class AuthFragment : Fragment() {
                 val errorMsg = when (state.error) {
                     UiError.LOGIN_FAILED -> getString(R.string.error_login_failed)
                     UiError.REGISTER_FAILED -> getString(R.string.error_register_failed)
-                    else -> state.error.name
+                    UiError.NETWORK_UNAVAILABLE -> getString(R.string.error_no_network)
+                    UiError.USER_NOT_LOGGED_IN -> getString(R.string.error_user_not_logged_in)
+                    else -> getString(R.string.error_default_message)
                 }
                 Snackbar.make(binding.root, errorMsg, Snackbar.LENGTH_LONG).show()
                 viewModel.onEvent(AuthEvent.ClearError)

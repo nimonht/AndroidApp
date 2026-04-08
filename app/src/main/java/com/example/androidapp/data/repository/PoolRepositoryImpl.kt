@@ -30,6 +30,13 @@ class PoolRepositoryImpl(
     private val firestore: FirebaseFirestore
 ) : PoolRepository {
 
+    // NOTE: Pagination cursors are stored as mutable fields on this singleton.
+    // This is acceptable because each paginated screen has its own independent
+    // cursor (contributions vs browse) and is only accessed from a single
+    // ViewModel at a time. If concurrent access becomes necessary, cursors
+    // should be moved to the ViewModel layer (passed as parameters and
+    // returned alongside results).
+
     /** Cursor for contributions pagination. */
     private var lastContributionDoc: DocumentSnapshot? = null
 
@@ -75,6 +82,7 @@ class PoolRepositoryImpl(
             // Commit the batch atomically; await() will throw on failure
             batch.commit().await()
             Log.d(TAG, "contributeQuestions: committed ${questions.size} items for quiz $sourceQuizId")
+            Unit
         }.also { result ->
             result.exceptionOrNull()?.let { e ->
                 Log.e(TAG, "contributeQuestions: batch commit failed for quiz $sourceQuizId", e)
@@ -111,6 +119,7 @@ class PoolRepositoryImpl(
         return safeCall {
             remoteDataSource.setPoolItemActive(poolItemId, false)
             Log.d(TAG, "revokeContribution: successfully revoked pool item $poolItemId")
+            Unit
         }.also { result ->
             result.exceptionOrNull()?.let { e ->
                 Log.e(TAG, "revokeContribution: failed to revoke pool item $poolItemId", e)

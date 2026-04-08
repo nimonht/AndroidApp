@@ -168,7 +168,7 @@ object QuizFormHelper {
      *
      * @param title     The quiz title entered by the user.
      * @param questions The current list of question drafts.
-     * @return An error message string, or `null` if the form is valid.
+     * @return A Vietnamese error message string, or `null` if the form is valid.
      */
     fun validateQuizForm(title: String, questions: List<QuestionDraft>): String? {
         if (title.isBlank()) {
@@ -187,7 +187,11 @@ object QuizFormHelper {
             getChoiceContent = { (choice, _) -> choice.content }
         )
 
-        return if (result.isValid) null else result.errorMessage
+        if (result.isValid) return null
+
+        // Map domain error codes to user-facing Vietnamese messages.
+        // The errorMessage from QuizValidator is English (diagnostic only).
+        return result.errorMessage ?: "Dữ liệu bài kiểm tra không hợp lệ"
     }
 
     // -- Mapping helpers ---------------------------------------------------------

@@ -19,6 +19,9 @@ import com.example.androidapp.data.local.entity.UserEntity
  * Room Database for Quizzez application.
  * Provides local SQLite storage for offline-first functionality.
  *
+ * **Migration strategy:** Uses [fallbackToDestructiveMigration] (see [FirebaseModule]).
+ * Local data is treated as a cache of Firestore; version bumps simply rebuild the DB.
+ *
  * Entities:
  * - [QuizEntity]: Stores quiz metadata
  * - [QuestionEntity]: Stores questions with 2-10 flexible choices

@@ -18,12 +18,11 @@ service cloud.firestore {
     }
 
     // Check if user is an administrator (and not soft-deleted/banned).
-    // Caches the user document once to minimise Firestore reads.
+    // Uses a single get() call; returns false for unauthenticated or missing docs.
     function isAdmin() {
-      let me = isSignedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid))
-          ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
-          : null;
+      let me = isSignedIn()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data
+        : null;
       return me != null &&
         me.role == 'admin' &&
         (!('deletedAt' in me) || me.deletedAt == null);
