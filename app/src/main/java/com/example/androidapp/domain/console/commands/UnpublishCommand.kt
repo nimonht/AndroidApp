@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -44,8 +45,8 @@ class UnpublishCommand : Command {
 
     override val usage: String =
         "unpublish <quizId> [...] [--owner <userId>] [--tag <tag>] [--search <query>] " +
-            "[--no-attempts] [--before <ts>] [--after <ts>] [--dry-run] [--confirm] " +
-            "[--format <table|json>] [--verbose]"
+                "[--no-attempts] [--before <ts>] [--after <ts>] [--dry-run] [--confirm] " +
+                "[--format <table|json>] [--verbose]"
 
     override val category: String = "admin"
 
@@ -67,7 +68,7 @@ class UnpublishCommand : Command {
         "unpub --tag science --owner userId1 --confirm" to "Go xuat ban quiz cua nguoi dung co tag cu the (dung alias)"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -132,8 +133,8 @@ class UnpublishCommand : Command {
         if (!dryRun && !confirm) {
             return CommandResult.error(
                 "Thao tac huy diet: go xuat ban quiz (isPublic=false). " +
-                    "Quiz se khong con hien thi trong tim kiem cong khai. " +
-                    "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                        "Quiz se khong con hien thi trong tim kiem cong khai. " +
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
             )
         }
 
@@ -151,12 +152,12 @@ class UnpublishCommand : Command {
                 }
                 if (!quiz.isPublic) {
                     return CommandResult.error(
-                        "Quiz '${truncate(quiz.title, 40)}' ($quizId) khong phai la quiz cong khai."
+                        "Quiz '${CommandFormatUtils.truncate(quiz.title, 40)}' ($quizId) khong phai la quiz cong khai."
                     )
                 }
                 if (quiz.deletedAt != null) {
                     return CommandResult.error(
-                        "Quiz '${truncate(quiz.title, 40)}' ($quizId) da bi xoa."
+                        "Quiz '${CommandFormatUtils.truncate(quiz.title, 40)}' ($quizId) da bi xoa."
                     )
                 }
                 quizzesToUnpublish.add(quiz)
@@ -279,8 +280,11 @@ class UnpublishCommand : Command {
 
         lines.add(
             OutputLine(
-                padRight("ID", 24) + padRight("Tieu de", 30) + padRight("Chu so huu", 18) +
-                    padRight("Luot lam", 10),
+                CommandFormatUtils.padRight("ID", 24) + CommandFormatUtils.padRight(
+                    "Tieu de",
+                    30
+                ) + CommandFormatUtils.padRight("Chu so huu", 18) +
+                        CommandFormatUtils.padRight("Luot lam", 10),
                 OutputStyle.TABLE_HEADER
             )
         )
@@ -291,9 +295,14 @@ class UnpublishCommand : Command {
         for (quiz in quizzes) {
             lines.add(
                 OutputLine(
-                    padRight(quiz.id, 24) + padRight(truncate(quiz.title, 28), 30) +
-                        padRight(truncate(quiz.ownerId, 16), 18) +
-                        padRight(quiz.attemptCount.toString(), 10),
+                    CommandFormatUtils.padRight(quiz.id, 24) + CommandFormatUtils.padRight(
+                        CommandFormatUtils.truncate(
+                            quiz.title,
+                            28
+                        ), 30
+                    ) +
+                            CommandFormatUtils.padRight(CommandFormatUtils.truncate(quiz.ownerId, 16), 18) +
+                            CommandFormatUtils.padRight(quiz.attemptCount.toString(), 10),
                     OutputStyle.TABLE_ROW
                 )
             )
@@ -321,7 +330,11 @@ class UnpublishCommand : Command {
                 )
                 lines.add(
                     OutputLine(
-                        "  Tao: ${formatTimestamp(quiz.createdAt)} | Cap nhat: ${formatTimestamp(quiz.updatedAt)}",
+                        "  Tao: ${CommandFormatUtils.formatTimestamp(quiz.createdAt)} | Cap nhat: ${
+                            CommandFormatUtils.formatTimestamp(
+                                quiz.updatedAt
+                            )
+                        }",
                         OutputStyle.MUTED
                     )
                 )
@@ -379,13 +392,29 @@ class UnpublishCommand : Command {
 
         for ((index, quiz) in quizzes.withIndex()) {
             val comma = if (index < quizzes.size - 1) "," else ""
-            val tagsStr = quiz.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
-            val shareCodeStr = if (quiz.shareCode != null) "\"${escapeJson(quiz.shareCode)}\"" else "null"
+            val tagsStr = quiz.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
+            val shareCodeStr =
+                if (quiz.shareCode != null) "\"${CommandFormatUtils.escapeJson(quiz.shareCode)}\"" else "null"
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(quiz.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"title\": \"${escapeJson(quiz.title)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"ownerId\": \"${escapeJson(quiz.ownerId)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"authorName\": \"${escapeJson(quiz.authorName)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(quiz.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"ownerId\": \"${CommandFormatUtils.escapeJson(quiz.ownerId)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"authorName\": \"${CommandFormatUtils.escapeJson(quiz.authorName)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"questionCount\": ${quiz.questionCount},", OutputStyle.CODE))
             lines.add(OutputLine("      \"attemptCount\": ${quiz.attemptCount},", OutputStyle.CODE))
             lines.add(OutputLine("      \"tags\": [$tagsStr],", OutputStyle.CODE))
@@ -418,7 +447,7 @@ class UnpublishCommand : Command {
             if (verbose) {
                 lines.add(
                     OutputLine(
-                        "Dang go xuat ban: ${truncate(quiz.title, 40)} (${quiz.id})...",
+                        "Dang go xuat ban: ${CommandFormatUtils.truncate(quiz.title, 40)} (${quiz.id})...",
                         OutputStyle.INFO
                     )
                 )
@@ -429,7 +458,7 @@ class UnpublishCommand : Command {
                 successCount++
                 lines.add(
                     OutputLine(
-                        "Da go xuat ban: ${truncate(quiz.title, 40)} (${quiz.id})",
+                        "Da go xuat ban: ${CommandFormatUtils.truncate(quiz.title, 40)} (${quiz.id})",
                         OutputStyle.SUCCESS
                     )
                 )
@@ -439,7 +468,7 @@ class UnpublishCommand : Command {
                 errors.add("${quiz.id}: $errorMsg")
                 lines.add(
                     OutputLine(
-                        "Loi khi go xuat ban '${truncate(quiz.title, 30)}': $errorMsg",
+                        "Loi khi go xuat ban '${CommandFormatUtils.truncate(quiz.title, 30)}': $errorMsg",
                         OutputStyle.ERROR
                     )
                 )
@@ -472,7 +501,7 @@ class UnpublishCommand : Command {
         lines.add(
             OutputLine(
                 "Quiz da go xuat ban se khong con hien thi trong tim kiem cong khai. " +
-                    "Van truy cap duoc qua share code (neu co).",
+                        "Van truy cap duoc qua share code (neu co).",
                 OutputStyle.MUTED
             )
         )
@@ -501,7 +530,7 @@ class UnpublishCommand : Command {
             lines.add(OutputLine("  \"errors\": [", OutputStyle.CODE))
             for ((index, err) in errors.withIndex()) {
                 val comma = if (index < errors.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(err)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(err)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ]", OutputStyle.CODE))
         } else {
@@ -514,37 +543,4 @@ class UnpublishCommand : Command {
         return CommandResult(output = lines, isSuccess = isSuccess, exitCode = if (isSuccess) 0 else 1)
     }
 
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
 }

@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -78,7 +79,7 @@ class DeleteCommand(
         "del -u userId1 --with-data --confirm" to "Xoa nguoi dung va ghi nhan xoa du lieu lien quan"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -207,7 +208,7 @@ class DeleteCommand(
         if (user.role.ordinal < subCommand.minimumRole.ordinal) {
             return CommandResult.error(
                 "Khong du quyen. Lenh '${subCommand.name}' yeu cau vai tro toi thieu: " +
-                    "${formatRole(subCommand.minimumRole)}."
+                        "${CommandFormatUtils.formatRole(subCommand.minimumRole)}."
             )
         }
 
@@ -216,7 +217,7 @@ class DeleteCommand(
         if (requiredPerm != null && !user.hasPermission(requiredPerm)) {
             return CommandResult.error(
                 "Khong du quyen. Lenh '${subCommand.name}' yeu cau quyen: " +
-                    "${formatPermission(requiredPerm)}."
+                        "${CommandFormatUtils.formatPermission(requiredPerm)}."
             )
         }
 
@@ -284,27 +285,4 @@ class DeleteCommand(
         return CommandResult(output = lines, isSuccess = false, exitCode = 1)
     }
 
-    /**
-     * Dinh dang ten vai tro sang tieng Viet.
-     */
-    private fun formatRole(role: UserRole): String = when (role) {
-        UserRole.GUEST -> "Khach"
-        UserRole.USER -> "Nguoi dung"
-        UserRole.ADMIN -> "Quan tri vien"
-        UserRole.SUPERUSER -> "Sieu quan tri"
-    }
-
-    /**
-     * Dinh dang ten quyen han de hien thi.
-     */
-    private fun formatPermission(permission: AdminPermission): String = when (permission) {
-        AdminPermission.MANAGE_USERS -> "Quan ly nguoi dung"
-        AdminPermission.CHANGE_USER_ROLES -> "Thay doi vai tro"
-        AdminPermission.DELETE_USERS -> "Xoa nguoi dung"
-        AdminPermission.BAN_USERS -> "Cam nguoi dung"
-        AdminPermission.MANAGE_QUIZZES -> "Quan ly quiz"
-        AdminPermission.DELETE_QUIZZES -> "Xoa quiz"
-        AdminPermission.PUBLISH_QUIZZES -> "Xuat ban quiz"
-        AdminPermission.VIEW_REPORTS -> "Xem bao cao"
-    }
 }

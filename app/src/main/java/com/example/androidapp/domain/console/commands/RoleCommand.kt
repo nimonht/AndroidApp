@@ -56,7 +56,7 @@ class RoleCommand : Command {
         "role --search \"@company.com\" --to ADMIN --dry-run" to "Xem truoc gan ADMIN cho nguoi dung cua cong ty"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -154,7 +154,7 @@ class RoleCommand : Command {
         val newRole = parseRole(newRoleStr)
             ?: return CommandResult.error(
                 "Vai tro khong hop le: \"$newRoleStr\". " +
-                    "Cac vai tro hop le: ${validRoleNames().joinToString(", ")}"
+                        "Cac vai tro hop le: ${validRoleNames().joinToString(", ")}"
             )
 
         return executeSingle(
@@ -314,14 +314,14 @@ class RoleCommand : Command {
         val toRole = parseRole(toRoleStr)
             ?: return CommandResult.error(
                 "Vai tro dich khong hop le: \"$toRoleStr\". " +
-                    "Cac vai tro hop le: ${validRoleNames().joinToString(", ")}"
+                        "Cac vai tro hop le: ${validRoleNames().joinToString(", ")}"
             )
 
         val fromRole = if (fromRoleStr != null) {
             parseRole(fromRoleStr)
                 ?: return CommandResult.error(
                     "Vai tro nguon khong hop le: \"$fromRoleStr\". " +
-                        "Cac vai tro hop le: ${validRoleNames().joinToString(", ")}"
+                            "Cac vai tro hop le: ${validRoleNames().joinToString(", ")}"
                 )
         } else {
             null
@@ -343,6 +343,12 @@ class RoleCommand : Command {
 
         var candidates = allUsers.filter { it.id != context.currentUser.id }
 
+        // Protect SUPERUSER accounts from accidental bulk role changes.
+        // To change a SUPERUSER's role, target them explicitly by ID/email.
+        if (fromRole == null) {
+            candidates = candidates.filter { it.role != UserRole.SUPERUSER }
+        }
+
         if (fromRole != null) {
             candidates = candidates.filter { it.role == fromRole }
         }
@@ -351,8 +357,8 @@ class RoleCommand : Command {
             val query = searchQuery.lowercase()
             candidates = candidates.filter { user ->
                 user.email.lowercase().contains(query) ||
-                    user.displayName.lowercase().contains(query) ||
-                    user.username.lowercase().contains(query)
+                        user.displayName.lowercase().contains(query) ||
+                        user.username.lowercase().contains(query)
             }
         }
 
@@ -369,7 +375,7 @@ class RoleCommand : Command {
             }
             return CommandResult.error(
                 "Khong tim thay nguoi dung nao can thay doi" +
-                    if (filterDesc.isNotEmpty()) " ($filterDesc)." else "."
+                        if (filterDesc.isNotEmpty()) " ($filterDesc)." else "."
             )
         }
 

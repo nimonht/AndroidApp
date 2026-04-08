@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -43,8 +44,8 @@ class DeletePoolItemCommand : Command {
 
     override val usage: String =
         "del -p <poolItemId> [...] [--contributor <userId>] [--tag <tag>] [--inactive] " +
-            "[--source-quiz <quizId>] [--limit <n>] [--dry-run] [--confirm] " +
-            "[--format <table|json>] [--verbose] [--quiet]"
+                "[--source-quiz <quizId>] [--limit <n>] [--dry-run] [--confirm] " +
+                "[--format <table|json>] [--verbose] [--quiet]"
 
     override val category: String = "admin"
 
@@ -62,12 +63,12 @@ class DeletePoolItemCommand : Command {
         "del -p --inactive --dry-run" to "Mo phong xoa cau hoi da bi vo hieu hoa",
         "del -p --source-quiz quizId1 --confirm" to "Vo hieu hoa tat ca cau hoi tu quiz nguon",
         "del -p --contributor userId1 --tag science --limit 10 --dry-run" to
-            "Mo phong vo hieu hoa toi da 10 cau hoi cua nguoi dong gop co tag 'science'",
+                "Mo phong vo hieu hoa toi da 10 cau hoi cua nguoi dong gop co tag 'science'",
         "del -p --inactive --format json --verbose --dry-run" to
-            "Mo phong xoa cau hoi da vo hieu, xuat JSON chi tiet"
+                "Mo phong xoa cau hoi da vo hieu, xuat JSON chi tiet"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -132,7 +133,7 @@ class DeletePoolItemCommand : Command {
         if (!dryRun && !confirm) {
             return CommandResult.error(
                 "Thao tac huy diet: vo hieu hoa/xoa cau hoi trong ngan hang cau hoi. " +
-                    "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
             )
         }
 
@@ -155,7 +156,7 @@ class DeletePoolItemCommand : Command {
             if (contributorFilter == null && args.isEmpty() && !inactive) {
                 return CommandResult.error(
                     "Vui long cung cap ID pool item, --contributor, --tag, --inactive, " +
-                        "hoac --source-quiz de xac dinh cau hoi can xu ly."
+                            "hoac --source-quiz de xac dinh cau hoi can xu ly."
                 )
             }
 
@@ -294,19 +295,22 @@ class DeletePoolItemCommand : Command {
         if (!quiet) {
             lines.add(
                 OutputLine(
-                    padRight("ID", 24) + padRight("Noi dung", 32) +
-                        padRight("Trang thai", 12) + padRight("Su dung", 8),
+                    CommandFormatUtils.padRight("ID", 24) + CommandFormatUtils.padRight("Noi dung", 32) +
+                            CommandFormatUtils.padRight("Trang thai", 12) + CommandFormatUtils.padRight("Su dung", 8),
                     OutputStyle.TABLE_HEADER
                 )
             )
 
             for (item in items) {
                 val status = if (item.isActive) "Hoat dong" else "Vo hieu"
-                val questionPreview = truncate(item.question.content, 30)
+                val questionPreview = CommandFormatUtils.truncate(item.question.content, 30)
                 lines.add(
                     OutputLine(
-                        padRight(item.id, 24) + padRight(questionPreview, 32) +
-                            padRight(status, 12) + padRight(item.usageCount.toString(), 8),
+                        CommandFormatUtils.padRight(item.id, 24) + CommandFormatUtils.padRight(questionPreview, 32) +
+                                CommandFormatUtils.padRight(
+                                    status,
+                                    12
+                                ) + CommandFormatUtils.padRight(item.usageCount.toString(), 8),
                         OutputStyle.TABLE_ROW
                     )
                 )
@@ -338,7 +342,7 @@ class DeletePoolItemCommand : Command {
                     }
                     lines.add(
                         OutputLine(
-                            "  Tao: ${formatTimestamp(item.createdAtMillis)}",
+                            "  Tao: ${CommandFormatUtils.formatTimestamp(item.createdAtMillis)}",
                             OutputStyle.MUTED
                         )
                     )
@@ -397,21 +401,33 @@ class DeletePoolItemCommand : Command {
         for ((index, item) in items.withIndex()) {
             val comma = if (index < items.size - 1) "," else ""
             val contributorStr = if (item.contributorId != null) {
-                "\"${escapeJson(item.contributorId)}\""
+                "\"${CommandFormatUtils.escapeJson(item.contributorId)}\""
             } else {
                 "null"
             }
-            val tagsStr = item.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
+            val tagsStr = item.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(item.id)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(item.id)}\",", OutputStyle.CODE))
             lines.add(
                 OutputLine(
-                    "      \"questionPreview\": \"${escapeJson(truncate(item.question.content, 60))}\",",
+                    "      \"questionPreview\": \"${
+                        CommandFormatUtils.escapeJson(
+                            CommandFormatUtils.truncate(
+                                item.question.content,
+                                60
+                            )
+                        )
+                    }\",",
                     OutputStyle.CODE
                 )
             )
             lines.add(OutputLine("      \"contributorId\": $contributorStr,", OutputStyle.CODE))
-            lines.add(OutputLine("      \"sourceQuizId\": \"${escapeJson(item.sourceQuizId)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"sourceQuizId\": \"${CommandFormatUtils.escapeJson(item.sourceQuizId)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"tags\": [$tagsStr],", OutputStyle.CODE))
             lines.add(OutputLine("      \"isActive\": ${item.isActive},", OutputStyle.CODE))
             lines.add(OutputLine("      \"usageCount\": ${item.usageCount}", OutputStyle.CODE))
@@ -450,7 +466,7 @@ class DeletePoolItemCommand : Command {
                     lines.add(
                         OutputLine(
                             "Bo qua (da vo hieu): ${item.id} - " +
-                                truncate(item.question.content, 30),
+                                    CommandFormatUtils.truncate(item.question.content, 30),
                             OutputStyle.MUTED
                         )
                     )
@@ -462,7 +478,7 @@ class DeletePoolItemCommand : Command {
                 lines.add(
                     OutputLine(
                         "Dang vo hieu hoa: ${item.id} - " +
-                            truncate(item.question.content, 30) + "...",
+                                CommandFormatUtils.truncate(item.question.content, 30) + "...",
                         OutputStyle.INFO
                     )
                 )
@@ -526,7 +542,7 @@ class DeletePoolItemCommand : Command {
         lines.add(
             OutputLine(
                 "Ghi chu: Pool item duoc vo hieu hoa (isActive=false), khong xoa vinh vien. " +
-                    "Xoa vinh vien can ho tro tu backend.",
+                        "Xoa vinh vien can ho tro tu backend.",
                 OutputStyle.MUTED
             )
         )
@@ -557,7 +573,7 @@ class DeletePoolItemCommand : Command {
             lines.add(OutputLine("  \"errors\": [", OutputStyle.CODE))
             for ((index, err) in errors.withIndex()) {
                 val comma = if (index < errors.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(err)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(err)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ]", OutputStyle.CODE))
         } else {
@@ -570,37 +586,4 @@ class DeletePoolItemCommand : Command {
         return CommandResult(output = lines, isSuccess = isSuccess, exitCode = if (isSuccess) 0 else 1)
     }
 
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
 }

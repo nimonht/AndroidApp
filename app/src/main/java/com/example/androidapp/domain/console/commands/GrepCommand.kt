@@ -52,7 +52,7 @@ class GrepCommand : Command {
         "ls -u | grep -w admin" to "Chi khop toan bo tu 'admin'"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -113,6 +113,14 @@ class GrepCommand : Command {
         val afterContext = (flags["after-context"] ?: flags["A"] ?: flags["context"] ?: flags["C"])
             ?.toIntOrNull() ?: 0
         val maxCount = (flags["max-count"] ?: flags["m"])?.toIntOrNull() ?: Int.MAX_VALUE
+
+        // ReDoS protection: reject overly long regex patterns
+        if (useRegex && rawPattern.length > 200) {
+            return CommandResult.error(
+                "Bieu thuc chinh quy qua dai (toi da 200 ky tu). " +
+                        "Su dung --fixed-string cho chuoi dai."
+            )
+        }
 
         // Build the effective pattern
         val effectivePattern = when {
@@ -196,10 +204,7 @@ class GrepCommand : Command {
             val isMatchLine = idx in matchingIndices
 
             val displayText = when {
-                onlyMatching && isMatchLine && !invert -> {
-                    val allMatches = regex.findAll(line).map { it.value }.toList()
-                    allMatches.joinToString("\n")
-                }
+                onlyMatching && isMatchLine && !invert -> ""
                 showLineNumbers -> "${idx + 1}: $line"
                 else -> line
             }

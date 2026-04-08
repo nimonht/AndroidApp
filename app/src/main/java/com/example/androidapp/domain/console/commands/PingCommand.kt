@@ -45,7 +45,7 @@ class PingCommand : Command {
         "ping --timeout 5000 --count 10" to "Ping 10 lan voi timeout 5 giay"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -110,7 +110,7 @@ class PingCommand : Command {
         val lines = mutableListOf<OutputLine>()
 
         // Check basic network first
-        val isOnline = context.services.networkMonitor.isOnline.value
+        val isOnline = context.services.networkService.isOnline.value
         if (!isOnline) {
             lines.add(OutputLine("Khong co ket noi mang!", OutputStyle.ERROR))
             lines.add(OutputLine("Kiem tra lai ket noi WiFi hoac du lieu di dong.", OutputStyle.MUTED))
@@ -170,16 +170,16 @@ class PingCommand : Command {
                 val avgLatency = latencies.average().toLong()
                 val successRate = ((count - failures) * 100) / count
 
-                lines.add(OutputLine("Thong ke $svc:", OutputStyle.HEADER))
+                lines.add(OutputLine("[Uoc luong] Thong ke $svc:", OutputStyle.HEADER))
                 lines.add(
                     OutputLine(
-                        "  Gui: $count | Thanh cong: ${count - failures} | That bai: $failures ($successRate% thanh cong)",
+                        "  [Uoc luong] Gui: $count | Thanh cong: ${count - failures} | That bai: $failures ($successRate% thanh cong)",
                         OutputStyle.TABLE_ROW
                     )
                 )
                 lines.add(
                     OutputLine(
-                        "  Min: ${minLatency}ms | Trung binh: ${avgLatency}ms | Max: ${maxLatency}ms",
+                        "  [Uoc luong] Min: ${minLatency}ms | Trung binh: ${avgLatency}ms | Max: ${maxLatency}ms",
                         OutputStyle.TABLE_ROW
                     )
                 )
@@ -196,7 +196,7 @@ class PingCommand : Command {
                     avgLatency < 600 -> OutputStyle.WARNING
                     else -> OutputStyle.ERROR
                 }
-                lines.add(OutputLine("  Chat luong: $quality", qualityStyle))
+                lines.add(OutputLine("  [Uoc luong] Chat luong: $quality", qualityStyle))
             } else {
                 lines.add(
                     OutputLine(
@@ -227,7 +227,7 @@ class PingCommand : Command {
         timeoutMs: Long,
         context: CommandContext
     ): Long {
-        val isOnline = context.services.networkMonitor.isOnline.value
+        val isOnline = context.services.networkService.isOnline.value
         if (!isOnline) return -1
 
         val start = System.currentTimeMillis()

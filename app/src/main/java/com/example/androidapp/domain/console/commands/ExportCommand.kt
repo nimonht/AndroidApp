@@ -6,6 +6,7 @@ import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
 import com.example.androidapp.domain.console.OutputStyle
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.Attempt
@@ -67,7 +68,7 @@ class ExportCommand : Command {
         "export logs --format json --limit 100" to "Xuat 100 ban ghi nhat ky gan nhat dang JSON"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -263,7 +264,7 @@ class ExportCommand : Command {
     ) {
         lines.add(OutputLine(fields.joinToString(","), OutputStyle.TABLE_HEADER))
         for (user in users) {
-            val values = fields.map { field -> csvEscape(getUserFieldValue(user, field)) }
+            val values = fields.map { field -> CommandFormatUtils.csvEscape(getUserFieldValue(user, field)) }
             lines.add(OutputLine(values.joinToString(","), OutputStyle.TABLE_ROW))
         }
     }
@@ -280,7 +281,7 @@ class ExportCommand : Command {
         for ((index, user) in users.withIndex()) {
             val comma = if (index < users.size - 1) "," else ""
             val pairs = fields.joinToString(", ") { field ->
-                "\"$field\": \"${escapeJson(getUserFieldValue(user, field))}\""
+                "\"$field\": \"${CommandFormatUtils.escapeJson(getUserFieldValue(user, field))}\""
             }
             lines.add(OutputLine("  { $pairs }$comma", OutputStyle.CODE))
         }
@@ -296,12 +297,16 @@ class ExportCommand : Command {
         lines: MutableList<OutputLine>
     ) {
         val widths = calculateColumnWidths(fields, users.map { u -> fields.map { getUserFieldValue(u, it) } })
-        val header = fields.mapIndexed { i, f -> padRight(f.uppercase(), widths[i]) }.joinToString(COL_SEPARATOR)
+        val header = fields.mapIndexed { i, f -> CommandFormatUtils.padRight(f.uppercase(), widths[i]) }
+            .joinToString(COL_SEPARATOR)
         lines.add(OutputLine(header, OutputStyle.TABLE_HEADER))
 
         for (user in users) {
             val row = fields.mapIndexed { i, f ->
-                padRight(truncate(getUserFieldValue(user, f), widths[i]), widths[i])
+                CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(getUserFieldValue(user, f), widths[i]),
+                    widths[i]
+                )
             }.joinToString(COL_SEPARATOR)
             val style = if (user.isBanned) OutputStyle.WARNING else OutputStyle.TABLE_ROW
             lines.add(OutputLine(row, style))
@@ -392,7 +397,7 @@ class ExportCommand : Command {
     ) {
         lines.add(OutputLine(fields.joinToString(","), OutputStyle.TABLE_HEADER))
         for (quiz in quizzes) {
-            val values = fields.map { field -> csvEscape(getQuizFieldValue(quiz, field)) }
+            val values = fields.map { field -> CommandFormatUtils.csvEscape(getQuizFieldValue(quiz, field)) }
             lines.add(OutputLine(values.joinToString(","), OutputStyle.TABLE_ROW))
         }
     }
@@ -409,7 +414,7 @@ class ExportCommand : Command {
         for ((index, quiz) in quizzes.withIndex()) {
             val comma = if (index < quizzes.size - 1) "," else ""
             val pairs = fields.joinToString(", ") { field ->
-                "\"$field\": \"${escapeJson(getQuizFieldValue(quiz, field))}\""
+                "\"$field\": \"${CommandFormatUtils.escapeJson(getQuizFieldValue(quiz, field))}\""
             }
             lines.add(OutputLine("  { $pairs }$comma", OutputStyle.CODE))
         }
@@ -425,12 +430,16 @@ class ExportCommand : Command {
         lines: MutableList<OutputLine>
     ) {
         val widths = calculateColumnWidths(fields, quizzes.map { q -> fields.map { getQuizFieldValue(q, it) } })
-        val header = fields.mapIndexed { i, f -> padRight(f.uppercase(), widths[i]) }.joinToString(COL_SEPARATOR)
+        val header = fields.mapIndexed { i, f -> CommandFormatUtils.padRight(f.uppercase(), widths[i]) }
+            .joinToString(COL_SEPARATOR)
         lines.add(OutputLine(header, OutputStyle.TABLE_HEADER))
 
         for (quiz in quizzes) {
             val row = fields.mapIndexed { i, f ->
-                padRight(truncate(getQuizFieldValue(quiz, f), widths[i]), widths[i])
+                CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(getQuizFieldValue(quiz, f), widths[i]),
+                    widths[i]
+                )
             }.joinToString(COL_SEPARATOR)
             val style = when {
                 quiz.deletedAt != null -> OutputStyle.ERROR
@@ -543,7 +552,7 @@ class ExportCommand : Command {
     ) {
         lines.add(OutputLine(fields.joinToString(","), OutputStyle.TABLE_HEADER))
         for (attempt in attempts) {
-            val values = fields.map { field -> csvEscape(getAttemptFieldValue(attempt, field)) }
+            val values = fields.map { field -> CommandFormatUtils.csvEscape(getAttemptFieldValue(attempt, field)) }
             lines.add(OutputLine(values.joinToString(","), OutputStyle.TABLE_ROW))
         }
     }
@@ -560,7 +569,7 @@ class ExportCommand : Command {
         for ((index, attempt) in attempts.withIndex()) {
             val comma = if (index < attempts.size - 1) "," else ""
             val pairs = fields.joinToString(", ") { field ->
-                "\"$field\": \"${escapeJson(getAttemptFieldValue(attempt, field))}\""
+                "\"$field\": \"${CommandFormatUtils.escapeJson(getAttemptFieldValue(attempt, field))}\""
             }
             lines.add(OutputLine("  { $pairs }$comma", OutputStyle.CODE))
         }
@@ -579,12 +588,16 @@ class ExportCommand : Command {
             fields,
             attempts.map { a -> fields.map { getAttemptFieldValue(a, it) } }
         )
-        val header = fields.mapIndexed { i, f -> padRight(f.uppercase(), widths[i]) }.joinToString(COL_SEPARATOR)
+        val header = fields.mapIndexed { i, f -> CommandFormatUtils.padRight(f.uppercase(), widths[i]) }
+            .joinToString(COL_SEPARATOR)
         lines.add(OutputLine(header, OutputStyle.TABLE_HEADER))
 
         for (attempt in attempts) {
             val row = fields.mapIndexed { i, f ->
-                padRight(truncate(getAttemptFieldValue(attempt, f), widths[i]), widths[i])
+                CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(getAttemptFieldValue(attempt, f), widths[i]),
+                    widths[i]
+                )
             }.joinToString(COL_SEPARATOR)
             lines.add(OutputLine(row, OutputStyle.TABLE_ROW))
         }
@@ -605,20 +618,23 @@ class ExportCommand : Command {
         } else {
             "0.0%"
         }
+
         "starttime", "start" -> formatTimestamp(attempt.startTimeMillis)
         "endtime", "end" -> if (attempt.endTimeMillis != null) {
             formatTimestamp(attempt.endTimeMillis)
         } else {
             "Chua hoan thanh"
         }
+
         "duration" -> {
             val endMs = attempt.endTimeMillis
             if (endMs != null) {
-                formatDuration((endMs - attempt.startTimeMillis) / 1000)
+                CommandFormatUtils.formatDuration((endMs - attempt.startTimeMillis) / 1000)
             } else {
                 "N/A"
             }
         }
+
         "answercount", "answers" -> attempt.answers.size.toString()
         else -> ""
     }
@@ -695,7 +711,12 @@ class ExportCommand : Command {
     ) {
         lines.add(OutputLine("metric,value", OutputStyle.TABLE_HEADER))
         for ((key, value) in stats) {
-            lines.add(OutputLine("${csvEscape(key)},${csvEscape(value)}", OutputStyle.TABLE_ROW))
+            lines.add(
+                OutputLine(
+                    "${CommandFormatUtils.csvEscape(key)},${CommandFormatUtils.csvEscape(value)}",
+                    OutputStyle.TABLE_ROW
+                )
+            )
         }
     }
 
@@ -711,7 +732,7 @@ class ExportCommand : Command {
             val comma = if (index < stats.size - 1) "," else ""
             lines.add(
                 OutputLine(
-                    "  \"${entry.first}\": \"${escapeJson(entry.second)}\"$comma",
+                    "  \"${entry.first}\": \"${CommandFormatUtils.escapeJson(entry.second)}\"$comma",
                     OutputStyle.CODE
                 )
             )
@@ -740,7 +761,7 @@ class ExportCommand : Command {
         val labelWidth = labels.values.maxOfOrNull { it.length }?.coerceAtLeast(COL_LABEL_MIN) ?: COL_LABEL_MIN
         lines.add(
             OutputLine(
-                "${padRight("CHI SO", labelWidth)}$COL_SEPARATOR${"GIA TRI"}",
+                "${CommandFormatUtils.padRight("CHI SO", labelWidth)}$COL_SEPARATOR${"GIA TRI"}",
                 OutputStyle.TABLE_HEADER
             )
         )
@@ -749,7 +770,7 @@ class ExportCommand : Command {
             val label = labels[key] ?: key
             lines.add(
                 OutputLine(
-                    "${padRight(label, labelWidth)}$COL_SEPARATOR$value",
+                    "${CommandFormatUtils.padRight(label, labelWidth)}$COL_SEPARATOR$value",
                     OutputStyle.TABLE_ROW
                 )
             )
@@ -778,11 +799,11 @@ class ExportCommand : Command {
         requestedFields: List<String>?,
         limit: Int?
     ): CommandResult {
-        val logCollector = context.services.logCollector
+        val logService = context.services.logService
 
         // Dinh dang table khong co fields tuy chinh va khong co limit: su dung export() nhanh
         if (format == "table" && requestedFields == null && limit == null) {
-            val exported = logCollector.export()
+            val exported = logService.export()
             if (exported.isBlank()) {
                 return CommandResult.success(
                     listOf(OutputLine("Khong co ban ghi nhat ky nao de xuat.", OutputStyle.WARNING))
@@ -798,7 +819,7 @@ class ExportCommand : Command {
         }
 
         // Su dung StateFlow de loc/dinh dang tu chinh
-        val allLogs = logCollector.logs.first()
+        val allLogs = logService.logs.first()
         if (allLogs.isEmpty()) {
             return CommandResult.success(
                 listOf(OutputLine("Khong co ban ghi nhat ky nao de xuat.", OutputStyle.WARNING))
@@ -843,7 +864,7 @@ class ExportCommand : Command {
     ) {
         lines.add(OutputLine(fields.joinToString(","), OutputStyle.TABLE_HEADER))
         for (entry in logs) {
-            val values = fields.map { field -> csvEscape(getLogFieldValue(entry, field)) }
+            val values = fields.map { field -> CommandFormatUtils.csvEscape(getLogFieldValue(entry, field)) }
             lines.add(OutputLine(values.joinToString(","), OutputStyle.TABLE_ROW))
         }
     }
@@ -860,7 +881,7 @@ class ExportCommand : Command {
         for ((index, entry) in logs.withIndex()) {
             val comma = if (index < logs.size - 1) "," else ""
             val pairs = fields.joinToString(", ") { field ->
-                "\"$field\": \"${escapeJson(getLogFieldValue(entry, field))}\""
+                "\"$field\": \"${CommandFormatUtils.escapeJson(getLogFieldValue(entry, field))}\""
             }
             lines.add(OutputLine("  { $pairs }$comma", OutputStyle.CODE))
         }
@@ -879,12 +900,16 @@ class ExportCommand : Command {
             fields,
             logs.map { e -> fields.map { getLogFieldValue(e, it) } }
         )
-        val header = fields.mapIndexed { i, f -> padRight(f.uppercase(), widths[i]) }.joinToString(COL_SEPARATOR)
+        val header = fields.mapIndexed { i, f -> CommandFormatUtils.padRight(f.uppercase(), widths[i]) }
+            .joinToString(COL_SEPARATOR)
         lines.add(OutputLine(header, OutputStyle.TABLE_HEADER))
 
         for (entry in logs) {
             val row = fields.mapIndexed { i, f ->
-                padRight(truncate(getLogFieldValue(entry, f), widths[i]), widths[i])
+                CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(getLogFieldValue(entry, f), widths[i]),
+                    widths[i]
+                )
             }.joinToString(COL_SEPARATOR)
             val style = when (entry.level) {
                 com.example.androidapp.domain.model.LogLevel.ERROR,
@@ -931,7 +956,7 @@ class ExportCommand : Command {
         lines.add(OutputLine(""))
         lines.add(OutputLine("Cac lenh con ho tro:", OutputStyle.HEADER))
         for ((sub, desc) in SUBCOMMANDS) {
-            lines.add(OutputLine("  ${padRight(sub, 12)}$desc", OutputStyle.INFO))
+            lines.add(OutputLine("  ${CommandFormatUtils.padRight(sub, 12)}$desc", OutputStyle.INFO))
         }
         lines.add(OutputLine(""))
         lines.add(OutputLine("Vi du:", OutputStyle.HEADER))
@@ -988,57 +1013,6 @@ class ExportCommand : Command {
         return sdf.format(java.util.Date(millis))
     }
 
-    /**
-     * Dinh dang thoi luong (giay) thanh chuoi doc duoc.
-     */
-    private fun formatDuration(totalSeconds: Long): String {
-        if (totalSeconds < 0) return "N/A"
-        if (totalSeconds < 60) return "${totalSeconds}s"
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        if (minutes < 60) return "${minutes}m ${seconds}s"
-        val hours = minutes / 60
-        val remainingMinutes = minutes % 60
-        return "${hours}h ${remainingMinutes}m ${seconds}s"
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
-
-    /**
-     * Thoat gia tri cho CSV (bao quanh bang dau nhay kep neu can).
-     */
-    private fun csvEscape(value: String): String {
-        return if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-            "\"${value.replace("\"", "\"\"")}\""
-        } else {
-            value
-        }
-    }
-
     // ====================================================================
     // Constants
     // ====================================================================
@@ -1080,7 +1054,8 @@ class ExportCommand : Command {
             "id", "userid", "quizid", "score", "totalquestions",
             "percentage", "starttime", "endtime", "duration", "answercount"
         )
-        private val ATTEMPT_DEFAULT_FIELDS = listOf("id", "userid", "quizid", "score", "totalquestions", "percentage", "duration")
+        private val ATTEMPT_DEFAULT_FIELDS =
+            listOf("id", "userid", "quizid", "score", "totalquestions", "percentage", "duration")
 
         // -- Stats fields --
 

@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -30,7 +31,8 @@ class EchoCommand : Command {
 
     override val description: String = "In van ban ra console voi cac tuy chon dinh dang"
 
-    override val usage: String = "echo [van_ban...] [--style <kieu>] [--repeat <n>] [--upper] [--lower] [--trim] [--timestamp] [--no-newline]"
+    override val usage: String =
+        "echo [van_ban...] [--style <kieu>] [--repeat <n>] [--upper] [--lower] [--trim] [--timestamp] [--no-newline]"
 
     override val category: String = "util"
 
@@ -44,7 +46,7 @@ class EchoCommand : Command {
         "echo --no-newline A B C" to "Gop tat ca thanh mot dong"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -52,13 +54,26 @@ class EchoCommand : Command {
         val lastArg = args.lastOrNull()?.lowercase() ?: ""
 
         val allFlags = listOf(
-            CompletionSuggestion("--style", description = "Kieu hien thi (normal/success/error/warning/info/header/muted/code)", type = SuggestionType.FLAG),
+            CompletionSuggestion(
+                "--style",
+                description = "Kieu hien thi (normal/success/error/warning/info/header/muted/code)",
+                type = SuggestionType.FLAG
+            ),
             CompletionSuggestion("--repeat", description = "Lap lai van ban N lan", type = SuggestionType.FLAG),
-            CompletionSuggestion("-r", displayText = "-r (--repeat)", description = "Lap lai van ban N lan", type = SuggestionType.FLAG),
+            CompletionSuggestion(
+                "-r",
+                displayText = "-r (--repeat)",
+                description = "Lap lai van ban N lan",
+                type = SuggestionType.FLAG
+            ),
             CompletionSuggestion("--upper", description = "Chuyen thanh chu hoa", type = SuggestionType.FLAG),
             CompletionSuggestion("--lower", description = "Chuyen thanh chu thuong", type = SuggestionType.FLAG),
             CompletionSuggestion("--trim", description = "Loai bo khoang trang thua", type = SuggestionType.FLAG),
-            CompletionSuggestion("--timestamp", description = "Them thoi gian vao dau dong", type = SuggestionType.FLAG),
+            CompletionSuggestion(
+                "--timestamp",
+                description = "Them thoi gian vao dau dong",
+                type = SuggestionType.FLAG
+            ),
             CompletionSuggestion("--no-newline", description = "Gop tat ca thanh mot dong", type = SuggestionType.FLAG)
         )
 
@@ -72,7 +87,7 @@ class EchoCommand : Command {
         if (lastArg.startsWith("-")) {
             return allFlags.filter {
                 it.text.startsWith(lastArg) &&
-                    !flags.containsKey(it.text.removePrefix("--").removePrefix("-"))
+                        !flags.containsKey(it.text.removePrefix("--").removePrefix("-"))
             }
         }
 
@@ -111,8 +126,7 @@ class EchoCommand : Command {
         }
 
         if (flags.containsKey("timestamp")) {
-            val now = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-                .format(java.util.Date())
+            val now = CommandFormatUtils.formatTimestamp(System.currentTimeMillis())
             text = "[$now] $text"
         }
 

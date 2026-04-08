@@ -41,10 +41,10 @@ class LogCommand : Command {
 
     override val usage: String =
         "log [so_dong] [-l|--level <muc>] [-t|--tag <tag>] [--search <tu_khoa>] " +
-            "[--regex <bieu_thuc>] [--not <loai_tru>] [--since <thoi_gian>] " +
-            "[--after <thoi_gian>] [--before <thoi_gian>] [--between <bat_dau,ket_thuc>] " +
-            "[--thread <ten_luong>] [--format <dinh_dang>] [--fields <truong>] " +
-            "[--no-timestamp] [--no-tag] [--clear] [--export] [--count] [--stats]"
+                "[--regex <bieu_thuc>] [--not <loai_tru>] [--since <thoi_gian>] " +
+                "[--after <thoi_gian>] [--before <thoi_gian>] [--between <bat_dau,ket_thuc>] " +
+                "[--thread <ten_luong>] [--format <dinh_dang>] [--fields <truong>] " +
+                "[--no-timestamp] [--no-tag] [--clear] [--export] [--count] [--stats]"
 
     override val category: String = "system"
 
@@ -71,7 +71,7 @@ class LogCommand : Command {
         "log --export" to "Xuat toan bo nhat ky"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -135,7 +135,7 @@ class LogCommand : Command {
 
         // --clear: xoa bo nho dem
         if (flags.containsKey("clear")) {
-            context.services.logCollector.clear()
+            context.services.logService.clear()
             return CommandResult.success(
                 listOf(OutputLine("Da xoa bo nho dem nhat ky.", OutputStyle.SUCCESS))
             )
@@ -143,7 +143,7 @@ class LogCommand : Command {
 
         // --export: xuat toan bo
         if (flags.containsKey("export")) {
-            val exported = context.services.logCollector.export()
+            val exported = context.services.logService.export()
             if (exported.isBlank()) {
                 return CommandResult.success(
                     listOf(OutputLine("Khong co ban ghi nao de xuat.", OutputStyle.WARNING))
@@ -159,7 +159,7 @@ class LogCommand : Command {
         }
 
         // Thu thap cac ban ghi hien tai
-        val allLogs = context.services.logCollector.logs.first()
+        val allLogs = context.services.logService.logs.first()
         if (allLogs.isEmpty()) {
             return CommandResult.success(
                 listOf(OutputLine("Khong co ban ghi nhat ky nao.", OutputStyle.MUTED))
@@ -178,7 +178,13 @@ class LogCommand : Command {
         if (levelStr != null) {
             val requestedLevel = LogLevel.fromString(levelStr)
             if (requestedLevel == null) {
-                return CommandResult.error("Muc do khong hop le: '$levelStr'. Cac muc hop le: ${availableLevelsForDisplay(isAdmin)}")
+                return CommandResult.error(
+                    "Muc do khong hop le: '$levelStr'. Cac muc hop le: ${
+                        availableLevelsForDisplay(
+                            isAdmin
+                        )
+                    }"
+                )
             }
             // Nguoi dung thuong khong duoc xem VERBOSE/DEBUG
             if (!isAdmin && requestedLevel !in LogLevel.USER_VISIBLE_LEVELS) {

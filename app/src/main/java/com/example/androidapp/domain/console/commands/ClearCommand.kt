@@ -35,7 +35,7 @@ class ClearCommand : Command {
     /**
      * Khong co tham so hay co nao de goi y — tra ve danh sach rong.
      */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext

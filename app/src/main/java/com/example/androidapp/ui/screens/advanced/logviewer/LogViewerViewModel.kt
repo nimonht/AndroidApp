@@ -2,21 +2,25 @@ package com.example.androidapp.ui.screens.advanced.logviewer
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.androidapp.data.logging.LogCollector
 import com.example.androidapp.domain.model.LogEntry
 import com.example.androidapp.domain.model.LogLevel
-import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.domain.service.LogService
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * UI state for the log viewer screen.
  *
- * @property allLogs The complete unfiltered log buffer from [LogCollector].
+ * @property allLogs The complete unfiltered log buffer from [LogService].
  * @property filteredLogs Logs after applying level, search, and tag filters.
  * @property availableLevels Log levels the current user is allowed to see.
  * @property selectedLevels Log levels currently selected for display.
@@ -43,8 +47,7 @@ data class LogViewerUiState(
     val logCount: Int = 0,
     val filteredCount: Int = 0,
     val isAdmin: Boolean = false,
-    val exportedText: String? = null,
-    val shouldScrollToBottom: Boolean = false
+    val exportedText: String? = null
 )
 
 /**
@@ -85,15 +88,15 @@ sealed class LogViewerEvent {
 /**
  * ViewModel for the GCP-Cloud-Logging-style log viewer.
  *
- * Collects the live log stream from [LogCollector], applies role-based
+ * Collects the live log stream from [LogService], applies role-based
  * level visibility and user-chosen filters (level chips, search query,
  * tag prefix), and exposes the resulting list via [uiState].
  *
- * @param logCollector The application-wide log ring-buffer collector.
+ * @param logCollector The application-wide log service (ring-buffer collector).
  * @param authRepository Repository for resolving the current user and role.
  */
 class LogViewerViewModel(
-    private val logCollector: LogCollector,
+    private val logCollector: LogService,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
@@ -102,11 +105,11 @@ class LogViewerViewModel(
     /** Observable UI state for the log viewer screen. */
     val uiState: StateFlow<LogViewerUiState> = _uiState.asStateFlow()
 
-    /**
-     * Snapshot of logs taken when the user pauses streaming.
-     * While paused, new logs from the collector are ignored until resumed.
-     */
-    private var pausedSnapshot: List<LogEntry>? = null
+    /** Channel-based one-shot signal to scroll the list to the bottom. */
+    private val _scrollToBottom = Channel<Unit>(Channel.CONFLATED)
+
+    /** Flow that emits a [Unit] each time the UI should scroll to the bottom. */
+    val scrollToBottom = _scrollToBottom.receiveAsFlow()
 
     init {
         observeCurrentUser()
@@ -162,9 +165,9 @@ class LogViewerViewModel(
     }
 
     /**
-     * Observes the live log stream from [LogCollector] and applies filters.
-     * When paused, incoming updates are silently discarded; the paused snapshot
-     * is retained until the user resumes.
+     * Observes the live log stream from [LogService] and applies filters.
+     * When paused, incoming updates are silently discarded; the frozen
+     * snapshot is retained until the user resumes.
      */
     private fun observeLogs() {
         viewModelScope.launch {
@@ -232,19 +235,17 @@ class LogViewerViewModel(
     }
 
     /**
-     * Pauses or resumes live streaming. On pause, a snapshot of current logs
-     * is frozen. On resume, the live stream replaces the snapshot.
+     * Pauses or resumes live streaming. On pause, the current log list is
+     * frozen in [uiState]. On resume, the live stream replaces the snapshot.
      */
     private fun handleTogglePause() {
         _uiState.update { current ->
             val nowPaused = !current.isPaused
             if (nowPaused) {
                 // Freeze the current log list
-                pausedSnapshot = current.allLogs
                 current.copy(isPaused = true)
             } else {
                 // Resume: reload from the collector's live buffer
-                pausedSnapshot = null
                 val liveLogs = logCollector.logs.value
                 applyFilters(
                     current.copy(
@@ -262,7 +263,6 @@ class LogViewerViewModel(
      */
     private fun handleClearLogs() {
         logCollector.clear()
-        pausedSnapshot = null
         _uiState.update { current ->
             current.copy(
                 allLogs = emptyList(),
@@ -286,11 +286,13 @@ class LogViewerViewModel(
             return
         }
         val text = buildString {
-            appendLine("=== Quizzez Log Export ===")
-            appendLine("Total entries: ${logsToExport.size}")
-            appendLine("Filters: levels=${state.selectedLevels.joinToString(",") { it.abbreviation }}" +
-                    ", search=\"${state.searchQuery}\"" +
-                    ", tag=\"${state.tagFilter}\"")
+            appendLine("=== Xuat Nhat Ky Quizzez ===")
+            appendLine("Tong muc: ${logsToExport.size}")
+            appendLine(
+                "Bo loc: muc do=${state.selectedLevels.joinToString(",") { it.abbreviation }}" +
+                        ", tim kiem=\"${state.searchQuery}\"" +
+                        ", tag=\"${state.tagFilter}\""
+            )
             appendLine()
             for (entry in logsToExport) {
                 appendLine(formatLogEntry(entry))
@@ -311,14 +313,12 @@ class LogViewerViewModel(
     }
 
     /**
-     * Signals the UI to scroll to the bottom of the log list.
+     * Signals the UI to scroll to the bottom of the log list via a
+     * conflated [Channel], avoiding the timing-hack approach.
      */
     private fun handleScrollToBottom() {
-        _uiState.update { it.copy(shouldScrollToBottom = true) }
-        // Reset the flag after a brief moment so the UI can observe the edge
         viewModelScope.launch {
-            kotlinx.coroutines.delay(100)
-            _uiState.update { it.copy(shouldScrollToBottom = false) }
+            _scrollToBottom.send(Unit)
         }
     }
 
@@ -391,10 +391,10 @@ class LogViewerViewModel(
      * @return A single-line string representation.
      */
     private fun formatLogEntry(entry: LogEntry): String {
-        val time = java.text.SimpleDateFormat(
+        val time = SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss.SSS",
-            java.util.Locale.US
-        ).format(java.util.Date(entry.timestamp))
+            Locale.US
+        ).format(Date(entry.timestamp))
         return "$time ${entry.level.abbreviation}/${entry.tag} [${entry.threadName}]: ${entry.message}"
     }
 }

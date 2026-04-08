@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -76,8 +77,8 @@ class LsCommand : Command {
 
     override val usage: String =
         "ls <-u|-q|-a|-p> [bo loc...] [--sort <field>] [--asc|--desc] [--limit <n>] " +
-            "[--offset <n>] [--page <n>] [--format <table|json|csv>] [--fields <fields>] " +
-            "[--output <full|count|ids|summary>] [--verbose] [--quiet] [--no-header]"
+                "[--offset <n>] [--page <n>] [--format <table|json|csv>] [--fields <fields>] " +
+                "[--output <full|count|ids|summary>] [--verbose] [--quiet] [--no-header]"
 
     override val category: String = "admin"
 
@@ -106,7 +107,7 @@ class LsCommand : Command {
         "ls -q --fields id,title,owner,status --no-header" to "Liet ke quiz voi cac truong cu the"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -226,25 +227,85 @@ class LsCommand : Command {
         // Goi y gia tri cho cac flag can gia tri
         if ("format" in flags && flags["format"] == null) {
             suggestions.clear()
-            suggestions.add(CompletionSuggestion(text = "table", description = "Dinh dang bang", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "json", description = "Dinh dang JSON", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "csv", description = "Dinh dang CSV", type = SuggestionType.ARGUMENT))
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "table",
+                    description = "Dinh dang bang",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "json",
+                    description = "Dinh dang JSON",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "csv",
+                    description = "Dinh dang CSV",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
         }
 
         if ("output" in flags && flags["output"] == null) {
             suggestions.clear()
-            suggestions.add(CompletionSuggestion(text = "full", description = "Hien thi day du", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "count", description = "Chi dem so luong", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "ids", description = "Chi hien thi ID", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "summary", description = "Hien thi tom tat", type = SuggestionType.ARGUMENT))
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "full",
+                    description = "Hien thi day du",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "count",
+                    description = "Chi dem so luong",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "ids",
+                    description = "Chi hien thi ID",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "summary",
+                    description = "Hien thi tom tat",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
         }
 
         if ("role" in flags && flags["role"] == null) {
             suggestions.clear()
             suggestions.add(CompletionSuggestion(text = "guest", description = "Khach", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "user", description = "Nguoi dung", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "admin", description = "Quan tri vien", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "superuser", description = "Sieu quan tri", type = SuggestionType.ARGUMENT))
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "user",
+                    description = "Nguoi dung",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "admin",
+                    description = "Quan tri vien",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "superuser",
+                    description = "Sieu quan tri",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
         }
 
         return suggestions
@@ -385,7 +446,16 @@ class LsCommand : Command {
         for (role in UserRole.entries) {
             val count = byRole[role]?.size ?: 0
             if (count > 0) {
-                lines.add(OutputLine("  ${padRight(formatRole(role), 17)}: $count", OutputStyle.NORMAL))
+                lines.add(
+                    OutputLine(
+                        "  ${
+                            CommandFormatUtils.padRight(
+                                CommandFormatUtils.formatRole(role),
+                                17
+                            )
+                        }: $count", OutputStyle.NORMAL
+                    )
+                )
             }
         }
 
@@ -461,7 +531,7 @@ class LsCommand : Command {
             lines.add(
                 OutputLine(
                     "Hien thi ${users.size} / $total ket qua" +
-                        paginationHint(params.offset, params.limit, total),
+                            paginationHint(params.offset, params.limit, total),
                     OutputStyle.MUTED
                 )
             )
@@ -476,14 +546,14 @@ class LsCommand : Command {
     private fun buildUserHeader(fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight("ID", COL_ID)
-                "email" -> padRight("Email", COL_EMAIL)
-                "name", "displayname" -> padRight("Ten", COL_NAME)
-                "username" -> padRight("Username", COL_NAME)
-                "role" -> padRight("Vai tro", COL_ROLE)
-                "status" -> padRight("Trang thai", COL_STATUS)
-                "permissions", "perms" -> padRight("So quyen", COL_SHORT)
-                else -> padRight(field, COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight("ID", COL_ID)
+                "email" -> CommandFormatUtils.padRight("Email", COL_EMAIL)
+                "name", "displayname" -> CommandFormatUtils.padRight("Ten", COL_NAME)
+                "username" -> CommandFormatUtils.padRight("Username", COL_NAME)
+                "role" -> CommandFormatUtils.padRight("Vai tro", COL_ROLE)
+                "status" -> CommandFormatUtils.padRight("Trang thai", COL_STATUS)
+                "permissions", "perms" -> CommandFormatUtils.padRight("So quyen", COL_SHORT)
+                else -> CommandFormatUtils.padRight(field, COL_DEFAULT)
             }
         }
     }
@@ -494,14 +564,32 @@ class LsCommand : Command {
     private fun buildUserRow(user: User, fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight(user.id, COL_ID)
-                "email" -> padRight(truncate(user.email, COL_EMAIL - 2), COL_EMAIL)
-                "name", "displayname" -> padRight(truncate(user.displayName, COL_NAME - 2), COL_NAME)
-                "username" -> padRight(if (user.username.isNotBlank()) "@${user.username}" else "-", COL_NAME)
-                "role" -> padRight(formatRole(user.role), COL_ROLE)
-                "status" -> padRight(if (user.isBanned) "Bi cam" else "Hoat dong", COL_STATUS)
-                "permissions", "perms" -> padRight(user.effectivePermissions().size.toString(), COL_SHORT)
-                else -> padRight("-", COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight(user.id, COL_ID)
+                "email" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(user.email, COL_EMAIL - 2),
+                    COL_EMAIL
+                )
+
+                "name", "displayname" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        user.displayName,
+                        COL_NAME - 2
+                    ), COL_NAME
+                )
+
+                "username" -> CommandFormatUtils.padRight(
+                    if (user.username.isNotBlank()) "@${user.username}" else "-",
+                    COL_NAME
+                )
+
+                "role" -> CommandFormatUtils.padRight(CommandFormatUtils.formatRole(user.role), COL_ROLE)
+                "status" -> CommandFormatUtils.padRight(if (user.isBanned) "Bi cam" else "Hoat dong", COL_STATUS)
+                "permissions", "perms" -> CommandFormatUtils.padRight(
+                    user.effectivePermissions().size.toString(),
+                    COL_SHORT
+                )
+
+                else -> CommandFormatUtils.padRight("-", COL_DEFAULT)
             }
         }
     }
@@ -527,10 +615,25 @@ class LsCommand : Command {
             val comma = if (index < users.size - 1) "," else ""
             val permsStr = user.effectivePermissions().joinToString(", ") { "\"${it.name}\"" }
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(user.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"email\": \"${escapeJson(user.email)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"displayName\": \"${escapeJson(user.displayName)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"username\": \"${escapeJson(user.username)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(user.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"email\": \"${CommandFormatUtils.escapeJson(user.email)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"displayName\": \"${CommandFormatUtils.escapeJson(user.displayName)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"username\": \"${CommandFormatUtils.escapeJson(user.username)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"role\": \"${user.role.name}\",", OutputStyle.CODE))
             lines.add(OutputLine("      \"isBanned\": ${user.isBanned},", OutputStyle.CODE))
             lines.add(OutputLine("      \"permissions\": [$permsStr]", OutputStyle.CODE))
@@ -556,13 +659,15 @@ class LsCommand : Command {
         for (user in users) {
             val values = fields.map { field ->
                 when (field) {
-                    "id" -> csvEscape(user.id)
-                    "email" -> csvEscape(user.email)
-                    "name", "displayname" -> csvEscape(user.displayName)
-                    "username" -> csvEscape(user.username)
+                    "id" -> CommandFormatUtils.csvEscape(user.id)
+                    "email" -> CommandFormatUtils.csvEscape(user.email)
+                    "name", "displayname" -> CommandFormatUtils.csvEscape(user.displayName)
+                    "username" -> CommandFormatUtils.csvEscape(user.username)
                     "role" -> user.role.name
                     "status" -> if (user.isBanned) "banned" else "active"
-                    "permissions", "perms" -> csvEscape(user.effectivePermissions().joinToString(";") { it.name })
+                    "permissions", "perms" -> CommandFormatUtils.csvEscape(
+                        user.effectivePermissions().joinToString(";") { it.name })
+
                     else -> ""
                 }
             }
@@ -740,7 +845,11 @@ class LsCommand : Command {
                 }
                 lines.add(
                     OutputLine(
-                        "  Tao: ${formatTimestamp(quiz.createdAt)} | Cap nhat: ${formatTimestamp(quiz.updatedAt)}",
+                        "  Tao: ${CommandFormatUtils.formatTimestampShort(quiz.createdAt)} | Cap nhat: ${
+                            CommandFormatUtils.formatTimestampShort(
+                                quiz.updatedAt
+                            )
+                        }",
                         OutputStyle.MUTED
                     )
                 )
@@ -752,7 +861,7 @@ class LsCommand : Command {
             lines.add(
                 OutputLine(
                     "Hien thi ${quizzes.size} / $total ket qua" +
-                        paginationHint(params.offset, params.limit, total),
+                            paginationHint(params.offset, params.limit, total),
                     OutputStyle.MUTED
                 )
             )
@@ -767,17 +876,17 @@ class LsCommand : Command {
     private fun buildQuizHeader(fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight("ID", COL_ID)
-                "title" -> padRight("Tieu de", COL_TITLE)
-                "owner" -> padRight("Chu so huu", COL_NAME)
-                "author" -> padRight("Tac gia", COL_NAME)
-                "status" -> padRight("Trang thai", COL_STATUS)
-                "attempts", "attemptcount" -> padRight("Luot lam", COL_SHORT)
-                "questions", "questioncount" -> padRight("Cau hoi", COL_SHORT)
-                "tags" -> padRight("Tags", COL_TITLE)
-                "created" -> padRight("Ngay tao", COL_DATE)
-                "updated" -> padRight("Cap nhat", COL_DATE)
-                else -> padRight(field, COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight("ID", COL_ID)
+                "title" -> CommandFormatUtils.padRight("Tieu de", COL_TITLE)
+                "owner" -> CommandFormatUtils.padRight("Chu so huu", COL_NAME)
+                "author" -> CommandFormatUtils.padRight("Tac gia", COL_NAME)
+                "status" -> CommandFormatUtils.padRight("Trang thai", COL_STATUS)
+                "attempts", "attemptcount" -> CommandFormatUtils.padRight("Luot lam", COL_SHORT)
+                "questions", "questioncount" -> CommandFormatUtils.padRight("Cau hoi", COL_SHORT)
+                "tags" -> CommandFormatUtils.padRight("Tags", COL_TITLE)
+                "created" -> CommandFormatUtils.padRight("Ngay tao", COL_DATE)
+                "updated" -> CommandFormatUtils.padRight("Cap nhat", COL_DATE)
+                else -> CommandFormatUtils.padRight(field, COL_DEFAULT)
             }
         }
     }
@@ -788,17 +897,45 @@ class LsCommand : Command {
     private fun buildQuizRow(quiz: Quiz, fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight(quiz.id, COL_ID)
-                "title" -> padRight(truncate(quiz.title, COL_TITLE - 2), COL_TITLE)
-                "owner" -> padRight(truncate(quiz.ownerId, COL_NAME - 2), COL_NAME)
-                "author" -> padRight(truncate(quiz.authorName.ifBlank { "-" }, COL_NAME - 2), COL_NAME)
-                "status" -> padRight(quizStatusLabel(quiz), COL_STATUS)
-                "attempts", "attemptcount" -> padRight(quiz.attemptCount.toString(), COL_SHORT)
-                "questions", "questioncount" -> padRight(quiz.questionCount.toString(), COL_SHORT)
-                "tags" -> padRight(truncate(quiz.tags.joinToString(","), COL_TITLE - 2), COL_TITLE)
-                "created" -> padRight(formatTimestamp(quiz.createdAt), COL_DATE)
-                "updated" -> padRight(formatTimestamp(quiz.updatedAt), COL_DATE)
-                else -> padRight("-", COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight(quiz.id, COL_ID)
+                "title" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(quiz.title, COL_TITLE - 2),
+                    COL_TITLE
+                )
+
+                "owner" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(quiz.ownerId, COL_NAME - 2),
+                    COL_NAME
+                )
+
+                "author" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        quiz.authorName.ifBlank { "-" },
+                        COL_NAME - 2
+                    ), COL_NAME
+                )
+
+                "status" -> CommandFormatUtils.padRight(quizStatusLabel(quiz), COL_STATUS)
+                "attempts", "attemptcount" -> CommandFormatUtils.padRight(quiz.attemptCount.toString(), COL_SHORT)
+                "questions", "questioncount" -> CommandFormatUtils.padRight(quiz.questionCount.toString(), COL_SHORT)
+                "tags" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        quiz.tags.joinToString(","),
+                        COL_TITLE - 2
+                    ), COL_TITLE
+                )
+
+                "created" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.formatTimestampShort(quiz.createdAt),
+                    COL_DATE
+                )
+
+                "updated" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.formatTimestampShort(quiz.updatedAt),
+                    COL_DATE
+                )
+
+                else -> CommandFormatUtils.padRight("-", COL_DEFAULT)
             }
         }
     }
@@ -822,16 +959,33 @@ class LsCommand : Command {
 
         for ((index, quiz) in quizzes.withIndex()) {
             val comma = if (index < quizzes.size - 1) "," else ""
-            val tagsStr = quiz.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
+            val tagsStr = quiz.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
             val deletedAtStr = quiz.deletedAt?.toString() ?: "null"
-            val descStr = if (quiz.description != null) "\"${escapeJson(quiz.description)}\"" else "null"
-            val shareCodeStr = if (quiz.shareCode != null) "\"${escapeJson(quiz.shareCode)}\"" else "null"
+            val descStr =
+                if (quiz.description != null) "\"${CommandFormatUtils.escapeJson(quiz.description)}\"" else "null"
+            val shareCodeStr =
+                if (quiz.shareCode != null) "\"${CommandFormatUtils.escapeJson(quiz.shareCode)}\"" else "null"
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(quiz.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"title\": \"${escapeJson(quiz.title)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(quiz.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"description\": $descStr,", OutputStyle.CODE))
-            lines.add(OutputLine("      \"ownerId\": \"${escapeJson(quiz.ownerId)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"authorName\": \"${escapeJson(quiz.authorName)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"ownerId\": \"${CommandFormatUtils.escapeJson(quiz.ownerId)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"authorName\": \"${CommandFormatUtils.escapeJson(quiz.authorName)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"status\": \"${quizStatusLabel(quiz)}\",", OutputStyle.CODE))
             lines.add(OutputLine("      \"isPublic\": ${quiz.isPublic},", OutputStyle.CODE))
             lines.add(OutputLine("      \"isDraft\": ${quiz.isDraft},", OutputStyle.CODE))
@@ -864,14 +1018,14 @@ class LsCommand : Command {
         for (quiz in quizzes) {
             val values = fields.map { field ->
                 when (field) {
-                    "id" -> csvEscape(quiz.id)
-                    "title" -> csvEscape(quiz.title)
-                    "owner" -> csvEscape(quiz.ownerId)
-                    "author" -> csvEscape(quiz.authorName)
+                    "id" -> CommandFormatUtils.csvEscape(quiz.id)
+                    "title" -> CommandFormatUtils.csvEscape(quiz.title)
+                    "owner" -> CommandFormatUtils.csvEscape(quiz.ownerId)
+                    "author" -> CommandFormatUtils.csvEscape(quiz.authorName)
                     "status" -> quizStatusLabel(quiz)
                     "attempts", "attemptcount" -> quiz.attemptCount.toString()
                     "questions", "questioncount" -> quiz.questionCount.toString()
-                    "tags" -> csvEscape(quiz.tags.joinToString(";"))
+                    "tags" -> CommandFormatUtils.csvEscape(quiz.tags.joinToString(";"))
                     "created" -> quiz.createdAt.toString()
                     "updated" -> quiz.updatedAt.toString()
                     else -> ""
@@ -1030,7 +1184,7 @@ class LsCommand : Command {
             if (params.verbose) {
                 lines.add(
                     OutputLine(
-                        "  Bat dau: ${formatTimestamp(attempt.startTimeMillis)}",
+                        "  Bat dau: ${CommandFormatUtils.formatTimestampShort(attempt.startTimeMillis)}",
                         OutputStyle.MUTED
                     )
                 )
@@ -1038,7 +1192,11 @@ class LsCommand : Command {
                     val durationSec = (attempt.endTimeMillis - attempt.startTimeMillis) / 1000
                     lines.add(
                         OutputLine(
-                            "  Ket thuc: ${formatTimestamp(attempt.endTimeMillis)} (${formatDuration(durationSec)})",
+                            "  Ket thuc: ${CommandFormatUtils.formatTimestampShort(attempt.endTimeMillis)} (${
+                                CommandFormatUtils.formatDuration(
+                                    durationSec
+                                )
+                            })",
                             OutputStyle.MUTED
                         )
                     )
@@ -1052,7 +1210,7 @@ class LsCommand : Command {
             lines.add(
                 OutputLine(
                     "Hien thi ${attempts.size} / $total ket qua" +
-                        paginationHint(params.offset, params.limit, total),
+                            paginationHint(params.offset, params.limit, total),
                     OutputStyle.MUTED
                 )
             )
@@ -1067,15 +1225,15 @@ class LsCommand : Command {
     private fun buildAttemptHeader(fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight("ID", COL_ID)
-                "user", "userid" -> padRight("User ID", COL_NAME)
-                "quiz", "quizid" -> padRight("Quiz ID", COL_NAME)
-                "score" -> padRight("Diem", COL_SHORT)
-                "status" -> padRight("Trang thai", COL_STATUS)
-                "start" -> padRight("Bat dau", COL_DATE)
-                "end" -> padRight("Ket thuc", COL_DATE)
-                "duration" -> padRight("Thoi gian", COL_STATUS)
-                else -> padRight(field, COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight("ID", COL_ID)
+                "user", "userid" -> CommandFormatUtils.padRight("User ID", COL_NAME)
+                "quiz", "quizid" -> CommandFormatUtils.padRight("Quiz ID", COL_NAME)
+                "score" -> CommandFormatUtils.padRight("Diem", COL_SHORT)
+                "status" -> CommandFormatUtils.padRight("Trang thai", COL_STATUS)
+                "start" -> CommandFormatUtils.padRight("Bat dau", COL_DATE)
+                "end" -> CommandFormatUtils.padRight("Ket thuc", COL_DATE)
+                "duration" -> CommandFormatUtils.padRight("Thoi gian", COL_STATUS)
+                else -> CommandFormatUtils.padRight(field, COL_DEFAULT)
             }
         }
     }
@@ -1086,25 +1244,47 @@ class LsCommand : Command {
     private fun buildAttemptRow(attempt: Attempt, fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight(attempt.id, COL_ID)
-                "user", "userid" -> padRight(truncate(attempt.userId, COL_NAME - 2), COL_NAME)
-                "quiz", "quizid" -> padRight(truncate(attempt.quizId, COL_NAME - 2), COL_NAME)
-                "score" -> padRight("${attempt.score}/${attempt.totalQuestions}", COL_SHORT)
-                "status" -> padRight(if (attempt.endTimeMillis != null) "Hoan thanh" else "Dang lam", COL_STATUS)
-                "start" -> padRight(formatTimestamp(attempt.startTimeMillis), COL_DATE)
-                "end" -> padRight(
-                    if (attempt.endTimeMillis != null) formatTimestamp(attempt.endTimeMillis) else "-",
+                "id" -> CommandFormatUtils.padRight(attempt.id, COL_ID)
+                "user", "userid" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        attempt.userId,
+                        COL_NAME - 2
+                    ), COL_NAME
+                )
+
+                "quiz", "quizid" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        attempt.quizId,
+                        COL_NAME - 2
+                    ), COL_NAME
+                )
+
+                "score" -> CommandFormatUtils.padRight("${attempt.score}/${attempt.totalQuestions}", COL_SHORT)
+                "status" -> CommandFormatUtils.padRight(
+                    if (attempt.endTimeMillis != null) "Hoan thanh" else "Dang lam",
+                    COL_STATUS
+                )
+
+                "start" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.formatTimestampShort(attempt.startTimeMillis),
                     COL_DATE
                 )
+
+                "end" -> CommandFormatUtils.padRight(
+                    if (attempt.endTimeMillis != null) CommandFormatUtils.formatTimestampShort(attempt.endTimeMillis) else "-",
+                    COL_DATE
+                )
+
                 "duration" -> {
                     val dur = if (attempt.endTimeMillis != null) {
-                        formatDuration((attempt.endTimeMillis - attempt.startTimeMillis) / 1000)
+                        CommandFormatUtils.formatDuration((attempt.endTimeMillis - attempt.startTimeMillis) / 1000)
                     } else {
                         "-"
                     }
-                    padRight(dur, COL_STATUS)
+                    CommandFormatUtils.padRight(dur, COL_STATUS)
                 }
-                else -> padRight("-", COL_DEFAULT)
+
+                else -> CommandFormatUtils.padRight("-", COL_DEFAULT)
             }
         }
     }
@@ -1130,9 +1310,19 @@ class LsCommand : Command {
             val comma = if (index < attempts.size - 1) "," else ""
             val endStr = attempt.endTimeMillis?.toString() ?: "null"
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(attempt.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"userId\": \"${escapeJson(attempt.userId)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"quizId\": \"${escapeJson(attempt.quizId)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(attempt.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"userId\": \"${CommandFormatUtils.escapeJson(attempt.userId)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"quizId\": \"${CommandFormatUtils.escapeJson(attempt.quizId)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
             lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
             lines.add(OutputLine("      \"startTimeMillis\": ${attempt.startTimeMillis},", OutputStyle.CODE))
@@ -1159,9 +1349,9 @@ class LsCommand : Command {
         for (attempt in attempts) {
             val values = fields.map { field ->
                 when (field) {
-                    "id" -> csvEscape(attempt.id)
-                    "user", "userid" -> csvEscape(attempt.userId)
-                    "quiz", "quizid" -> csvEscape(attempt.quizId)
+                    "id" -> CommandFormatUtils.csvEscape(attempt.id)
+                    "user", "userid" -> CommandFormatUtils.csvEscape(attempt.userId)
+                    "quiz", "quizid" -> CommandFormatUtils.csvEscape(attempt.quizId)
                     "score" -> "${attempt.score}/${attempt.totalQuestions}"
                     "status" -> if (attempt.endTimeMillis != null) "completed" else "incomplete"
                     "start" -> attempt.startTimeMillis.toString()
@@ -1348,7 +1538,7 @@ class LsCommand : Command {
                 }
                 lines.add(
                     OutputLine(
-                        "  Tao: ${formatTimestamp(item.createdAtMillis)}",
+                        "  Tao: ${CommandFormatUtils.formatTimestampShort(item.createdAtMillis)}",
                         OutputStyle.MUTED
                     )
                 )
@@ -1360,7 +1550,7 @@ class LsCommand : Command {
             lines.add(
                 OutputLine(
                     "Hien thi ${items.size} / $total ket qua" +
-                        paginationHint(params.offset, params.limit, total),
+                            paginationHint(params.offset, params.limit, total),
                     OutputStyle.MUTED
                 )
             )
@@ -1375,15 +1565,15 @@ class LsCommand : Command {
     private fun buildPoolHeader(fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight("ID", COL_ID)
-                "question" -> padRight("Noi dung", COL_TITLE)
-                "contributor" -> padRight("Nguoi dong gop", COL_NAME)
-                "status" -> padRight("Trang thai", COL_STATUS)
-                "usage", "usagecount" -> padRight("Su dung", COL_SHORT)
-                "tags" -> padRight("Tags", COL_NAME)
-                "source", "sourcequiz" -> padRight("Quiz nguon", COL_ID)
-                "created" -> padRight("Ngay tao", COL_DATE)
-                else -> padRight(field, COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight("ID", COL_ID)
+                "question" -> CommandFormatUtils.padRight("Noi dung", COL_TITLE)
+                "contributor" -> CommandFormatUtils.padRight("Nguoi dong gop", COL_NAME)
+                "status" -> CommandFormatUtils.padRight("Trang thai", COL_STATUS)
+                "usage", "usagecount" -> CommandFormatUtils.padRight("Su dung", COL_SHORT)
+                "tags" -> CommandFormatUtils.padRight("Tags", COL_NAME)
+                "source", "sourcequiz" -> CommandFormatUtils.padRight("Quiz nguon", COL_ID)
+                "created" -> CommandFormatUtils.padRight("Ngay tao", COL_DATE)
+                else -> CommandFormatUtils.padRight(field, COL_DEFAULT)
             }
         }
     }
@@ -1394,15 +1584,36 @@ class LsCommand : Command {
     private fun buildPoolRow(item: QuestionPoolItem, fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight(item.id, COL_ID)
-                "question" -> padRight(truncate(item.question.content, COL_TITLE - 2), COL_TITLE)
-                "contributor" -> padRight(truncate(item.contributorId ?: "(an danh)", COL_NAME - 2), COL_NAME)
-                "status" -> padRight(if (item.isActive) "Hoat dong" else "Vo hieu", COL_STATUS)
-                "usage", "usagecount" -> padRight(item.usageCount.toString(), COL_SHORT)
-                "tags" -> padRight(truncate(item.tags.joinToString(","), COL_NAME - 2), COL_NAME)
-                "source", "sourcequiz" -> padRight(item.sourceQuizId, COL_ID)
-                "created" -> padRight(formatTimestamp(item.createdAtMillis), COL_DATE)
-                else -> padRight("-", COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight(item.id, COL_ID)
+                "question" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        item.question.content,
+                        COL_TITLE - 2
+                    ), COL_TITLE
+                )
+
+                "contributor" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        item.contributorId ?: "(an danh)", COL_NAME - 2
+                    ), COL_NAME
+                )
+
+                "status" -> CommandFormatUtils.padRight(if (item.isActive) "Hoat dong" else "Vo hieu", COL_STATUS)
+                "usage", "usagecount" -> CommandFormatUtils.padRight(item.usageCount.toString(), COL_SHORT)
+                "tags" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        item.tags.joinToString(","),
+                        COL_NAME - 2
+                    ), COL_NAME
+                )
+
+                "source", "sourcequiz" -> CommandFormatUtils.padRight(item.sourceQuizId, COL_ID)
+                "created" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.formatTimestampShort(item.createdAtMillis),
+                    COL_DATE
+                )
+
+                else -> CommandFormatUtils.padRight("-", COL_DEFAULT)
             }
         }
     }
@@ -1426,13 +1637,30 @@ class LsCommand : Command {
 
         for ((index, item) in items.withIndex()) {
             val comma = if (index < items.size - 1) "," else ""
-            val contributorStr = if (item.contributorId != null) "\"${escapeJson(item.contributorId)}\"" else "null"
-            val tagsStr = item.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
+            val contributorStr =
+                if (item.contributorId != null) "\"${CommandFormatUtils.escapeJson(item.contributorId)}\"" else "null"
+            val tagsStr = item.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(item.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"questionPreview\": \"${escapeJson(truncate(item.question.content, 80))}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(item.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"questionPreview\": \"${
+                        CommandFormatUtils.escapeJson(
+                            CommandFormatUtils.truncate(
+                                item.question.content,
+                                80
+                            )
+                        )
+                    }\",", OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"contributorId\": $contributorStr,", OutputStyle.CODE))
-            lines.add(OutputLine("      \"sourceQuizId\": \"${escapeJson(item.sourceQuizId)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"sourceQuizId\": \"${CommandFormatUtils.escapeJson(item.sourceQuizId)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"tags\": [$tagsStr],", OutputStyle.CODE))
             lines.add(OutputLine("      \"isActive\": ${item.isActive},", OutputStyle.CODE))
             lines.add(OutputLine("      \"usageCount\": ${item.usageCount},", OutputStyle.CODE))
@@ -1459,13 +1687,13 @@ class LsCommand : Command {
         for (item in items) {
             val values = fields.map { field ->
                 when (field) {
-                    "id" -> csvEscape(item.id)
-                    "question" -> csvEscape(truncate(item.question.content, 80))
-                    "contributor" -> csvEscape(item.contributorId ?: "")
+                    "id" -> CommandFormatUtils.csvEscape(item.id)
+                    "question" -> CommandFormatUtils.csvEscape(CommandFormatUtils.truncate(item.question.content, 80))
+                    "contributor" -> CommandFormatUtils.csvEscape(item.contributorId ?: "")
                     "status" -> if (item.isActive) "active" else "inactive"
                     "usage", "usagecount" -> item.usageCount.toString()
-                    "tags" -> csvEscape(item.tags.joinToString(";"))
-                    "source", "sourcequiz" -> csvEscape(item.sourceQuizId)
+                    "tags" -> CommandFormatUtils.csvEscape(item.tags.joinToString(";"))
+                    "source", "sourcequiz" -> CommandFormatUtils.csvEscape(item.sourceQuizId)
                     "created" -> item.createdAtMillis.toString()
                     else -> ""
                 }
@@ -1493,7 +1721,7 @@ class LsCommand : Command {
             lines.add(OutputLine("{", OutputStyle.CODE))
             lines.add(OutputLine("  \"total\": $total,", OutputStyle.CODE))
             lines.add(OutputLine("  \"count\": ${ids.size},", OutputStyle.CODE))
-            val idsStr = ids.joinToString(", ") { "\"${escapeJson(it)}\"" }
+            val idsStr = ids.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
             lines.add(OutputLine("  \"ids\": [$idsStr]", OutputStyle.CODE))
             lines.add(OutputLine("}", OutputStyle.CODE))
             return CommandResult.success(lines)
@@ -1555,7 +1783,7 @@ class LsCommand : Command {
             }
             return CommandResult.error(
                 "Khong du quyen de liet ke $entityLabel. " +
-                    "Yeu cau quyen: ${formatPermission(requiredPerm)}."
+                        "Yeu cau quyen: ${CommandFormatUtils.formatPermission(requiredPerm)}."
             )
         }
         return null
@@ -1624,87 +1852,6 @@ class LsCommand : Command {
         }
     }
 
-    /**
-     * Dinh dang ten vai tro sang tieng Viet.
-     */
-    private fun formatRole(role: UserRole): String = when (role) {
-        UserRole.GUEST -> "Khach"
-        UserRole.USER -> "Nguoi dung"
-        UserRole.ADMIN -> "Quan tri vien"
-        UserRole.SUPERUSER -> "Sieu quan tri"
-    }
-
-    /**
-     * Dinh dang ten quyen han de hien thi.
-     */
-    private fun formatPermission(permission: AdminPermission): String = when (permission) {
-        AdminPermission.MANAGE_USERS -> "Quan ly nguoi dung"
-        AdminPermission.CHANGE_USER_ROLES -> "Thay doi vai tro"
-        AdminPermission.DELETE_USERS -> "Xoa nguoi dung"
-        AdminPermission.BAN_USERS -> "Cam nguoi dung"
-        AdminPermission.MANAGE_QUIZZES -> "Quan ly quiz"
-        AdminPermission.DELETE_QUIZZES -> "Xoa quiz"
-        AdminPermission.PUBLISH_QUIZZES -> "Xuat ban quiz"
-        AdminPermission.VIEW_REPORTS -> "Xem bao cao"
-    }
-
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Dinh dang thoi luong (giay) thanh chuoi doc duoc.
-     */
-    private fun formatDuration(totalSeconds: Long): String {
-        if (totalSeconds < 60) return "${totalSeconds}s"
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        if (minutes < 60) return "${minutes}m ${seconds}s"
-        val hours = minutes / 60
-        val remainingMinutes = minutes % 60
-        return "${hours}h ${remainingMinutes}m ${seconds}s"
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
-
-    /**
-     * Thoat gia tri cho CSV (bao quanh bang dau nhay kep neu can).
-     */
-    private fun csvEscape(value: String): String {
-        return if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-            "\"${value.replace("\"", "\"\"")}\""
-        } else {
-            value
-        }
-    }
 
     // ====================================================================
     // Internal types & constants

@@ -12,25 +12,102 @@ import com.example.androidapp.domain.model.UserRole
  * internally.
  *
  * @property registry The command registry used to resolve command names.
+ *   Exposed as read-only; mutation (registration) should happen only at startup.
  * @property contextProvider Lambda that produces a fresh [CommandContext]
  *   for each execution. Called once per top-level [execute] invocation;
  *   pipe stages share the same context (with updated [CommandContext.pipeInput]).
  */
 class CommandExecutor(
-    val registry: CommandRegistry,
+    private val registry: CommandRegistry,
     private val contextProvider: () -> CommandContext
 ) {
+
+    companion object {
+        /**
+         * Maximum allowed length for raw console input to prevent
+         * denial-of-service via extremely large pastes that would
+         * freeze the character-by-character lexer.
+         */
+        const val MAX_INPUT_LENGTH = 4096
+    }
+
+    /**
+     * Resolves a command by name or alias via the underlying registry.
+     *
+     * Provides controlled read-only access to command resolution without
+     * exposing the mutable [CommandRegistry] directly.
+     *
+     * @param name The command name or alias (case-insensitive).
+     * @return The matching [Command], or `null` if not found.
+     */
+    fun resolveCommand(name: String): Command? = registry.resolve(name)
+
+    /**
+     * Returns all commands visible to the given [role].
+     *
+     * @param role The user's current [UserRole].
+     * @return An alphabetically sorted list of commands accessible to the role.
+     */
+    fun commandsForRole(role: UserRole): List<Command> = registry.commandsForRole(role)
+
+    /**
+     * Returns all unique category names from commands visible to the given [role].
+     *
+     * @param role The user's current [UserRole].
+     * @return Sorted list of category names.
+     */
+    fun categoriesForRole(role: UserRole): List<String> = registry.categoriesForRole(role)
+
+    /**
+     * Returns commands in a specific [category] visible to [role].
+     *
+     * @param category The category to filter by (case-insensitive).
+     * @param role The user's current [UserRole].
+     * @return Filtered and sorted list of commands.
+     */
+    fun commandsForCategory(category: String, role: UserRole): List<Command> =
+        registry.commandsForCategory(category, role)
+
+    /**
+     * Searches commands visible to [role] whose name, description, or aliases
+     * contain [query].
+     *
+     * @param query The search text.
+     * @param role The user's current [UserRole].
+     * @return Matching commands sorted by name.
+     */
+    fun searchCommands(query: String, role: UserRole): List<Command> =
+        registry.searchCommands(query, role)
+
+    /**
+     * Returns the total number of registered commands.
+     */
+    val registrySize: Int get() = registry.size
+
+    /**
+     * Returns the aggregated set of all value-bearing long flag names
+     * declared by registered commands. Useful for external callers that
+     * need to know which flags expect values.
+     */
+    fun allValueFlags(): Set<String> = registry.allValueFlags()
+
+    /**
+     * Returns the aggregated set of all value-bearing short flag names
+     * declared by registered commands.
+     */
+    fun allShortValueFlags(): Set<String> = registry.allShortValueFlags()
 
     /**
      * Execute a raw console input string and return the combined result.
      *
      * Processing pipeline:
-     * 1. **Alias expansion** — if the first word matches a registered alias,
+     * 1. **Input validation** — rejects empty or excessively long input.
+     * 2. **Alias expansion** — if the first word matches a registered alias,
      *    the alias body replaces it before lexing.
-     * 2. **Lex** — [CommandLexer.tokenize] splits the input into tokens.
-     * 3. **Parse** — [CommandParser.parse] builds a [ParsedCommand] with
+     * 3. **Lex** — [CommandLexer.tokenize] splits the input into tokens.
+     * 4. **Parse** — [CommandParser.parse] builds a [ParsedCommand] with
      *    semicolon-separated chains of piped segments.
-     * 4. For each chain (semicolon-separated):
+     * 5. For each chain (semicolon-separated):
      *    a. For each segment in the pipeline:
      *       - **Resolve** the command name via [CommandRegistry.resolve].
      *       - **Role check** — current user's role must be >= command's [Command.minimumRole].
@@ -41,7 +118,7 @@ class CommandExecutor(
      *       - **Execute** — call [Command.execute] with args, flags, and context
      *         (including pipe input from the previous stage, if any).
      *    b. The output of each stage becomes the pipe input for the next stage.
-     * 5. Outputs from all chains are concatenated.
+     * 6. Outputs from all chains are concatenated.
      *
      * @param rawInput The raw text entered by the user in the console.
      * @return A [CommandResult] containing all output lines and a combined success status.
@@ -52,14 +129,24 @@ class CommandExecutor(
             return CommandResult.empty()
         }
 
+        if (trimmed.length > MAX_INPUT_LENGTH) {
+            return CommandResult.error(
+                "Dau vao qua dai (toi da $MAX_INPUT_LENGTH ky tu, hien tai ${trimmed.length})."
+            )
+        }
+
         val context = contextProvider()
 
         // Alias expansion: replace the first word if it matches an alias
         val expanded = expandAliases(trimmed, context.aliases)
 
-        // Lex and parse
+        // Lex and parse (pass aggregated value flags from all registered commands)
         val tokens = CommandLexer.tokenize(expanded)
-        val parsed = CommandParser.parse(tokens, expanded)
+        val parsed = CommandParser.parse(
+            tokens = tokens,
+            valueFlags = registry.allValueFlags(),
+            shortValueFlags = registry.allShortValueFlags()
+        )
 
         if (parsed.chains.isEmpty()) {
             return CommandResult.empty()
@@ -94,10 +181,12 @@ class CommandExecutor(
      * @param cursorPosition The cursor index within [rawInput].
      * @return An ordered list of [CompletionSuggestion]s.
      */
-    fun autocomplete(rawInput: String, cursorPosition: Int): List<CompletionSuggestion> {
+    suspend fun autocomplete(rawInput: String, cursorPosition: Int): List<CompletionSuggestion> {
         val context = try {
             contextProvider()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            // Log the exception class for debugging DI misconfiguration
+            System.err.println("CommandExecutor.autocomplete: contextProvider failed: ${e::class.simpleName}: ${e.message}")
             return emptyList()
         }
 
@@ -122,7 +211,6 @@ class CommandExecutor(
         val firstToken = segmentTokens.firstOrNull()
         val commandName = when (firstToken) {
             is CommandToken.Keyword -> firstToken.value.lowercase()
-            is CommandToken.Argument -> firstToken.value.lowercase()
             else -> ""
         }
 
@@ -142,13 +230,17 @@ class CommandExecutor(
         }
 
         // Parse the segment to extract args and flags
-        val parsed = CommandParser.parse(segmentTokens, "")
+        val parsed = CommandParser.parse(
+            tokens = segmentTokens,
+            valueFlags = registry.allValueFlags(),
+            shortValueFlags = registry.allShortValueFlags()
+        )
         val segment = parsed.chains.firstOrNull()?.firstOrNull()
             ?: return emptyList()
 
         return command.autocomplete(
             args = buildList {
-                if (segment.subCommand != null) add(segment.subCommand!!)
+                segment.subCommand?.let { add(it) }
                 addAll(segment.args)
             },
             flags = segment.flags,
@@ -157,6 +249,35 @@ class CommandExecutor(
     }
 
     // -- Internal helpers -------------------------------------------------------
+
+    /**
+     * Checks role and permission access for a [command] given the [context].
+     *
+     * @return A [CommandResult] error if access is denied, or `null` if the
+     *   user has sufficient privileges.
+     */
+    private fun checkAccess(
+        command: Command,
+        commandName: String,
+        context: CommandContext
+    ): CommandResult? {
+        // Role check
+        if (context.currentUser.role < command.minimumRole) {
+            return CommandResult.error(
+                "Quyen truy cap khong du. Lenh '$commandName' yeu cau vai tro ${command.minimumRole.name} tro len."
+            )
+        }
+
+        // Permission check
+        val requiredPerm = command.requiredPermission
+        if (requiredPerm != null && !context.currentUser.hasPermission(requiredPerm)) {
+            return CommandResult.error(
+                "Quyen han khong du. Lenh '$commandName' yeu cau quyen ${requiredPerm.name}."
+            )
+        }
+
+        return null
+    }
 
     /**
      * Executes a single pipeline chain (list of piped [CommandSegment]s).
@@ -168,7 +289,6 @@ class CommandExecutor(
     ): CommandResult {
         var pipeInput: List<String>? = null
         val allOutput = mutableListOf<OutputLine>()
-        var lastSuccess = true
 
         for ((index, segment) in segments.withIndex()) {
             val isLastSegment = index == segments.size - 1
@@ -177,6 +297,9 @@ class CommandExecutor(
             if (segment.flags.containsKey("help") || segment.flags.containsKey("h")) {
                 val command = registry.resolve(segment.command)
                 if (command != null) {
+                    val accessError = checkAccess(command, segment.command, baseContext)
+                    if (accessError != null) return accessError
+
                     val helpResult = buildCommandHelp(command)
                     allOutput.addAll(helpResult.output)
                     return CommandResult(output = allOutput, isSuccess = true)
@@ -199,17 +322,18 @@ class CommandExecutor(
 
             if (isLastSegment) {
                 allOutput.addAll(result.output)
-                lastSuccess = result.isSuccess
             } else {
-                // Feed output as pipe input to the next segment
+                // Feed output as pipe input to the next segment.
+                // Only the text is carried forward; styling is stripped
+                // because pipes transport data, not formatting.
                 pipeInput = result.output.map { it.text }
             }
         }
 
         return CommandResult(
             output = allOutput,
-            isSuccess = lastSuccess,
-            exitCode = if (lastSuccess) 0 else 1
+            isSuccess = true,
+            exitCode = 0
         )
     }
 
@@ -232,20 +356,9 @@ class CommandExecutor(
                 "Khong tim thay lenh: '$commandName'. Go 'help' de xem danh sach lenh."
             )
 
-        // Role check
-        if (context.currentUser.role < command.minimumRole) {
-            return CommandResult.error(
-                "Quyen truy cap khong du. Lenh '$commandName' yeu cau vai tro ${command.minimumRole.name} tro len."
-            )
-        }
-
-        // Permission check
-        val requiredPerm = command.requiredPermission
-        if (requiredPerm != null && !context.currentUser.hasPermission(requiredPerm)) {
-            return CommandResult.error(
-                "Quyen han khong du. Lenh '$commandName' yeu cau quyen ${requiredPerm.name}."
-            )
-        }
+        // Role + permission check (shared helper)
+        val accessError = checkAccess(command, commandName, context)
+        if (accessError != null) return accessError
 
         // Destructive confirmation check
         if (command.isDestructive) {
@@ -271,7 +384,7 @@ class CommandExecutor(
 
         // Build args list: include subCommand as first arg if present
         val args = buildList {
-            if (segment.subCommand != null) add(segment.subCommand!!)
+            segment.subCommand?.let { add(it) }
             addAll(segment.args)
         }
 
@@ -345,26 +458,33 @@ class CommandExecutor(
             }
         }
 
-        if (command.requiredPermission != null) {
+        val perm = command.requiredPermission
+        if (perm != null) {
             lines.add(OutputLine("", OutputStyle.NORMAL))
-            lines.add(OutputLine(
-                "Quyen yeu cau: ${command.requiredPermission!!.name}",
-                OutputStyle.WARNING
-            ))
+            lines.add(
+                OutputLine(
+                    "Quyen yeu cau: ${perm.name}",
+                    OutputStyle.WARNING
+                )
+            )
         }
 
         if (command.minimumRole != UserRole.USER) {
-            lines.add(OutputLine(
-                "Vai tro toi thieu: ${command.minimumRole.name}",
-                OutputStyle.WARNING
-            ))
+            lines.add(
+                OutputLine(
+                    "Vai tro toi thieu: ${command.minimumRole.name}",
+                    OutputStyle.WARNING
+                )
+            )
         }
 
         if (command.isDestructive) {
-            lines.add(OutputLine(
-                "Canh bao: Lenh nay thuc hien thao tac khong the hoan tac!",
-                OutputStyle.WARNING
-            ))
+            lines.add(
+                OutputLine(
+                    "Canh bao: Lenh nay thuc hien thao tac khong the hoan tac!",
+                    OutputStyle.WARNING
+                )
+            )
         }
 
         return CommandResult.success(lines)

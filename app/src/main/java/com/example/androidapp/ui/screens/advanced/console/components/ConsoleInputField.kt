@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +23,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -30,6 +34,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.androidapp.R
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 /**
@@ -85,6 +90,8 @@ fun ConsoleInputField(
     val ghostColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
 
+    val inputHint = stringResource(R.string.console_input_hint)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -118,8 +125,7 @@ fun ConsoleInputField(
             // Placeholder when empty
             if (value.isEmpty() && !isExecuting) {
                 Text(
-                    // TODO: move to strings.xml
-                    text = "Nhap lenh...",
+                    text = inputHint,
                     style = monoStyle.copy(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     ),
@@ -145,6 +151,7 @@ fun ConsoleInputField(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics { contentDescription = inputHint }
                     .onPreviewKeyEvent { event ->
                         if (event.type == KeyEventType.KeyDown) {
                             when (event.key) {
@@ -184,7 +191,8 @@ fun ConsoleInputField(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .then(Modifier.padding(2.dp))
+                    .padding(2.dp)
+                    .size(20.dp)
             )
         }
     }

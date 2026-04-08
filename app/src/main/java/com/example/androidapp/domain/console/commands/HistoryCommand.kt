@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -29,7 +30,7 @@ class HistoryCommand : Command {
     override val name: String = "history"
 
     /** @inheritDoc */
-    override val aliases: List<String> = listOf("hist", "h")
+    override val aliases: List<String> = listOf("hist")
 
     /** @inheritDoc */
     override val description: String = "Hien thi va quan ly lich su lenh"
@@ -37,8 +38,8 @@ class HistoryCommand : Command {
     /** @inheritDoc */
     override val usage: String =
         "history [<so_luong>] [--search <tu_khoa>] [--regex <mau>] [--clear] " +
-            "[--unique] [--reverse] [--numbered] [--no-numbered] [--since <thoi_gian>] " +
-            "[--format <dinh_dang>] [--export]"
+                "[--unique] [--reverse] [--numbered] [--no-numbered] [--since <thoi_gian>] " +
+                "[--format <dinh_dang>] [--export]"
 
     /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.USER
@@ -61,7 +62,7 @@ class HistoryCommand : Command {
     )
 
     /** @inheritDoc */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -71,15 +72,35 @@ class HistoryCommand : Command {
         if (args.isEmpty()) {
             suggestions.addAll(
                 listOf(
-                    CompletionSuggestion("--search", description = "Tim kiem trong lich su", type = SuggestionType.FLAG),
-                    CompletionSuggestion("--regex", description = "Tim kiem bang bieu thuc chinh quy", type = SuggestionType.FLAG),
+                    CompletionSuggestion(
+                        "--search",
+                        description = "Tim kiem trong lich su",
+                        type = SuggestionType.FLAG
+                    ),
+                    CompletionSuggestion(
+                        "--regex",
+                        description = "Tim kiem bang bieu thuc chinh quy",
+                        type = SuggestionType.FLAG
+                    ),
                     CompletionSuggestion("--clear", description = "Xoa lich su lenh", type = SuggestionType.FLAG),
-                    CompletionSuggestion("--unique", description = "Chi hien thi lenh khong trung", type = SuggestionType.FLAG),
+                    CompletionSuggestion(
+                        "--unique",
+                        description = "Chi hien thi lenh khong trung",
+                        type = SuggestionType.FLAG
+                    ),
                     CompletionSuggestion("--reverse", description = "Dao nguoc thu tu", type = SuggestionType.FLAG),
                     CompletionSuggestion("--numbered", description = "Danh so cac dong", type = SuggestionType.FLAG),
                     CompletionSuggestion("--no-numbered", description = "Khong danh so", type = SuggestionType.FLAG),
-                    CompletionSuggestion("--since", description = "Chi hien thi lenh tu thoi diem", type = SuggestionType.FLAG),
-                    CompletionSuggestion("--format", description = "Dinh dang dau ra (text/json)", type = SuggestionType.FLAG),
+                    CompletionSuggestion(
+                        "--since",
+                        description = "Chi hien thi lenh tu thoi diem",
+                        type = SuggestionType.FLAG
+                    ),
+                    CompletionSuggestion(
+                        "--format",
+                        description = "Dinh dang dau ra (text/json)",
+                        type = SuggestionType.FLAG
+                    ),
                     CompletionSuggestion("--export", description = "Xuat lich su", type = SuggestionType.FLAG)
                 )
             )
@@ -87,7 +108,13 @@ class HistoryCommand : Command {
 
         if ("format" in flags && flags["format"] == null) {
             suggestions.add(CompletionSuggestion("text", description = "Van ban thuan", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion("json", description = "Dinh dang JSON", type = SuggestionType.ARGUMENT))
+            suggestions.add(
+                CompletionSuggestion(
+                    "json",
+                    description = "Dinh dang JSON",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
         }
 
         return suggestions
@@ -129,6 +156,9 @@ class HistoryCommand : Command {
 
         // --regex: filter by regex pattern
         val regexPattern = flags["regex"]
+        if (regexPattern != null && regexPattern.length > 200) {
+            return CommandResult.error("Bieu thuc chinh quy qua dai (toi da 200 ky tu).")
+        }
         if (regexPattern != null) {
             val regex = try {
                 Regex(regexPattern, RegexOption.IGNORE_CASE)
@@ -250,9 +280,7 @@ class HistoryCommand : Command {
 
         entries.forEachIndexed { i, entry ->
             val comma = if (i < entries.size - 1) "," else ""
-            val escapedCmd = entry.command
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
+            val escapedCmd = CommandFormatUtils.escapeJson(entry.command)
             lines.add(
                 OutputLine(
                     "  { \"index\": ${entry.index}, \"command\": \"$escapedCmd\" }$comma",

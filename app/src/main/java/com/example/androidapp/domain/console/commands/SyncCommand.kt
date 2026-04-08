@@ -7,7 +7,9 @@ import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
 import com.example.androidapp.domain.console.OutputStyle
 import com.example.androidapp.domain.console.SuggestionType
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.model.UserRole
+import com.example.androidapp.domain.service.ConsoleSyncState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -23,7 +25,7 @@ import kotlinx.coroutines.flow.first
  * - `sync pull` — Tai du lieu tu cloud ve local.
  * - `sync retry` — Thu lai cac thao tac dong bo that bai.
  *
- * Lenh nay tuong tac voi [SyncManager] va [NetworkMonitor] de thuc hien
+ * Lenh nay tuong tac voi [SyncService] va [NetworkService] de thuc hien
  * cac thao tac dong bo va bao cao trang thai mang.
  */
 class SyncCommand : Command {
@@ -34,7 +36,8 @@ class SyncCommand : Command {
 
     override val description: String = "Dong bo du lieu giua thiet bi va may chu"
 
-    override val usage: String = "sync [now|status|push|pull|retry] [--verbose] [--force] [--format <format>] [--timeout <ms>]"
+    override val usage: String =
+        "sync [now|status|push|pull|retry] [--verbose] [--force] [--format <format>] [--timeout <ms>]"
 
     override val minimumRole: UserRole = UserRole.USER
 
@@ -61,7 +64,7 @@ class SyncCommand : Command {
      */
     private val validFlags = listOf("--verbose", "-v", "--force", "-f", "--format", "--timeout")
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -141,9 +144,9 @@ class SyncCommand : Command {
         format: String
     ): CommandResult {
         val lines = mutableListOf<OutputLine>()
-        val syncManager = context.services.syncManager
-        val networkMonitor = context.services.networkMonitor
-        val isOnline = networkMonitor.isOnline.value
+        val syncService = context.services.syncService
+        val networkService = context.services.networkService
+        val isOnline = networkService.isOnline.value
 
         if (!isOnline && !force) {
             return CommandResult.error(
@@ -155,8 +158,8 @@ class SyncCommand : Command {
             lines.add(OutputLine("Canh bao: Khong co ket noi mang, thu dong bo bat buoc...", OutputStyle.WARNING))
         }
 
-        val currentState = syncManager.syncState.value
-        if (currentState.name == "SYNCING") {
+        val currentState = syncService.consoleSyncState.value
+        if (currentState == ConsoleSyncState.SYNCING) {
             return CommandResult.error("Dong bo dang duoc thuc hien. Vui long doi.")
         }
 
@@ -167,18 +170,15 @@ class SyncCommand : Command {
 
         if (verbose) {
             lines.add(OutputLine("Trang thai mang: ${if (isOnline) "Truc tuyen" else "Ngoai tuyen"}", OutputStyle.INFO))
-            lines.add(OutputLine("Trang thai truoc: ${translateSyncState(currentState.name)}", OutputStyle.MUTED))
+            lines.add(OutputLine("Trang thai truoc: ${formatSyncState(currentState)}", OutputStyle.MUTED))
             lines.add(OutputLine(""))
         }
 
         try {
-            lines.add(OutputLine("[1/3] Xu ly cac thao tac cho dong bo...", OutputStyle.INFO))
-            syncManager.processPendingOperations()
+            lines.add(OutputLine("[1/2] Xu ly va dong bo cac thao tac cho...", OutputStyle.INFO))
+            syncService.processPendingOperations()
 
-            lines.add(OutputLine("[2/3] Day du lieu len cloud...", OutputStyle.INFO))
-            syncManager.processPendingOperations()
-
-            lines.add(OutputLine("[3/3] Hoan tat!", OutputStyle.INFO))
+            lines.add(OutputLine("[2/2] Hoan tat!", OutputStyle.SUCCESS))
 
             val elapsed = System.currentTimeMillis() - startTime
 
@@ -186,15 +186,20 @@ class SyncCommand : Command {
             lines.add(OutputLine("Dong bo hoan tat trong ${elapsed}ms", OutputStyle.SUCCESS))
 
             if (verbose) {
-                val endState = syncManager.syncState.value
-                lines.add(OutputLine("Trang thai sau: ${translateSyncState(endState.name)}", OutputStyle.MUTED))
-                val pendingCount = syncManager.getPendingCount()
+                val endState = syncService.consoleSyncState.value
+                lines.add(OutputLine("Trang thai sau: ${formatSyncState(endState)}", OutputStyle.MUTED))
+                val pendingCount = syncService.getPendingCount()
                 lines.add(OutputLine("Thao tac cho xu ly: $pendingCount", OutputStyle.MUTED))
             }
         } catch (e: Exception) {
             val elapsed = System.currentTimeMillis() - startTime
             lines.add(OutputLine(""))
-            lines.add(OutputLine("Dong bo that bai sau ${elapsed}ms: ${e.message ?: "Loi khong xac dinh"}", OutputStyle.ERROR))
+            lines.add(
+                OutputLine(
+                    "Dong bo that bai sau ${elapsed}ms: ${e.message ?: "Loi khong xac dinh"}",
+                    OutputStyle.ERROR
+                )
+            )
             return CommandResult(output = lines, isSuccess = false)
         }
 
@@ -209,75 +214,94 @@ class SyncCommand : Command {
         verbose: Boolean,
         format: String
     ): CommandResult {
-        val syncManager = context.services.syncManager
-        val networkMonitor = context.services.networkMonitor
-        val isOnline = networkMonitor.isOnline.value
-        val isWifi = networkMonitor.isWifi.value
-        val currentState = syncManager.syncState.value
-        val pendingCount = syncManager.getPendingCount()
+        val syncService = context.services.syncService
+        val networkService = context.services.networkService
+        val isOnline = networkService.isOnline.value
+        val isWifi = networkService.isWifi.value
+        val currentState = syncService.consoleSyncState.value
+        val pendingCount = syncService.getPendingCount()
         val timestamp = formatTimestamp(System.currentTimeMillis())
 
         if (format == "json") {
-            return formatStatusAsJson(currentState.name, isOnline, isWifi, pendingCount, timestamp, verbose)
+            return formatStatusAsJson(currentState, isOnline, isWifi, pendingCount, timestamp, verbose)
         }
 
         val lines = mutableListOf<OutputLine>()
         lines.add(OutputLine("Trang thai dong bo", OutputStyle.HEADER))
         lines.add(OutputLine(""))
 
-        lines.add(OutputLine(
-            padRight("Trang thai:", 24) + translateSyncState(currentState.name),
-            OutputStyle.TABLE_ROW
-        ))
-        lines.add(OutputLine(
-            padRight("Ket noi mang:", 24) + if (isOnline) "Truc tuyen" else "Ngoai tuyen",
-            if (isOnline) OutputStyle.TABLE_ROW else OutputStyle.WARNING
-        ))
-        lines.add(OutputLine(
-            padRight("Loai mang:", 24) + if (isWifi) "WiFi" else if (isOnline) "Di dong" else "Khong co",
-            OutputStyle.TABLE_ROW
-        ))
-        lines.add(OutputLine(
-            padRight("Thao tac cho xu ly:", 24) + pendingCount.toString(),
-            if (pendingCount > 0) OutputStyle.WARNING else OutputStyle.TABLE_ROW
-        ))
-        lines.add(OutputLine(
-            padRight("Thoi diem kiem tra:", 24) + timestamp,
-            OutputStyle.MUTED
-        ))
+        lines.add(
+            OutputLine(
+                CommandFormatUtils.padRight("Trang thai:", 24) + formatSyncState(currentState),
+                OutputStyle.TABLE_ROW
+            )
+        )
+        lines.add(
+            OutputLine(
+                CommandFormatUtils.padRight("Ket noi mang:", 24) + if (isOnline) "Truc tuyen" else "Ngoai tuyen",
+                if (isOnline) OutputStyle.TABLE_ROW else OutputStyle.WARNING
+            )
+        )
+        lines.add(
+            OutputLine(
+                CommandFormatUtils.padRight(
+                    "Loai mang:",
+                    24
+                ) + if (isWifi) "WiFi" else if (isOnline) "Di dong" else "Khong co",
+                OutputStyle.TABLE_ROW
+            )
+        )
+        lines.add(
+            OutputLine(
+                CommandFormatUtils.padRight("Thao tac cho xu ly:", 24) + pendingCount.toString(),
+                if (pendingCount > 0) OutputStyle.WARNING else OutputStyle.TABLE_ROW
+            )
+        )
+        lines.add(
+            OutputLine(
+                CommandFormatUtils.padRight("Thoi diem kiem tra:", 24) + timestamp,
+                OutputStyle.MUTED
+            )
+        )
 
         if (verbose) {
             lines.add(OutputLine(""))
             lines.add(OutputLine("Chi tiet", OutputStyle.HEADER))
             lines.add(OutputLine(""))
 
-            val settingsPreferences = context.services.settingsPreferences
+            val settingsService = context.services.settingsService
             val autoSyncEnabled = try {
-                settingsPreferences.autoSyncEnabled.first()
+                settingsService.autoSyncEnabled.first()
             } catch (_: Exception) {
                 true
             }
             val wifiOnlySync = try {
-                settingsPreferences.wifiOnlySync.first()
+                settingsService.wifiOnlySync.first()
             } catch (_: Exception) {
                 false
             }
 
-            lines.add(OutputLine(
-                padRight("Tu dong dong bo:", 24) + if (autoSyncEnabled) "Bat" else "Tat",
-                OutputStyle.TABLE_ROW
-            ))
-            lines.add(OutputLine(
-                padRight("Chi dong bo WiFi:", 24) + if (wifiOnlySync) "Bat" else "Tat",
-                OutputStyle.TABLE_ROW
-            ))
+            lines.add(
+                OutputLine(
+                    CommandFormatUtils.padRight("Tu dong dong bo:", 24) + if (autoSyncEnabled) "Bat" else "Tat",
+                    OutputStyle.TABLE_ROW
+                )
+            )
+            lines.add(
+                OutputLine(
+                    CommandFormatUtils.padRight("Chi dong bo WiFi:", 24) + if (wifiOnlySync) "Bat" else "Tat",
+                    OutputStyle.TABLE_ROW
+                )
+            )
 
             if (pendingCount > 0) {
                 lines.add(OutputLine(""))
-                lines.add(OutputLine(
-                    "Co $pendingCount thao tac cho xu ly. Dung 'sync now' de dong bo ngay.",
-                    OutputStyle.WARNING
-                ))
+                lines.add(
+                    OutputLine(
+                        "Co $pendingCount thao tac cho xu ly. Dung 'sync now' de dong bo ngay.",
+                        OutputStyle.WARNING
+                    )
+                )
             }
         }
 
@@ -293,8 +317,8 @@ class SyncCommand : Command {
         force: Boolean,
         format: String
     ): CommandResult {
-        val networkMonitor = context.services.networkMonitor
-        val isOnline = networkMonitor.isOnline.value
+        val networkService = context.services.networkService
+        val isOnline = networkService.isOnline.value
 
         if (!isOnline && !force) {
             return CommandResult.error(
@@ -306,8 +330,8 @@ class SyncCommand : Command {
         lines.add(OutputLine("Day du lieu len cloud", OutputStyle.HEADER))
         lines.add(OutputLine(""))
 
-        val syncManager = context.services.syncManager
-        val pendingBefore = syncManager.getPendingCount()
+        val syncService = context.services.syncService
+        val pendingBefore = syncService.getPendingCount()
 
         if (pendingBefore == 0) {
             lines.add(OutputLine("Khong co du lieu nao can day len cloud.", OutputStyle.INFO))
@@ -321,18 +345,20 @@ class SyncCommand : Command {
         val startTime = System.currentTimeMillis()
 
         try {
-            syncManager.processPendingOperations()
+            syncService.processPendingOperations()
             val elapsed = System.currentTimeMillis() - startTime
-            val pendingAfter = syncManager.getPendingCount()
+            val pendingAfter = syncService.getPendingCount()
             val pushed = pendingBefore - pendingAfter
 
             lines.add(OutputLine("Da day $pushed/$pendingBefore thao tac trong ${elapsed}ms", OutputStyle.SUCCESS))
 
             if (pendingAfter > 0) {
-                lines.add(OutputLine(
-                    "Con $pendingAfter thao tac chua duoc xu ly.",
-                    OutputStyle.WARNING
-                ))
+                lines.add(
+                    OutputLine(
+                        "Con $pendingAfter thao tac chua duoc xu ly.",
+                        OutputStyle.WARNING
+                    )
+                )
             }
         } catch (e: Exception) {
             lines.add(OutputLine("Loi khi day du lieu: ${e.message ?: "Loi khong xac dinh"}", OutputStyle.ERROR))
@@ -344,6 +370,9 @@ class SyncCommand : Command {
 
     /**
      * Tai du lieu tu cloud ve local.
+     *
+     * Luu y: Hien tai chua co thao tac pull rieng biet. Lenh nay su dung chung
+     * voi dong bo (process pending operations).
      */
     private suspend fun executePull(
         context: CommandContext,
@@ -351,8 +380,8 @@ class SyncCommand : Command {
         force: Boolean,
         format: String
     ): CommandResult {
-        val networkMonitor = context.services.networkMonitor
-        val isOnline = networkMonitor.isOnline.value
+        val networkService = context.services.networkService
+        val isOnline = networkService.isOnline.value
 
         if (!isOnline && !force) {
             return CommandResult.error(
@@ -363,19 +392,26 @@ class SyncCommand : Command {
         val lines = mutableListOf<OutputLine>()
         lines.add(OutputLine("Tai du lieu tu cloud", OutputStyle.HEADER))
         lines.add(OutputLine(""))
+        lines.add(
+            OutputLine(
+                "Luu y: Chuc nang pull su dung chung voi dong bo (process pending operations).",
+                OutputStyle.WARNING
+            )
+        )
+        lines.add(OutputLine(""))
 
         val startTime = System.currentTimeMillis()
 
         try {
-            val syncManager = context.services.syncManager
-            syncManager.processPendingOperations()
+            val syncService = context.services.syncService
+            syncService.processPendingOperations()
             val elapsed = System.currentTimeMillis() - startTime
 
             lines.add(OutputLine("Da xep hang dong bo tai du lieu trong ${elapsed}ms", OutputStyle.SUCCESS))
 
             if (verbose) {
-                val state = syncManager.syncState.value
-                lines.add(OutputLine("Trang thai: ${translateSyncState(state.name)}", OutputStyle.MUTED))
+                val state = syncService.consoleSyncState.value
+                lines.add(OutputLine("Trang thai: ${formatSyncState(state)}", OutputStyle.MUTED))
             }
         } catch (e: Exception) {
             lines.add(OutputLine("Loi khi tai du lieu: ${e.message ?: "Loi khong xac dinh"}", OutputStyle.ERROR))
@@ -394,8 +430,8 @@ class SyncCommand : Command {
         format: String
     ): CommandResult {
         val lines = mutableListOf<OutputLine>()
-        val syncManager = context.services.syncManager
-        val pendingBefore = syncManager.getPendingCount()
+        val syncService = context.services.syncService
+        val pendingBefore = syncService.getPendingCount()
 
         lines.add(OutputLine("Thu lai dong bo", OutputStyle.HEADER))
         lines.add(OutputLine(""))
@@ -412,14 +448,16 @@ class SyncCommand : Command {
         val startTime = System.currentTimeMillis()
 
         try {
-            syncManager.retryFailedOperations()
+            syncService.retryFailedOperations()
             val elapsed = System.currentTimeMillis() - startTime
-            val pendingAfter = syncManager.getPendingCount()
+            val pendingAfter = syncService.getPendingCount()
 
-            lines.add(OutputLine(
-                "Da thu lai xong trong ${elapsed}ms",
-                OutputStyle.SUCCESS
-            ))
+            lines.add(
+                OutputLine(
+                    "Da thu lai xong trong ${elapsed}ms",
+                    OutputStyle.SUCCESS
+                )
+            )
 
             if (verbose) {
                 lines.add(OutputLine("Truoc: $pendingBefore thao tac cho", OutputStyle.MUTED))
@@ -427,10 +465,12 @@ class SyncCommand : Command {
             }
 
             if (pendingAfter > 0) {
-                lines.add(OutputLine(
-                    "Van con $pendingAfter thao tac chua thanh cong.",
-                    OutputStyle.WARNING
-                ))
+                lines.add(
+                    OutputLine(
+                        "Van con $pendingAfter thao tac chua thanh cong.",
+                        OutputStyle.WARNING
+                    )
+                )
             }
         } catch (e: Exception) {
             lines.add(OutputLine("Loi khi thu lai: ${e.message ?: "Loi khong xac dinh"}", OutputStyle.ERROR))
@@ -444,7 +484,7 @@ class SyncCommand : Command {
      * Dinh dang trang thai dong bo dang JSON.
      */
     private fun formatStatusAsJson(
-        state: String,
+        state: ConsoleSyncState,
         isOnline: Boolean,
         isWifi: Boolean,
         pendingCount: Int,
@@ -453,9 +493,14 @@ class SyncCommand : Command {
     ): CommandResult {
         val lines = mutableListOf<OutputLine>()
         lines.add(OutputLine("{", OutputStyle.CODE))
-        lines.add(OutputLine("  \"sync_state\": \"${state.lowercase()}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"sync_state\": \"${state.name.lowercase()}\",", OutputStyle.CODE))
         lines.add(OutputLine("  \"is_online\": $isOnline,", OutputStyle.CODE))
-        lines.add(OutputLine("  \"network_type\": \"${if (isWifi) "wifi" else if (isOnline) "mobile" else "none"}\",", OutputStyle.CODE))
+        lines.add(
+            OutputLine(
+                "  \"network_type\": \"${if (isWifi) "wifi" else if (isOnline) "mobile" else "none"}\",",
+                OutputStyle.CODE
+            )
+        )
         lines.add(OutputLine("  \"pending_operations\": $pendingCount,", OutputStyle.CODE))
         lines.add(OutputLine("  \"checked_at\": \"$timestamp\"", OutputStyle.CODE))
         lines.add(OutputLine("}", OutputStyle.CODE))
@@ -465,28 +510,18 @@ class SyncCommand : Command {
     /**
      * Dich trang thai dong bo sang tieng Viet.
      */
-    private fun translateSyncState(state: String): String {
-        return when (state.uppercase()) {
-            "IDLE" -> "San sang"
-            "SYNCING" -> "Dang dong bo..."
-            "PENDING" -> "Cho xu ly"
-            "ERROR" -> "Loi"
-            else -> state
-        }
-    }
-
-    /**
-     * Can chuoi ben phai voi ky tu khoang trang.
-     */
-    private fun padRight(text: String, width: Int): String {
-        return if (text.length >= width) text else text + " ".repeat(width - text.length)
+    private fun formatSyncState(state: ConsoleSyncState): String = when (state) {
+        ConsoleSyncState.IDLE -> "Ranh roi"
+        ConsoleSyncState.SYNCING -> "Dang dong bo..."
+        ConsoleSyncState.PENDING -> "Cho xu ly"
+        ConsoleSyncState.ERROR -> "Loi"
     }
 
     /**
      * Dinh dang timestamp thanh chuoi doc duoc.
      */
     private fun formatTimestamp(millis: Long): String {
-        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.ROOT)
         return sdf.format(Date(millis))
     }
 

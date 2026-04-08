@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -9,6 +10,7 @@ import com.example.androidapp.domain.console.OutputStyle
 import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.UserRole
+import com.example.androidapp.domain.service.ConsoleSyncState
 
 /**
  * Lenh `whoami` — hien thi thong tin nguoi dung hien tai.
@@ -20,7 +22,7 @@ class WhoamiCommand : Command {
 
     override val name: String = "whoami"
 
-    override val aliases: List<String> = listOf("me", "user")
+    override val aliases: List<String> = listOf("user")
 
     override val description: String = "Hien thi thong tin nguoi dung hien tai"
 
@@ -36,7 +38,7 @@ class WhoamiCommand : Command {
         "whoami --session" to "Hien thi thong tin phien dang nhap"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -64,8 +66,20 @@ class WhoamiCommand : Command {
 
         if ("format" in flags && flags["format"] == null) {
             suggestions.clear()
-            suggestions.add(CompletionSuggestion(text = "table", description = "Dinh dang bang", type = SuggestionType.ARGUMENT))
-            suggestions.add(CompletionSuggestion(text = "json", description = "Dinh dang JSON", type = SuggestionType.ARGUMENT))
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "table",
+                    description = "Dinh dang bang",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
+            suggestions.add(
+                CompletionSuggestion(
+                    text = "json",
+                    description = "Dinh dang JSON",
+                    type = SuggestionType.ARGUMENT
+                )
+            )
         }
 
         return suggestions
@@ -103,7 +117,7 @@ class WhoamiCommand : Command {
         lines.add(OutputLine("== Thong tin nguoi dung ==", OutputStyle.HEADER))
         lines.add(OutputLine(""))
 
-        val roleBadge = formatRoleBadge(user.role)
+        val roleBadge = CommandFormatUtils.formatRole(user.role)
         lines.add(OutputLine("  Ten hien thi : ${user.displayName}", OutputStyle.NORMAL))
         lines.add(OutputLine("  Email        : ${user.email}", OutputStyle.NORMAL))
 
@@ -128,7 +142,12 @@ class WhoamiCommand : Command {
             lines.add(OutputLine("  La superuser : ${if (user.isSuperuser()) "Co" else "Khong"}", OutputStyle.NORMAL))
 
             val effectivePerms = user.effectivePermissions()
-            lines.add(OutputLine("  So quyen     : ${effectivePerms.size}/${AdminPermission.entries.size}", OutputStyle.NORMAL))
+            lines.add(
+                OutputLine(
+                    "  So quyen     : ${effectivePerms.size}/${AdminPermission.entries.size}",
+                    OutputStyle.NORMAL
+                )
+            )
         }
 
         if (showPermissions) {
@@ -141,7 +160,7 @@ class WhoamiCommand : Command {
             }
 
             val effectivePerms = user.effectivePermissions()
-            val maxLen = AdminPermission.entries.maxOfOrNull { formatPermissionName(it).length } ?: 0
+            val maxLen = AdminPermission.entries.maxOfOrNull { CommandFormatUtils.formatPermission(it).length } ?: 0
 
             lines.add(
                 OutputLine(
@@ -151,7 +170,7 @@ class WhoamiCommand : Command {
             )
 
             for (perm in AdminPermission.entries) {
-                val name = formatPermissionName(perm).padEnd(maxLen + 2)
+                val name = CommandFormatUtils.formatPermission(perm).padEnd(maxLen + 2)
                 val status = if (perm in effectivePerms) "[V]" else "[ ]"
                 val style = if (perm in effectivePerms) OutputStyle.SUCCESS else OutputStyle.MUTED
                 lines.add(OutputLine("  $name$status", style))
@@ -162,13 +181,13 @@ class WhoamiCommand : Command {
             lines.add(OutputLine(""))
             lines.add(OutputLine("-- Phien dang nhap --", OutputStyle.HEADER))
 
-            val isOnline = context.services.networkMonitor.isOnline.value
+            val isOnline = context.services.networkService.isOnline.value
             val networkStatus = if (isOnline) "Truc tuyen" else "Ngoai tuyen"
             val networkStyle = if (isOnline) OutputStyle.SUCCESS else OutputStyle.WARNING
 
             lines.add(OutputLine("  Mang         : $networkStatus", networkStyle))
 
-            val syncState = context.services.syncManager.syncState.value
+            val syncState = context.services.syncService.consoleSyncState.value
             lines.add(OutputLine("  Dong bo      : ${formatSyncState(syncState)}", OutputStyle.NORMAL))
         }
 
@@ -187,29 +206,45 @@ class WhoamiCommand : Command {
     ): CommandResult {
         val lines = mutableListOf<OutputLine>()
         lines.add(OutputLine("{", OutputStyle.CODE))
-        lines.add(OutputLine("  \"displayName\": \"${escapeJson(user.displayName)}\",", OutputStyle.CODE))
-        lines.add(OutputLine("  \"email\": \"${escapeJson(user.email)}\",", OutputStyle.CODE))
-        lines.add(OutputLine("  \"username\": \"${escapeJson(user.username)}\",", OutputStyle.CODE))
-        lines.add(OutputLine("  \"role\": \"${user.role.name}\",", OutputStyle.CODE))
+        lines.add(
+            OutputLine(
+                "  \"displayName\": \"${CommandFormatUtils.escapeJson(user.displayName)}\",",
+                OutputStyle.CODE
+            )
+        )
+        lines.add(OutputLine("  \"email\": \"${CommandFormatUtils.escapeJson(user.email)}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"username\": \"${CommandFormatUtils.escapeJson(user.username)}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"role\": \"${CommandFormatUtils.escapeJson(user.role.name)}\",", OutputStyle.CODE))
         lines.add(OutputLine("  \"isBanned\": ${user.isBanned},", OutputStyle.CODE))
 
         if (verbose) {
-            lines.add(OutputLine("  \"id\": \"${escapeJson(user.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("  \"photoUrl\": ${if (user.photoUrl != null) "\"${escapeJson(user.photoUrl)}\"" else "null"},", OutputStyle.CODE))
+            lines.add(OutputLine("  \"id\": \"${CommandFormatUtils.escapeJson(user.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "  \"photoUrl\": ${if (user.photoUrl != null) "\"${CommandFormatUtils.escapeJson(user.photoUrl)}\"" else "null"},",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("  \"isAdmin\": ${user.isAdmin()},", OutputStyle.CODE))
             lines.add(OutputLine("  \"isSuperuser\": ${user.isSuperuser()},", OutputStyle.CODE))
         }
 
         if (showPermissions) {
-            val perms = user.effectivePermissions().joinToString(", ") { "\"${it.name}\"" }
+            val perms =
+                user.effectivePermissions().joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it.name)}\"" }
             lines.add(OutputLine("  \"permissions\": [$perms],", OutputStyle.CODE))
         }
 
         if (showSession) {
-            val isOnline = context.services.networkMonitor.isOnline.value
-            val syncState = context.services.syncManager.syncState.value
+            val isOnline = context.services.networkService.isOnline.value
+            val syncState = context.services.syncService.consoleSyncState.value
             lines.add(OutputLine("  \"network\": \"${if (isOnline) "online" else "offline"}\",", OutputStyle.CODE))
-            lines.add(OutputLine("  \"syncState\": \"${syncState.name}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "  \"syncState\": \"${CommandFormatUtils.escapeJson(syncState.name)}\",",
+                    OutputStyle.CODE
+                )
+            )
         }
 
         // Remove trailing comma from last property
@@ -226,48 +261,13 @@ class WhoamiCommand : Command {
     }
 
     /**
-     * Dinh dang ten vai tro sang tieng Viet.
-     */
-    private fun formatRoleBadge(role: UserRole): String = when (role) {
-        UserRole.GUEST -> "Khach"
-        UserRole.USER -> "Nguoi dung"
-        UserRole.ADMIN -> "Quan tri vien"
-        UserRole.SUPERUSER -> "Sieu quan tri"
-    }
-
-    /**
-     * Dinh dang ten quyen han de hien thi.
-     */
-    private fun formatPermissionName(permission: AdminPermission): String = when (permission) {
-        AdminPermission.MANAGE_USERS -> "Quan ly nguoi dung"
-        AdminPermission.CHANGE_USER_ROLES -> "Thay doi vai tro"
-        AdminPermission.DELETE_USERS -> "Xoa nguoi dung"
-        AdminPermission.BAN_USERS -> "Cam nguoi dung"
-        AdminPermission.MANAGE_QUIZZES -> "Quan ly quiz"
-        AdminPermission.DELETE_QUIZZES -> "Xoa quiz"
-        AdminPermission.PUBLISH_QUIZZES -> "Xuat ban quiz"
-        AdminPermission.VIEW_REPORTS -> "Xem bao cao"
-    }
-
-    /**
      * Dinh dang trang thai dong bo sang tieng Viet.
      */
-    private fun formatSyncState(state: com.example.androidapp.data.sync.SyncState): String = when (state) {
-        com.example.androidapp.data.sync.SyncState.IDLE -> "Ranh roi"
-        com.example.androidapp.data.sync.SyncState.SYNCING -> "Dang dong bo..."
-        com.example.androidapp.data.sync.SyncState.PENDING -> "Cho xu ly"
-        com.example.androidapp.data.sync.SyncState.ERROR -> "Loi"
+    private fun formatSyncState(state: ConsoleSyncState): String = when (state) {
+        ConsoleSyncState.IDLE -> "Ranh roi"
+        ConsoleSyncState.SYNCING -> "Dang dong bo..."
+        ConsoleSyncState.PENDING -> "Cho xu ly"
+        ConsoleSyncState.ERROR -> "Loi"
     }
 
-    /**
-     * Thoat ky tu dac biet cho chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
 }

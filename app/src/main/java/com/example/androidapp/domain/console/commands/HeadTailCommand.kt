@@ -68,7 +68,7 @@ class HeadTailCommand(private val isHead: Boolean) : Command {
      * @param context Runtime context.
      * @return Ordered list of completion suggestions.
      */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext

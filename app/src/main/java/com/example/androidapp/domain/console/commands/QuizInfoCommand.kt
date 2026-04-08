@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -40,7 +41,7 @@ class QuizInfoCommand : Command {
 
     override val usage: String =
         "quizinfo <quizId> [--questions] [--attempts] [--stats] [--all] " +
-            "[--share-code <code>] [--format <table|json>] [--verbose] [--fields <fields>]"
+                "[--share-code <code>] [--format <table|json>] [--verbose] [--fields <fields>]"
 
     override val category: String = "admin"
 
@@ -59,7 +60,7 @@ class QuizInfoCommand : Command {
         "qi quizId123 --all --verbose" to "Xem toan bo thong tin quiz chi tiet (dung alias)"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -150,7 +151,16 @@ class QuizInfoCommand : Command {
 
         return when (format) {
             "json" -> buildJsonOutput(quiz, questions, attempts, showQuestions, showAttempts, showStats, verbose)
-            else -> buildTableOutput(quiz, questions, attempts, showQuestions, showAttempts, showStats, verbose, requestedFields)
+            else -> buildTableOutput(
+                quiz,
+                questions,
+                attempts,
+                showQuestions,
+                showAttempts,
+                showStats,
+                verbose,
+                requestedFields
+            )
         }
     }
 
@@ -179,12 +189,12 @@ class QuizInfoCommand : Command {
             for ((label, value, style) in basicFields) {
                 val fieldKey = label.lowercase().replace(" ", "").replace(":", "")
                 if (requestedFields.any { fieldKey.contains(it) }) {
-                    lines.add(OutputLine("  ${padRight(label, 18)}: $value", style))
+                    lines.add(OutputLine("  ${CommandFormatUtils.padRight(label, 18)}: $value", style))
                 }
             }
         } else {
             for ((label, value, style) in basicFields) {
-                lines.add(OutputLine("  ${padRight(label, 18)}: $value", style))
+                lines.add(OutputLine("  ${CommandFormatUtils.padRight(label, 18)}: $value", style))
             }
         }
 
@@ -199,25 +209,28 @@ class QuizInfoCommand : Command {
                 lines.add(OutputLine(""))
                 lines.add(
                     OutputLine(
-                        "  " + padRight("#", 4) + padRight("Noi dung", 44) +
-                            padRight("Lua chon", 10) + padRight("Diem", 6) +
-                            padRight("Nhieu dap an", 12),
+                        "  " + CommandFormatUtils.padRight("#", 4) + CommandFormatUtils.padRight("Noi dung", 44) +
+                                CommandFormatUtils.padRight("Lua chon", 10) + CommandFormatUtils.padRight("Diem", 6) +
+                                CommandFormatUtils.padRight("Nhieu dap an", 12),
                         OutputStyle.TABLE_HEADER
                     )
                 )
 
                 for ((index, question) in questions.withIndex()) {
                     val num = (index + 1).toString()
-                    val content = truncate(question.content, 42)
+                    val content = CommandFormatUtils.truncate(question.content, 42)
                     val choiceCount = question.choices.size.toString()
                     val points = question.points.toString()
                     val multiSelect = if (question.isMultiSelect) "Co" else "Khong"
 
                     lines.add(
                         OutputLine(
-                            "  " + padRight(num, 4) + padRight(content, 44) +
-                                padRight(choiceCount, 10) + padRight(points, 6) +
-                                padRight(multiSelect, 12),
+                            "  " + CommandFormatUtils.padRight(num, 4) + CommandFormatUtils.padRight(content, 44) +
+                                    CommandFormatUtils.padRight(choiceCount, 10) + CommandFormatUtils.padRight(
+                                points,
+                                6
+                            ) +
+                                    CommandFormatUtils.padRight(multiSelect, 12),
                             OutputStyle.TABLE_ROW
                         )
                     )
@@ -227,7 +240,7 @@ class QuizInfoCommand : Command {
                             val prefix = if (choice.isCorrect) "[V]" else "[ ]"
                             lines.add(
                                 OutputLine(
-                                    "       ${('A' + ci)}. $prefix ${truncate(choice.content, 50)}",
+                                    "       ${('A' + ci)}. $prefix ${CommandFormatUtils.truncate(choice.content, 50)}",
                                     if (choice.isCorrect) OutputStyle.SUCCESS else OutputStyle.MUTED
                                 )
                             )
@@ -235,7 +248,7 @@ class QuizInfoCommand : Command {
                         if (question.explanation != null) {
                             lines.add(
                                 OutputLine(
-                                    "       Giai thich: ${truncate(question.explanation, 60)}",
+                                    "       Giai thich: ${CommandFormatUtils.truncate(question.explanation, 60)}",
                                     OutputStyle.INFO
                                 )
                             )
@@ -264,8 +277,11 @@ class QuizInfoCommand : Command {
                 lines.add(OutputLine(""))
                 lines.add(
                     OutputLine(
-                        "  " + padRight("User ID", 22) + padRight("Diem", 10) +
-                            padRight("Thoi gian", 14) + padRight("Trang thai", 12),
+                        "  " + CommandFormatUtils.padRight("User ID", 22) + CommandFormatUtils.padRight("Diem", 10) +
+                                CommandFormatUtils.padRight("Thoi gian", 14) + CommandFormatUtils.padRight(
+                            "Trang thai",
+                            12
+                        ),
                         OutputStyle.TABLE_HEADER
                     )
                 )
@@ -276,7 +292,7 @@ class QuizInfoCommand : Command {
                 for (attempt in sortedAttempts.take(displayLimit)) {
                     val scoreStr = "${attempt.score}/${attempt.totalQuestions}"
                     val duration = if (attempt.endTimeMillis != null) {
-                        formatDuration((attempt.endTimeMillis - attempt.startTimeMillis) / 1000)
+                        CommandFormatUtils.formatDuration((attempt.endTimeMillis - attempt.startTimeMillis) / 1000)
                     } else {
                         "-"
                     }
@@ -284,9 +300,12 @@ class QuizInfoCommand : Command {
 
                     lines.add(
                         OutputLine(
-                            "  " + padRight(truncate(attempt.userId, 20), 22) +
-                                padRight(scoreStr, 10) + padRight(duration, 14) +
-                                padRight(status, 12),
+                            "  " + CommandFormatUtils.padRight(CommandFormatUtils.truncate(attempt.userId, 20), 22) +
+                                    CommandFormatUtils.padRight(scoreStr, 10) + CommandFormatUtils.padRight(
+                                duration,
+                                14
+                            ) +
+                                    CommandFormatUtils.padRight(status, 12),
                             OutputStyle.TABLE_ROW
                         )
                     )
@@ -294,7 +313,7 @@ class QuizInfoCommand : Command {
                     if (verbose) {
                         lines.add(
                             OutputLine(
-                                "    ID: ${attempt.id} | Bat dau: ${formatTimestamp(attempt.startTimeMillis)}",
+                                "    ID: ${attempt.id} | Bat dau: ${CommandFormatUtils.formatTimestamp(attempt.startTimeMillis)}",
                                 OutputStyle.MUTED
                             )
                         )
@@ -346,16 +365,44 @@ class QuizInfoCommand : Command {
                     val zeroCount = scores.count { it == 0 }
 
                     lines.add(OutputLine(""))
-                    lines.add(OutputLine("  Diem trung binh      : ${"%.2f".format(avgScore)}/$totalQuestions (${"%.1f".format(avgScore / totalQuestions * 100)}%)", OutputStyle.INFO))
+                    lines.add(
+                        OutputLine(
+                            "  Diem trung binh      : ${"%.2f".format(avgScore)}/$totalQuestions (${
+                                "%.1f".format(
+                                    avgScore / totalQuestions * 100
+                                )
+                            }%)", OutputStyle.INFO
+                        )
+                    )
                     lines.add(OutputLine("  Diem cao nhat        : $maxScore/$totalQuestions", OutputStyle.SUCCESS))
-                    lines.add(OutputLine("  Diem thap nhat       : $minScore/$totalQuestions", if (minScore == 0) OutputStyle.WARNING else OutputStyle.NORMAL))
-                    lines.add(OutputLine("  Diem trung vi        : ${"%.1f".format(medianScore)}/$totalQuestions", OutputStyle.NORMAL))
+                    lines.add(
+                        OutputLine(
+                            "  Diem thap nhat       : $minScore/$totalQuestions",
+                            if (minScore == 0) OutputStyle.WARNING else OutputStyle.NORMAL
+                        )
+                    )
+                    lines.add(
+                        OutputLine(
+                            "  Diem trung vi        : ${"%.1f".format(medianScore)}/$totalQuestions",
+                            OutputStyle.NORMAL
+                        )
+                    )
 
                     if (perfectCount > 0) {
-                        lines.add(OutputLine("  Diem tuyet doi       : $perfectCount (${"%.1f".format(perfectCount.toDouble() / completedCount * 100)}%)", OutputStyle.SUCCESS))
+                        lines.add(
+                            OutputLine(
+                                "  Diem tuyet doi       : $perfectCount (${"%.1f".format(perfectCount.toDouble() / completedCount * 100)}%)",
+                                OutputStyle.SUCCESS
+                            )
+                        )
                     }
                     if (zeroCount > 0) {
-                        lines.add(OutputLine("  Diem 0               : $zeroCount (${"%.1f".format(zeroCount.toDouble() / completedCount * 100)}%)", OutputStyle.WARNING))
+                        lines.add(
+                            OutputLine(
+                                "  Diem 0               : $zeroCount (${"%.1f".format(zeroCount.toDouble() / completedCount * 100)}%)",
+                                OutputStyle.WARNING
+                            )
+                        )
                     }
 
                     // Phan bo diem
@@ -379,7 +426,12 @@ class QuizInfoCommand : Command {
                             val pct = "${"%.0f".format(count.toDouble() / completedCount * 100)}%"
                             lines.add(
                                 OutputLine(
-                                    "    ${padRight(range, 8)} ${padRight(bar, 22)} $count ($pct)",
+                                    "    ${CommandFormatUtils.padRight(range, 8)} ${
+                                        CommandFormatUtils.padRight(
+                                            bar,
+                                            22
+                                        )
+                                    } $count ($pct)",
                                     OutputStyle.TABLE_ROW
                                 )
                             )
@@ -396,9 +448,24 @@ class QuizInfoCommand : Command {
                         val minDuration = durations.min()
 
                         lines.add(OutputLine(""))
-                        lines.add(OutputLine("  Thoi gian trung binh : ${formatDuration(avgDuration)}", OutputStyle.NORMAL))
-                        lines.add(OutputLine("  Thoi gian dai nhat   : ${formatDuration(maxDuration)}", OutputStyle.NORMAL))
-                        lines.add(OutputLine("  Thoi gian ngan nhat  : ${formatDuration(minDuration)}", OutputStyle.NORMAL))
+                        lines.add(
+                            OutputLine(
+                                "  Thoi gian trung binh : ${CommandFormatUtils.formatDuration(avgDuration)}",
+                                OutputStyle.NORMAL
+                            )
+                        )
+                        lines.add(
+                            OutputLine(
+                                "  Thoi gian dai nhat   : ${CommandFormatUtils.formatDuration(maxDuration)}",
+                                OutputStyle.NORMAL
+                            )
+                        )
+                        lines.add(
+                            OutputLine(
+                                "  Thoi gian ngan nhat  : ${CommandFormatUtils.formatDuration(minDuration)}",
+                                OutputStyle.NORMAL
+                            )
+                        )
                     }
                 }
             }
@@ -424,7 +491,7 @@ class QuizInfoCommand : Command {
         fields.add(Triple("Tieu de", quiz.title, OutputStyle.NORMAL))
 
         if (quiz.description != null && quiz.description.isNotBlank()) {
-            fields.add(Triple("Mo ta", truncate(quiz.description, 60), OutputStyle.NORMAL))
+            fields.add(Triple("Mo ta", CommandFormatUtils.truncate(quiz.description, 60), OutputStyle.NORMAL))
         }
 
         fields.add(Triple("Tac gia", quiz.authorName.ifBlank { "(khong ro)" }, OutputStyle.NORMAL))
@@ -451,11 +518,11 @@ class QuizInfoCommand : Command {
             fields.add(Triple("Share code", quiz.shareCode, OutputStyle.INFO))
         }
 
-        fields.add(Triple("Ngay tao", formatTimestamp(quiz.createdAt), OutputStyle.MUTED))
-        fields.add(Triple("Cap nhat", formatTimestamp(quiz.updatedAt), OutputStyle.MUTED))
+        fields.add(Triple("Ngay tao", CommandFormatUtils.formatTimestamp(quiz.createdAt), OutputStyle.MUTED))
+        fields.add(Triple("Cap nhat", CommandFormatUtils.formatTimestamp(quiz.updatedAt), OutputStyle.MUTED))
 
         if (quiz.deletedAt != null) {
-            fields.add(Triple("Ngay xoa", formatTimestamp(quiz.deletedAt), OutputStyle.ERROR))
+            fields.add(Triple("Ngay xoa", CommandFormatUtils.formatTimestamp(quiz.deletedAt), OutputStyle.ERROR))
         }
 
         if (verbose) {
@@ -467,8 +534,12 @@ class QuizInfoCommand : Command {
             }
             fields.add(Triple("Cong khai", if (quiz.isPublic) "Co" else "Khong", OutputStyle.NORMAL))
             fields.add(Triple("Nhap", if (quiz.isDraft) "Co" else "Khong", OutputStyle.NORMAL))
-            fields.add(Triple("Xoa cloud", if (quiz.isRemovedFromCloud) "Co" else "Khong",
-                if (quiz.isRemovedFromCloud) OutputStyle.WARNING else OutputStyle.NORMAL))
+            fields.add(
+                Triple(
+                    "Xoa cloud", if (quiz.isRemovedFromCloud) "Co" else "Khong",
+                    if (quiz.isRemovedFromCloud) OutputStyle.WARNING else OutputStyle.NORMAL
+                )
+            )
         }
 
         return fields
@@ -490,24 +561,30 @@ class QuizInfoCommand : Command {
         lines.add(OutputLine("{", OutputStyle.CODE))
 
         // Thong tin co ban
-        lines.add(OutputLine("  \"id\": \"${escapeJson(quiz.id)}\",", OutputStyle.CODE))
-        lines.add(OutputLine("  \"title\": \"${escapeJson(quiz.title)}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"id\": \"${CommandFormatUtils.escapeJson(quiz.id)}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\",", OutputStyle.CODE))
 
-        val descStr = if (quiz.description != null) "\"${escapeJson(quiz.description)}\"" else "null"
+        val descStr = if (quiz.description != null) "\"${CommandFormatUtils.escapeJson(quiz.description)}\"" else "null"
         lines.add(OutputLine("  \"description\": $descStr,", OutputStyle.CODE))
 
-        lines.add(OutputLine("  \"authorName\": \"${escapeJson(quiz.authorName)}\",", OutputStyle.CODE))
-        lines.add(OutputLine("  \"ownerId\": \"${escapeJson(quiz.ownerId)}\",", OutputStyle.CODE))
+        lines.add(
+            OutputLine(
+                "  \"authorName\": \"${CommandFormatUtils.escapeJson(quiz.authorName)}\",",
+                OutputStyle.CODE
+            )
+        )
+        lines.add(OutputLine("  \"ownerId\": \"${CommandFormatUtils.escapeJson(quiz.ownerId)}\",", OutputStyle.CODE))
         lines.add(OutputLine("  \"status\": \"${buildStatusLabel(quiz)}\",", OutputStyle.CODE))
         lines.add(OutputLine("  \"isPublic\": ${quiz.isPublic},", OutputStyle.CODE))
         lines.add(OutputLine("  \"isDraft\": ${quiz.isDraft},", OutputStyle.CODE))
         lines.add(OutputLine("  \"questionCount\": ${quiz.questionCount},", OutputStyle.CODE))
         lines.add(OutputLine("  \"attemptCount\": ${quiz.attemptCount},", OutputStyle.CODE))
 
-        val tagsStr = quiz.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
+        val tagsStr = quiz.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
         lines.add(OutputLine("  \"tags\": [$tagsStr],", OutputStyle.CODE))
 
-        val shareCodeStr = if (quiz.shareCode != null) "\"${escapeJson(quiz.shareCode)}\"" else "null"
+        val shareCodeStr =
+            if (quiz.shareCode != null) "\"${CommandFormatUtils.escapeJson(quiz.shareCode)}\"" else "null"
         lines.add(OutputLine("  \"shareCode\": $shareCodeStr,", OutputStyle.CODE))
 
         lines.add(OutputLine("  \"createdAt\": ${quiz.createdAt},", OutputStyle.CODE))
@@ -517,9 +594,11 @@ class QuizInfoCommand : Command {
         lines.add(OutputLine("  \"deletedAt\": $deletedAtStr,", OutputStyle.CODE))
 
         if (verbose) {
-            val thumbStr = if (quiz.thumbnailUrl != null) "\"${escapeJson(quiz.thumbnailUrl)}\"" else "null"
+            val thumbStr =
+                if (quiz.thumbnailUrl != null) "\"${CommandFormatUtils.escapeJson(quiz.thumbnailUrl)}\"" else "null"
             lines.add(OutputLine("  \"thumbnailUrl\": $thumbStr,", OutputStyle.CODE))
-            val checksumStr = if (quiz.checksum != null) "\"${escapeJson(quiz.checksum)}\"" else "null"
+            val checksumStr =
+                if (quiz.checksum != null) "\"${CommandFormatUtils.escapeJson(quiz.checksum)}\"" else "null"
             lines.add(OutputLine("  \"checksum\": $checksumStr,", OutputStyle.CODE))
             lines.add(OutputLine("  \"isRemovedFromCloud\": ${quiz.isRemovedFromCloud},", OutputStyle.CODE))
         }
@@ -530,16 +609,28 @@ class QuizInfoCommand : Command {
             for ((qi, question) in questions.withIndex()) {
                 val qComma = if (qi < questions.size - 1) "," else ""
                 lines.add(OutputLine("    {", OutputStyle.CODE))
-                lines.add(OutputLine("      \"id\": \"${escapeJson(question.id)}\",", OutputStyle.CODE))
-                lines.add(OutputLine("      \"content\": \"${escapeJson(question.content)}\",", OutputStyle.CODE))
+                lines.add(
+                    OutputLine(
+                        "      \"id\": \"${CommandFormatUtils.escapeJson(question.id)}\",",
+                        OutputStyle.CODE
+                    )
+                )
+                lines.add(
+                    OutputLine(
+                        "      \"content\": \"${CommandFormatUtils.escapeJson(question.content)}\",",
+                        OutputStyle.CODE
+                    )
+                )
                 lines.add(OutputLine("      \"isMultiSelect\": ${question.isMultiSelect},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"points\": ${question.points},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"position\": ${question.position},", OutputStyle.CODE))
 
                 if (verbose) {
-                    val explStr = if (question.explanation != null) "\"${escapeJson(question.explanation)}\"" else "null"
+                    val explStr =
+                        if (question.explanation != null) "\"${CommandFormatUtils.escapeJson(question.explanation)}\"" else "null"
                     lines.add(OutputLine("      \"explanation\": $explStr,", OutputStyle.CODE))
-                    val mediaStr = if (question.mediaUrl != null) "\"${escapeJson(question.mediaUrl)}\"" else "null"
+                    val mediaStr =
+                        if (question.mediaUrl != null) "\"${CommandFormatUtils.escapeJson(question.mediaUrl)}\"" else "null"
                     lines.add(OutputLine("      \"mediaUrl\": $mediaStr,", OutputStyle.CODE))
                 }
 
@@ -547,8 +638,18 @@ class QuizInfoCommand : Command {
                 for ((ci, choice) in question.choices.withIndex()) {
                     val cComma = if (ci < question.choices.size - 1) "," else ""
                     lines.add(OutputLine("        {", OutputStyle.CODE))
-                    lines.add(OutputLine("          \"id\": \"${escapeJson(choice.id)}\",", OutputStyle.CODE))
-                    lines.add(OutputLine("          \"text\": \"${escapeJson(choice.content)}\",", OutputStyle.CODE))
+                    lines.add(
+                        OutputLine(
+                            "          \"id\": \"${CommandFormatUtils.escapeJson(choice.id)}\",",
+                            OutputStyle.CODE
+                        )
+                    )
+                    lines.add(
+                        OutputLine(
+                            "          \"text\": \"${CommandFormatUtils.escapeJson(choice.content)}\",",
+                            OutputStyle.CODE
+                        )
+                    )
                     lines.add(OutputLine("          \"isCorrect\": ${choice.isCorrect}", OutputStyle.CODE))
                     lines.add(OutputLine("        }$cComma", OutputStyle.CODE))
                 }
@@ -567,8 +668,18 @@ class QuizInfoCommand : Command {
                 val aComma = if (ai < sorted.size - 1) "," else ""
                 val endStr = attempt.endTimeMillis?.toString() ?: "null"
                 lines.add(OutputLine("    {", OutputStyle.CODE))
-                lines.add(OutputLine("      \"id\": \"${escapeJson(attempt.id)}\",", OutputStyle.CODE))
-                lines.add(OutputLine("      \"userId\": \"${escapeJson(attempt.userId)}\",", OutputStyle.CODE))
+                lines.add(
+                    OutputLine(
+                        "      \"id\": \"${CommandFormatUtils.escapeJson(attempt.id)}\",",
+                        OutputStyle.CODE
+                    )
+                )
+                lines.add(
+                    OutputLine(
+                        "      \"userId\": \"${CommandFormatUtils.escapeJson(attempt.userId)}\",",
+                        OutputStyle.CODE
+                    )
+                )
                 lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"startTimeMillis\": ${attempt.startTimeMillis},", OutputStyle.CODE))
@@ -584,8 +695,18 @@ class QuizInfoCommand : Command {
             val completedAttempts = attempts.filter { it.endTimeMillis != null }
             lines.add(OutputLine("    \"totalAttempts\": ${attempts.size},", OutputStyle.CODE))
             lines.add(OutputLine("    \"completedAttempts\": ${completedAttempts.size},", OutputStyle.CODE))
-            lines.add(OutputLine("    \"incompleteAttempts\": ${attempts.size - completedAttempts.size},", OutputStyle.CODE))
-            lines.add(OutputLine("    \"uniqueUsers\": ${attempts.map { it.userId }.distinct().size},", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "    \"incompleteAttempts\": ${attempts.size - completedAttempts.size},",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "    \"uniqueUsers\": ${attempts.map { it.userId }.distinct().size},",
+                    OutputStyle.CODE
+                )
+            )
 
             if (completedAttempts.isNotEmpty()) {
                 val scores = completedAttempts.map { it.score }
@@ -593,13 +714,23 @@ class QuizInfoCommand : Command {
                 lines.add(OutputLine("    \"averageScore\": ${"%.2f".format(avgScore)},", OutputStyle.CODE))
                 lines.add(OutputLine("    \"maxScore\": ${scores.max()},", OutputStyle.CODE))
                 lines.add(OutputLine("    \"minScore\": ${scores.min()},", OutputStyle.CODE))
-                lines.add(OutputLine("    \"medianScore\": ${"%.1f".format(calculateMedian(scores))},", OutputStyle.CODE))
+                lines.add(
+                    OutputLine(
+                        "    \"medianScore\": ${"%.1f".format(calculateMedian(scores))},",
+                        OutputStyle.CODE
+                    )
+                )
 
                 val durations = completedAttempts.mapNotNull { a ->
                     a.endTimeMillis?.let { end -> (end - a.startTimeMillis) / 1000 }
                 }
                 if (durations.isNotEmpty()) {
-                    lines.add(OutputLine("    \"avgDurationSeconds\": ${durations.average().toLong()},", OutputStyle.CODE))
+                    lines.add(
+                        OutputLine(
+                            "    \"avgDurationSeconds\": ${durations.average().toLong()},",
+                            OutputStyle.CODE
+                        )
+                    )
                     lines.add(OutputLine("    \"maxDurationSeconds\": ${durations.max()},", OutputStyle.CODE))
                     lines.add(OutputLine("    \"minDurationSeconds\": ${durations.min()}", OutputStyle.CODE))
                 } else {
@@ -663,54 +794,4 @@ class QuizInfoCommand : Command {
         }
     }
 
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Dinh dang thoi luong (giay) thanh chuoi doc duoc.
-     */
-    private fun formatDuration(totalSeconds: Long): String {
-        if (totalSeconds < 60) {
-            return "${totalSeconds}s"
-        }
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        if (minutes < 60) {
-            return "${minutes}m ${seconds}s"
-        }
-        val hours = minutes / 60
-        val remainingMinutes = minutes % 60
-        return "${hours}h ${remainingMinutes}m ${seconds}s"
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
 }

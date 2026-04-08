@@ -6,6 +6,7 @@ import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
 import com.example.androidapp.domain.console.OutputStyle
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.Quiz
@@ -39,8 +40,8 @@ class RestoreCommand : Command {
 
     override val usage: String =
         "restore <quizId> [...] [--owner <userId>] [--all] [--tag <tag>] " +
-            "[--deleted-before <ts>] [--deleted-after <ts>] [--deleted-between <start>,<end>] " +
-            "[--dry-run] [--confirm] [--format <table|json>] [--verbose]"
+                "[--deleted-before <ts>] [--deleted-after <ts>] [--deleted-between <start>,<end>] " +
+                "[--dry-run] [--confirm] [--format <table|json>] [--verbose]"
 
     override val category: String = "admin"
 
@@ -57,11 +58,11 @@ class RestoreCommand : Command {
         "restore --tag math --dry-run" to "Mo phong khoi phuc quiz co tag 'math'",
         "restore --deleted-after 1700000000000 --confirm" to "Khoi phuc quiz bi xoa sau moc thoi gian",
         "restore --deleted-between 1700000000000,1710000000000 --dry-run" to
-            "Mo phong khoi phuc quiz bi xoa trong khoang thoi gian",
+                "Mo phong khoi phuc quiz bi xoa trong khoang thoi gian",
         "restore quizId123 --format json --verbose" to "Khoi phuc va hien thi ket qua dang JSON chi tiet"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -132,7 +133,12 @@ class RestoreCommand : Command {
         val quizzesToRestore = mutableListOf<Quiz>()
 
         if (args.isNotEmpty() && !hasFilterFlags(flags) && !restoreAll) {
-            // Khoi phuc theo ID cu the — khong bat buoc --confirm cho tung quiz
+            // Khoi phuc theo ID cu the
+            if (!dryRun && !confirm) {
+                return CommandResult.error(
+                    "Thao tac khoi phuc quiz. Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                )
+            }
             for (quizId in args) {
                 val quiz = deletedQuizzes.find { it.id == quizId }
                 if (quiz == null) {
@@ -140,8 +146,8 @@ class RestoreCommand : Command {
                     val existingQuiz = allQuizzes.find { it.id == quizId }
                     if (existingQuiz != null) {
                         return CommandResult.error(
-                            "Quiz '${truncate(existingQuiz.title, 40)}' ($quizId) chua bi xoa, " +
-                                "khong can khoi phuc."
+                            "Quiz '${CommandFormatUtils.truncate(existingQuiz.title, 40)}' ($quizId) chua bi xoa, " +
+                                    "khong can khoi phuc."
                         )
                     }
                     return CommandResult.error("Khong tim thay quiz da xoa voi ID: '$quizId'")
@@ -153,7 +159,7 @@ class RestoreCommand : Command {
             if (!dryRun && !confirm) {
                 return CommandResult.error(
                     "Khoi phuc hang loat yeu cau --confirm hoac --dry-run. " +
-                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                            "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
                 )
             }
 
@@ -178,7 +184,7 @@ class RestoreCommand : Command {
         } else {
             return CommandResult.error(
                 "Vui long cung cap quiz ID, --all, hoac bo loc (--owner, --tag, " +
-                    "--deleted-before/after/between) de xac dinh quiz can khoi phuc."
+                        "--deleted-before/after/between) de xac dinh quiz can khoi phuc."
             )
         }
 
@@ -294,8 +300,8 @@ class RestoreCommand : Command {
 
         lines.add(
             OutputLine(
-                padRight("ID", 24) + padRight("Tieu de", 30) +
-                    padRight("Chu so huu", 18) + padRight("Ngay xoa", 22),
+                CommandFormatUtils.padRight("ID", 24) + CommandFormatUtils.padRight("Tieu de", 30) +
+                        CommandFormatUtils.padRight("Chu so huu", 18) + CommandFormatUtils.padRight("Ngay xoa", 22),
                 OutputStyle.TABLE_HEADER
             )
         )
@@ -304,16 +310,21 @@ class RestoreCommand : Command {
 
         for (quiz in quizzes) {
             val deletedAtStr = if (quiz.deletedAt != null) {
-                formatTimestamp(quiz.deletedAt)
+                CommandFormatUtils.formatTimestamp(quiz.deletedAt)
             } else {
                 "-"
             }
 
             lines.add(
                 OutputLine(
-                    padRight(quiz.id, 24) + padRight(truncate(quiz.title, 28), 30) +
-                        padRight(truncate(quiz.ownerId, 16), 18) +
-                        padRight(deletedAtStr, 22),
+                    CommandFormatUtils.padRight(quiz.id, 24) + CommandFormatUtils.padRight(
+                        CommandFormatUtils.truncate(
+                            quiz.title,
+                            28
+                        ), 30
+                    ) +
+                            CommandFormatUtils.padRight(CommandFormatUtils.truncate(quiz.ownerId, 16), 18) +
+                            CommandFormatUtils.padRight(deletedAtStr, 22),
                     OutputStyle.TABLE_ROW
                 )
             )
@@ -352,7 +363,11 @@ class RestoreCommand : Command {
                 )
                 lines.add(
                     OutputLine(
-                        "  Tao: ${formatTimestamp(quiz.createdAt)} | Cap nhat: ${formatTimestamp(quiz.updatedAt)}",
+                        "  Tao: ${CommandFormatUtils.formatTimestamp(quiz.createdAt)} | Cap nhat: ${
+                            CommandFormatUtils.formatTimestamp(
+                                quiz.updatedAt
+                            )
+                        }",
                         OutputStyle.MUTED
                     )
                 )
@@ -422,7 +437,7 @@ class RestoreCommand : Command {
 
         for ((index, quiz) in quizzes.withIndex()) {
             val comma = if (index < quizzes.size - 1) "," else ""
-            val tagsStr = quiz.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
+            val tagsStr = quiz.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
             val deletedAtStr = quiz.deletedAt?.toString() ?: "null"
             val statusBefore = when {
                 quiz.isDraft -> "draft"
@@ -430,10 +445,25 @@ class RestoreCommand : Command {
                 else -> "private"
             }
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(quiz.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"title\": \"${escapeJson(quiz.title)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"ownerId\": \"${escapeJson(quiz.ownerId)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"authorName\": \"${escapeJson(quiz.authorName)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(quiz.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"ownerId\": \"${CommandFormatUtils.escapeJson(quiz.ownerId)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"authorName\": \"${CommandFormatUtils.escapeJson(quiz.authorName)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"statusBeforeDelete\": \"$statusBefore\",", OutputStyle.CODE))
             lines.add(OutputLine("      \"questionCount\": ${quiz.questionCount},", OutputStyle.CODE))
             lines.add(OutputLine("      \"attemptCount\": ${quiz.attemptCount},", OutputStyle.CODE))
@@ -468,15 +498,15 @@ class RestoreCommand : Command {
             if (verbose) {
                 lines.add(
                     OutputLine(
-                        "Dang khoi phuc: ${truncate(quiz.title, 40)} (${quiz.id})...",
+                        "Dang khoi phuc: ${CommandFormatUtils.truncate(quiz.title, 40)} (${quiz.id})...",
                         OutputStyle.INFO
                     )
                 )
             }
 
             if (quiz.isRemovedFromCloud) {
-                val warningMsg = "Quiz '${truncate(quiz.title, 30)}' (${quiz.id}) " +
-                    "da bi xoa khoi cloud — khoi phuc chi o local."
+                val warningMsg = "Quiz '${CommandFormatUtils.truncate(quiz.title, 30)}' (${quiz.id}) " +
+                        "da bi xoa khoi cloud — khoi phuc chi o local."
                 warnings.add(warningMsg)
                 if (verbose) {
                     lines.add(OutputLine("  Canh bao: $warningMsg", OutputStyle.WARNING))
@@ -488,7 +518,7 @@ class RestoreCommand : Command {
                 successCount++
                 lines.add(
                     OutputLine(
-                        "Da khoi phuc: ${truncate(quiz.title, 40)} (${quiz.id})",
+                        "Da khoi phuc: ${CommandFormatUtils.truncate(quiz.title, 40)} (${quiz.id})",
                         OutputStyle.SUCCESS
                     )
                 )
@@ -498,7 +528,7 @@ class RestoreCommand : Command {
                 errors.add("${quiz.id}: $errorMsg")
                 lines.add(
                     OutputLine(
-                        "Loi khi khoi phuc '${truncate(quiz.title, 30)}': $errorMsg",
+                        "Loi khi khoi phuc '${CommandFormatUtils.truncate(quiz.title, 30)}': $errorMsg",
                         OutputStyle.ERROR
                     )
                 )
@@ -562,7 +592,7 @@ class RestoreCommand : Command {
             lines.add(OutputLine("  \"errors\": [", OutputStyle.CODE))
             for ((index, err) in errors.withIndex()) {
                 val comma = if (index < errors.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(err)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(err)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ],", OutputStyle.CODE))
         } else {
@@ -573,7 +603,7 @@ class RestoreCommand : Command {
             lines.add(OutputLine("  \"warnings\": [", OutputStyle.CODE))
             for ((index, warn) in warnings.withIndex()) {
                 val comma = if (index < warnings.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(warn)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(warn)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ]", OutputStyle.CODE))
         } else {
@@ -586,37 +616,4 @@ class RestoreCommand : Command {
         return CommandResult(output = lines, isSuccess = isSuccess, exitCode = if (isSuccess) 0 else 1)
     }
 
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
 }

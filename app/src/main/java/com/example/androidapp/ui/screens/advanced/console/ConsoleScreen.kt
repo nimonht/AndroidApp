@@ -24,14 +24,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.androidapp.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.di.LocalAppContainer
@@ -62,15 +64,7 @@ fun ConsoleScreen(
         factory = ConsoleViewModelFactory(
             commandExecutor = container.commandExecutor,
             authRepository = container.authRepository,
-            networkMonitor = container.networkMonitor,
-            logCollector = container.logCollector,
-            syncManager = container.syncManager,
-            settingsPreferences = container.settingsPreferences,
-            adminRepository = container.adminRepository,
-            quizRepository = container.quizRepository,
-            attemptRepository = container.attemptRepository,
-            shareCodeRepository = container.shareCodeRepository,
-            poolRepository = container.poolRepository
+            networkMonitor = container.networkMonitor
         )
     )
 
@@ -108,11 +102,7 @@ fun ConsoleScreenContent(
         }
     }
 
-    val prompt = remember(uiState.userName, uiState.userRole) {
-        val suffix = if (uiState.userRole >= UserRole.ADMIN) "#" else "$"
-        val name = uiState.userName.ifEmpty { "guest" }
-        "[$name]$suffix "
-    }
+
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -135,16 +125,14 @@ fun ConsoleScreenContent(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            // TODO: move to strings.xml
-                            text = "Quizzez Console",
+                            text = stringResource(R.string.console_title),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontFamily = FontFamily.Monospace
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            // TODO: move to strings.xml
-                            text = "Go 'help' de xem danh sach lenh",
+                            text = stringResource(R.string.console_help_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontFamily = FontFamily.Monospace
@@ -192,7 +180,7 @@ fun ConsoleScreenContent(
                     onEvent(ConsoleEvent.InputChanged(text, cursor))
                 },
                 ghostText = uiState.ghostText,
-                prompt = prompt,
+                prompt = uiState.prompt,
                 onSubmit = { onEvent(ConsoleEvent.Submit) },
                 onTabPress = { onEvent(ConsoleEvent.AcceptSuggestion) },
                 onUpPress = { onEvent(ConsoleEvent.HistoryUp) },
@@ -253,8 +241,7 @@ fun ConsoleStatusBar(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    // TODO: move to strings.xml
-                    text = if (networkStatus) "Truc tuyen" else "Ngoai tuyen",
+                    text = if (networkStatus) stringResource(R.string.console_network_online) else stringResource(R.string.console_network_offline),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontFamily = FontFamily.Monospace,
@@ -272,7 +259,12 @@ fun ConsoleStatusBar(
                 }
             ) {
                 Text(
-                    text = userRole.name,
+                    text = when (userRole) {
+                        UserRole.SUPERUSER -> stringResource(R.string.role_superuser)
+                        UserRole.ADMIN -> stringResource(R.string.role_admin)
+                        UserRole.USER -> stringResource(R.string.role_user)
+                        UserRole.GUEST -> stringResource(R.string.role_guest)
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = when (userRole) {
                         UserRole.SUPERUSER -> MaterialTheme.colorScheme.error

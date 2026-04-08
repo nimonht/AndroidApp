@@ -65,14 +65,43 @@ interface Command {
     val examples: List<Pair<String, String>> get() = emptyList()
 
     /**
+     * Set of long flag names that this command recognises as value-bearing
+     * (i.e. the flag consumes the next token as its value during parsing).
+     *
+     * Example: if a command supports `--role <role>` and `--format <fmt>`,
+     * it should return `setOf("role", "format")`.
+     *
+     * The [CommandParser] aggregates these from all registered commands
+     * (via [CommandRegistry.allValueFlags]) so that flag-value association
+     * is determined by the commands themselves rather than a hardcoded list.
+     *
+     * Defaults to an empty set (all flags treated as boolean).
+     */
+    val valueFlags: Set<String> get() = emptySet()
+
+    /**
+     * Set of short (single-character) flag names that this command recognises
+     * as value-bearing.
+     *
+     * Example: if a command supports `-n <count>`, it should return `setOf("n")`.
+     *
+     * Defaults to an empty set.
+     */
+    val shortValueFlags: Set<String> get() = emptySet()
+
+    /**
      * Produce autocomplete suggestions for the current input state.
+     *
+     * This is a `suspend` function because implementations may need to
+     * query repositories (e.g. fetching user lists, quiz titles) for
+     * meaningful completions.
      *
      * @param args Positional arguments entered so far.
      * @param flags Flags entered so far (name -> optional value).
      * @param context Runtime context with repositories and current user.
      * @return Ordered list of completion suggestions.
      */
-    fun autocomplete(
+    suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext

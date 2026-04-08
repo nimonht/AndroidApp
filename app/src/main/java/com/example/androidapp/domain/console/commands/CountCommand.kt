@@ -66,7 +66,7 @@ class CountCommand : Command {
     )
 
     /** @inheritDoc */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext

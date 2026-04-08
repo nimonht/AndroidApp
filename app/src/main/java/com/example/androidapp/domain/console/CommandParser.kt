@@ -44,30 +44,25 @@ data class CommandSegment(
  *
  * Flags that use the `--key=value` syntax are already captured as
  * [CommandToken.FlagValue] by the lexer. For `--key value` syntax, the
- * parser peeks at the next token: if it is a [CommandToken.Keyword],
- * [CommandToken.Argument], or [CommandToken.StringLiteral], it is consumed
+ * parser peeks at the next token: if it is a [CommandToken.Keyword]
+ * or [CommandToken.StringLiteral], it is consumed
  * as the flag's value. Otherwise the flag is treated as boolean (value = null).
  *
- * Known value-bearing flags that always consume the next token:
- * `role`, `format`, `sort`, `limit`, `offset`, `page`, `fields`, `timeout`,
- * `output`, `level`, `tag`, `search`, `owner`, `user`, `quiz`, `service`,
- * `style`, `repeat`, `count`, `since`, `after`, `before`, `period`,
- * `category`, `score-above`, `score-below`, `min-attempts`, `max-attempts`,
- * `min-questions`, `max-questions`, `min-usage`, `max-usage`, `inactive-days`,
- * `active-days`, `email-domain`, `permission`, `contributor`, `source-quiz`,
- * `reason`, `from`, `to`, `compare-period`, `trend`, `type`, `exclude`,
- * `older-than`, `context`, `before-context`, `after-context`, `max-count`,
- * `delimiter`, `field`, `by-field`, `lines`, `skip`, `key`, `banned-before`,
- * `banned-after`, `created-after`, `created-before`, `updated-after`,
- * `updated-before`, `duration-above`, `duration-below`, `last`,
- * `n`, `l`, `t`, `k`, `d`, `s`, `f`, `o`, `p`, `c`, `r`, `m`, `C`, `B`, `A`.
+ * Value-bearing flags are determined by the aggregated [Command.valueFlags]
+ * and [Command.shortValueFlags] sets passed in from [CommandRegistry] via
+ * [CommandExecutor]. A built-in fallback set is kept for backward
+ * compatibility until all commands declare their own value flags.
  */
 object CommandParser {
 
     /**
-     * Set of long flag names that are known to take a value argument.
+     * Built-in fallback set of long flag names known to take a value argument.
+     *
+     * This set is used as a baseline and is merged with the command-declared
+     * value flags passed to [parse]. Over time, as commands declare their own
+     * [Command.valueFlags], entries can be removed from this fallback.
      */
-    private val VALUE_FLAGS: Set<String> = setOf(
+    private val FALLBACK_VALUE_FLAGS: Set<String> = setOf(
         "role", "format", "sort", "limit", "offset", "page", "fields", "timeout",
         "output", "level", "tag", "search", "owner", "user", "quiz", "service",
         "style", "repeat", "count", "since", "after", "before", "period",
@@ -86,9 +81,9 @@ object CommandParser {
     )
 
     /**
-     * Set of short flag characters that are known to take a value argument.
+     * Built-in fallback set of short flag characters known to take a value argument.
      */
-    private val SHORT_VALUE_FLAGS: Set<String> = setOf(
+    private val FALLBACK_SHORT_VALUE_FLAGS: Set<String> = setOf(
         "n", "l", "t", "k", "d", "s", "f", "o", "p", "c", "r", "m",
         "C", "B", "A"
     )
@@ -97,13 +92,25 @@ object CommandParser {
      * Parses a token list into a [ParsedCommand].
      *
      * @param tokens The token list produced by [CommandLexer.tokenize].
-     * @param rawInput The original raw input string (for reconstructing segment raw text).
+     * @param valueFlags Aggregated set of long flag names from all registered
+     *   commands that are known to take a value. Merged with the built-in
+     *   fallback set. Pass `emptySet()` to rely solely on the fallback.
+     * @param shortValueFlags Aggregated set of short flag names from all
+     *   registered commands. Merged with the built-in fallback set.
      * @return A [ParsedCommand] with chains of piped segments.
      */
-    fun parse(tokens: List<CommandToken>, rawInput: String = ""): ParsedCommand {
+    fun parse(
+        tokens: List<CommandToken>,
+        valueFlags: Set<String> = emptySet(),
+        shortValueFlags: Set<String> = emptySet()
+    ): ParsedCommand {
         if (tokens.isEmpty()) {
             return ParsedCommand(chains = emptyList())
         }
+
+        // Merge caller-provided flags with the built-in fallback
+        val effectiveValueFlags = FALLBACK_VALUE_FLAGS + valueFlags
+        val effectiveShortValueFlags = FALLBACK_SHORT_VALUE_FLAGS + shortValueFlags
 
         val chains = mutableListOf<List<CommandSegment>>()
         var currentPipeline = mutableListOf<List<CommandToken>>()
@@ -117,16 +124,20 @@ object CommandParser {
                         currentSegmentTokens = mutableListOf()
                     }
                 }
+
                 is CommandToken.Semicolon -> {
                     if (currentSegmentTokens.isNotEmpty()) {
                         currentPipeline.add(currentSegmentTokens.toList())
                         currentSegmentTokens = mutableListOf()
                     }
                     if (currentPipeline.isNotEmpty()) {
-                        chains.add(currentPipeline.map { parseSegment(it) })
+                        chains.add(currentPipeline.map {
+                            parseSegment(it, effectiveValueFlags, effectiveShortValueFlags)
+                        })
                         currentPipeline = mutableListOf()
                     }
                 }
+
                 else -> {
                     currentSegmentTokens.add(token)
                 }
@@ -138,7 +149,9 @@ object CommandParser {
             currentPipeline.add(currentSegmentTokens.toList())
         }
         if (currentPipeline.isNotEmpty()) {
-            chains.add(currentPipeline.map { parseSegment(it) })
+            chains.add(currentPipeline.map {
+                parseSegment(it, effectiveValueFlags, effectiveShortValueFlags)
+            })
         }
 
         return ParsedCommand(chains = chains)
@@ -152,9 +165,15 @@ object CommandParser {
      * the command is known to not have sub-commands.
      *
      * @param tokens Tokens for this segment (no pipes or semicolons).
+     * @param effectiveValueFlags Merged set of long value-bearing flag names.
+     * @param effectiveShortValueFlags Merged set of short value-bearing flag names.
      * @return A fully parsed [CommandSegment].
      */
-    private fun parseSegment(tokens: List<CommandToken>): CommandSegment {
+    private fun parseSegment(
+        tokens: List<CommandToken>,
+        effectiveValueFlags: Set<String>,
+        effectiveShortValueFlags: Set<String>
+    ): CommandSegment {
         if (tokens.isEmpty()) {
             return CommandSegment(command = "", rawInput = "")
         }
@@ -184,16 +203,6 @@ object CommandParser {
                     }
                 }
 
-                is CommandToken.Argument -> {
-                    rawParts.add(token.value)
-                    if (!commandFound) {
-                        command = token.value.lowercase()
-                        commandFound = true
-                    } else {
-                        args.add(token.value)
-                    }
-                }
-
                 is CommandToken.StringLiteral -> {
                     rawParts.add("\"${token.value}\"")
                     if (!commandFound) {
@@ -207,12 +216,17 @@ object CommandParser {
                 is CommandToken.Flag -> {
                     rawParts.add(if (token.name.length == 1) "-${token.name}" else "--${token.name}")
                     // Check if this flag is known to take a value
-                    if (flagExpectsValue(token.name) && i + 1 < tokens.size) {
+                    if (flagExpectsValue(
+                            token.name,
+                            effectiveValueFlags,
+                            effectiveShortValueFlags
+                        ) && i + 1 < tokens.size
+                    ) {
                         val nextToken = tokens[i + 1]
                         val nextValue = extractTokenValue(nextToken)
                         if (nextValue != null) {
-                            // If the flag already exists, we may have repeated flags
-                            // For repeated flags like --tag, --level, append with comma
+                            // If the flag already exists, we may have repeated flags.
+                            // For repeated flags like --tag, --level, append with comma.
                             val existing = flags[token.name]
                             if (existing != null) {
                                 flags[token.name] = "$existing,$nextValue"
@@ -240,8 +254,11 @@ object CommandParser {
                 }
 
                 // Pipe and Semicolon should not appear here (already split)
-                is CommandToken.Pipe -> { /* skip */ }
-                is CommandToken.Semicolon -> { /* skip */ }
+                is CommandToken.Pipe -> { /* skip */
+                }
+
+                is CommandToken.Semicolon -> { /* skip */
+                }
             }
             i++
         }
@@ -257,9 +274,18 @@ object CommandParser {
 
     /**
      * Determines whether a flag name is known to take a value argument.
+     *
+     * @param flagName The flag name to check (without leading dashes).
+     * @param longFlags Effective set of long value-bearing flag names.
+     * @param shortFlags Effective set of short value-bearing flag names.
+     * @return `true` if the flag expects a value argument.
      */
-    private fun flagExpectsValue(flagName: String): Boolean {
-        return flagName in VALUE_FLAGS || flagName in SHORT_VALUE_FLAGS
+    private fun flagExpectsValue(
+        flagName: String,
+        longFlags: Set<String>,
+        shortFlags: Set<String>
+    ): Boolean {
+        return flagName in longFlags || flagName in shortFlags
     }
 
     /**
@@ -269,7 +295,6 @@ object CommandParser {
      */
     private fun extractTokenValue(token: CommandToken): String? = when (token) {
         is CommandToken.Keyword -> token.value
-        is CommandToken.Argument -> token.value
         is CommandToken.StringLiteral -> token.value
         else -> null
     }

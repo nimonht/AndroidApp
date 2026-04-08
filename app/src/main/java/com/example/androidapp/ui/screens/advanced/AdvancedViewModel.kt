@@ -4,28 +4,48 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
- * Minimal ViewModel for the [AdvancedScreen] container.
+ * UI state for the [AdvancedScreen] container.
  *
- * Tracks which tab (Console or Logs) is currently selected.
- * Tab indices:
- * - `0` = Console
- * - `1` = Logs
+ * @property selectedTab Currently selected tab index (0 = Console, 1 = Logs).
+ */
+data class AdvancedUiState(
+    val selectedTab: Int = 0
+)
+
+/**
+ * Events dispatched from [AdvancedScreen] to [AdvancedViewModel].
+ */
+sealed class AdvancedEvent {
+    /** Select the tab at the given [index] (0 = Console, 1 = Logs). */
+    data class SelectTab(val index: Int) : AdvancedEvent()
+}
+
+/**
+ * ViewModel for the [AdvancedScreen] container.
+ *
+ * Tracks which tab (Console or Logs) is currently selected using the
+ * standard `_uiState`/`uiState` + `onEvent()` pattern.
  */
 class AdvancedViewModel : ViewModel() {
 
-    private val _selectedTab = MutableStateFlow(0)
+    private val _uiState = MutableStateFlow(AdvancedUiState())
 
-    /** Currently selected tab index (0 = Console, 1 = Logs). */
-    val selectedTab: StateFlow<Int> = _selectedTab.asStateFlow()
+    /** Observable UI state for the Advanced screen. */
+    val uiState: StateFlow<AdvancedUiState> = _uiState.asStateFlow()
 
     /**
-     * Selects the tab at the given [index].
+     * Central event dispatcher.
      *
-     * @param index Tab index to select (0 = Console, 1 = Logs).
+     * @param event The [AdvancedEvent] to handle.
      */
-    fun selectTab(index: Int) {
-        _selectedTab.value = index.coerceIn(0, 1)
+    fun onEvent(event: AdvancedEvent) {
+        when (event) {
+            is AdvancedEvent.SelectTab -> {
+                _uiState.update { it.copy(selectedTab = event.index.coerceIn(0, 1)) }
+            }
+        }
     }
 }

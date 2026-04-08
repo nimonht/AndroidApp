@@ -18,9 +18,11 @@ import kotlinx.coroutines.flow.first
  * Supports targeting by email/user-ID, search query, regex pattern, and role
  * filter. Only users whose [User.isBanned] flag is `true` are eligible.
  *
- * Optional date-range filters (`--banned-before`, `--banned-after`) narrow the
- * candidate set by ban timestamp. A `--dry-run` flag previews which users would
- * be unbanned without performing the operation.
+ * A `--dry-run` flag previews which users would be unbanned without performing
+ * the operation.
+ *
+ * // Note: --banned-before/--banned-after removed — domain model lacks bannedAt field.
+ * // Re-add when User model supports a dedicated banned timestamp.
  *
  * Usage examples:
  * ```
@@ -44,8 +46,8 @@ class UnbanCommand : Command {
     /** @inheritDoc */
     override val usage: String =
         "unban <email|userId> [...] [--search <query>] [--regex <pattern>] " +
-            "[--role <role>] [--banned-before <epoch>] [--banned-after <epoch>] " +
-            "[--dry-run] [--confirm] [--reason <text>] [--verbose] [--quiet] [--format <plain|table>]"
+                "[--role <role>] " +
+                "[--dry-run] [--confirm] [--reason <text>] [--verbose] [--quiet] [--format <plain|table>]"
 
     /** @inheritDoc */
     override val requiredPermission: AdminPermission = AdminPermission.BAN_USERS
@@ -60,17 +62,18 @@ class UnbanCommand : Command {
     override val category: String = "admin"
 
     /** @inheritDoc */
+    // Note: --banned-before/--banned-after removed — domain model lacks bannedAt field.
+    // Re-add when User model supports a dedicated banned timestamp.
     override val examples: List<Pair<String, String>> = listOf(
         "unban user@example.com" to "Bo cam mot nguoi dung cu the",
         "unban user1@a.com user2@b.com" to "Bo cam nhieu nguoi dung",
         "unban --search test --dry-run" to "Xem truoc nguoi dung bi cam khop voi 'test'",
         "unban --role USER --confirm" to "Bo cam tat ca nguoi dung co role USER",
-        "unban --regex \".*@temp\\.com\" --confirm" to "Bo cam nguoi dung khop regex",
-        "unban --banned-before 1700000000000 --confirm" to "Bo cam nguoi dung bi cam truoc thoi diem"
+        "unban --regex \".*@temp\\.com\" --confirm" to "Bo cam nguoi dung khop regex"
     )
 
     /** @inheritDoc */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -81,8 +84,6 @@ class UnbanCommand : Command {
             "--search" to "Tim kiem nguoi dung bi cam",
             "--regex" to "Loc bang bieu thuc chinh quy",
             "--role" to "Loc theo vai tro",
-            "--banned-before" to "Chi bo cam nguoi bi cam truoc thoi diem (epoch ms)",
-            "--banned-after" to "Chi bo cam nguoi bi cam sau thoi diem (epoch ms)",
             "--dry-run" to "Xem truoc ket qua ma khong thuc hien",
             "--confirm" to "Bo qua xac nhan",
             "--reason" to "Ly do bo cam",
@@ -141,8 +142,6 @@ class UnbanCommand : Command {
         val searchQuery = flags["search"]
         val regexPattern = flags["regex"]
         val roleFilter = flags["role"]
-        val bannedBefore = flags["banned-before"]?.toLongOrNull()
-        val bannedAfter = flags["banned-after"]?.toLongOrNull()
 
         if (args.isEmpty() && searchQuery == null && regexPattern == null && roleFilter == null) {
             return CommandResult.error(
@@ -161,6 +160,8 @@ class UnbanCommand : Command {
         if (bannedUsers.isEmpty()) {
             return CommandResult.success("Khong co nguoi dung nao dang bi cam trong he thong.")
         }
+
+        val warnings = mutableListOf<OutputLine>()
 
         var targetUsers = when {
             args.isNotEmpty() -> {
@@ -189,7 +190,7 @@ class UnbanCommand : Command {
                     )
                 }
                 if (notFound.isNotEmpty()) {
-                    val lines = mutableListOf(
+                    warnings.add(
                         OutputLine(
                             "Canh bao: Khong tim thay mot so nguoi dung bi cam: ${notFound.joinToString(", ")}",
                             OutputStyle.WARNING
@@ -200,17 +201,18 @@ class UnbanCommand : Command {
                             "Khong tim thay nguoi dung bi cam nao khop voi tieu chi."
                         )
                     }
-                    // Continue with matched users; warnings will be prepended later
                 }
                 matched
             }
+
             searchQuery != null -> {
                 bannedUsers.filter { user ->
                     user.email.contains(searchQuery, ignoreCase = true) ||
-                        user.displayName.contains(searchQuery, ignoreCase = true) ||
-                        user.username.contains(searchQuery, ignoreCase = true)
+                            user.displayName.contains(searchQuery, ignoreCase = true) ||
+                            user.username.contains(searchQuery, ignoreCase = true)
                 }
             }
+
             regexPattern != null -> {
                 val regex = try {
                     Regex(regexPattern, RegexOption.IGNORE_CASE)
@@ -219,10 +221,11 @@ class UnbanCommand : Command {
                 }
                 bannedUsers.filter { user ->
                     regex.containsMatchIn(user.email) ||
-                        regex.containsMatchIn(user.displayName) ||
-                        regex.containsMatchIn(user.username)
+                            regex.containsMatchIn(user.displayName) ||
+                            regex.containsMatchIn(user.username)
                 }
             }
+
             roleFilter != null -> {
                 val role = try {
                     UserRole.valueOf(roleFilter.uppercase())
@@ -233,22 +236,8 @@ class UnbanCommand : Command {
                 }
                 bannedUsers.filter { it.role == role }
             }
-            else -> bannedUsers
-        }
 
-        // Apply date filters
-        if (bannedBefore != null) {
-            targetUsers = targetUsers.filter { user ->
-                // Use updatedAt as an approximation of ban time (no dedicated bannedAt field)
-                // In a production system, you'd have a bannedAt timestamp
-                true // Pass through — we don't have bannedAt on the domain model,
-                     // but we keep the flag interface for future extensibility
-            }
-        }
-        if (bannedAfter != null) {
-            targetUsers = targetUsers.filter { user ->
-                true // Same as above — placeholder for future bannedAt field
-            }
+            else -> bannedUsers
         }
 
         if (targetUsers.isEmpty()) {
@@ -269,6 +258,7 @@ class UnbanCommand : Command {
 
         // Execute unban operations
         val output = mutableListOf<OutputLine>()
+        output.addAll(warnings)
         var successCount = 0
         var failureCount = 0
         val errors = mutableListOf<String>()

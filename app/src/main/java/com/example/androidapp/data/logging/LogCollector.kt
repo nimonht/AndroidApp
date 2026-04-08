@@ -3,6 +3,7 @@ package com.example.androidapp.data.logging
 import android.os.Process
 import com.example.androidapp.domain.model.LogEntry
 import com.example.androidapp.domain.model.LogLevel
+import com.example.androidapp.domain.service.LogService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,7 +47,7 @@ import java.util.concurrent.atomic.AtomicLong
 class LogCollector(
     private val scope: CoroutineScope,
     private val maxEntries: Int = 10_000
-) {
+) : LogService {
 
     private val _logs = MutableStateFlow<List<LogEntry>>(emptyList())
 
@@ -54,7 +55,7 @@ class LogCollector(
      * Reactive stream of captured log entries, ordered from oldest to newest.
      * The list is replaced (not mutated) on each update for safe snapshot reads.
      */
-    val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
+    override val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
 
     private val nextId = AtomicLong(0)
     private var readerJob: Job? = null
@@ -67,6 +68,9 @@ class LogCollector(
 
     /** Timestamp of the last flush to [_logs]. */
     private var lastFlushTime = System.currentTimeMillis()
+
+    /** Lock guarding [ringBuffer], [pendingCount], and [lastFlushTime] access. */
+    private val bufferLock = Any()
 
     /**
      * Regex pattern matching the logcat `threadtime` format:
@@ -131,10 +135,12 @@ class LogCollector(
                 flushToStateFlow()
                 try {
                     reader.close()
-                } catch (_: Exception) { /* best-effort */ }
+                } catch (_: Exception) { /* best-effort */
+                }
                 try {
                     process.destroy()
-                } catch (_: Exception) { /* best-effort */ }
+                } catch (_: Exception) { /* best-effort */
+                }
             }
         }
     }
@@ -142,9 +148,11 @@ class LogCollector(
     /**
      * Clears all captured log entries and resets the buffer.
      */
-    fun clear() {
-        ringBuffer.clear()
-        pendingCount = 0
+    override fun clear() {
+        synchronized(bufferLock) {
+            ringBuffer.clear()
+            pendingCount = 0
+        }
         _logs.value = emptyList()
     }
 
@@ -160,7 +168,7 @@ class LogCollector(
      * @return A newline-separated string of all log entries, or an empty
      *   string if no entries are captured.
      */
-    fun export(): String {
+    override fun export(): String {
         val exportFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
         return _logs.value.joinToString("\n") { entry ->
             val timestamp = exportFormat.format(entry.timestamp)
@@ -219,15 +227,17 @@ class LogCollector(
      * reduce GC pressure and UI churn.
      */
     private fun appendEntry(entry: LogEntry) {
-        while (ringBuffer.size >= maxEntries) {
-            ringBuffer.removeFirst()
-        }
-        ringBuffer.addLast(entry)
-        pendingCount++
+        synchronized(bufferLock) {
+            while (ringBuffer.size >= maxEntries) {
+                ringBuffer.removeFirst()
+            }
+            ringBuffer.addLast(entry)
+            pendingCount++
 
-        val now = System.currentTimeMillis()
-        if (pendingCount >= FLUSH_BATCH_SIZE || now - lastFlushTime >= FLUSH_INTERVAL_MS) {
-            flushToStateFlow()
+            val now = System.currentTimeMillis()
+            if (pendingCount >= FLUSH_BATCH_SIZE || now - lastFlushTime >= FLUSH_INTERVAL_MS) {
+                flushToStateFlow()
+            }
         }
     }
 
@@ -236,6 +246,7 @@ class LogCollector(
      * to the [_logs] StateFlow.
      */
     private fun flushToStateFlow() {
+        // Called within synchronized(bufferLock) — safe to read ringBuffer
         _logs.value = ringBuffer.toList()
         pendingCount = 0
         lastFlushTime = System.currentTimeMillis()

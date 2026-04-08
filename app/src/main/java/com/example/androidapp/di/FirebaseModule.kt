@@ -266,13 +266,14 @@ class AppContainerImpl(override val context: Context) : AppContainer {
                         quizRepository = quizRepository,
                         attemptRepository = attemptRepository,
                         shareCodeRepository = shareCodeRepository,
-                        poolRepository = poolRepository
+                        poolRepository = poolRepository,
+                        searchRepository = searchRepository
                     ),
                     services = ServiceBundle(
-                        syncManager = syncManager,
-                        networkMonitor = networkMonitor,
-                        settingsPreferences = settingsPreferences,
-                        logCollector = logCollector
+                        syncService = syncManager,
+                        networkService = networkMonitor,
+                        settingsService = settingsPreferences,
+                        logService = logCollector
                     )
                 )
             }

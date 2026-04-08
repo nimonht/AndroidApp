@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -10,6 +11,7 @@ import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.model.AdminPermission
 import com.example.androidapp.domain.model.UserRole
 import kotlinx.coroutines.flow.first
 
@@ -55,7 +57,7 @@ class PurgeCommand : Command {
 
     override val minimumRole: UserRole = UserRole.SUPERUSER
 
-    override val requiredPermission: Nothing? = null
+    override val requiredPermission: AdminPermission? = null
 
     override val category: String = "admin"
 
@@ -71,7 +73,7 @@ class PurgeCommand : Command {
         "purge --trash --banned-users --confirm" to "Don dep nhieu loai cung luc"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -970,22 +972,27 @@ class PurgeCommand : Command {
                 for (quiz in quizzes) {
                     lines.add(
                         OutputLine(
-                            "${csvEscape(quiz.id)},${csvEscape(quiz.title)}," +
-                                    "${csvEscape(quiz.ownerId)},${quiz.questionCount}," +
+                            "${CommandFormatUtils.csvEscape(quiz.id)},${CommandFormatUtils.csvEscape(quiz.title)}," +
+                                    "${CommandFormatUtils.csvEscape(quiz.ownerId)},${quiz.questionCount}," +
                                     "${quiz.deletedAt ?: ""}",
                             OutputStyle.TABLE_ROW
                         )
                     )
                 }
             }
+
             "json" -> {
                 lines.add(OutputLine("[", OutputStyle.CODE))
                 for ((index, quiz) in quizzes.withIndex()) {
                     val comma = if (index < quizzes.size - 1) "," else ""
                     lines.add(
                         OutputLine(
-                            "  {\"id\":\"${escapeJson(quiz.id)}\",\"title\":\"${escapeJson(quiz.title)}\"," +
-                                    "\"ownerId\":\"${escapeJson(quiz.ownerId)}\"," +
+                            "  {\"id\":\"${CommandFormatUtils.escapeJson(quiz.id)}\",\"title\":\"${
+                                CommandFormatUtils.escapeJson(
+                                    quiz.title
+                                )
+                            }\"," +
+                                    "\"ownerId\":\"${CommandFormatUtils.escapeJson(quiz.ownerId)}\"," +
                                     "\"questionCount\":${quiz.questionCount}," +
                                     "\"deletedAt\":${quiz.deletedAt ?: "null"}}$comma",
                             OutputStyle.CODE
@@ -994,6 +1001,7 @@ class PurgeCommand : Command {
                 }
                 lines.add(OutputLine("]", OutputStyle.CODE))
             }
+
             else -> {
                 lines.add(
                     OutputLine(
@@ -1009,9 +1017,9 @@ class PurgeCommand : Command {
                         OutputLine(
                             String.format(
                                 "  %-24s %-28s %-24s %d",
-                                truncate(quiz.id, 22),
-                                truncate(quiz.title, 26),
-                                truncate(quiz.ownerId, 22),
+                                CommandFormatUtils.truncate(quiz.id, 22),
+                                CommandFormatUtils.truncate(quiz.title, 26),
+                                CommandFormatUtils.truncate(quiz.ownerId, 22),
                                 quiz.questionCount
                             ),
                             OutputStyle.TABLE_ROW
@@ -1040,21 +1048,26 @@ class PurgeCommand : Command {
                 for (user in users) {
                     lines.add(
                         OutputLine(
-                            "${csvEscape(user.id)},${csvEscape(user.email)}," +
-                                    "${csvEscape(user.displayName)},${user.role.name},${user.isBanned}",
+                            "${CommandFormatUtils.csvEscape(user.id)},${CommandFormatUtils.csvEscape(user.email)}," +
+                                    "${CommandFormatUtils.csvEscape(user.displayName)},${user.role.name},${user.isBanned}",
                             OutputStyle.TABLE_ROW
                         )
                     )
                 }
             }
+
             "json" -> {
                 lines.add(OutputLine("[", OutputStyle.CODE))
                 for ((index, user) in users.withIndex()) {
                     val comma = if (index < users.size - 1) "," else ""
                     lines.add(
                         OutputLine(
-                            "  {\"id\":\"${escapeJson(user.id)}\",\"email\":\"${escapeJson(user.email)}\"," +
-                                    "\"displayName\":\"${escapeJson(user.displayName)}\"," +
+                            "  {\"id\":\"${CommandFormatUtils.escapeJson(user.id)}\",\"email\":\"${
+                                CommandFormatUtils.escapeJson(
+                                    user.email
+                                )
+                            }\"," +
+                                    "\"displayName\":\"${CommandFormatUtils.escapeJson(user.displayName)}\"," +
                                     "\"role\":\"${user.role.name}\",\"isBanned\":${user.isBanned}}$comma",
                             OutputStyle.CODE
                         )
@@ -1062,6 +1075,7 @@ class PurgeCommand : Command {
                 }
                 lines.add(OutputLine("]", OutputStyle.CODE))
             }
+
             else -> {
                 lines.add(
                     OutputLine(
@@ -1077,9 +1091,9 @@ class PurgeCommand : Command {
                         OutputLine(
                             String.format(
                                 "  %-24s %-28s %-18s %-10s %s",
-                                truncate(user.id, 22),
-                                truncate(user.email, 26),
-                                truncate(user.displayName, 16),
+                                CommandFormatUtils.truncate(user.id, 22),
+                                CommandFormatUtils.truncate(user.email, 26),
+                                CommandFormatUtils.truncate(user.displayName, 16),
                                 user.role.name,
                                 if (user.isBanned) "Co" else "Khong"
                             ),
@@ -1112,23 +1126,24 @@ class PurgeCommand : Command {
                 for (attempt in attempts) {
                     lines.add(
                         OutputLine(
-                            "${csvEscape(attempt.id)},${csvEscape(attempt.userId)}," +
-                                    "${csvEscape(attempt.quizId)},${attempt.score}," +
+                            "${CommandFormatUtils.csvEscape(attempt.id)},${CommandFormatUtils.csvEscape(attempt.userId)}," +
+                                    "${CommandFormatUtils.csvEscape(attempt.quizId)},${attempt.score}," +
                                     "${attempt.totalQuestions},${attempt.startTimeMillis}",
                             OutputStyle.TABLE_ROW
                         )
                     )
                 }
             }
+
             "json" -> {
                 lines.add(OutputLine("[", OutputStyle.CODE))
                 for ((index, attempt) in attempts.withIndex()) {
                     val comma = if (index < attempts.size - 1) "," else ""
                     lines.add(
                         OutputLine(
-                            "  {\"id\":\"${escapeJson(attempt.id)}\"," +
-                                    "\"userId\":\"${escapeJson(attempt.userId)}\"," +
-                                    "\"quizId\":\"${escapeJson(attempt.quizId)}\"," +
+                            "  {\"id\":\"${CommandFormatUtils.escapeJson(attempt.id)}\"," +
+                                    "\"userId\":\"${CommandFormatUtils.escapeJson(attempt.userId)}\"," +
+                                    "\"quizId\":\"${CommandFormatUtils.escapeJson(attempt.quizId)}\"," +
                                     "\"score\":${attempt.score}," +
                                     "\"totalQuestions\":${attempt.totalQuestions}," +
                                     "\"startTimeMillis\":${attempt.startTimeMillis}}$comma",
@@ -1138,6 +1153,7 @@ class PurgeCommand : Command {
                 }
                 lines.add(OutputLine("]", OutputStyle.CODE))
             }
+
             else -> {
                 lines.add(
                     OutputLine(
@@ -1153,12 +1169,12 @@ class PurgeCommand : Command {
                         OutputLine(
                             String.format(
                                 "  %-24s %-24s %-24s %-8d %-8d %s",
-                                truncate(attempt.id, 22),
-                                truncate(attempt.userId, 22),
-                                truncate(attempt.quizId, 22),
+                                CommandFormatUtils.truncate(attempt.id, 22),
+                                CommandFormatUtils.truncate(attempt.userId, 22),
+                                CommandFormatUtils.truncate(attempt.quizId, 22),
                                 attempt.score,
                                 attempt.totalQuestions,
-                                formatTimestamp(attempt.startTimeMillis)
+                                CommandFormatUtils.formatTimestampShort(attempt.startTimeMillis)
                             ),
                             OutputStyle.TABLE_ROW
                         )
@@ -1268,57 +1284,6 @@ class PurgeCommand : Command {
     // ====================================================================
     // Tien ich dinh dang
     // ====================================================================
-
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     *
-     * @param millis Epoch milliseconds.
-     * @return Chuoi dinh dang "yyyy-MM-dd HH:mm".
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     *
-     * @param text Chuoi goc.
-     * @param maxLength Do dai toi da.
-     * @return Chuoi da cat ngan hoac giu nguyen.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     *
-     * @param value Chuoi goc.
-     * @return Chuoi da thoat an toan cho JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
-
-    /**
-     * Thoat gia tri cho CSV (bao quanh bang dau nhay kep neu can).
-     *
-     * @param value Chuoi goc.
-     * @return Chuoi an toan cho CSV.
-     */
-    private fun csvEscape(value: String): String {
-        return if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-            "\"${value.replace("\"", "\"\"")}\""
-        } else {
-            value
-        }
-    }
 
     // ====================================================================
     // Kieu du lieu noi bo

@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -35,8 +36,8 @@ class MyCommand : Command {
 
     override val usage: String =
         "my <quizzes|attempts|stats|pool> [--public] [--private] [--draft] [--deleted] " +
-            "[--tag <tag>] [--sort <field>] [--search <text>] [--format <table|json|list>] " +
-            "[--limit <n>] [--page <n>] [--score-above <n>] [--score-below <n>] [--perfect] [--failed]"
+                "[--tag <tag>] [--sort <field>] [--search <text>] [--format <table|json|list>] " +
+                "[--limit <n>] [--page <n>] [--score-above <n>] [--score-below <n>] [--perfect] [--failed]"
 
     override val category: String = "user"
 
@@ -52,7 +53,7 @@ class MyCommand : Command {
         "my pool" to "Liet ke cac dong gop vao ngan hang cau hoi"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -85,18 +86,30 @@ class MyCommand : Command {
             "quizzes" -> QUIZ_FLAGS.map { (flag, desc) ->
                 CompletionSuggestion(text = flag, description = desc, type = SuggestionType.FLAG)
             }
+
             "attempts" -> ATTEMPT_FLAGS.map { (flag, desc) ->
                 CompletionSuggestion(text = flag, description = desc, type = SuggestionType.FLAG)
             }
+
             "stats" -> listOf(
-                CompletionSuggestion("--format", description = "Dinh dang xuat (table/json)", type = SuggestionType.FLAG),
+                CompletionSuggestion(
+                    "--format",
+                    description = "Dinh dang xuat (table/json)",
+                    type = SuggestionType.FLAG
+                ),
                 CompletionSuggestion("--verbose", description = "Hien thi chi tiet", type = SuggestionType.FLAG)
             )
+
             "pool" -> listOf(
                 CompletionSuggestion("--format", description = "Dinh dang xuat", type = SuggestionType.FLAG),
-                CompletionSuggestion("--active", description = "Chi hien dong gop dang hoat dong", type = SuggestionType.FLAG),
+                CompletionSuggestion(
+                    "--active",
+                    description = "Chi hien dong gop dang hoat dong",
+                    type = SuggestionType.FLAG
+                ),
                 CompletionSuggestion("--limit", description = "Gioi han so ket qua", type = SuggestionType.FLAG)
             )
+
             else -> emptyList()
         }
     }
@@ -109,7 +122,7 @@ class MyCommand : Command {
         if (args.isEmpty()) {
             return CommandResult.error(
                 "Thieu lenh con. Su dung: my <quizzes|attempts|stats|pool>\n" +
-                    "Chay 'help my' de xem huong dan chi tiet."
+                        "Chay 'help my' de xem huong dan chi tiet."
             )
         }
 
@@ -120,7 +133,7 @@ class MyCommand : Command {
             "pool", "p" -> executePool(flags, context)
             else -> CommandResult.error(
                 "Lenh con khong hop le: '${args[0]}'. " +
-                    "Cac lenh con ho tro: quizzes, attempts, stats, pool"
+                        "Cac lenh con ho tro: quizzes, attempts, stats, pool"
             )
         }
     }
@@ -174,7 +187,7 @@ class MyCommand : Command {
             val queryLower = searchText.lowercase()
             filtered = filtered.filter { quiz ->
                 quiz.title.lowercase().contains(queryLower) ||
-                    quiz.description?.lowercase()?.contains(queryLower) == true
+                        quiz.description?.lowercase()?.contains(queryLower) == true
             }
         }
 
@@ -247,27 +260,34 @@ class MyCommand : Command {
 
         // Header
         val headerParts = mutableListOf<String>()
-        if ("id" in showFields) headerParts.add(padRight("ID", 10))
-        if ("title" in showFields) headerParts.add(padRight("Tieu de", 30))
-        if ("status" in showFields) headerParts.add(padRight("Trang thai", 14))
-        if ("questions" in showFields) headerParts.add(padRight("Cau hoi", 8))
-        if ("attempts" in showFields) headerParts.add(padRight("Luot lam", 9))
-        if ("tags" in showFields) headerParts.add(padRight("Tags", 20))
-        if ("updated" in showFields) headerParts.add(padRight("Cap nhat", 12))
-        if ("created" in showFields) headerParts.add(padRight("Tao luc", 12))
+        if ("id" in showFields) headerParts.add(CommandFormatUtils.padRight("ID", 10))
+        if ("title" in showFields) headerParts.add(CommandFormatUtils.padRight("Tieu de", 30))
+        if ("status" in showFields) headerParts.add(CommandFormatUtils.padRight("Trang thai", 14))
+        if ("questions" in showFields) headerParts.add(CommandFormatUtils.padRight("Cau hoi", 8))
+        if ("attempts" in showFields) headerParts.add(CommandFormatUtils.padRight("Luot lam", 9))
+        if ("tags" in showFields) headerParts.add(CommandFormatUtils.padRight("Tags", 20))
+        if ("updated" in showFields) headerParts.add(CommandFormatUtils.padRight("Cap nhat", 12))
+        if ("created" in showFields) headerParts.add(CommandFormatUtils.padRight("Tao luc", 12))
         lines.add(OutputLine(headerParts.joinToString(" | "), OutputStyle.TABLE_HEADER))
 
         // Rows
         for (quiz in quizzes) {
             val rowParts = mutableListOf<String>()
-            if ("id" in showFields) rowParts.add(padRight(quiz.id.take(8) + "..", 10))
-            if ("title" in showFields) rowParts.add(padRight(truncate(quiz.title, 28), 30))
-            if ("status" in showFields) rowParts.add(padRight(quizStatus(quiz), 14))
-            if ("questions" in showFields) rowParts.add(padRight(quiz.questionCount.toString(), 8))
-            if ("attempts" in showFields) rowParts.add(padRight(quiz.attemptCount.toString(), 9))
-            if ("tags" in showFields) rowParts.add(padRight(truncate(quiz.tags.joinToString(", "), 18), 20))
-            if ("updated" in showFields) rowParts.add(padRight(formatDate(quiz.updatedAt), 12))
-            if ("created" in showFields) rowParts.add(padRight(formatDate(quiz.createdAt), 12))
+            if ("id" in showFields) rowParts.add(CommandFormatUtils.padRight(quiz.id.take(8) + "..", 10))
+            if ("title" in showFields) rowParts.add(CommandFormatUtils.padRight(truncateShort(quiz.title, 28), 30))
+            if ("status" in showFields) rowParts.add(CommandFormatUtils.padRight(quizStatus(quiz), 14))
+            if ("questions" in showFields) rowParts.add(CommandFormatUtils.padRight(quiz.questionCount.toString(), 8))
+            if ("attempts" in showFields) rowParts.add(CommandFormatUtils.padRight(quiz.attemptCount.toString(), 9))
+            if ("tags" in showFields) rowParts.add(
+                CommandFormatUtils.padRight(
+                    truncateShort(
+                        quiz.tags.joinToString(", "),
+                        18
+                    ), 20
+                )
+            )
+            if ("updated" in showFields) rowParts.add(CommandFormatUtils.padRight(formatDate(quiz.updatedAt), 12))
+            if ("created" in showFields) rowParts.add(CommandFormatUtils.padRight(formatDate(quiz.createdAt), 12))
             lines.add(OutputLine(rowParts.joinToString(" | "), OutputStyle.TABLE_ROW))
         }
 
@@ -302,10 +322,12 @@ class MyCommand : Command {
         for ((index, quiz) in quizzes.withIndex()) {
             val num = (page - 1) * limit + index + 1
             val status = quizStatus(quiz)
-            lines.add(OutputLine(
-                "  $num. ${quiz.title} [$status] (${quiz.questionCount} cau, ${quiz.attemptCount} luot)",
-                OutputStyle.NORMAL
-            ))
+            lines.add(
+                OutputLine(
+                    "  $num. ${quiz.title} [$status] (${quiz.questionCount} cau, ${quiz.attemptCount} luot)",
+                    OutputStyle.NORMAL
+                )
+            )
             if (quiz.tags.isNotEmpty()) {
                 lines.add(OutputLine("     Tags: ${quiz.tags.joinToString(", ")}", OutputStyle.MUTED))
             }
@@ -343,7 +365,7 @@ class MyCommand : Command {
             val showFields = fields ?: listOf("id", "title", "status", "questions", "attempts", "tags", "updated")
             val entries = mutableListOf<String>()
             if ("id" in showFields) entries.add("\"id\": \"${quiz.id}\"")
-            if ("title" in showFields) entries.add("\"title\": \"${escapeJson(quiz.title)}\"")
+            if ("title" in showFields) entries.add("\"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\"")
             if ("status" in showFields) entries.add("\"status\": \"${quizStatus(quiz)}\"")
             if ("public" in showFields) entries.add("\"isPublic\": ${quiz.isPublic}")
             if ("draft" in showFields) entries.add("\"isDraft\": ${quiz.isDraft}")
@@ -469,11 +491,18 @@ class MyCommand : Command {
             return CommandResult.success(lines)
         }
 
-        lines.add(OutputLine(
-            "${padRight("ID", 10)} | ${padRight("Quiz", 25)} | ${padRight("Diem", 10)} | " +
-                "${padRight("Thoi gian", 10)} | ${padRight("Ngay", 12)}",
-            OutputStyle.TABLE_HEADER
-        ))
+        lines.add(
+            OutputLine(
+                "${CommandFormatUtils.padRight("ID", 10)} | ${
+                    CommandFormatUtils.padRight(
+                        "Quiz",
+                        25
+                    )
+                } | ${CommandFormatUtils.padRight("Diem", 10)} | " +
+                        "${CommandFormatUtils.padRight("Thoi gian", 10)} | ${CommandFormatUtils.padRight("Ngay", 12)}",
+                OutputStyle.TABLE_HEADER
+            )
+        )
 
         for (attempt in attempts) {
             val quizTitle = resolveQuizTitle(attempt.quizId, context)
@@ -488,11 +517,23 @@ class MyCommand : Command {
                 else -> OutputStyle.TABLE_ROW
             }
 
-            lines.add(OutputLine(
-                "${padRight(attempt.id.take(8) + "..", 10)} | ${padRight(truncate(quizTitle, 23), 25)} | " +
-                    "${padRight(scoreText, 10)} | ${padRight(duration, 10)} | ${padRight(dateText, 12)}",
-                scoreStyle
-            ))
+            lines.add(
+                OutputLine(
+                    "${CommandFormatUtils.padRight(attempt.id.take(8) + "..", 10)} | ${
+                        CommandFormatUtils.padRight(
+                            truncateShort(quizTitle, 23),
+                            25
+                        )
+                    } | " +
+                            "${CommandFormatUtils.padRight(scoreText, 10)} | ${
+                                CommandFormatUtils.padRight(
+                                    duration,
+                                    10
+                                )
+                            } | ${CommandFormatUtils.padRight(dateText, 12)}",
+                    scoreStyle
+                )
+            )
         }
 
         val totalPages = (total + limit - 1) / limit
@@ -526,10 +567,12 @@ class MyCommand : Command {
             val quizTitle = resolveQuizTitle(attempt.quizId, context)
             val pct = percentageScore(attempt)
             val duration = formatDurationMs(attemptDurationMs(attempt))
-            lines.add(OutputLine(
-                "  $num. $quizTitle - ${attempt.score}/${attempt.totalQuestions} ($pct%) - $duration",
-                OutputStyle.NORMAL
-            ))
+            lines.add(
+                OutputLine(
+                    "  $num. $quizTitle - ${attempt.score}/${attempt.totalQuestions} ($pct%) - $duration",
+                    OutputStyle.NORMAL
+                )
+            )
         }
 
         val totalPages = (total + limit - 1) / limit
@@ -565,7 +608,12 @@ class MyCommand : Command {
             lines.add(OutputLine("    {", OutputStyle.CODE))
             lines.add(OutputLine("      \"id\": \"${attempt.id}\",", OutputStyle.CODE))
             lines.add(OutputLine("      \"quizId\": \"${attempt.quizId}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"quizTitle\": \"${escapeJson(quizTitle)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"quizTitle\": \"${CommandFormatUtils.escapeJson(quizTitle)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
             lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
             lines.add(OutputLine("      \"percentage\": $pct,", OutputStyle.CODE))
@@ -777,8 +825,18 @@ class MyCommand : Command {
                 val comma = if (index < limited.size - 1) "," else ""
                 lines.add(OutputLine("    {", OutputStyle.CODE))
                 lines.add(OutputLine("      \"id\": \"${item.id}\",", OutputStyle.CODE))
-                lines.add(OutputLine("      \"question\": \"${escapeJson(item.question.content)}\",", OutputStyle.CODE))
-                lines.add(OutputLine("      \"tags\": [${item.tags.joinToString(", ") { "\"$it\"" }}],", OutputStyle.CODE))
+                lines.add(
+                    OutputLine(
+                        "      \"question\": \"${CommandFormatUtils.escapeJson(item.question.content)}\",",
+                        OutputStyle.CODE
+                    )
+                )
+                lines.add(
+                    OutputLine(
+                        "      \"tags\": [${item.tags.joinToString(", ") { "\"$it\"" }}],",
+                        OutputStyle.CODE
+                    )
+                )
                 lines.add(OutputLine("      \"usageCount\": ${item.usageCount},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"isActive\": ${item.isActive}", OutputStyle.CODE))
                 lines.add(OutputLine("    }$comma", OutputStyle.CODE))
@@ -797,23 +855,37 @@ class MyCommand : Command {
             return CommandResult.success(lines)
         }
 
-        lines.add(OutputLine(
-            "${padRight("ID", 10)} | ${padRight("Cau hoi", 35)} | ${padRight("Tags", 18)} | " +
-                "${padRight("Luot dung", 10)} | ${padRight("Trang thai", 11)}",
-            OutputStyle.TABLE_HEADER
-        ))
+        lines.add(
+            OutputLine(
+                "${CommandFormatUtils.padRight("ID", 10)} | ${
+                    CommandFormatUtils.padRight(
+                        "Cau hoi",
+                        35
+                    )
+                } | ${CommandFormatUtils.padRight("Tags", 18)} | " +
+                        "${CommandFormatUtils.padRight("Luot dung", 10)} | ${
+                            CommandFormatUtils.padRight(
+                                "Trang thai",
+                                11
+                            )
+                        }",
+                OutputStyle.TABLE_HEADER
+            )
+        )
 
         for (item in limited) {
             val status = if (item.isActive) "Hoat dong" else "Ngung"
             val statusStyle = if (item.isActive) OutputStyle.TABLE_ROW else OutputStyle.MUTED
-            lines.add(OutputLine(
-                "${padRight(item.id.take(8) + "..", 10)} | " +
-                    "${padRight(truncate(item.question.content, 33), 35)} | " +
-                    "${padRight(truncate(item.tags.joinToString(", "), 16), 18)} | " +
-                    "${padRight(item.usageCount.toString(), 10)} | " +
-                    padRight(status, 11),
-                statusStyle
-            ))
+            lines.add(
+                OutputLine(
+                    "${CommandFormatUtils.padRight(item.id.take(8) + "..", 10)} | " +
+                            "${CommandFormatUtils.padRight(truncateShort(item.question.content, 33), 35)} | " +
+                            "${CommandFormatUtils.padRight(truncateShort(item.tags.joinToString(", "), 16), 18)} | " +
+                            "${CommandFormatUtils.padRight(item.usageCount.toString(), 10)} | " +
+                            CommandFormatUtils.padRight(status, 11),
+                    statusStyle
+                )
+            )
         }
 
         if (totalCount > limit) {
@@ -903,31 +975,11 @@ class MyCommand : Command {
     }
 
     /**
-     * Cat chuoi va them "..." neu qua dai.
+     * Cat chuoi va them ".." neu qua dai (rut gon ngan hon CommandFormatUtils.truncate).
      */
-    private fun truncate(text: String, maxLen: Int): String {
+    private fun truncateShort(text: String, maxLen: Int): String {
         return if (text.length <= maxLen) text
         else text.take(maxLen - 2) + ".."
-    }
-
-    /**
-     * Do them khoang trang ben phai chuoi de dat do dai toi thieu.
-     */
-    private fun padRight(text: String, width: Int): String {
-        return if (text.length >= width) text.take(width)
-        else text + " ".repeat(width - text.length)
-    }
-
-    /**
-     * Escape cac ky tu dac biet trong JSON string.
-     */
-    private fun escapeJson(text: String): String {
-        return text
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
     }
 
     private companion object {

@@ -1,6 +1,7 @@
 package com.example.androidapp.ui.screens.advanced.console.components
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material.icons.filled.Segment
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +41,32 @@ import androidx.compose.ui.unit.dp
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.ui.theme.QuizzezTheme
+
+// -- ColorScheme extensions for suggestion icon tints -------------------------
+
+/** Blue tint for command suggestion icons. */
+val ColorScheme.suggestionCommand: Color
+    get() = Color(0xFF42A5F5)
+
+/** Green tint for subcommand suggestion icons. */
+val ColorScheme.suggestionSubcommand: Color
+    get() = Color(0xFF66BB6A)
+
+/** Amber tint for flag suggestion icons. */
+val ColorScheme.suggestionFlag: Color
+    get() = Color(0xFFFFC107)
+
+/** Purple tint for user suggestion icons. */
+val ColorScheme.suggestionUser: Color
+    get() = Color(0xFFAB47BC)
+
+/** Orange tint for quiz suggestion icons. */
+val ColorScheme.suggestionQuiz: Color
+    get() = Color(0xFFFF7043)
+
+/** Teal tint for tag suggestion icons. */
+val ColorScheme.suggestionTag: Color
+    get() = Color(0xFF26A69A)
 
 /**
  * Maximum number of suggestions visible in the dropdown at once.
@@ -66,6 +95,8 @@ fun SuggestionDropdown(
     modifier: Modifier = Modifier
 ) {
     if (suggestions.isEmpty()) return
+
+    BackHandler(enabled = true, onBack = onDismiss)
 
     val visibleSuggestions = suggestions.take(MAX_VISIBLE_SUGGESTIONS)
 
@@ -124,7 +155,7 @@ private fun SuggestionItem(
     Row(
         modifier = modifier
             .background(backgroundColor)
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -171,19 +202,23 @@ private fun SuggestionItem(
 /**
  * Returns the icon and tint color for a given [SuggestionType].
  *
+ * Colors are resolved from [ColorScheme] extension properties so they
+ * participate in theming and remain consistent with other console components.
+ *
  * @param type The suggestion type to resolve visuals for.
  * @return A pair of (ImageVector, Color) for the icon and its tint.
  */
 @Composable
 private fun suggestionTypeVisuals(type: SuggestionType): Pair<ImageVector, Color> {
+    val colorScheme = MaterialTheme.colorScheme
     return when (type) {
-        SuggestionType.COMMAND -> Icons.Filled.Terminal to Color(0xFF42A5F5)
-        SuggestionType.SUBCOMMAND -> Icons.Filled.Segment to Color(0xFF66BB6A)
-        SuggestionType.FLAG -> Icons.Filled.Flag to Color(0xFFFFC107)
-        SuggestionType.ARGUMENT -> Icons.Filled.Code to MaterialTheme.colorScheme.onSurfaceVariant
-        SuggestionType.USER -> Icons.Filled.Person to Color(0xFFAB47BC)
-        SuggestionType.QUIZ -> Icons.Filled.Quiz to Color(0xFFFF7043)
-        SuggestionType.TAG -> Icons.AutoMirrored.Filled.Label to Color(0xFF26A69A)
+        SuggestionType.COMMAND -> Icons.Filled.Terminal to colorScheme.suggestionCommand
+        SuggestionType.SUBCOMMAND -> Icons.Filled.Segment to colorScheme.suggestionSubcommand
+        SuggestionType.FLAG -> Icons.Filled.Flag to colorScheme.suggestionFlag
+        SuggestionType.ARGUMENT -> Icons.Filled.Code to colorScheme.onSurfaceVariant
+        SuggestionType.USER -> Icons.Filled.Person to colorScheme.suggestionUser
+        SuggestionType.QUIZ -> Icons.Filled.Quiz to colorScheme.suggestionQuiz
+        SuggestionType.TAG -> Icons.AutoMirrored.Filled.Label to colorScheme.suggestionTag
     }
 }
 
@@ -201,31 +236,31 @@ private fun SuggestionDropdownPreview() {
         CompletionSuggestion(
             text = "help",
             displayText = "help",
-            description = "Hien thi danh sach lenh", // TODO: move to strings.xml
+            description = "Hien thi danh sach lenh",
             type = SuggestionType.COMMAND
         ),
         CompletionSuggestion(
             text = "history",
             displayText = "history",
-            description = "Xem lich su lam bai", // TODO: move to strings.xml
+            description = "Xem lich su lam bai",
             type = SuggestionType.COMMAND
         ),
         CompletionSuggestion(
             text = "--verbose",
             displayText = "--verbose",
-            description = "Hien thi chi tiet", // TODO: move to strings.xml
+            description = "Hien thi chi tiet",
             type = SuggestionType.FLAG
         ),
         CompletionSuggestion(
             text = "user@example.com",
             displayText = "user@example.com",
-            description = "Nguoi dung", // TODO: move to strings.xml
+            description = "Nguoi dung",
             type = SuggestionType.USER
         ),
         CompletionSuggestion(
             text = "quiz-123",
             displayText = "quiz-123",
-            description = "Bai kiem tra", // TODO: move to strings.xml
+            description = "Bai kiem tra",
             type = SuggestionType.QUIZ
         )
     )

@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -54,7 +55,7 @@ class DeleteUserCommand : Command {
         "del -u user@example.com --format json --verbose" to "Xoa va hien thi ket qua dang JSON chi tiet"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -113,7 +114,7 @@ class DeleteUserCommand : Command {
         if (!dryRun && !confirm) {
             return CommandResult.error(
                 "Thao tac huy diet: xoa nguoi dung vinh vien. " +
-                    "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
             )
         }
 
@@ -130,7 +131,7 @@ class DeleteUserCommand : Command {
         } else if (args.isEmpty()) {
             return CommandResult.error(
                 "Vui long cung cap email hoac ID nguoi dung can xoa, " +
-                    "hoac su dung --banned-only de xoa tat ca nguoi dung bi cam."
+                        "hoac su dung --banned-only de xoa tat ca nguoi dung bi cam."
             )
         } else {
             val allUsers = adminRepo.getAllUsers().first()
@@ -146,7 +147,7 @@ class DeleteUserCommand : Command {
                     if (!quiet) {
                         return CommandResult.error(
                             "Nguoi dung '${user.displayName}' chua bi cam. " +
-                                "Su dung --banned-only chi ap dung cho nguoi dung bi cam."
+                                    "Su dung --banned-only chi ap dung cho nguoi dung bi cam."
                         )
                     }
                     continue
@@ -208,8 +209,11 @@ class DeleteUserCommand : Command {
         if (!quiet) {
             lines.add(
                 OutputLine(
-                    padRight("Email", 30) + padRight("Ten", 20) + padRight("Vai tro", 15) +
-                        padRight("Trang thai", 12),
+                    CommandFormatUtils.padRight("Email", 30) + CommandFormatUtils.padRight(
+                        "Ten",
+                        20
+                    ) + CommandFormatUtils.padRight("Vai tro", 15) +
+                            CommandFormatUtils.padRight("Trang thai", 12),
                     OutputStyle.TABLE_HEADER
                 )
             )
@@ -219,8 +223,11 @@ class DeleteUserCommand : Command {
                 val roleName = formatRole(user.role)
                 lines.add(
                     OutputLine(
-                        padRight(user.email, 30) + padRight(user.displayName, 20) +
-                            padRight(roleName, 15) + padRight(status, 12),
+                        CommandFormatUtils.padRight(user.email, 30) + CommandFormatUtils.padRight(
+                            user.displayName,
+                            20
+                        ) +
+                                CommandFormatUtils.padRight(roleName, 15) + CommandFormatUtils.padRight(status, 12),
                         OutputStyle.TABLE_ROW
                     )
                 )
@@ -238,7 +245,7 @@ class DeleteUserCommand : Command {
         lines.add(
             OutputLine(
                 "[DRY-RUN] Se xoa ${users.size} nguoi dung." +
-                    if (withData) " (bao gom du lieu lien quan)" else "",
+                        if (withData) " (bao gom du lieu lien quan)" else "",
                 OutputStyle.WARNING
             )
         )
@@ -261,9 +268,19 @@ class DeleteUserCommand : Command {
         for ((index, user) in users.withIndex()) {
             val comma = if (index < users.size - 1) "," else ""
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(user.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"email\": \"${escapeJson(user.email)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"displayName\": \"${escapeJson(user.displayName)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(user.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"email\": \"${CommandFormatUtils.escapeJson(user.email)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"displayName\": \"${CommandFormatUtils.escapeJson(user.displayName)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"role\": \"${user.role.name}\",", OutputStyle.CODE))
             lines.add(OutputLine("      \"isBanned\": ${user.isBanned}", OutputStyle.CODE))
             lines.add(OutputLine("    }$comma", OutputStyle.CODE))
@@ -380,7 +397,7 @@ class DeleteUserCommand : Command {
             lines.add(OutputLine("  \"errors\": [", OutputStyle.CODE))
             for ((index, err) in errors.withIndex()) {
                 val comma = if (index < errors.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(err)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(err)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ]", OutputStyle.CODE))
         } else {
@@ -401,24 +418,5 @@ class DeleteUserCommand : Command {
         UserRole.USER -> "Nguoi dung"
         UserRole.ADMIN -> "Quan tri"
         UserRole.SUPERUSER -> "Sieu QT"
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
     }
 }

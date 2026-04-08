@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -43,14 +45,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -58,47 +59,64 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.LogEntry
 import com.example.androidapp.domain.model.LogLevel
+import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.domain.service.LogService
 import com.example.androidapp.ui.theme.QuizzezTheme
-import kotlinx.coroutines.launch
 
-// -- Level badge colors -------------------------------------------------------
+// -- Level badge colors as ColorScheme extensions -----------------------------
+
+/** Console/log viewer color extensions for [ColorScheme]. */
 
 /** Gray for VERBOSE-level badges. */
-private val VerboseColor = Color(0xFF9E9E9E)
+val ColorScheme.logVerbose: Color
+    get() = Color(0xFF9E9E9E)
 
 /** Blue for DEBUG-level badges. */
-private val DebugColor = Color(0xFF42A5F5)
+val ColorScheme.logDebug: Color
+    get() = Color(0xFF2196F3)
 
 /** Green for INFO-level badges. */
-private val InfoColor = Color(0xFF4CAF50)
+val ColorScheme.logInfo: Color
+    get() = Color(0xFF4CAF50)
 
 /** Amber for WARN-level badges. */
-private val WarnColor = Color(0xFFFFC107)
+val ColorScheme.logWarn: Color
+    get() = Color(0xFFFFC107)
 
 /** Red for ERROR-level badges. */
-private val ErrorColor = Color(0xFFEF5350)
+val ColorScheme.logError: Color
+    get() = Color(0xFFEF5350)
 
 /** Purple for ASSERT-level badges. */
-private val AssertColor = Color(0xFFAB47BC)
+val ColorScheme.logAssert: Color
+    get() = Color(0xFFE040FB)
 
 /**
- * Returns the badge color associated with a given [LogLevel].
+ * Returns the badge color associated with a given [LogLevel] from the current
+ * [ColorScheme].
  *
  * @param level The log severity level.
  * @return A [Color] value for the level badge.
  */
-private fun levelColor(level: LogLevel): Color = when (level) {
-    LogLevel.VERBOSE -> VerboseColor
-    LogLevel.DEBUG -> DebugColor
-    LogLevel.INFO -> InfoColor
-    LogLevel.WARN -> WarnColor
-    LogLevel.ERROR -> ErrorColor
-    LogLevel.ASSERT -> AssertColor
+@Composable
+private fun levelColor(level: LogLevel): Color {
+    val cs = MaterialTheme.colorScheme
+    return when (level) {
+        LogLevel.VERBOSE -> cs.logVerbose
+        LogLevel.DEBUG -> cs.logDebug
+        LogLevel.INFO -> cs.logInfo
+        LogLevel.WARN -> cs.logWarn
+        LogLevel.ERROR -> cs.logError
+        LogLevel.ASSERT -> cs.logAssert
+    }
 }
 
 // -- Main screen --------------------------------------------------------------
@@ -127,9 +145,21 @@ fun LogViewerScreen(
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val listState = rememberLazyListState()
+
+    // Collect scroll-to-bottom one-shot events from the Channel
+    LaunchedEffect(Unit) {
+        viewModel.scrollToBottom.collect {
+            if (uiState.filteredLogs.isNotEmpty()) {
+                listState.animateScrollToItem(uiState.filteredLogs.size - 1)
+            }
+        }
+    }
+
     LogViewerScreenContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
+        listState = listState,
         modifier = modifier
     )
 }
@@ -140,24 +170,16 @@ fun LogViewerScreen(
  *
  * @param uiState Current log viewer state.
  * @param onEvent Callback to dispatch [LogViewerEvent]s.
+ * @param listState Optional [LazyListState] for external scroll control.
  * @param modifier Modifier for external layout customisation.
  */
 @Composable
 fun LogViewerScreenContent(
     uiState: LogViewerUiState,
     onEvent: (LogViewerEvent) -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier
 ) {
-    val listState = rememberLazyListState()
-    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-
-    // Auto-scroll when requested
-    LaunchedEffect(uiState.shouldScrollToBottom) {
-        if (uiState.shouldScrollToBottom && uiState.filteredLogs.isNotEmpty()) {
-            listState.animateScrollToItem(uiState.filteredLogs.size - 1)
-        }
-    }
-
     // Auto-scroll on new logs when not paused and near bottom
     LaunchedEffect(uiState.filteredLogs.size) {
         if (!uiState.isPaused && uiState.filteredLogs.isNotEmpty()) {
@@ -220,15 +242,13 @@ fun LogViewerScreenContent(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            // TODO: move to strings.xml
-                            text = "Khong co muc nhat ky nao",
+                            text = stringResource(R.string.log_viewer_empty_title),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            // TODO: move to strings.xml
-                            text = "Dieu chinh bo loc hoac cho nhat ky moi",
+                            text = stringResource(R.string.log_viewer_empty_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
@@ -300,8 +320,7 @@ private fun LogViewerToolbar(
         IconButton(onClick = onTogglePause) {
             Icon(
                 imageVector = if (isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause,
-                // TODO: move to strings.xml
-                contentDescription = if (isPaused) "Tiep tuc" else "Tam dung",
+                contentDescription = if (isPaused) stringResource(R.string.log_viewer_resume) else stringResource(R.string.log_viewer_pause),
                 tint = if (isPaused) {
                     MaterialTheme.colorScheme.primary
                 } else {
@@ -314,8 +333,7 @@ private fun LogViewerToolbar(
         IconButton(onClick = onClear) {
             Icon(
                 imageVector = Icons.Filled.Clear,
-                // TODO: move to strings.xml
-                contentDescription = "Xoa tat ca",
+                contentDescription = stringResource(R.string.log_viewer_clear),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -324,8 +342,7 @@ private fun LogViewerToolbar(
         IconButton(onClick = onExport) {
             Icon(
                 imageVector = Icons.Filled.ContentCopy,
-                // TODO: move to strings.xml
-                contentDescription = "Xuat nhat ky",
+                contentDescription = stringResource(R.string.log_viewer_export),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -334,8 +351,7 @@ private fun LogViewerToolbar(
         IconButton(onClick = onScrollToBottom) {
             Icon(
                 imageVector = Icons.Filled.ArrowDownward,
-                // TODO: move to strings.xml
-                contentDescription = "Cuon xuong cuoi",
+                contentDescription = stringResource(R.string.log_viewer_scroll_bottom),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -459,8 +475,7 @@ private fun LogSearchBar(
             ) {
                 if (searchQuery.isEmpty()) {
                     Text(
-                        // TODO: move to strings.xml
-                        text = "Tim kiem nhat ky...",
+                        text = stringResource(R.string.log_viewer_search_logs_hint),
                         style = TextStyle(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 13.sp,
@@ -518,8 +533,7 @@ private fun LogSearchBar(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                // TODO: move to strings.xml
-                text = "Tag:",
+                text = stringResource(R.string.log_viewer_tag_label),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = FontFamily.Monospace
@@ -534,8 +548,7 @@ private fun LogSearchBar(
             ) {
                 if (tagFilter.isEmpty()) {
                     Text(
-                        // TODO: move to strings.xml
-                        text = "Loc theo tag...",
+                        text = stringResource(R.string.log_viewer_tag_filter_hint),
                         style = TextStyle(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 13.sp,
@@ -593,7 +606,8 @@ private fun LogEntryRow(
     Column(
         modifier = modifier
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .heightIn(min = 40.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         // Collapsed row
         Row(
@@ -676,8 +690,7 @@ private fun LogEntryRow(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 LogDetailField(
-                    // TODO: move to strings.xml
-                    label = "Thoi gian",
+                    label = stringResource(R.string.log_viewer_detail_timestamp),
                     value = remember(entry.timestamp) {
                         java.text.SimpleDateFormat(
                             "yyyy-MM-dd HH:mm:ss.SSS",
@@ -686,23 +699,19 @@ private fun LogEntryRow(
                     }
                 )
                 LogDetailField(
-                    // TODO: move to strings.xml
-                    label = "Muc do",
+                    label = stringResource(R.string.log_viewer_detail_level),
                     value = "${entry.level.name} (${entry.level.abbreviation})"
                 )
                 LogDetailField(
-                    // TODO: move to strings.xml
-                    label = "Tag",
+                    label = stringResource(R.string.log_viewer_detail_tag),
                     value = entry.tag
                 )
                 LogDetailField(
-                    // TODO: move to strings.xml
-                    label = "Luong",
+                    label = stringResource(R.string.log_viewer_detail_thread),
                     value = entry.threadName
                 )
                 LogDetailField(
-                    // TODO: move to strings.xml
-                    label = "Noi dung",
+                    label = stringResource(R.string.log_viewer_detail_message),
                     value = entry.message
                 )
             }
@@ -787,8 +796,7 @@ private fun LogStatusBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                // TODO: move to strings.xml
-                text = "Hien thi $filteredCount / $totalCount muc",
+                text = stringResource(R.string.log_viewer_status, filteredCount, totalCount),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp
@@ -802,8 +810,7 @@ private fun LogStatusBar(
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
                 ) {
                     Text(
-                        // TODO: move to strings.xml
-                        text = "TAM DUNG",
+                        text = stringResource(R.string.log_viewer_paused_badge),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
@@ -823,15 +830,20 @@ private fun LogStatusBar(
 /**
  * Factory for creating [LogViewerViewModel] instances with manual DI.
  *
- * @param logCollector The application's log collector instance.
+ * @param logCollector The application's [LogService] instance.
  * @param authRepository The auth repository for role-based filtering.
  */
 class LogViewerViewModelFactory(
-    private val logCollector: com.example.androidapp.data.logging.LogCollector,
-    private val authRepository: com.example.androidapp.domain.repository.AuthRepository
-) : androidx.lifecycle.ViewModelProvider.Factory {
+    private val logCollector: LogService,
+    private val authRepository: AuthRepository
+) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (!modelClass.isAssignableFrom(LogViewerViewModel::class.java)) {
+            throw IllegalArgumentException(
+                "Unknown ViewModel class: ${modelClass.name}. Expected LogViewerViewModel."
+            )
+        }
         return LogViewerViewModel(
             logCollector = logCollector,
             authRepository = authRepository

@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -58,8 +59,8 @@ class SearchCommand : Command {
     /** @inheritDoc */
     override val usage: String =
         "search <-u|-q> <query> [--regex] [--tag <tag>] [--role <role>] " +
-            "[--exact] [--sort <field>] [--limit <n>] [--format <table|json>] " +
-            "[--fields <fields>] [--output <full|count|ids>]"
+                "[--exact] [--sort <field>] [--limit <n>] [--format <table|json>] " +
+                "[--fields <fields>] [--output <full|count|ids>]"
 
     /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.ADMIN
@@ -89,7 +90,7 @@ class SearchCommand : Command {
     )
 
     /** @inheritDoc */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -156,7 +157,7 @@ class SearchCommand : Command {
                     suggestions.add(
                         CompletionSuggestion(
                             text = role.name.lowercase(),
-                            description = "Vai tro: ${formatRole(role)}",
+                            description = "Vai tro: ${CommandFormatUtils.formatRole(role)}",
                             type = SuggestionType.ARGUMENT
                         )
                     )
@@ -203,13 +204,49 @@ class SearchCommand : Command {
         // Goi y gia tri cho --sort
         if ("sort" in usedFlags && flags["sort"] == null) {
             if ("u" in usedFlags) {
-                suggestions.add(CompletionSuggestion(text = "name", description = "Sap xep theo ten", type = SuggestionType.ARGUMENT))
-                suggestions.add(CompletionSuggestion(text = "email", description = "Sap xep theo email", type = SuggestionType.ARGUMENT))
-                suggestions.add(CompletionSuggestion(text = "role", description = "Sap xep theo vai tro", type = SuggestionType.ARGUMENT))
+                suggestions.add(
+                    CompletionSuggestion(
+                        text = "name",
+                        description = "Sap xep theo ten",
+                        type = SuggestionType.ARGUMENT
+                    )
+                )
+                suggestions.add(
+                    CompletionSuggestion(
+                        text = "email",
+                        description = "Sap xep theo email",
+                        type = SuggestionType.ARGUMENT
+                    )
+                )
+                suggestions.add(
+                    CompletionSuggestion(
+                        text = "role",
+                        description = "Sap xep theo vai tro",
+                        type = SuggestionType.ARGUMENT
+                    )
+                )
             } else if ("q" in usedFlags) {
-                suggestions.add(CompletionSuggestion(text = "title", description = "Sap xep theo tieu de", type = SuggestionType.ARGUMENT))
-                suggestions.add(CompletionSuggestion(text = "date", description = "Sap xep theo ngay tao", type = SuggestionType.ARGUMENT))
-                suggestions.add(CompletionSuggestion(text = "attempts", description = "Sap xep theo luot lam", type = SuggestionType.ARGUMENT))
+                suggestions.add(
+                    CompletionSuggestion(
+                        text = "title",
+                        description = "Sap xep theo tieu de",
+                        type = SuggestionType.ARGUMENT
+                    )
+                )
+                suggestions.add(
+                    CompletionSuggestion(
+                        text = "date",
+                        description = "Sap xep theo ngay tao",
+                        type = SuggestionType.ARGUMENT
+                    )
+                )
+                suggestions.add(
+                    CompletionSuggestion(
+                        text = "attempts",
+                        description = "Sap xep theo luot lam",
+                        type = SuggestionType.ARGUMENT
+                    )
+                )
             }
         }
 
@@ -232,7 +269,7 @@ class SearchCommand : Command {
         if (searchUsers && searchQuizzes) {
             return CommandResult.error(
                 "Khong the tim kiem dong thoi nguoi dung va quiz. " +
-                    "Vui long chi dinh -u hoac -q, khong dung ca hai."
+                        "Vui long chi dinh -u hoac -q, khong dung ca hai."
             )
         }
 
@@ -264,7 +301,7 @@ class SearchCommand : Command {
         if (!context.currentUser.hasPermission(AdminPermission.MANAGE_USERS)) {
             return CommandResult.error(
                 "Khong du quyen de tim kiem nguoi dung. " +
-                    "Yeu cau quyen: ${formatPermission(AdminPermission.MANAGE_USERS)}."
+                        "Yeu cau quyen: ${CommandFormatUtils.formatPermission(AdminPermission.MANAGE_USERS)}."
             )
         }
 
@@ -281,7 +318,7 @@ class SearchCommand : Command {
             } catch (_: IllegalArgumentException) {
                 return CommandResult.error(
                     "Vai tro khong hop le: '${flags["role"]}'. " +
-                        "Cac vai tro hop le: ${UserRole.entries.joinToString(", ") { it.name.lowercase() }}"
+                            "Cac vai tro hop le: ${UserRole.entries.joinToString(", ") { it.name.lowercase() }}"
                 )
             }
         }
@@ -308,8 +345,8 @@ class SearchCommand : Command {
             }
             users = users.filter { user ->
                 regex.containsMatchIn(user.displayName) ||
-                    regex.containsMatchIn(user.email) ||
-                    regex.containsMatchIn(user.username)
+                        regex.containsMatchIn(user.email) ||
+                        regex.containsMatchIn(user.username)
             }
         }
 
@@ -318,8 +355,8 @@ class SearchCommand : Command {
             val queryLower = query.lowercase()
             users = users.filter { user ->
                 user.displayName.lowercase() == queryLower ||
-                    user.email.lowercase() == queryLower ||
-                    user.username.lowercase() == queryLower
+                        user.email.lowercase() == queryLower ||
+                        user.username.lowercase() == queryLower
             }
         }
 
@@ -340,6 +377,7 @@ class SearchCommand : Command {
             "count" -> CommandResult.success(
                 listOf(OutputLine("Tim thay: $total nguoi dung", OutputStyle.INFO))
             )
+
             "ids" -> buildIdsOutput(users.map { it.id }, total, limit)
             else -> when (format) {
                 "json" -> buildUsersJson(users, total, limit, query, requestedFields)
@@ -376,7 +414,12 @@ class SearchCommand : Command {
         val lines = mutableListOf<OutputLine>()
 
         lines.add(OutputLine("Tim kiem nguoi dung: \"$query\"", OutputStyle.HEADER))
-        lines.add(OutputLine("Tim thay $total ket qua${if (total > limit) " (hien thi $limit)" else ""}", OutputStyle.INFO))
+        lines.add(
+            OutputLine(
+                "Tim thay $total ket qua${if (total > limit) " (hien thi $limit)" else ""}",
+                OutputStyle.INFO
+            )
+        )
         lines.add(OutputLine(""))
 
         if (users.isEmpty()) {
@@ -417,14 +460,14 @@ class SearchCommand : Command {
     private fun buildUserHeader(fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight("ID", COL_ID)
-                "email" -> padRight("EMAIL", COL_EMAIL)
-                "name" -> padRight("TEN", COL_NAME)
-                "username" -> padRight("USERNAME", COL_NAME)
-                "role" -> padRight("VAI TRO", COL_ROLE)
-                "status" -> padRight("TRANG THAI", COL_STATUS)
-                "permissions" -> padRight("QUYEN", COL_PERMS)
-                else -> padRight(field.uppercase(), COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight("ID", COL_ID)
+                "email" -> CommandFormatUtils.padRight("EMAIL", COL_EMAIL)
+                "name" -> CommandFormatUtils.padRight("TEN", COL_NAME)
+                "username" -> CommandFormatUtils.padRight("USERNAME", COL_NAME)
+                "role" -> CommandFormatUtils.padRight("VAI TRO", COL_ROLE)
+                "status" -> CommandFormatUtils.padRight("TRANG THAI", COL_STATUS)
+                "permissions" -> CommandFormatUtils.padRight("QUYEN", COL_PERMS)
+                else -> CommandFormatUtils.padRight(field.uppercase(), COL_DEFAULT)
             }
         }
     }
@@ -435,14 +478,26 @@ class SearchCommand : Command {
     private fun buildUserRow(user: User, fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight(truncate(user.id, COL_ID - 2), COL_ID)
-                "email" -> padRight(truncate(user.email, COL_EMAIL - 2), COL_EMAIL)
-                "name" -> padRight(truncate(user.displayName, COL_NAME - 2), COL_NAME)
-                "username" -> padRight(truncate(user.username, COL_NAME - 2), COL_NAME)
-                "role" -> padRight(formatRole(user.role), COL_ROLE)
-                "status" -> padRight(if (user.isBanned) "Bi cam" else "Hoat dong", COL_STATUS)
-                "permissions" -> padRight(user.permissions.size.toString() + " quyen", COL_PERMS)
-                else -> padRight("-", COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight(CommandFormatUtils.truncate(user.id, COL_ID - 2), COL_ID)
+                "email" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(user.email, COL_EMAIL - 2),
+                    COL_EMAIL
+                )
+
+                "name" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(user.displayName, COL_NAME - 2),
+                    COL_NAME
+                )
+
+                "username" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(user.username, COL_NAME - 2),
+                    COL_NAME
+                )
+
+                "role" -> CommandFormatUtils.padRight(CommandFormatUtils.formatRole(user.role), COL_ROLE)
+                "status" -> CommandFormatUtils.padRight(if (user.isBanned) "Bi cam" else "Hoat dong", COL_STATUS)
+                "permissions" -> CommandFormatUtils.padRight(user.permissions.size.toString() + " quyen", COL_PERMS)
+                else -> CommandFormatUtils.padRight("-", COL_DEFAULT)
             }
         }
     }
@@ -462,7 +517,7 @@ class SearchCommand : Command {
         val fields = requestedFields ?: defaultFields
 
         lines.add(OutputLine("{", OutputStyle.CODE))
-        lines.add(OutputLine("  \"query\": \"${escapeJson(query)}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"query\": \"${CommandFormatUtils.escapeJson(query)}\",", OutputStyle.CODE))
         lines.add(OutputLine("  \"total\": $total,", OutputStyle.CODE))
         lines.add(OutputLine("  \"showing\": ${users.size},", OutputStyle.CODE))
         lines.add(OutputLine("  \"results\": [", OutputStyle.CODE))
@@ -473,16 +528,17 @@ class SearchCommand : Command {
 
             for (f in fields) {
                 when (f.lowercase()) {
-                    "id" -> jsonFields.add("\"id\": \"${escapeJson(user.id)}\"")
-                    "email" -> jsonFields.add("\"email\": \"${escapeJson(user.email)}\"")
-                    "displayname", "name" -> jsonFields.add("\"displayName\": \"${escapeJson(user.displayName)}\"")
-                    "username" -> jsonFields.add("\"username\": \"${escapeJson(user.username)}\"")
+                    "id" -> jsonFields.add("\"id\": \"${CommandFormatUtils.escapeJson(user.id)}\"")
+                    "email" -> jsonFields.add("\"email\": \"${CommandFormatUtils.escapeJson(user.email)}\"")
+                    "displayname", "name" -> jsonFields.add("\"displayName\": \"${CommandFormatUtils.escapeJson(user.displayName)}\"")
+                    "username" -> jsonFields.add("\"username\": \"${CommandFormatUtils.escapeJson(user.username)}\"")
                     "role" -> jsonFields.add("\"role\": \"${user.role.name}\"")
                     "isbanned", "banned", "status" -> jsonFields.add("\"isBanned\": ${user.isBanned}")
                     "permissions" -> {
                         val permsStr = user.permissions.joinToString(", ") { "\"${it.name}\"" }
                         jsonFields.add("\"permissions\": [$permsStr]")
                     }
+
                     else -> jsonFields.add("\"$f\": null")
                 }
             }
@@ -517,7 +573,7 @@ class SearchCommand : Command {
         if (!context.currentUser.hasPermission(AdminPermission.MANAGE_QUIZZES)) {
             return CommandResult.error(
                 "Khong du quyen de tim kiem quiz. " +
-                    "Yeu cau quyen: ${formatPermission(AdminPermission.MANAGE_QUIZZES)}."
+                        "Yeu cau quyen: ${CommandFormatUtils.formatPermission(AdminPermission.MANAGE_QUIZZES)}."
             )
         }
 
@@ -552,8 +608,8 @@ class SearchCommand : Command {
             }
             quizzes = quizzes.filter { quiz ->
                 regex.containsMatchIn(quiz.title) ||
-                    (quiz.description?.let { regex.containsMatchIn(it) } ?: false) ||
-                    regex.containsMatchIn(quiz.authorName)
+                        (quiz.description?.let { regex.containsMatchIn(it) } ?: false) ||
+                        regex.containsMatchIn(quiz.authorName)
             }
         }
 
@@ -562,8 +618,8 @@ class SearchCommand : Command {
             val queryLower = query.lowercase()
             quizzes = quizzes.filter { quiz ->
                 quiz.title.lowercase() == queryLower ||
-                    quiz.description?.lowercase() == queryLower ||
-                    quiz.authorName.lowercase() == queryLower
+                        quiz.description?.lowercase() == queryLower ||
+                        quiz.authorName.lowercase() == queryLower
             }
         }
 
@@ -586,6 +642,7 @@ class SearchCommand : Command {
             "count" -> CommandResult.success(
                 listOf(OutputLine("Tim thay: $total quiz", OutputStyle.INFO))
             )
+
             "ids" -> buildIdsOutput(quizzes.map { it.id }, total, limit)
             else -> when (format) {
                 "json" -> buildQuizzesJson(quizzes, total, limit, query, requestedFields)
@@ -624,7 +681,12 @@ class SearchCommand : Command {
         val lines = mutableListOf<OutputLine>()
 
         lines.add(OutputLine("Tim kiem quiz: \"$query\"", OutputStyle.HEADER))
-        lines.add(OutputLine("Tim thay $total ket qua${if (total > limit) " (hien thi $limit)" else ""}", OutputStyle.INFO))
+        lines.add(
+            OutputLine(
+                "Tim thay $total ket qua${if (total > limit) " (hien thi $limit)" else ""}",
+                OutputStyle.INFO
+            )
+        )
         lines.add(OutputLine(""))
 
         if (quizzes.isEmpty()) {
@@ -669,17 +731,17 @@ class SearchCommand : Command {
     private fun buildQuizHeader(fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight("ID", COL_ID)
-                "title" -> padRight("TIEU DE", COL_TITLE)
-                "author" -> padRight("TAC GIA", COL_NAME)
-                "owner" -> padRight("CHU SO HUU", COL_ID)
-                "status" -> padRight("TRANG THAI", COL_STATUS)
-                "questions" -> padRight("CAU HOI", COL_SHORT)
-                "attempts" -> padRight("LUOT LAM", COL_SHORT)
-                "tags" -> padRight("TAGS", COL_TITLE)
-                "date" -> padRight("NGAY TAO", COL_DATE)
-                "updated" -> padRight("CAP NHAT", COL_DATE)
-                else -> padRight(field.uppercase(), COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight("ID", COL_ID)
+                "title" -> CommandFormatUtils.padRight("TIEU DE", COL_TITLE)
+                "author" -> CommandFormatUtils.padRight("TAC GIA", COL_NAME)
+                "owner" -> CommandFormatUtils.padRight("CHU SO HUU", COL_ID)
+                "status" -> CommandFormatUtils.padRight("TRANG THAI", COL_STATUS)
+                "questions" -> CommandFormatUtils.padRight("CAU HOI", COL_SHORT)
+                "attempts" -> CommandFormatUtils.padRight("LUOT LAM", COL_SHORT)
+                "tags" -> CommandFormatUtils.padRight("TAGS", COL_TITLE)
+                "date" -> CommandFormatUtils.padRight("NGAY TAO", COL_DATE)
+                "updated" -> CommandFormatUtils.padRight("CAP NHAT", COL_DATE)
+                else -> CommandFormatUtils.padRight(field.uppercase(), COL_DEFAULT)
             }
         }
     }
@@ -690,18 +752,42 @@ class SearchCommand : Command {
     private fun buildQuizRow(quiz: Quiz, fields: List<String>): String {
         return fields.joinToString("") { field ->
             when (field) {
-                "id" -> padRight(truncate(quiz.id, COL_ID - 2), COL_ID)
-                "title" -> padRight(truncate(quiz.title, COL_TITLE - 2), COL_TITLE)
-                "author" -> padRight(truncate(quiz.authorName, COL_NAME - 2), COL_NAME)
-                "owner" -> padRight(truncate(quiz.ownerId, COL_ID - 2), COL_ID)
-                "status" -> padRight(quizStatusLabel(quiz), COL_STATUS)
-                "questions" -> padRight(quiz.questionCount.toString(), COL_SHORT)
-                "attempts" -> padRight(quiz.attemptCount.toString(), COL_SHORT)
-                "tags" -> padRight(truncate(quiz.tags.joinToString(", "), COL_TITLE - 2), COL_TITLE)
-                "date" -> padRight(formatTimestamp(quiz.createdAt), COL_DATE)
-                "updated" -> padRight(formatTimestamp(quiz.updatedAt), COL_DATE)
-                "sharecode" -> padRight(quiz.shareCode ?: "-", COL_DEFAULT)
-                else -> padRight("-", COL_DEFAULT)
+                "id" -> CommandFormatUtils.padRight(CommandFormatUtils.truncate(quiz.id, COL_ID - 2), COL_ID)
+                "title" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(quiz.title, COL_TITLE - 2),
+                    COL_TITLE
+                )
+
+                "author" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(quiz.authorName, COL_NAME - 2),
+                    COL_NAME
+                )
+
+                "owner" -> CommandFormatUtils.padRight(CommandFormatUtils.truncate(quiz.ownerId, COL_ID - 2), COL_ID)
+                "status" -> CommandFormatUtils.padRight(quizStatusLabel(quiz), COL_STATUS)
+                "questions" -> CommandFormatUtils.padRight(quiz.questionCount.toString(), COL_SHORT)
+                "attempts" -> CommandFormatUtils.padRight(quiz.attemptCount.toString(), COL_SHORT)
+                "tags" -> CommandFormatUtils.padRight(
+                    CommandFormatUtils.truncate(
+                        quiz.tags.joinToString(", "),
+                        COL_TITLE - 2
+                    ), COL_TITLE
+                )
+
+                "date" -> CommandFormatUtils.padRight(
+                    if (quiz.createdAt == 0L) "-" else CommandFormatUtils.formatTimestampShort(
+                        quiz.createdAt
+                    ), COL_DATE
+                )
+
+                "updated" -> CommandFormatUtils.padRight(
+                    if (quiz.updatedAt == 0L) "-" else CommandFormatUtils.formatTimestampShort(
+                        quiz.updatedAt
+                    ), COL_DATE
+                )
+
+                "sharecode" -> CommandFormatUtils.padRight(quiz.shareCode ?: "-", COL_DEFAULT)
+                else -> CommandFormatUtils.padRight("-", COL_DEFAULT)
             }
         }
     }
@@ -717,11 +803,12 @@ class SearchCommand : Command {
         requestedFields: List<String>?
     ): CommandResult {
         val lines = mutableListOf<OutputLine>()
-        val defaultFields = listOf("id", "title", "authorName", "isPublic", "isDraft", "questionCount", "attemptCount", "tags")
+        val defaultFields =
+            listOf("id", "title", "authorName", "isPublic", "isDraft", "questionCount", "attemptCount", "tags")
         val fields = requestedFields ?: defaultFields
 
         lines.add(OutputLine("{", OutputStyle.CODE))
-        lines.add(OutputLine("  \"query\": \"${escapeJson(query)}\",", OutputStyle.CODE))
+        lines.add(OutputLine("  \"query\": \"${CommandFormatUtils.escapeJson(query)}\",", OutputStyle.CODE))
         lines.add(OutputLine("  \"total\": $total,", OutputStyle.CODE))
         lines.add(OutputLine("  \"showing\": ${quizzes.size},", OutputStyle.CODE))
         lines.add(OutputLine("  \"results\": [", OutputStyle.CODE))
@@ -732,26 +819,29 @@ class SearchCommand : Command {
 
             for (f in fields) {
                 when (f.lowercase()) {
-                    "id" -> jsonFields.add("\"id\": \"${escapeJson(quiz.id)}\"")
-                    "title" -> jsonFields.add("\"title\": \"${escapeJson(quiz.title)}\"")
-                    "authorname", "author" -> jsonFields.add("\"authorName\": \"${escapeJson(quiz.authorName)}\"")
-                    "ownerid", "owner" -> jsonFields.add("\"ownerId\": \"${escapeJson(quiz.ownerId)}\"")
+                    "id" -> jsonFields.add("\"id\": \"${CommandFormatUtils.escapeJson(quiz.id)}\"")
+                    "title" -> jsonFields.add("\"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\"")
+                    "authorname", "author" -> jsonFields.add("\"authorName\": \"${CommandFormatUtils.escapeJson(quiz.authorName)}\"")
+                    "ownerid", "owner" -> jsonFields.add("\"ownerId\": \"${CommandFormatUtils.escapeJson(quiz.ownerId)}\"")
                     "description" -> {
-                        val descStr = quiz.description?.let { "\"${escapeJson(it)}\"" } ?: "null"
+                        val descStr = quiz.description?.let { "\"${CommandFormatUtils.escapeJson(it)}\"" } ?: "null"
                         jsonFields.add("\"description\": $descStr")
                     }
+
                     "ispublic", "public" -> jsonFields.add("\"isPublic\": ${quiz.isPublic}")
                     "isdraft", "draft" -> jsonFields.add("\"isDraft\": ${quiz.isDraft}")
                     "questioncount", "questions" -> jsonFields.add("\"questionCount\": ${quiz.questionCount}")
                     "attemptcount", "attempts" -> jsonFields.add("\"attemptCount\": ${quiz.attemptCount}")
                     "tags" -> {
-                        val tagsStr = quiz.tags.joinToString(", ") { "\"${escapeJson(it)}\"" }
+                        val tagsStr = quiz.tags.joinToString(", ") { "\"${CommandFormatUtils.escapeJson(it)}\"" }
                         jsonFields.add("\"tags\": [$tagsStr]")
                     }
+
                     "sharecode" -> {
-                        val shareStr = quiz.shareCode?.let { "\"${escapeJson(it)}\"" } ?: "null"
+                        val shareStr = quiz.shareCode?.let { "\"${CommandFormatUtils.escapeJson(it)}\"" } ?: "null"
                         jsonFields.add("\"shareCode\": $shareStr")
                     }
+
                     "createdat", "date" -> jsonFields.add("\"createdAt\": ${quiz.createdAt}")
                     "updatedat", "updated" -> jsonFields.add("\"updatedAt\": ${quiz.updatedAt}")
                     "status" -> jsonFields.add("\"status\": \"${quizStatusLabel(quiz)}\"")
@@ -797,7 +887,12 @@ class SearchCommand : Command {
      */
     private fun buildIdsOutput(ids: List<String>, total: Int, limit: Int): CommandResult {
         val lines = mutableListOf<OutputLine>()
-        lines.add(OutputLine("Tim thay $total ket qua${if (total > limit) " (hien thi $limit)" else ""}:", OutputStyle.INFO))
+        lines.add(
+            OutputLine(
+                "Tim thay $total ket qua${if (total > limit) " (hien thi $limit)" else ""}:",
+                OutputStyle.INFO
+            )
+        )
 
         if (ids.isEmpty()) {
             lines.add(OutputLine("(khong co ket qua)", OutputStyle.MUTED))
@@ -853,65 +948,6 @@ class SearchCommand : Command {
         quiz.isDraft -> "Nhap"
         quiz.isPublic -> "Cong khai"
         else -> "Rieng tu"
-    }
-
-    /**
-     * Dinh dang vai tro nguoi dung thanh chuoi doc duoc.
-     */
-    private fun formatRole(role: UserRole): String = when (role) {
-        UserRole.GUEST -> "Khach"
-        UserRole.USER -> "Nguoi dung"
-        UserRole.ADMIN -> "Quan tri vien"
-        UserRole.SUPERUSER -> "Sieu quan tri"
-    }
-
-    /**
-     * Dinh dang quyen admin thanh chuoi doc duoc.
-     */
-    private fun formatPermission(permission: AdminPermission): String = when (permission) {
-        AdminPermission.MANAGE_USERS -> "Quan ly nguoi dung"
-        AdminPermission.CHANGE_USER_ROLES -> "Thay doi vai tro"
-        AdminPermission.DELETE_USERS -> "Xoa nguoi dung"
-        AdminPermission.BAN_USERS -> "Cam nguoi dung"
-        AdminPermission.MANAGE_QUIZZES -> "Quan ly quiz"
-        AdminPermission.DELETE_QUIZZES -> "Xoa quiz"
-        AdminPermission.PUBLISH_QUIZZES -> "Xuat ban quiz"
-        AdminPermission.VIEW_REPORTS -> "Xem bao cao"
-    }
-
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        if (millis == 0L) return "-"
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh (padding ben phai).
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
     }
 
     companion object {

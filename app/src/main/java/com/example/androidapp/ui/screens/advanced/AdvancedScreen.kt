@@ -1,6 +1,9 @@
 package com.example.androidapp.ui.screens.advanced
 
 import android.content.res.Configuration
+import androidx.compose.ui.res.stringResource
+import com.example.androidapp.R
+import com.example.androidapp.ui.screens.advanced.AdvancedEvent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -45,25 +48,23 @@ fun AdvancedScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel: AdvancedViewModel = viewModel()
-    val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val selectedTab = uiState.selectedTab
 
-    // TODO: move to strings.xml
-    val tabTitles = listOf("Console", "Nhat ky")
+    val tabTitles = listOf(stringResource(R.string.advanced_tab_console), stringResource(R.string.advanced_tab_logs))
 
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
-                    // TODO: move to strings.xml
-                    Text(text = "Cong cu nang cao")
+                    Text(text = stringResource(R.string.advanced_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            // TODO: move to strings.xml
-                            contentDescription = "Quay lai"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 },
@@ -87,7 +88,7 @@ fun AdvancedScreen(
                 tabTitles.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTab == index,
-                        onClick = { viewModel.selectTab(index) },
+                        onClick = { viewModel.onEvent(AdvancedEvent.SelectTab(index)) },
                         text = {
                             Text(
                                 text = title,

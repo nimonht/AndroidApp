@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -42,8 +43,8 @@ class DeleteAttemptCommand : Command {
 
     override val usage: String =
         "del -a <attemptId> [...] [--user <userId>] [--quiz <quizId>] [--before <ts>] " +
-            "[--after <ts>] [--score-below <n>] [--score-above <n>] [--incomplete] " +
-            "[--limit <n>] [--dry-run] [--confirm] [--format <table|json>] [--verbose] [--quiet]"
+                "[--after <ts>] [--score-below <n>] [--score-above <n>] [--incomplete] " +
+                "[--limit <n>] [--dry-run] [--confirm] [--format <table|json>] [--verbose] [--quiet]"
 
     override val category: String = "admin"
 
@@ -62,10 +63,10 @@ class DeleteAttemptCommand : Command {
         "del -a --score-below 3 --quiz quizId1 --dry-run" to "Mo phong xoa attempt diem thap cua quiz",
         "del -a --before 1700000000000 --limit 50 --confirm" to "Xoa toi da 50 attempt cu",
         "del -a --user userId1 --after 1700000000000 --format json --verbose --dry-run" to
-            "Mo phong xoa attempt cua nguoi dung sau moc thoi gian, xuat JSON"
+                "Mo phong xoa attempt cua nguoi dung sau moc thoi gian, xuat JSON"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -136,7 +137,7 @@ class DeleteAttemptCommand : Command {
         if (!dryRun && !confirm) {
             return CommandResult.error(
                 "Thao tac huy diet: xoa luot lam quiz vinh vien. " +
-                    "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
             )
         }
 
@@ -281,8 +282,11 @@ class DeleteAttemptCommand : Command {
         if (!quiet) {
             lines.add(
                 OutputLine(
-                    padRight("ID", 24) + padRight("User ID", 20) + padRight("Quiz ID", 20) +
-                        padRight("Diem", 8) + padRight("Trang thai", 14),
+                    CommandFormatUtils.padRight("ID", 24) + CommandFormatUtils.padRight(
+                        "User ID",
+                        20
+                    ) + CommandFormatUtils.padRight("Quiz ID", 20) +
+                            CommandFormatUtils.padRight("Diem", 8) + CommandFormatUtils.padRight("Trang thai", 14),
                     OutputStyle.TABLE_HEADER
                 )
             )
@@ -292,9 +296,12 @@ class DeleteAttemptCommand : Command {
                 val scoreStr = "${attempt.score}/${attempt.totalQuestions}"
                 lines.add(
                     OutputLine(
-                        padRight(attempt.id, 24) + padRight(truncate(attempt.userId, 18), 20) +
-                            padRight(truncate(attempt.quizId, 18), 20) +
-                            padRight(scoreStr, 8) + padRight(status, 14),
+                        CommandFormatUtils.padRight(
+                            attempt.id,
+                            24
+                        ) + CommandFormatUtils.padRight(CommandFormatUtils.truncate(attempt.userId, 18), 20) +
+                                CommandFormatUtils.padRight(CommandFormatUtils.truncate(attempt.quizId, 18), 20) +
+                                CommandFormatUtils.padRight(scoreStr, 8) + CommandFormatUtils.padRight(status, 14),
                         OutputStyle.TABLE_ROW
                     )
                 )
@@ -302,21 +309,21 @@ class DeleteAttemptCommand : Command {
                 if (verbose) {
                     lines.add(
                         OutputLine(
-                            "  Bat dau: ${formatTimestamp(attempt.startTimeMillis)}",
+                            "  Bat dau: ${CommandFormatUtils.formatTimestamp(attempt.startTimeMillis)}",
                             OutputStyle.MUTED
                         )
                     )
                     if (attempt.endTimeMillis != null) {
                         lines.add(
                             OutputLine(
-                                "  Ket thuc: ${formatTimestamp(attempt.endTimeMillis)}",
+                                "  Ket thuc: ${CommandFormatUtils.formatTimestamp(attempt.endTimeMillis)}",
                                 OutputStyle.MUTED
                             )
                         )
                         val durationSec = (attempt.endTimeMillis - attempt.startTimeMillis) / 1000
                         lines.add(
                             OutputLine(
-                                "  Thoi gian: ${formatDuration(durationSec)}",
+                                "  Thoi gian: ${CommandFormatUtils.formatDuration(durationSec)}",
                                 OutputStyle.MUTED
                             )
                         )
@@ -389,9 +396,19 @@ class DeleteAttemptCommand : Command {
         for ((index, attempt) in attempts.withIndex()) {
             val comma = if (index < attempts.size - 1) "," else ""
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(attempt.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"userId\": \"${escapeJson(attempt.userId)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"quizId\": \"${escapeJson(attempt.quizId)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(attempt.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"userId\": \"${CommandFormatUtils.escapeJson(attempt.userId)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"quizId\": \"${CommandFormatUtils.escapeJson(attempt.quizId)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
             lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
             lines.add(OutputLine("      \"startTimeMillis\": ${attempt.startTimeMillis},", OutputStyle.CODE))
@@ -425,9 +442,9 @@ class DeleteAttemptCommand : Command {
                 lines.add(
                     OutputLine(
                         "Dang xoa attempt: ${attempt.id} " +
-                            "(user=${truncate(attempt.userId, 12)}, " +
-                            "quiz=${truncate(attempt.quizId, 12)}, " +
-                            "diem=${attempt.score}/${attempt.totalQuestions})...",
+                                "(user=${CommandFormatUtils.truncate(attempt.userId, 12)}, " +
+                                "quiz=${CommandFormatUtils.truncate(attempt.quizId, 12)}, " +
+                                "diem=${attempt.score}/${attempt.totalQuestions})...",
                         OutputStyle.INFO
                     )
                 )
@@ -506,7 +523,7 @@ class DeleteAttemptCommand : Command {
             lines.add(OutputLine("  \"errors\": [", OutputStyle.CODE))
             for ((index, err) in errors.withIndex()) {
                 val comma = if (index < errors.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(err)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(err)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ]", OutputStyle.CODE))
         } else {
@@ -519,54 +536,4 @@ class DeleteAttemptCommand : Command {
         return CommandResult(output = lines, isSuccess = isSuccess, exitCode = if (isSuccess) 0 else 1)
     }
 
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Dinh dang thoi luong (giay) thanh chuoi doc duoc.
-     */
-    private fun formatDuration(totalSeconds: Long): String {
-        if (totalSeconds < 60) {
-            return "${totalSeconds}s"
-        }
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        if (minutes < 60) {
-            return "${minutes}m ${seconds}s"
-        }
-        val hours = minutes / 60
-        val remainingMinutes = minutes % 60
-        return "${hours}h ${remainingMinutes}m ${seconds}s"
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-    }
 }

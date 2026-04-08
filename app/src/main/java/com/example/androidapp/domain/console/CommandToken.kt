@@ -31,19 +31,9 @@ sealed class CommandToken {
     data class FlagValue(val name: String, val value: String) : CommandToken()
 
     /**
-     * A positional argument that is not a flag or keyword
-     * (e.g. `user@email.com`, `quizId123`).
-     *
-     * @property value The argument text.
-     */
-    data class Argument(val value: String) : CommandToken()
-
-    /**
      * The pipe operator `|`, used to chain command output as input to the next command.
-     *
-     * @property value Always `"|"`.
      */
-    data class Pipe(val value: String = "|") : CommandToken()
+    data object Pipe : CommandToken()
 
     /**
      * A quoted string literal (e.g. `"hello world"`, `'single quotes'`).

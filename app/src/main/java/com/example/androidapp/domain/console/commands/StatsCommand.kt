@@ -47,7 +47,7 @@ class StatsCommand : Command {
     /** @inheritDoc */
     override val usage: String =
         "stats [--users] [--quizzes] [--attempts] [--sync] " +
-            "[--format <table|json>] [--verbose] [--export]"
+                "[--format <table|json>] [--verbose] [--export]"
 
     /** @inheritDoc */
     override val requiredPermission: AdminPermission = AdminPermission.VIEW_REPORTS
@@ -72,7 +72,7 @@ class StatsCommand : Command {
     )
 
     /** @inheritDoc */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -379,10 +379,10 @@ class StatsCommand : Command {
         lines.add(OutputLine(""))
         lines.add(OutputLine("  Dong bo", OutputStyle.INFO))
 
-        val syncManager = context.services.syncManager
-        val networkMonitor = context.services.networkMonitor
-        val isOnline = networkMonitor.isOnline.value
-        val syncState = syncManager.syncState.value
+        val syncService = context.services.syncService
+        val networkService = context.services.networkService
+        val isOnline = networkService.isOnline.value
+        val syncState = syncService.consoleSyncState.value
 
         lines.add(
             OutputLine(
@@ -398,7 +398,7 @@ class StatsCommand : Command {
         )
 
         try {
-            val pendingCount = syncManager.getPendingCount()
+            val pendingCount = syncService.getPendingCount()
             lines.add(
                 OutputLine(
                     formatTableRow("Thao tac cho xu ly", pendingCount.toString()),
@@ -415,10 +415,10 @@ class StatsCommand : Command {
         }
 
         if (verbose) {
-            val settingsPreferences = context.services.settingsPreferences
+            val settingsService = context.services.settingsService
             try {
-                val autoSync = settingsPreferences.autoSyncEnabled.first()
-                val wifiOnly = settingsPreferences.wifiOnlySync.first()
+                val autoSync = settingsService.autoSyncEnabled.first()
+                val wifiOnly = settingsService.wifiOnlySync.first()
                 lines.add(
                     OutputLine(
                         formatTableRow(
@@ -604,10 +604,10 @@ class StatsCommand : Command {
         context: CommandContext
     ): List<OutputLine> {
         val lines = mutableListOf<OutputLine>()
-        val syncManager = context.services.syncManager
-        val networkMonitor = context.services.networkMonitor
-        val isOnline = networkMonitor.isOnline.value
-        val syncState = syncManager.syncState.value
+        val syncService = context.services.syncService
+        val networkService = context.services.networkService
+        val isOnline = networkService.isOnline.value
+        val syncState = syncService.consoleSyncState.value
 
         lines.add(OutputLine("  \"sync\": {", OutputStyle.CODE))
         lines.add(
@@ -624,7 +624,7 @@ class StatsCommand : Command {
         )
 
         val pendingCount = try {
-            syncManager.getPendingCount()
+            syncService.getPendingCount()
         } catch (_: Exception) {
             -1
         }
@@ -632,8 +632,8 @@ class StatsCommand : Command {
         if (verbose) {
             lines.add(OutputLine("    \"pending_operations\": $pendingCount,", OutputStyle.CODE))
             try {
-                val autoSync = context.services.settingsPreferences.autoSyncEnabled.first()
-                val wifiOnly = context.services.settingsPreferences.wifiOnlySync.first()
+                val autoSync = context.services.settingsService.autoSyncEnabled.first()
+                val wifiOnly = context.services.settingsService.wifiOnlySync.first()
                 lines.add(OutputLine("    \"auto_sync\": $autoSync,", OutputStyle.CODE))
                 lines.add(OutputLine("    \"wifi_only\": $wifiOnly", OutputStyle.CODE))
             } catch (_: Exception) {

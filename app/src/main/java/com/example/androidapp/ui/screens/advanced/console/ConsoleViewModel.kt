@@ -2,20 +2,12 @@ package com.example.androidapp.ui.screens.advanced.console
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.androidapp.data.logging.LogCollector
-import com.example.androidapp.data.network.NetworkMonitor
-import com.example.androidapp.data.preferences.SettingsPreferences
-import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.service.NetworkService
 import com.example.androidapp.domain.console.CommandExecutor
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputStyle
 import com.example.androidapp.domain.model.UserRole
-import com.example.androidapp.domain.repository.AdminRepository
-import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
-import com.example.androidapp.domain.repository.PoolRepository
-import com.example.androidapp.domain.repository.QuizRepository
-import com.example.androidapp.domain.repository.ShareCodeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,13 +19,20 @@ import kotlinx.coroutines.launch
  *
  * @property text The text content of this output line.
  * @property style The [OutputStyle] controlling color and formatting.
- * @property id Unique identifier for stable Compose keys, based on [System.nanoTime].
+ * @property id Unique identifier for stable Compose keys, generated via [nextId].
  */
 data class StyledOutputLine(
     val text: String,
     val style: OutputStyle,
-    val id: Long = System.nanoTime()
-)
+    val id: Long = nextId()
+) {
+    companion object {
+        private val counter = java.util.concurrent.atomic.AtomicLong(0)
+
+        /** Generates a unique, monotonically increasing ID for stable Compose keys. */
+        fun nextId(): Long = counter.incrementAndGet()
+    }
+}
 
 /**
  * UI state for the developer console screen.
@@ -49,6 +48,7 @@ data class StyledOutputLine(
  * @property userRole Role of the authenticated user.
  * @property userName Display name or username of the authenticated user.
  * @property showSuggestions Whether the suggestion dropdown is visible.
+ * @property prompt Shell-style prompt string displayed before the input cursor.
  */
 data class ConsoleUiState(
     val outputLines: List<StyledOutputLine> = emptyList(),
@@ -61,7 +61,8 @@ data class ConsoleUiState(
     val networkStatus: Boolean = true,
     val userRole: UserRole = UserRole.USER,
     val userName: String = "",
-    val showSuggestions: Boolean = false
+    val showSuggestions: Boolean = false,
+    val prompt: String = "[user]$ "
 )
 
 /**
@@ -107,7 +108,7 @@ sealed class ConsoleEvent {
  *
  * Manages command input, execution via [CommandExecutor], autocomplete suggestions,
  * command history navigation, and output rendering. Observes [AuthRepository] for
- * the current user's role/name and [NetworkMonitor] for connectivity status.
+ * the current user's role/name and [NetworkService] for connectivity status.
  *
  * Special output conventions:
  * - A line containing `"__CLEAR__"` triggers clearing all output (used by ClearCommand).
@@ -116,27 +117,11 @@ sealed class ConsoleEvent {
  * @param commandExecutor The engine that lexes, parses, and executes console commands.
  * @param authRepository Repository for observing the current user.
  * @param networkMonitor Connectivity state provider.
- * @param logCollector Application log buffer (unused directly but available for context).
- * @param syncManager Sync infrastructure (unused directly but available for context).
- * @param settingsPreferences App settings (unused directly but available for context).
- * @param adminRepository Admin data access (unused directly but available for context).
- * @param quizRepository Quiz data access (unused directly but available for context).
- * @param attemptRepository Attempt data access (unused directly but available for context).
- * @param shareCodeRepository Share code data access (unused directly but available for context).
- * @param poolRepository Question pool data access (unused directly but available for context).
  */
 class ConsoleViewModel(
     private val commandExecutor: CommandExecutor,
     private val authRepository: AuthRepository,
-    private val networkMonitor: NetworkMonitor,
-    private val logCollector: LogCollector,
-    private val syncManager: SyncManager,
-    private val settingsPreferences: SettingsPreferences,
-    private val adminRepository: AdminRepository,
-    private val quizRepository: QuizRepository,
-    private val attemptRepository: AttemptRepository,
-    private val shareCodeRepository: ShareCodeRepository,
-    private val poolRepository: PoolRepository
+    private val networkMonitor: NetworkService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ConsoleUiState())
@@ -192,12 +177,17 @@ class ConsoleViewModel(
     private fun observeUser() {
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
+                val role = user?.role ?: UserRole.GUEST
+                val name = user?.username?.ifBlank { user.displayName }
+                    ?: user?.displayName?.ifBlank { "user" }
+                    ?: "user"
+                val suffix = if (role >= UserRole.ADMIN) "#" else "$"
+                val prompt = "[$name]$suffix "
                 _uiState.update {
                     it.copy(
-                        userRole = user?.role ?: UserRole.GUEST,
-                        userName = user?.username?.ifBlank { user.displayName }
-                            ?: user?.displayName
-                            ?: "guest"
+                        userRole = role,
+                        userName = name,
+                        prompt = prompt
                     )
                 }
             }
@@ -242,25 +232,27 @@ class ConsoleViewModel(
             return
         }
 
-        val suggestions = try {
-            commandExecutor.autocomplete(text, cursor)
-        } catch (_: Exception) {
-            emptyList()
-        }
+        viewModelScope.launch {
+            val suggestions = try {
+                commandExecutor.autocomplete(text, cursor)
+            } catch (_: Exception) {
+                emptyList()
+            }
 
-        val ghost = if (suggestions.isNotEmpty()) {
-            computeGhostText(text, suggestions.first().text)
-        } else {
-            ""
-        }
+            val ghost = if (suggestions.isNotEmpty()) {
+                computeGhostText(text, suggestions.first().text)
+            } else {
+                ""
+            }
 
-        _uiState.update {
-            it.copy(
-                suggestions = suggestions,
-                ghostText = ghost,
-                showSuggestions = suggestions.isNotEmpty(),
-                selectedSuggestionIndex = if (suggestions.isNotEmpty()) 0 else -1
-            )
+            _uiState.update {
+                it.copy(
+                    suggestions = suggestions,
+                    ghostText = ghost,
+                    showSuggestions = suggestions.isNotEmpty(),
+                    selectedSuggestionIndex = if (suggestions.isNotEmpty()) 0 else -1
+                )
+            }
         }
     }
 
@@ -320,6 +312,8 @@ class ConsoleViewModel(
                 val result = commandExecutor.execute(input)
                 processCommandOutput(result.output)
             } catch (e: Exception) {
+                // TODO: these developer-facing console error messages are hardcoded Vietnamese;
+                //  stringResource() is unavailable in ViewModels — acceptable for dev console output.
                 appendOutput(
                     StyledOutputLine(
                         "Loi: ${e.message ?: "Loi khong xac dinh"}",
@@ -557,7 +551,8 @@ class ConsoleViewModel(
 
     /** Appends the initial welcome banner when the console is first opened. */
     private fun appendWelcomeBanner() {
-        // TODO: move to strings.xml
+        // TODO: these developer-facing banner strings are hardcoded Vietnamese;
+        //  stringResource() is unavailable in ViewModels — acceptable for dev console output.
         val bannerLines = listOf(
             StyledOutputLine(
                 "Quizzez Developer Console v1.0",

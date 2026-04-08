@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -63,7 +64,7 @@ class UserInfoCommand : Command {
     )
 
     /** @inheritDoc */
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -208,7 +209,7 @@ class UserInfoCommand : Command {
                     lines.add(
                         OutputLine(
                             padEnd("ID", 24) + padEnd("Tieu de", 32) +
-                                padEnd("Cong khai", 12) + padEnd("Luot thi", 10),
+                                    padEnd("Cong khai", 12) + padEnd("Luot thi", 10),
                             OutputStyle.TABLE_HEADER
                         )
                     )
@@ -218,9 +219,9 @@ class UserInfoCommand : Command {
                         lines.add(
                             OutputLine(
                                 padEnd(quiz.id, 24) +
-                                    padEnd(truncate(quiz.title, 28) + draft, 32) +
-                                    padEnd(visibility, 12) +
-                                    padEnd(quiz.attemptCount.toString(), 10),
+                                        padEnd(CommandFormatUtils.truncate(quiz.title, 28) + draft, 32) +
+                                        padEnd(visibility, 12) +
+                                        padEnd(quiz.attemptCount.toString(), 10),
                                 OutputStyle.TABLE_ROW
                             )
                         )
@@ -254,7 +255,7 @@ class UserInfoCommand : Command {
                     lines.add(
                         OutputLine(
                             padEnd("ID", 24) + padEnd("Quiz ID", 24) +
-                                padEnd("Diem", 12) + padEnd("Thoi gian (ms)", 16),
+                                    padEnd("Diem", 12) + padEnd("Thoi gian (ms)", 16),
                             OutputStyle.TABLE_HEADER
                         )
                     )
@@ -267,12 +268,12 @@ class UserInfoCommand : Command {
                         lines.add(
                             OutputLine(
                                 padEnd(attempt.id, 24) +
-                                    padEnd(attempt.quizId, 24) +
-                                    padEnd(
-                                        "${attempt.score}/${attempt.totalQuestions}",
-                                        12
-                                    ) +
-                                    padEnd(duration, 16),
+                                        padEnd(attempt.quizId, 24) +
+                                        padEnd(
+                                            "${attempt.score}/${attempt.totalQuestions}",
+                                            12
+                                        ) +
+                                        padEnd(duration, 16),
                                 OutputStyle.TABLE_ROW
                             )
                         )
@@ -438,14 +439,4 @@ class UserInfoCommand : Command {
         return text.padEnd(length)
     }
 
-    /**
-     * Truncates a string to the given max length, appending "..." if truncated.
-     *
-     * @param text The text to truncate.
-     * @param maxLen The maximum length.
-     * @return Truncated string.
-     */
-    private fun truncate(text: String, maxLen: Int): String {
-        return if (text.length > maxLen) text.take(maxLen - 3) + "..." else text
-    }
 }

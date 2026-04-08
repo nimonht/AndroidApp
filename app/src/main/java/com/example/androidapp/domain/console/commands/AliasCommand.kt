@@ -46,7 +46,7 @@ class AliasCommand : Command {
         "alias --clear" to "Xoa tat ca alias"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -168,7 +168,7 @@ class AliasCommand : Command {
         if (eqIndex < 1) {
             return CommandResult.error(
                 "Cu phap khong hop le. Su dung: alias <ten>=<lenh mo rong>\n" +
-                    "Vi du: alias ll=ls -u --verbose"
+                        "Vi du: alias ll=ls -u --verbose"
             )
         }
 
@@ -182,21 +182,21 @@ class AliasCommand : Command {
         if (expansion.isEmpty()) {
             return CommandResult.error(
                 "Lenh mo rong khong duoc de trong. " +
-                    "De xoa alias, su dung: alias --remove $name"
+                        "De xoa alias, su dung: alias --remove $name"
             )
         }
 
         if (!isValidAliasName(name)) {
             return CommandResult.error(
                 "Ten alias '$name' khong hop le. " +
-                    "Chi cho phep chu cai, so, dau gach ngang va gach duoi."
+                        "Chi cho phep chu cai, so, dau gach ngang va gach duoi."
             )
         }
 
         if (name == expansion.split(" ").firstOrNull()) {
             return CommandResult.error(
                 "Alias '$name' khong the tro den lenh bat dau bang chinh no " +
-                    "(tranh vong lap vo han)."
+                        "(tranh vong lap vo han)."
             )
         }
 

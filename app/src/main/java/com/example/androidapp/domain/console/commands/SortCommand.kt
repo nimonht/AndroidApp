@@ -32,7 +32,7 @@ class SortCommand : Command {
     override val description: String = "Sap xep cac dong dau vao theo thu tu"
 
     override val usage: String = "sort [--reverse|-r] [--numeric|-n] [--field|-k N] " +
-        "[--delimiter|-d SEP] [--unique|-u] [--ignore-case|-f] [--stable] [--random]"
+            "[--delimiter|-d SEP] [--unique|-u] [--ignore-case|-f] [--stable] [--random]"
 
     override val minimumRole: UserRole = UserRole.USER
 
@@ -48,7 +48,7 @@ class SortCommand : Command {
         "ls -u | sort -f" to "Sap xep khong phan biet hoa thuong"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -82,7 +82,12 @@ class SortCommand : Command {
         }
         if ("ignore-case" !in flags && "f" !in flags) {
             available.add(
-                CompletionSuggestion("--ignore-case", "--ignore-case", "Khong phan biet hoa thuong", SuggestionType.FLAG)
+                CompletionSuggestion(
+                    "--ignore-case",
+                    "--ignore-case",
+                    "Khong phan biet hoa thuong",
+                    SuggestionType.FLAG
+                )
             )
         }
         if ("stable" !in flags) {

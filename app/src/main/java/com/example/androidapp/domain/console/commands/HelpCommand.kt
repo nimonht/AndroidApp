@@ -29,7 +29,8 @@ class HelpCommand(
 
     override val description: String = "Hien thi danh sach lenh hoac huong dan chi tiet cho mot lenh"
 
-    override val usage: String = "help [<lenh>] [--all] [--category <danh-muc>] [--search <tu-khoa>] [--flags] [--examples] [--format <dinh-dang>]"
+    override val usage: String =
+        "help [<lenh>] [--all] [--category <danh-muc>] [--search <tu-khoa>] [--flags] [--examples] [--format <dinh-dang>]"
 
     override val category: String = "general"
 
@@ -43,7 +44,7 @@ class HelpCommand(
         "help ping --flags" to "Xem danh sach co (flag) cua lenh ping"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -232,7 +233,12 @@ class HelpCommand(
         }
 
         if (command.isDestructive) {
-            lines.add(OutputLine("Canh bao:   Lenh nay co the thay doi du lieu khong the hoan tac!", OutputStyle.WARNING))
+            lines.add(
+                OutputLine(
+                    "Canh bao:   Lenh nay co the thay doi du lieu khong the hoan tac!",
+                    OutputStyle.WARNING
+                )
+            )
         }
 
         if (command.requiredPermission != null) {
@@ -310,7 +316,12 @@ class HelpCommand(
             lines.add(OutputLine("[", OutputStyle.CODE))
             results.forEachIndexed { index, cmd ->
                 val comma = if (index < results.size - 1) "," else ""
-                lines.add(OutputLine("  {\"name\": \"${cmd.name}\", \"description\": \"${cmd.description}\"}$comma", OutputStyle.CODE))
+                lines.add(
+                    OutputLine(
+                        "  {\"name\": \"${cmd.name}\", \"description\": \"${cmd.description}\"}$comma",
+                        OutputStyle.CODE
+                    )
+                )
             }
             lines.add(OutputLine("]", OutputStyle.CODE))
         } else {

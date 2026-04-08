@@ -37,7 +37,7 @@ object CommandLexer {
             when {
                 // Pipe operator
                 input[i] == '|' -> {
-                    tokens.add(CommandToken.Pipe())
+                    tokens.add(CommandToken.Pipe)
                     i++
                 }
 

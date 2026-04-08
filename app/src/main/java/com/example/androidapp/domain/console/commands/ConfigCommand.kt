@@ -2,12 +2,14 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
 import com.example.androidapp.domain.console.OutputStyle
 import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.domain.model.UserRole
+import com.example.androidapp.domain.service.SettingsService
 import kotlinx.coroutines.flow.first
 
 /**
@@ -52,10 +54,6 @@ class ConfigCommand : Command {
         private const val KEY_AUTO_SYNC = "auto_sync"
         private const val KEY_WIFI_ONLY = "wifi_only"
 
-        private const val THEME_MODE_SYSTEM = 0
-        private const val THEME_MODE_LIGHT = 1
-        private const val THEME_MODE_DARK = 2
-
         private val VALID_KEYS = setOf(KEY_DARK_THEME, KEY_AUTO_SYNC, KEY_WIFI_ONLY)
 
         private val KEY_DESCRIPTIONS = mapOf(
@@ -74,7 +72,7 @@ class ConfigCommand : Command {
         private val VALID_BOOL_VALUES = setOf("true", "false")
     }
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -82,10 +80,19 @@ class ConfigCommand : Command {
         return when {
             args.isEmpty() -> listOf(
                 CompletionSuggestion("get", description = "Xem gia tri cau hinh", type = SuggestionType.SUBCOMMAND),
-                CompletionSuggestion("set", description = "Thay doi gia tri cau hinh", type = SuggestionType.SUBCOMMAND),
-                CompletionSuggestion("reset", description = "Dat lai gia tri mac dinh", type = SuggestionType.SUBCOMMAND),
+                CompletionSuggestion(
+                    "set",
+                    description = "Thay doi gia tri cau hinh",
+                    type = SuggestionType.SUBCOMMAND
+                ),
+                CompletionSuggestion(
+                    "reset",
+                    description = "Dat lai gia tri mac dinh",
+                    type = SuggestionType.SUBCOMMAND
+                ),
                 CompletionSuggestion("list", description = "Liet ke tat ca cau hinh", type = SuggestionType.SUBCOMMAND)
             )
+
             args.size == 1 -> {
                 val prefix = args[0].lowercase()
                 listOf("get", "set", "reset", "list")
@@ -104,6 +111,7 @@ class ConfigCommand : Command {
                         )
                     }
             }
+
             args.size == 2 && args[0].lowercase() in setOf("get", "set", "reset") -> {
                 val prefix = args[1].lowercase()
                 VALID_KEYS.filter { it.startsWith(prefix) }
@@ -115,6 +123,7 @@ class ConfigCommand : Command {
                         )
                     }
             }
+
             args.size == 3 && args[0].lowercase() == "set" -> {
                 val key = args[1].lowercase()
                 val prefix = args[2].lowercase()
@@ -125,6 +134,7 @@ class ConfigCommand : Command {
                 }.filter { it.startsWith(prefix) }
                     .map { CompletionSuggestion(it, type = SuggestionType.ARGUMENT) }
             }
+
             else -> emptyList()
         }
     }
@@ -137,7 +147,7 @@ class ConfigCommand : Command {
         if (args.isEmpty()) {
             return CommandResult.error(
                 "Thieu lenh con. Su dung: config <get|set|reset|list>\n" +
-                    "Dung 'help config' de xem huong dan chi tiet."
+                        "Dung 'help config' de xem huong dan chi tiet."
             )
         }
 
@@ -163,7 +173,7 @@ class ConfigCommand : Command {
         context: CommandContext,
         format: String
     ): CommandResult {
-        val prefs = context.services.settingsPreferences
+        val prefs = context.services.settingsService
         val currentValues = readAllValues(prefs)
 
         val showKeysOnly = flags.containsKey("keys")
@@ -173,7 +183,9 @@ class ConfigCommand : Command {
 
         if (showKeysOnly) {
             return if (format == "json") {
-                val jsonArray = VALID_KEYS.joinToString(", ") { "\"$it\"" }
+                val jsonArray = VALID_KEYS.joinToString(", ") {
+                    "\"${CommandFormatUtils.escapeJson(it)}\""
+                }
                 CommandResult.success("[$jsonArray]")
             } else {
                 val lines = mutableListOf(
@@ -219,19 +231,23 @@ class ConfigCommand : Command {
             )
         }
 
-        val prefs = context.services.settingsPreferences
+        val prefs = context.services.settingsService
         val value = readValue(prefs, key)
         val defaultValue = DEFAULT_VALUES[key] ?: ""
         val verbose = flags.containsKey("verbose")
 
         if (format == "json") {
+            val escapedKey = CommandFormatUtils.escapeJson(key)
+            val escapedValue = CommandFormatUtils.escapeJson(value)
+            val escapedDefault = CommandFormatUtils.escapeJson(defaultValue)
             val json = buildString {
                 append("{")
-                append("\"key\": \"$key\", ")
-                append("\"value\": \"$value\", ")
-                append("\"default\": \"$defaultValue\"")
+                append("\"key\": \"$escapedKey\", ")
+                append("\"value\": \"$escapedValue\", ")
+                append("\"default\": \"$escapedDefault\"")
                 if (verbose) {
-                    append(", \"description\": \"${KEY_DESCRIPTIONS[key] ?: ""}\"")
+                    val escapedDesc = CommandFormatUtils.escapeJson(KEY_DESCRIPTIONS[key] ?: "")
+                    append(", \"description\": \"$escapedDesc\"")
                     append(", \"is_default\": ${value == defaultValue}")
                 }
                 append("}")
@@ -286,30 +302,41 @@ class ConfigCommand : Command {
             return CommandResult.error(validationError)
         }
 
-        val prefs = context.services.settingsPreferences
+        val prefs = context.services.settingsService
         val oldValue = readValue(prefs, key)
 
         if (oldValue == newValue) {
             return if (format == "json") {
-                CommandResult.success("{\"key\": \"$key\", \"value\": \"$newValue\", \"changed\": false}")
+                val escapedKey = CommandFormatUtils.escapeJson(key)
+                val escapedValue = CommandFormatUtils.escapeJson(newValue)
+                CommandResult.success(
+                    "{\"key\": \"$escapedKey\", \"value\": \"$escapedValue\", \"changed\": false}"
+                )
             } else {
-                CommandResult.success(listOf(
-                    OutputLine("Gia tri '$key' da la '$newValue', khong can thay doi.", OutputStyle.WARNING)
-                ))
+                CommandResult.success(
+                    listOf(
+                        OutputLine("Gia tri '$key' da la '$newValue', khong can thay doi.", OutputStyle.WARNING)
+                    )
+                )
             }
         }
 
         writeValue(prefs, key, newValue)
 
         return if (format == "json") {
+            val escapedKey = CommandFormatUtils.escapeJson(key)
+            val escapedOld = CommandFormatUtils.escapeJson(oldValue)
+            val escapedNew = CommandFormatUtils.escapeJson(newValue)
             CommandResult.success(
-                "{\"key\": \"$key\", \"old_value\": \"$oldValue\", \"new_value\": \"$newValue\", \"changed\": true}"
+                "{\"key\": \"$escapedKey\", \"old_value\": \"$escapedOld\", \"new_value\": \"$escapedNew\", \"changed\": true}"
             )
         } else {
-            CommandResult.success(listOf(
-                OutputLine("Da cap nhat cau hinh:", OutputStyle.SUCCESS),
-                OutputLine("  $key: $oldValue -> $newValue", OutputStyle.INFO)
-            ))
+            CommandResult.success(
+                listOf(
+                    OutputLine("Da cap nhat cau hinh:", OutputStyle.SUCCESS),
+                    OutputLine("  $key: $oldValue -> $newValue", OutputStyle.INFO)
+                )
+            )
         }
     }
 
@@ -324,7 +351,7 @@ class ConfigCommand : Command {
         if (args.size < 2) {
             return CommandResult.error(
                 "Thieu ten khoa. Su dung: config reset <key>\n" +
-                    "Dung 'config reset all' de dat lai tat ca."
+                        "Dung 'config reset all' de dat lai tat ca."
             )
         }
 
@@ -340,31 +367,42 @@ class ConfigCommand : Command {
             )
         }
 
-        val prefs = context.services.settingsPreferences
+        val prefs = context.services.settingsService
         val oldValue = readValue(prefs, key)
         val defaultValue = DEFAULT_VALUES[key] ?: ""
 
         if (oldValue == defaultValue) {
             return if (format == "json") {
-                CommandResult.success("{\"key\": \"$key\", \"value\": \"$defaultValue\", \"was_default\": true}")
+                val escapedKey = CommandFormatUtils.escapeJson(key)
+                val escapedDefault = CommandFormatUtils.escapeJson(defaultValue)
+                CommandResult.success(
+                    "{\"key\": \"$escapedKey\", \"value\": \"$escapedDefault\", \"was_default\": true}"
+                )
             } else {
-                CommandResult.success(listOf(
-                    OutputLine("'$key' da o gia tri mac dinh ($defaultValue).", OutputStyle.WARNING)
-                ))
+                CommandResult.success(
+                    listOf(
+                        OutputLine("'$key' da o gia tri mac dinh ($defaultValue).", OutputStyle.WARNING)
+                    )
+                )
             }
         }
 
         writeValue(prefs, key, defaultValue)
 
         return if (format == "json") {
+            val escapedKey = CommandFormatUtils.escapeJson(key)
+            val escapedOld = CommandFormatUtils.escapeJson(oldValue)
+            val escapedDefault = CommandFormatUtils.escapeJson(defaultValue)
             CommandResult.success(
-                "{\"key\": \"$key\", \"old_value\": \"$oldValue\", \"new_value\": \"$defaultValue\", \"reset\": true}"
+                "{\"key\": \"$escapedKey\", \"old_value\": \"$escapedOld\", \"new_value\": \"$escapedDefault\", \"reset\": true}"
             )
         } else {
-            CommandResult.success(listOf(
-                OutputLine("Da dat lai cau hinh:", OutputStyle.SUCCESS),
-                OutputLine("  $key: $oldValue -> $defaultValue (mac dinh)", OutputStyle.INFO)
-            ))
+            CommandResult.success(
+                listOf(
+                    OutputLine("Da dat lai cau hinh:", OutputStyle.SUCCESS),
+                    OutputLine("  $key: $oldValue -> $defaultValue (mac dinh)", OutputStyle.INFO)
+                )
+            )
         }
     }
 
@@ -375,7 +413,7 @@ class ConfigCommand : Command {
         context: CommandContext,
         format: String
     ): CommandResult {
-        val prefs = context.services.settingsPreferences
+        val prefs = context.services.settingsService
         val oldValues = readAllValues(prefs)
         val changes = mutableListOf<Triple<String, String, String>>()
 
@@ -392,15 +430,20 @@ class ConfigCommand : Command {
             return if (format == "json") {
                 CommandResult.success("{\"reset_count\": 0, \"message\": \"Tat ca da o gia tri mac dinh\"}")
             } else {
-                CommandResult.success(listOf(
-                    OutputLine("Tat ca cau hinh da o gia tri mac dinh.", OutputStyle.WARNING)
-                ))
+                CommandResult.success(
+                    listOf(
+                        OutputLine("Tat ca cau hinh da o gia tri mac dinh.", OutputStyle.WARNING)
+                    )
+                )
             }
         }
 
         return if (format == "json") {
             val changesJson = changes.joinToString(", ") { (key, old, new) ->
-                "{\"key\": \"$key\", \"old\": \"$old\", \"new\": \"$new\"}"
+                val escapedKey = CommandFormatUtils.escapeJson(key)
+                val escapedOld = CommandFormatUtils.escapeJson(old)
+                val escapedNew = CommandFormatUtils.escapeJson(new)
+                "{\"key\": \"$escapedKey\", \"old\": \"$escapedOld\", \"new\": \"$escapedNew\"}"
             }
             CommandResult.success("{\"reset_count\": ${changes.size}, \"changes\": [$changesJson]}")
         } else {
@@ -423,7 +466,7 @@ class ConfigCommand : Command {
     ): CommandResult {
         if (format == "json") {
             val entries = currentValues.entries.joinToString(", ") { (k, v) ->
-                "\"$k\": \"$v\""
+                "\"${CommandFormatUtils.escapeJson(k)}\": \"${CommandFormatUtils.escapeJson(v)}\""
             }
             return CommandResult.success("{$entries}")
         }
@@ -455,7 +498,7 @@ class ConfigCommand : Command {
             lines.add(
                 OutputLine(
                     padEnd("Khoa", 16) + padEnd("Gia tri", 12) +
-                        padEnd("Mac dinh", 12) + "Mo ta",
+                            padEnd("Mac dinh", 12) + "Mo ta",
                     OutputStyle.TABLE_HEADER
                 )
             )
@@ -478,7 +521,7 @@ class ConfigCommand : Command {
 
             val row = if (verbose) {
                 padEnd(key, 16) + padEnd(value, 12) +
-                    padEnd(defaultValue, 12) + (KEY_DESCRIPTIONS[key] ?: "")
+                        padEnd(defaultValue, 12) + (KEY_DESCRIPTIONS[key] ?: "")
             } else {
                 padEnd(key, 16) + padEnd(value, 12) + defaultValue
             }
@@ -516,26 +559,30 @@ class ConfigCommand : Command {
             }
 
         val jsonEntries = entries.joinToString(",\n  ") { (key, value) ->
+            val escapedKey = CommandFormatUtils.escapeJson(key)
+            val escapedValue = CommandFormatUtils.escapeJson(value)
             if (verbose) {
                 val defaultValue = DEFAULT_VALUES[key] ?: ""
                 val desc = KEY_DESCRIPTIONS[key] ?: ""
-                "\"$key\": {\"value\": \"$value\", \"default\": \"$defaultValue\", " +
-                    "\"description\": \"$desc\", \"is_default\": ${value == defaultValue}}"
+                val escapedDefault = CommandFormatUtils.escapeJson(defaultValue)
+                val escapedDesc = CommandFormatUtils.escapeJson(desc)
+                "\"$escapedKey\": {\"value\": \"$escapedValue\", \"default\": \"$escapedDefault\", " +
+                        "\"description\": \"$escapedDesc\", \"is_default\": ${value == defaultValue}}"
             } else {
-                "\"$key\": \"$value\""
+                "\"$escapedKey\": \"$escapedValue\""
             }
         }
 
         return CommandResult.success("{\n  $jsonEntries\n}")
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────
+    // -- Helpers -----------------------------------------------------------
 
     /**
      * Doc gia tri hien tai cua tat ca cac khoa.
      */
     private suspend fun readAllValues(
-        prefs: com.example.androidapp.data.preferences.SettingsPreferences
+        prefs: SettingsService
     ): Map<String, String> {
         val themeMode = prefs.darkThemeMode.first()
         val autoSync = prefs.autoSyncEnabled.first()
@@ -552,7 +599,7 @@ class ConfigCommand : Command {
      * Doc gia tri hien tai cua mot khoa cu the.
      */
     private suspend fun readValue(
-        prefs: com.example.androidapp.data.preferences.SettingsPreferences,
+        prefs: SettingsService,
         key: String
     ): String {
         return when (key) {
@@ -567,7 +614,7 @@ class ConfigCommand : Command {
      * Ghi gia tri moi cho mot khoa cu the.
      */
     private suspend fun writeValue(
-        prefs: com.example.androidapp.data.preferences.SettingsPreferences,
+        prefs: SettingsService,
         key: String,
         value: String
     ) {
@@ -588,15 +635,17 @@ class ConfigCommand : Command {
             KEY_DARK_THEME -> {
                 if (value !in VALID_THEME_VALUES) {
                     "Gia tri khong hop le cho '$key': '$value'\n" +
-                        "Cac gia tri hop le: ${VALID_THEME_VALUES.joinToString(", ")}"
+                            "Cac gia tri hop le: ${VALID_THEME_VALUES.joinToString(", ")}"
                 } else null
             }
+
             KEY_AUTO_SYNC, KEY_WIFI_ONLY -> {
                 if (value !in VALID_BOOL_VALUES) {
                     "Gia tri khong hop le cho '$key': '$value'\n" +
-                        "Cac gia tri hop le: true, false"
+                            "Cac gia tri hop le: true, false"
                 } else null
             }
+
             else -> "Khoa khong hop le: '$key'"
         }
     }
@@ -605,8 +654,8 @@ class ConfigCommand : Command {
      * Chuyen doi gia tri int cua che do giao dien sang chuoi.
      */
     private fun themeModeToString(mode: Int): String = when (mode) {
-        THEME_MODE_LIGHT -> "light"
-        THEME_MODE_DARK -> "dark"
+        SettingsService.THEME_MODE_LIGHT -> "light"
+        SettingsService.THEME_MODE_DARK -> "dark"
         else -> "system"
     }
 
@@ -614,9 +663,9 @@ class ConfigCommand : Command {
      * Chuyen doi chuoi che do giao dien sang gia tri int.
      */
     private fun stringToThemeMode(value: String): Int = when (value.lowercase()) {
-        "light" -> THEME_MODE_LIGHT
-        "dark" -> THEME_MODE_DARK
-        else -> THEME_MODE_SYSTEM
+        "light" -> SettingsService.THEME_MODE_LIGHT
+        "dark" -> SettingsService.THEME_MODE_DARK
+        else -> SettingsService.THEME_MODE_SYSTEM
     }
 
     /**

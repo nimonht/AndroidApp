@@ -1,6 +1,10 @@
 package com.example.androidapp.domain.console
 
 import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.service.LogService
+import com.example.androidapp.domain.service.NetworkService
+import com.example.androidapp.domain.service.SettingsService
+import com.example.androidapp.domain.service.SyncService
 
 /**
  * Runtime context injected into every command during execution.
@@ -14,7 +18,7 @@ import com.example.androidapp.domain.model.User
  * receiving end of a pipe (`|`) operator.
  *
  * **Design note**: This class references repository *interfaces* from the
- * domain layer and infrastructure wrappers. The actual implementations
+ * domain layer and domain-layer service interfaces. The actual implementations
  * are resolved by the DI container and injected via [CommandExecutor]'s
  * context provider lambda.
  *
@@ -25,7 +29,8 @@ import com.example.androidapp.domain.model.User
  *   if this command is not receiving piped input.
  * @property aliases Currently registered command aliases (name -> expansion).
  * @property commandHistory List of previously executed raw command strings
- *   in the current session (oldest first).
+ *   in the current session (oldest first). Capped at [MAX_HISTORY_SIZE]
+ *   entries to prevent unbounded memory growth.
  */
 data class CommandContext(
     val currentUser: User,
@@ -34,7 +39,15 @@ data class CommandContext(
     val pipeInput: List<String>? = null,
     val aliases: Map<String, String> = emptyMap(),
     val commandHistory: List<String> = emptyList()
-)
+) {
+    companion object {
+        /**
+         * Maximum number of command history entries retained in the context.
+         * Older entries are dropped when this limit is exceeded.
+         */
+        const val MAX_HISTORY_SIZE = 500
+    }
+}
 
 /**
  * Bundle of all repository interfaces available to commands.
@@ -51,24 +64,25 @@ data class RepositoryBundle(
     val quizRepository: com.example.androidapp.domain.repository.QuizRepository,
     val attemptRepository: com.example.androidapp.domain.repository.AttemptRepository,
     val shareCodeRepository: com.example.androidapp.domain.repository.ShareCodeRepository,
-    val poolRepository: com.example.androidapp.domain.repository.PoolRepository
+    val poolRepository: com.example.androidapp.domain.repository.PoolRepository,
+    val searchRepository: com.example.androidapp.domain.repository.SearchRepository
 )
 
 /**
  * Bundle of infrastructure services available to commands.
  *
- * These are data-layer or framework-level services that commands may need
- * for operations like triggering sync, checking connectivity, reading
- * settings, or querying the log buffer.
+ * All properties are typed as domain-layer service interfaces, keeping the
+ * [CommandContext] and all [Command] implementations free of data-layer or
+ * Android-framework imports.
  *
- * The types here are concrete classes from the data layer. This is an
- * accepted trade-off: [CommandContext] itself lives in the domain layer
- * but acts as a bridge to infrastructure. The [Command] interface remains
- * pure — it only sees [CommandContext], not the individual service types.
+ * @property syncService Sync management operations (trigger, retry, observe state).
+ * @property networkService Network connectivity status (online, WiFi).
+ * @property settingsService Application settings (theme, sync preferences).
+ * @property logService Application log buffer access (read, clear).
  */
 data class ServiceBundle(
-    val syncManager: com.example.androidapp.data.sync.SyncManager,
-    val networkMonitor: com.example.androidapp.data.network.NetworkMonitor,
-    val settingsPreferences: com.example.androidapp.data.preferences.SettingsPreferences,
-    val logCollector: com.example.androidapp.data.logging.LogCollector
+    val syncService: SyncService,
+    val networkService: NetworkService,
+    val settingsService: SettingsService,
+    val logService: LogService
 )

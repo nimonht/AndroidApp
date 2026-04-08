@@ -2,6 +2,7 @@ package com.example.androidapp.domain.console.commands
 
 import com.example.androidapp.domain.console.Command
 import com.example.androidapp.domain.console.CommandContext
+import com.example.androidapp.domain.console.CommandFormatUtils
 import com.example.androidapp.domain.console.CommandResult
 import com.example.androidapp.domain.console.CompletionSuggestion
 import com.example.androidapp.domain.console.OutputLine
@@ -43,8 +44,8 @@ class DeleteQuizCommand : Command {
 
     override val usage: String =
         "del -q <quizId> [...] [--owner <userId>] [--tag <tag>] [--draft] [--public] [--private] " +
-            "[--no-attempts] [--deleted-only] [--permanent] [--before <ts>] [--after <ts>] " +
-            "[--dry-run] [--confirm] [--format <table|json>] [--verbose]"
+                "[--no-attempts] [--deleted-only] [--permanent] [--before <ts>] [--after <ts>] " +
+                "[--dry-run] [--confirm] [--format <table|json>] [--verbose]"
 
     override val category: String = "admin"
 
@@ -64,7 +65,7 @@ class DeleteQuizCommand : Command {
         "del -q --public --format json --verbose --dry-run" to "Mo phong xoa quiz cong khai, xuat JSON chi tiet"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -137,7 +138,7 @@ class DeleteQuizCommand : Command {
         if (!dryRun && !confirm) {
             return CommandResult.error(
                 "Thao tac huy diet: xoa quiz vinh vien. " +
-                    "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
             )
         }
 
@@ -295,8 +296,11 @@ class DeleteQuizCommand : Command {
 
         lines.add(
             OutputLine(
-                padRight("ID", 24) + padRight("Tieu de", 30) + padRight("Trang thai", 14) +
-                    padRight("Luot lam", 10),
+                CommandFormatUtils.padRight("ID", 24) + CommandFormatUtils.padRight(
+                    "Tieu de",
+                    30
+                ) + CommandFormatUtils.padRight("Trang thai", 14) +
+                        CommandFormatUtils.padRight("Luot lam", 10),
                 OutputStyle.TABLE_HEADER
             )
         )
@@ -305,8 +309,16 @@ class DeleteQuizCommand : Command {
             val status = buildStatusLabel(quiz)
             lines.add(
                 OutputLine(
-                    padRight(quiz.id, 24) + padRight(truncate(quiz.title, 28), 30) +
-                        padRight(status, 14) + padRight(quiz.attemptCount.toString(), 10),
+                    CommandFormatUtils.padRight(quiz.id, 24) + CommandFormatUtils.padRight(
+                        CommandFormatUtils.truncate(
+                            quiz.title,
+                            28
+                        ), 30
+                    ) +
+                            CommandFormatUtils.padRight(
+                                status,
+                                14
+                            ) + CommandFormatUtils.padRight(quiz.attemptCount.toString(), 10),
                     OutputStyle.TABLE_ROW
                 )
             )
@@ -316,9 +328,14 @@ class DeleteQuizCommand : Command {
                 if (quiz.tags.isNotEmpty()) {
                     lines.add(OutputLine("  Tags: ${quiz.tags.joinToString(", ")}", OutputStyle.MUTED))
                 }
-                lines.add(OutputLine("  Tao: ${formatTimestamp(quiz.createdAt)}", OutputStyle.MUTED))
+                lines.add(OutputLine("  Tao: ${CommandFormatUtils.formatTimestamp(quiz.createdAt)}", OutputStyle.MUTED))
                 if (quiz.deletedAt != null) {
-                    lines.add(OutputLine("  Xoa mem: ${formatTimestamp(quiz.deletedAt)}", OutputStyle.MUTED))
+                    lines.add(
+                        OutputLine(
+                            "  Xoa mem: ${CommandFormatUtils.formatTimestamp(quiz.deletedAt)}",
+                            OutputStyle.MUTED
+                        )
+                    )
                 }
             }
         }
@@ -349,9 +366,19 @@ class DeleteQuizCommand : Command {
         for ((index, quiz) in quizzes.withIndex()) {
             val comma = if (index < quizzes.size - 1) "," else ""
             lines.add(OutputLine("    {", OutputStyle.CODE))
-            lines.add(OutputLine("      \"id\": \"${escapeJson(quiz.id)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"title\": \"${escapeJson(quiz.title)}\",", OutputStyle.CODE))
-            lines.add(OutputLine("      \"ownerId\": \"${escapeJson(quiz.ownerId)}\",", OutputStyle.CODE))
+            lines.add(OutputLine("      \"id\": \"${CommandFormatUtils.escapeJson(quiz.id)}\",", OutputStyle.CODE))
+            lines.add(
+                OutputLine(
+                    "      \"title\": \"${CommandFormatUtils.escapeJson(quiz.title)}\",",
+                    OutputStyle.CODE
+                )
+            )
+            lines.add(
+                OutputLine(
+                    "      \"ownerId\": \"${CommandFormatUtils.escapeJson(quiz.ownerId)}\",",
+                    OutputStyle.CODE
+                )
+            )
             lines.add(OutputLine("      \"isPublic\": ${quiz.isPublic},", OutputStyle.CODE))
             lines.add(OutputLine("      \"isDraft\": ${quiz.isDraft},", OutputStyle.CODE))
             lines.add(OutputLine("      \"attemptCount\": ${quiz.attemptCount},", OutputStyle.CODE))
@@ -384,7 +411,7 @@ class DeleteQuizCommand : Command {
             if (verbose) {
                 lines.add(
                     OutputLine(
-                        "Dang xoa: ${truncate(quiz.title, 40)} (${quiz.id})...",
+                        "Dang xoa: ${CommandFormatUtils.truncate(quiz.title, 40)} (${quiz.id})...",
                         OutputStyle.INFO
                     )
                 )
@@ -395,7 +422,7 @@ class DeleteQuizCommand : Command {
                 successCount++
                 lines.add(
                     OutputLine(
-                        "Da xoa: ${truncate(quiz.title, 40)} (${quiz.id})",
+                        "Da xoa: ${CommandFormatUtils.truncate(quiz.title, 40)} (${quiz.id})",
                         OutputStyle.SUCCESS
                     )
                 )
@@ -405,7 +432,7 @@ class DeleteQuizCommand : Command {
                 errors.add("${quiz.id}: $errorMsg")
                 lines.add(
                     OutputLine(
-                        "Loi khi xoa '${truncate(quiz.title, 30)}': $errorMsg",
+                        "Loi khi xoa '${CommandFormatUtils.truncate(quiz.title, 30)}': $errorMsg",
                         OutputStyle.ERROR
                     )
                 )
@@ -452,7 +479,7 @@ class DeleteQuizCommand : Command {
             lines.add(OutputLine("  \"errors\": [", OutputStyle.CODE))
             for ((index, err) in errors.withIndex()) {
                 val comma = if (index < errors.size - 1) "," else ""
-                lines.add(OutputLine("    \"${escapeJson(err)}\"$comma", OutputStyle.CODE))
+                lines.add(OutputLine("    \"${CommandFormatUtils.escapeJson(err)}\"$comma", OutputStyle.CODE))
             }
             lines.add(OutputLine("  ]", OutputStyle.CODE))
         } else {
@@ -475,39 +502,5 @@ class DeleteQuizCommand : Command {
             quiz.isPublic -> "Cong khai"
             else -> "Rieng tu"
         }
-    }
-
-    /**
-     * Dinh dang timestamp thanh chuoi ngay gio doc duoc.
-     */
-    private fun formatTimestamp(millis: Long): String {
-        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date(millis))
-    }
-
-    /**
-     * Cat ngan chuoi va them "..." neu qua dai.
-     */
-    private fun truncate(text: String, maxLength: Int): String {
-        return if (text.length <= maxLength) text else text.take(maxLength - 3) + "..."
-    }
-
-    /**
-     * Can chuoi ve do dai co dinh.
-     */
-    private fun padRight(text: String, length: Int): String {
-        return if (text.length >= length) text.take(length) else text.padEnd(length)
-    }
-
-    /**
-     * Thoat ky tu dac biet trong chuoi JSON.
-     */
-    private fun escapeJson(value: String): String {
-        return value
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
     }
 }

@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,21 +20,45 @@ import com.example.androidapp.domain.console.OutputStyle
 import com.example.androidapp.ui.screens.advanced.console.StyledOutputLine
 import com.example.androidapp.ui.theme.QuizzezTheme
 
+// -- ColorScheme extensions for console output colors -------------------------
+
+/** Green used for success output lines. */
+val ColorScheme.consoleSuccess: Color
+    get() = Color(0xFF4CAF50)
+
+/** Red used for error output lines. */
+val ColorScheme.consoleError: Color
+    get() = Color(0xFFEF5350)
+
+/** Amber used for warning output lines. */
+val ColorScheme.consoleWarning: Color
+    get() = Color(0xFFFFC107)
+
+/** Blue used for informational output lines. */
+val ColorScheme.consoleInfo: Color
+    get() = Color(0xFF42A5F5)
+
+/** Green-ish tone used for code/preformatted output lines. */
+val ColorScheme.consoleCode: Color
+    get() = Color(0xFF66BB6A)
+
+// -- Composable ---------------------------------------------------------------
+
 /**
  * Renders a single console output line with monospace font and color
  * determined by the [OutputStyle] of the line.
  *
  * Color mapping:
  * - [OutputStyle.NORMAL]: onSurface
- * - [OutputStyle.SUCCESS]: green (#4CAF50)
- * - [OutputStyle.ERROR]: red (#EF5350)
- * - [OutputStyle.WARNING]: amber (#FFC107)
- * - [OutputStyle.INFO]: blue (#42A5F5)
+ * - [OutputStyle.SUCCESS]: [ColorScheme.consoleSuccess]
+ * - [OutputStyle.ERROR]: [ColorScheme.consoleError]
+ * - [OutputStyle.WARNING]: [ColorScheme.consoleWarning]
+ * - [OutputStyle.INFO]: [ColorScheme.consoleInfo]
  * - [OutputStyle.HEADER]: primary, bold
  * - [OutputStyle.MUTED]: onSurfaceVariant
  * - [OutputStyle.TABLE_HEADER]: primary, bold
  * - [OutputStyle.TABLE_ROW]: onSurface
- * - [OutputStyle.CODE]: green-ish with subtle background
+ * - [OutputStyle.CODE]: [ColorScheme.consoleCode] with subtle background
  *
  * @param line The [StyledOutputLine] to render.
  * @param modifier Modifier for external layout customisation.
@@ -47,15 +72,15 @@ fun ConsoleOutputLine(
 
     val textColor: Color = when (line.style) {
         OutputStyle.NORMAL -> colorScheme.onSurface
-        OutputStyle.SUCCESS -> SuccessGreen
-        OutputStyle.ERROR -> ErrorRed
-        OutputStyle.WARNING -> WarningAmber
-        OutputStyle.INFO -> InfoBlue
+        OutputStyle.SUCCESS -> colorScheme.consoleSuccess
+        OutputStyle.ERROR -> colorScheme.consoleError
+        OutputStyle.WARNING -> colorScheme.consoleWarning
+        OutputStyle.INFO -> colorScheme.consoleInfo
         OutputStyle.HEADER -> colorScheme.primary
         OutputStyle.MUTED -> colorScheme.onSurfaceVariant
         OutputStyle.TABLE_HEADER -> colorScheme.primary
         OutputStyle.TABLE_ROW -> colorScheme.onSurface
-        OutputStyle.CODE -> CodeGreen
+        OutputStyle.CODE -> colorScheme.consoleCode
     }
 
     val fontWeight: FontWeight = when (line.style) {
@@ -67,6 +92,7 @@ fun ConsoleOutputLine(
         OutputStyle.CODE -> Modifier.background(
             colorScheme.surfaceVariant.copy(alpha = 0.3f)
         )
+
         else -> Modifier
     }
 
@@ -83,21 +109,6 @@ fun ConsoleOutputLine(
             .padding(horizontal = 8.dp, vertical = 1.dp)
     )
 }
-
-/** Green used for success output lines. */
-private val SuccessGreen = Color(0xFF4CAF50)
-
-/** Red used for error output lines. */
-private val ErrorRed = Color(0xFFEF5350)
-
-/** Amber used for warning output lines. */
-private val WarningAmber = Color(0xFFFFC107)
-
-/** Blue used for informational output lines. */
-private val InfoBlue = Color(0xFF42A5F5)
-
-/** Green-ish tone used for code/preformatted output lines. */
-private val CodeGreen = Color(0xFF66BB6A)
 
 // region Previews
 

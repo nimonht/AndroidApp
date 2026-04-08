@@ -41,7 +41,7 @@ class PermCommand : Command {
 
     override val category: String = "admin"
 
-    override val isDestructive: Boolean = false
+    override val isDestructive: Boolean = true
 
     override val examples: List<Pair<String, String>> = listOf(
         "perm admin@example.com" to "Xem quyen hien tai cua nguoi dung",
@@ -53,7 +53,7 @@ class PermCommand : Command {
         "perm grant admin@example.com MANAGE_USERS --dry-run" to "Xem truoc thay doi ma khong ap dung"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -199,7 +199,12 @@ class PermCommand : Command {
 
             UserRole.ADMIN -> {
                 val effective = user.effectivePermissions()
-                lines.add(OutputLine("  Quyen duoc cap: ${effective.size}/${AdminPermission.entries.size}", OutputStyle.INFO))
+                lines.add(
+                    OutputLine(
+                        "  Quyen duoc cap: ${effective.size}/${AdminPermission.entries.size}",
+                        OutputStyle.INFO
+                    )
+                )
                 lines.add(OutputLine(""))
 
                 if (effective.isEmpty()) {
@@ -259,7 +264,7 @@ class PermCommand : Command {
         if (user.role != UserRole.ADMIN) {
             return CommandResult.error(
                 "Nguoi dung '${user.email}' co vai tro ${user.role.name}. " +
-                    "Chi co the cap quyen cho nguoi dung co vai tro ADMIN."
+                        "Chi co the cap quyen cho nguoi dung co vai tro ADMIN."
             )
         }
 
@@ -271,14 +276,14 @@ class PermCommand : Command {
             if (subArgs.size < 2) {
                 return CommandResult.error(
                     "Thieu ten quyen. Su dung: perm grant <email> <permission>\n" +
-                        "Hoac dung --all de cap tat ca quyen."
+                            "Hoac dung --all de cap tat ca quyen."
                 )
             }
             val permName = subArgs[1].uppercase()
             val perm = parsePermission(permName)
                 ?: return CommandResult.error(
                     "Quyen khong hop le: $permName\n" +
-                        "Cac quyen hop le: ${AdminPermission.entries.joinToString(", ") { it.name }}"
+                            "Cac quyen hop le: ${AdminPermission.entries.joinToString(", ") { it.name }}"
                 )
             setOf(perm)
         }
@@ -290,10 +295,12 @@ class PermCommand : Command {
             val lines = mutableListOf<OutputLine>()
             lines.add(OutputLine("Khong co thay doi.", OutputStyle.WARNING))
             if (alreadyGranted.isNotEmpty()) {
-                lines.add(OutputLine(
-                    "Nguoi dung da co quyen: ${alreadyGranted.joinToString(", ") { it.name }}",
-                    OutputStyle.MUTED
-                ))
+                lines.add(
+                    OutputLine(
+                        "Nguoi dung da co quyen: ${alreadyGranted.joinToString(", ") { it.name }}",
+                        OutputStyle.MUTED
+                    )
+                )
             }
             return CommandResult.success(lines)
         }
@@ -311,29 +318,35 @@ class PermCommand : Command {
 
         return if (result.isSuccess) {
             val lines = mutableListOf<OutputLine>()
-            lines.add(OutputLine(
-                "Da cap ${newlyGranted.size} quyen cho ${user.email}.",
-                OutputStyle.SUCCESS
-            ))
+            lines.add(
+                OutputLine(
+                    "Da cap ${newlyGranted.size} quyen cho ${user.email}.",
+                    OutputStyle.SUCCESS
+                )
+            )
             if (verbose) {
                 newlyGranted.forEach { perm ->
                     lines.add(OutputLine("  + ${perm.name}", OutputStyle.SUCCESS))
                 }
                 if (alreadyGranted.isNotEmpty()) {
                     lines.add(OutputLine(""))
-                    lines.add(OutputLine(
-                        "Bo qua ${alreadyGranted.size} quyen da co:",
-                        OutputStyle.MUTED
-                    ))
+                    lines.add(
+                        OutputLine(
+                            "Bo qua ${alreadyGranted.size} quyen da co:",
+                            OutputStyle.MUTED
+                        )
+                    )
                     alreadyGranted.forEach { perm ->
                         lines.add(OutputLine("    ${perm.name}", OutputStyle.MUTED))
                     }
                 }
                 lines.add(OutputLine(""))
-                lines.add(OutputLine(
-                    "Tong quyen hien tai: ${updatedPerms.size}/${AdminPermission.entries.size}",
-                    OutputStyle.INFO
-                ))
+                lines.add(
+                    OutputLine(
+                        "Tong quyen hien tai: ${updatedPerms.size}/${AdminPermission.entries.size}",
+                        OutputStyle.INFO
+                    )
+                )
             }
             CommandResult.success(lines)
         } else {
@@ -375,7 +388,7 @@ class PermCommand : Command {
         if (user.role != UserRole.ADMIN) {
             return CommandResult.error(
                 "Nguoi dung '${user.email}' co vai tro ${user.role.name}. " +
-                    "Chi co the thu hoi quyen cua nguoi dung co vai tro ADMIN."
+                        "Chi co the thu hoi quyen cua nguoi dung co vai tro ADMIN."
             )
         }
 
@@ -387,14 +400,14 @@ class PermCommand : Command {
             if (subArgs.size < 2) {
                 return CommandResult.error(
                     "Thieu ten quyen. Su dung: perm revoke <email> <permission>\n" +
-                        "Hoac dung --all de thu hoi tat ca quyen."
+                            "Hoac dung --all de thu hoi tat ca quyen."
                 )
             }
             val permName = subArgs[1].uppercase()
             val perm = parsePermission(permName)
                 ?: return CommandResult.error(
                     "Quyen khong hop le: $permName\n" +
-                        "Cac quyen hop le: ${AdminPermission.entries.joinToString(", ") { it.name }}"
+                            "Cac quyen hop le: ${AdminPermission.entries.joinToString(", ") { it.name }}"
                 )
             setOf(perm)
         }
@@ -406,10 +419,12 @@ class PermCommand : Command {
             val lines = mutableListOf<OutputLine>()
             lines.add(OutputLine("Khong co thay doi.", OutputStyle.WARNING))
             if (notPresent.isNotEmpty()) {
-                lines.add(OutputLine(
-                    "Nguoi dung khong co quyen: ${notPresent.joinToString(", ") { it.name }}",
-                    OutputStyle.MUTED
-                ))
+                lines.add(
+                    OutputLine(
+                        "Nguoi dung khong co quyen: ${notPresent.joinToString(", ") { it.name }}",
+                        OutputStyle.MUTED
+                    )
+                )
             }
             return CommandResult.success(lines)
         }
@@ -427,29 +442,35 @@ class PermCommand : Command {
 
         return if (result.isSuccess) {
             val lines = mutableListOf<OutputLine>()
-            lines.add(OutputLine(
-                "Da thu hoi ${actuallyRevoked.size} quyen cua ${user.email}.",
-                OutputStyle.SUCCESS
-            ))
+            lines.add(
+                OutputLine(
+                    "Da thu hoi ${actuallyRevoked.size} quyen cua ${user.email}.",
+                    OutputStyle.SUCCESS
+                )
+            )
             if (verbose) {
                 actuallyRevoked.forEach { perm ->
                     lines.add(OutputLine("  - ${perm.name}", OutputStyle.WARNING))
                 }
                 if (notPresent.isNotEmpty()) {
                     lines.add(OutputLine(""))
-                    lines.add(OutputLine(
-                        "Bo qua ${notPresent.size} quyen khong ton tai:",
-                        OutputStyle.MUTED
-                    ))
+                    lines.add(
+                        OutputLine(
+                            "Bo qua ${notPresent.size} quyen khong ton tai:",
+                            OutputStyle.MUTED
+                        )
+                    )
                     notPresent.forEach { perm ->
                         lines.add(OutputLine("    ${perm.name}", OutputStyle.MUTED))
                     }
                 }
                 lines.add(OutputLine(""))
-                lines.add(OutputLine(
-                    "Tong quyen con lai: ${updatedPerms.size}/${AdminPermission.entries.size}",
-                    OutputStyle.INFO
-                ))
+                lines.add(
+                    OutputLine(
+                        "Tong quyen con lai: ${updatedPerms.size}/${AdminPermission.entries.size}",
+                        OutputStyle.INFO
+                    )
+                )
             }
             CommandResult.success(lines)
         } else {
@@ -510,10 +531,12 @@ class PermCommand : Command {
         }
 
         lines.add(OutputLine(""))
-        lines.add(OutputLine(
-            "Tong quyen sau thay doi: ${finalPerms.size}/${AdminPermission.entries.size}",
-            OutputStyle.INFO
-        ))
+        lines.add(
+            OutputLine(
+                "Tong quyen sau thay doi: ${finalPerms.size}/${AdminPermission.entries.size}",
+                OutputStyle.INFO
+            )
+        )
         lines.add(OutputLine("Khong co thay doi nao duoc ap dung (dry-run).", OutputStyle.MUTED))
         return CommandResult.success(lines)
     }
@@ -529,8 +552,8 @@ class PermCommand : Command {
         val allUsers = context.repositories.adminRepository.getAllUsers().first()
         return allUsers.find { user ->
             user.email.equals(identifier, ignoreCase = true) ||
-                user.id == identifier ||
-                user.username.equals(identifier, ignoreCase = true)
+                    user.id == identifier ||
+                    user.username.equals(identifier, ignoreCase = true)
         }
     }
 

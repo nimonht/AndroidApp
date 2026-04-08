@@ -56,7 +56,7 @@ class BanCommand : Command {
         "ban user1@ex.com user2@ex.com --confirm" to "Chan nhieu nguoi dung cung luc"
     )
 
-    override fun autocomplete(
+    override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
         context: CommandContext
@@ -123,17 +123,43 @@ class BanCommand : Command {
         val isDryRun = "dry-run" in flags
         val isVerbose = "verbose" in flags
         val isQuiet = "quiet" in flags
+        val confirm = "confirm" in flags
         val reason = flags["reason"]
         val format = flags["format"] ?: "table"
         val roleFilter = flags["role"]
         val searchQuery = flags["search"]
         val regexPattern = flags["regex"]
 
+        if (!isDryRun && !confirm) {
+            return CommandResult.error(
+                "Thao tac huy diet: cam nguoi dung vinh vien. " +
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+            )
+        }
+
         if (args.isEmpty() && roleFilter == null && searchQuery == null && regexPattern == null) {
             return CommandResult.error(
                 "Vui long cung cap email/ID nguoi dung hoac tieu chi loc.\n" +
                         "Su dung: $usage"
             )
+        }
+
+        if (roleFilter != null) {
+            try {
+                UserRole.valueOf(roleFilter.uppercase())
+            } catch (e: IllegalArgumentException) {
+                return CommandResult.error(
+                    "Vai tro khong hop le: $roleFilter. Cac vai tro hop le: ${UserRole.entries.joinToString(", ") { it.name }}"
+                )
+            }
+        }
+
+        if (regexPattern != null) {
+            try {
+                Regex(regexPattern, RegexOption.IGNORE_CASE)
+            } catch (e: Exception) {
+                return CommandResult.error("Bieu thuc chinh quy khong hop le: $regexPattern")
+            }
         }
 
         val allUsers: List<User> = try {
@@ -288,13 +314,11 @@ class BanCommand : Command {
             val role = try {
                 UserRole.valueOf(roleFilter.uppercase())
             } catch (_: IllegalArgumentException) {
-                null
+                null // Already validated in execute()
             }
             if (role != null) {
                 for (user in allUsers) {
-                    if (user.role == role) {
-                        addUser(user)
-                    }
+                    if (user.role == role) addUser(user)
                 }
             }
         }
@@ -315,13 +339,11 @@ class BanCommand : Command {
             val regex = try {
                 Regex(regexPattern, RegexOption.IGNORE_CASE)
             } catch (_: Exception) {
-                null
+                null // Already validated in execute()
             }
             if (regex != null) {
                 for (user in allUsers) {
-                    if (regex.containsMatchIn(user.email)) {
-                        addUser(user)
-                    }
+                    if (regex.containsMatchIn(user.email)) addUser(user)
                 }
             }
         }
@@ -369,6 +391,7 @@ class BanCommand : Command {
                     )
                 }
             }
+
             "list" -> {
                 for (user in toBan) {
                     lines.add(
@@ -379,6 +402,7 @@ class BanCommand : Command {
                     )
                 }
             }
+
             else -> {
                 lines.add(
                     OutputLine(

@@ -41,7 +41,7 @@ private object TokenColors {
  * - [CommandToken.Flag] / [CommandToken.FlagValue] -> amber
  * - [CommandToken.StringLiteral] -> green
  * - [CommandToken.Pipe] / [CommandToken.Semicolon] -> magenta
- * - [CommandToken.Argument] -> default light color
+ * - Other tokens -> default light color
  *
  * The transformation does not alter the text content or offset mapping;
  * it only annotates spans with color styles.
