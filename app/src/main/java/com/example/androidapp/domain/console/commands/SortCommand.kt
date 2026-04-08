@@ -160,11 +160,10 @@ class SortCommand : Command {
                     if (primary != 0) {
                         primary
                     } else {
-                        val tieBreaker = if (ignoreCase) {
-                            a.value.compareTo(b.value, ignoreCase = true)
-                        } else {
-                            a.value.compareTo(b.value)
-                        }
+                        // When primary keys are equal, use case-sensitive
+                        // lexicographic order as tie-breaker, then fall
+                        // back to original index for total ordering.
+                        val tieBreaker = a.value.compareTo(b.value)
                         if (tieBreaker != 0) tieBreaker else a.index.compareTo(b.index)
                     }
                 }

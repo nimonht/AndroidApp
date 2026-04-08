@@ -199,16 +199,12 @@ class PublishCommand : Command {
         }
 
         if (quizzesToPublish.isEmpty()) {
-            if (skippedLines.isNotEmpty()) {
-                return CommandResult(
-                    output = skippedLines + OutputLine(
-                        "Khong tim thay quiz nao can xuat ban phu hop voi bo loc.",
-                        OutputStyle.INFO
-                    ),
-                    isSuccess = true
-                )
+            val emptyResult = CommandResult.success("Khong tim thay quiz nao can xuat ban phu hop voi bo loc.")
+            return if (skippedLines.isNotEmpty()) {
+                emptyResult.copy(output = skippedLines + emptyResult.output)
+            } else {
+                emptyResult
             }
-            return CommandResult.success("Khong tim thay quiz nao can xuat ban phu hop voi bo loc.")
         }
 
         if (dryRun) {

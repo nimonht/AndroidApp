@@ -66,7 +66,7 @@ class LogCollector(
     private var pendingCount = 0
 
     /** Timestamp of the last flush to [_logs]. */
-    private var lastFlushTime = 0L
+    private var lastFlushTime = System.currentTimeMillis()
 
     /**
      * Regex pattern matching the logcat `threadtime` format:
