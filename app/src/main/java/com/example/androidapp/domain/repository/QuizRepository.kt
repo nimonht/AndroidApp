@@ -179,6 +179,15 @@ interface QuizRepository {
     suspend fun getSearchResultsCount(query: String): Int
 
     /**
+     * Forces a one-shot refresh of the user's quizzes from the remote data source,
+     * bypassing sync-allowed checks. Used by the developer console to ensure
+     * fresh data.
+     *
+     * @param userId The owner's user ID whose quizzes should be refreshed.
+     */
+    suspend fun forceRefreshUserQuizzes(userId: String)
+
+    /**
      * Refreshes the local Room cache of public quizzes from Firestore.
      *
      * Fetches all public quizzes, upserts them into Room (including their

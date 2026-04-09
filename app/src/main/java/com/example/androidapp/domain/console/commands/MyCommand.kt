@@ -152,6 +152,12 @@ class MyCommand : Command {
         val userId = context.currentUser.id
         val quizRepo = context.repositories.quizRepository
 
+        // Force refresh from Firestore for developer console
+        try {
+            quizRepo.forceRefreshUserQuizzes(userId)
+        } catch (_: Exception) { /* best-effort */
+        }
+
         val showDeleted = flags.containsKey("deleted")
         val quizzes: List<Quiz> = if (showDeleted) {
             quizRepo.getDeletedQuizzes(userId).first()
@@ -402,6 +408,8 @@ class MyCommand : Command {
         val userId = context.currentUser.id
         val attemptRepo = context.repositories.attemptRepository
 
+        // Attempt refresh is handled by getAttemptsByUser's .onStart { syncManager.downloadAttempts(userId) }
+        // which runs before the first emission, so Firestore data is fetched automatically.
         var attempts = attemptRepo.getAttemptsByUser(userId).first()
 
         // --quiz <quizId>
@@ -641,6 +649,12 @@ class MyCommand : Command {
         val userId = context.currentUser.id
         val quizRepo = context.repositories.quizRepository
         val attemptRepo = context.repositories.attemptRepository
+
+        // Force refresh from Firestore for developer console
+        try {
+            quizRepo.forceRefreshUserQuizzes(userId)
+        } catch (_: Exception) { /* best-effort */
+        }
 
         val myQuizzes = quizRepo.getMyQuizzes(userId).first()
         val deletedQuizzes = quizRepo.getDeletedQuizzes(userId).first()

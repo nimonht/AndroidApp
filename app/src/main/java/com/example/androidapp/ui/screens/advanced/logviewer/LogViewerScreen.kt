@@ -1,6 +1,11 @@
 package com.example.androidapp.ui.screens.advanced.logviewer
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.res.Configuration
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -190,6 +195,30 @@ fun LogViewerScreenContent(
                 listState.animateScrollToItem(totalItems - 1)
             }
         }
+    }
+
+    // Copy exported logs to clipboard when exportedText is set
+    val context = LocalContext.current
+    LaunchedEffect(uiState.exportedText) {
+        val text = uiState.exportedText ?: return@LaunchedEffect
+        if (text.isEmpty()) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.log_viewer_export_empty),
+                Toast.LENGTH_SHORT
+            ).show()
+            onEvent(LogViewerEvent.ClearExport)
+            return@LaunchedEffect
+        }
+        val clipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboardManager.setPrimaryClip(ClipData.newPlainText("Quizzez Logs", text))
+        Toast.makeText(
+            context,
+            context.getString(R.string.log_viewer_export_success),
+            Toast.LENGTH_SHORT
+        ).show()
+        onEvent(LogViewerEvent.ClearExport)
     }
 
     Surface(

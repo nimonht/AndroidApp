@@ -1004,5 +1004,9 @@
     <string name="log_viewer_detail_message">Nội dung</string>
     <string name="log_viewer_paused_badge">TẠM DỪNG</string>
     <string name="log_viewer_search_logs_hint">Tìm kiếm nhật ký…</string>
+    <string
+        name="log_viewer_export_success"
+    >Đã sao chép nhật ký vào bộ nhớ tạm</string>
+    <string name="log_viewer_export_empty">Không có nhật ký nào để xuất</string>
 
 </resources>

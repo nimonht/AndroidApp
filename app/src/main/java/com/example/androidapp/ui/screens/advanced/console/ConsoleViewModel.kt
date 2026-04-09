@@ -312,8 +312,11 @@ class ConsoleViewModel(
                 val result = commandExecutor.execute(input)
                 processCommandOutput(result.output)
             } catch (e: Exception) {
-                // TODO: these developer-facing console error messages are hardcoded Vietnamese;
-                //  stringResource() is unavailable in ViewModels — acceptable for dev console output.
+                // TODO(C11): Hardcoded Vietnamese — stringResource() is unavailable in ViewModels.
+                //  Fixing only here would be inconsistent: all 28+ command implementations in
+                //  commands/ also emit hardcoded Vietnamese output. A comprehensive pass across
+                //  ConsoleViewModel + every ConsoleCommand is needed to fully resolve C11 for the
+                //  developer console. Tracked as low-priority since this is a dev-only tool.
                 appendOutput(
                     StyledOutputLine(
                         "Loi: ${e.message ?: "Loi khong xac dinh"}",
@@ -551,8 +554,11 @@ class ConsoleViewModel(
 
     /** Appends the initial welcome banner when the console is first opened. */
     private fun appendWelcomeBanner() {
-        // TODO: these developer-facing banner strings are hardcoded Vietnamese;
-        //  stringResource() is unavailable in ViewModels — acceptable for dev console output.
+        // TODO(C11): Hardcoded Vietnamese — stringResource() is unavailable in ViewModels.
+        //  Fixing only here would be inconsistent: all 28+ command implementations in
+        //  commands/ also emit hardcoded Vietnamese output. A comprehensive pass across
+        //  ConsoleViewModel + every ConsoleCommand is needed to fully resolve C11 for the
+        //  developer console. Tracked as low-priority since this is a dev-only tool.
         val bannerLines = listOf(
             StyledOutputLine(
                 "Quizzez Developer Console v1.0",
