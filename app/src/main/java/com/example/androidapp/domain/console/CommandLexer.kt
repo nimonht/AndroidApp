@@ -229,8 +229,33 @@ object CommandLexer {
                 tokens.add(CommandToken.FlagValue(firstChar.toString(), rest))
             } else {
                 // Compound short flags: -abc -> Flag(a), Flag(b), Flag(c)
-                for (ch in chars) {
+                // Stop at the first digit to avoid emitting digits as flag names.
+                // If a digit is encountered, treat it (and any following chars) as
+                // a value for the preceding flag letter.
+                var hitDigit = false
+                for ((idx, ch) in chars.withIndex()) {
+                    if (ch.isDigit()) {
+                        // Remaining chars (starting with this digit) become the
+                        // value for the immediately preceding flag.
+                        val digitSuffix = chars.substring(idx)
+                        if (tokens.isNotEmpty()) {
+                            val lastFlag = tokens.removeAt(tokens.lastIndex)
+                            if (lastFlag is CommandToken.Flag) {
+                                tokens.add(CommandToken.FlagValue(lastFlag.name, digitSuffix))
+                            } else {
+                                tokens.add(lastFlag)
+                                tokens.add(CommandToken.Keyword(digitSuffix))
+                            }
+                        } else {
+                            tokens.add(CommandToken.Keyword(digitSuffix))
+                        }
+                        hitDigit = true
+                        break
+                    }
                     tokens.add(CommandToken.Flag(ch.toString()))
+                }
+                if (!hitDigit) {
+                    // All characters were letters — already added above
                 }
             }
         }

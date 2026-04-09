@@ -62,7 +62,8 @@ class DeleteCommand(
 
     /**
      * Tinh huy diet duoc uy quyen cho lenh con. Tat ca lenh con deu
-     * la huy diet, nhung meta-dispatcher khong tu danh dau.
+     * la huy diet, va meta-dispatcher nay cung duoc danh dau huy diet
+     * vi day la diem vao cho thao tac xoa tu goc nhin cua bo thuc thi.
      */
     override val isDestructive: Boolean = true
 

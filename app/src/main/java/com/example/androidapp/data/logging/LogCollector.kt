@@ -132,7 +132,9 @@ class LogCollector(
             } catch (_: Exception) {
                 // Stream closed or process killed — stop gracefully.
             } finally {
-                flushToStateFlow()
+                synchronized(bufferLock) {
+                    flushToStateFlow()
+                }
                 try {
                     reader.close()
                 } catch (_: Exception) { /* best-effort */

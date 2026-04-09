@@ -87,17 +87,19 @@ class HeadTailCommand(private val isHead: Boolean) : Command {
         }
 
         val availableFlags = listOf(
-            Triple("--lines", "-n", "So dong can lay"),
-            Triple("--skip", null, "Bo qua N dong truoc khi lay"),
-            Triple("--numbered", null, "Hien thi so thu tu dong")
+            Triple("lines", "n", "So dong can lay"),
+            Triple("skip", null, "Bo qua N dong truoc khi lay"),
+            Triple("numbered", null, "Hien thi so thu tu dong")
         )
 
         for ((long, short, desc) in availableFlags) {
             if (long !in flags && (short == null || short !in flags)) {
+                val longFlag = "--$long"
+                val shortFlag = short?.let { "-$it" }
                 suggestions.add(
                     CompletionSuggestion(
-                        text = long,
-                        displayText = if (short != null) "$long/$short" else long,
+                        text = longFlag,
+                        displayText = if (shortFlag != null) "$longFlag/$shortFlag" else longFlag,
                         description = desc,
                         type = SuggestionType.FLAG
                     )

@@ -73,9 +73,9 @@ class PingCommand : Command {
             }
         }
 
-        // Suggest service names if the previous flag is --service
+        // Suggest service names when --service/-s flag is present but has no value yet
         val serviceFlag = flags["service"] ?: flags["s"]
-        if (serviceFlag == null && args.lastOrNull() in listOf("--service", "-s")) {
+        if (("service" in flags || "s" in flags) && serviceFlag == null) {
             listOf("firestore", "auth", "all").forEach { svc ->
                 suggestions.add(
                     CompletionSuggestion(

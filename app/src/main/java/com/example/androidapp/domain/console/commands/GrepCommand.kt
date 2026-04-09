@@ -58,29 +58,32 @@ class GrepCommand : Command {
         context: CommandContext
     ): List<CompletionSuggestion> {
         val allFlags = listOf(
-            "--regex" to "Su dung bieu thuc chinh quy",
-            "--ignore-case" to "Khong phan biet hoa thuong",
-            "--invert" to "Hien dong khong khop",
-            "--count" to "Chi hien so dong khop",
-            "--line-number" to "Hien so dong",
-            "--context" to "So dong ngu canh truoc va sau",
-            "--before-context" to "So dong ngu canh truoc",
-            "--after-context" to "So dong ngu canh sau",
-            "--max-count" to "Gioi han so ket qua",
-            "--only-matching" to "Chi hien phan khop",
-            "--word" to "Chi khop toan bo tu",
-            "--fixed-string" to "Tim kiem chuoi co dinh (khong regex)",
-            "--color" to "To mau phan khop"
+            Triple(listOf("--regex", "-r"), setOf("regex", "r"), "Su dung bieu thuc chinh quy"),
+            Triple(listOf("--ignore-case", "-i"), setOf("ignore-case", "i"), "Khong phan biet hoa thuong"),
+            Triple(listOf("--invert", "-v"), setOf("invert", "v"), "Hien dong khong khop"),
+            Triple(listOf("--count", "-c"), setOf("count", "c"), "Chi hien so dong khop"),
+            Triple(listOf("--line-number", "-n"), setOf("line-number", "n"), "Hien so dong"),
+            Triple(listOf("--context", "-C"), setOf("context", "C"), "So dong ngu canh truoc va sau"),
+            Triple(listOf("--before-context", "-B"), setOf("before-context", "B"), "So dong ngu canh truoc"),
+            Triple(listOf("--after-context", "-A"), setOf("after-context", "A"), "So dong ngu canh sau"),
+            Triple(listOf("--max-count", "-m"), setOf("max-count", "m"), "Gioi han so ket qua"),
+            Triple(listOf("--only-matching", "-o"), setOf("only-matching", "o"), "Chi hien phan khop"),
+            Triple(listOf("--word", "-w"), setOf("word", "w"), "Chi khop toan bo tu"),
+            Triple(listOf("--fixed-string", "-F"), setOf("fixed-string", "F"), "Tim kiem chuoi co dinh (khong regex)"),
+            Triple(listOf("--color"), setOf("color"), "To mau phan khop")
         )
+        val usedFlags = flags.keys
 
         return allFlags
-            .filter { (flag, _) -> flag !in flags }
-            .map { (flag, desc) ->
-                CompletionSuggestion(
-                    text = flag,
-                    description = desc,
-                    type = SuggestionType.FLAG
-                )
+            .filter { (_, normalizedFlags, _) -> normalizedFlags.none { it in usedFlags } }
+            .flatMap { (variants, _, desc) ->
+                variants.map { flag ->
+                    CompletionSuggestion(
+                        text = flag,
+                        description = desc,
+                        type = SuggestionType.FLAG
+                    )
+                }
             }
     }
 
