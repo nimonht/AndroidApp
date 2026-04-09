@@ -37,7 +37,7 @@ class SyncCommand : Command {
     override val description: String = "Dong bo du lieu giua thiet bi va may chu"
 
     override val usage: String =
-        "sync [now|status|push|pull|retry] [--verbose] [--force] [--format <format>] [--timeout <ms>]"
+        "sync [now|status|push|pull|retry] [--verbose] [--force] [--format <format>]"
 
     override val minimumRole: UserRole = UserRole.USER
 
@@ -62,7 +62,7 @@ class SyncCommand : Command {
     /**
      * Cac flag hop le.
      */
-    private val validFlags = listOf("--verbose", "-v", "--force", "-f", "--format", "--timeout")
+    private val validFlags = listOf("--verbose", "-v", "--force", "-f", "--format")
 
     override suspend fun autocomplete(
         args: List<String>,
@@ -181,6 +181,18 @@ class SyncCommand : Command {
             lines.add(OutputLine("[2/2] Hoan tat!", OutputStyle.SUCCESS))
 
             val elapsed = System.currentTimeMillis() - startTime
+
+            if (format == "json") {
+                val endState = syncService.consoleSyncState.value
+                val jsonLines = mutableListOf<OutputLine>()
+                jsonLines.add(OutputLine("{", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"action\": \"sync_now\",", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"success\": true,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"elapsed_ms\": $elapsed,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"state\": \"${endState.name.lowercase()}\"", OutputStyle.CODE))
+                jsonLines.add(OutputLine("}", OutputStyle.CODE))
+                return CommandResult.success(jsonLines)
+            }
 
             lines.add(OutputLine(""))
             lines.add(OutputLine("Dong bo hoan tat trong ${elapsed}ms", OutputStyle.SUCCESS))
@@ -334,6 +346,16 @@ class SyncCommand : Command {
         val pendingBefore = syncService.getPendingCount()
 
         if (pendingBefore == 0) {
+            if (format == "json") {
+                val jsonLines = mutableListOf<OutputLine>()
+                jsonLines.add(OutputLine("{", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"action\": \"push\",", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"success\": true,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"elapsed_ms\": 0,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"pushed\": 0", OutputStyle.CODE))
+                jsonLines.add(OutputLine("}", OutputStyle.CODE))
+                return CommandResult.success(jsonLines)
+            }
             lines.add(OutputLine("Khong co du lieu nao can day len cloud.", OutputStyle.INFO))
             return CommandResult.success(lines)
         }
@@ -349,6 +371,17 @@ class SyncCommand : Command {
             val elapsed = System.currentTimeMillis() - startTime
             val pendingAfter = syncService.getPendingCount()
             val pushed = pendingBefore - pendingAfter
+
+            if (format == "json") {
+                val jsonLines = mutableListOf<OutputLine>()
+                jsonLines.add(OutputLine("{", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"action\": \"push\",", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"success\": true,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"elapsed_ms\": $elapsed,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"pushed\": $pushed", OutputStyle.CODE))
+                jsonLines.add(OutputLine("}", OutputStyle.CODE))
+                return CommandResult.success(jsonLines)
+            }
 
             lines.add(OutputLine("Da day $pushed/$pendingBefore thao tac trong ${elapsed}ms", OutputStyle.SUCCESS))
 
@@ -407,6 +440,18 @@ class SyncCommand : Command {
             syncService.processPendingOperations()
             val elapsed = System.currentTimeMillis() - startTime
 
+            if (format == "json") {
+                val state = syncService.consoleSyncState.value
+                val jsonLines = mutableListOf<OutputLine>()
+                jsonLines.add(OutputLine("{", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"action\": \"pull\",", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"success\": true,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"elapsed_ms\": $elapsed,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"state\": \"${state.name.lowercase()}\"", OutputStyle.CODE))
+                jsonLines.add(OutputLine("}", OutputStyle.CODE))
+                return CommandResult.success(jsonLines)
+            }
+
             lines.add(OutputLine("Da xep hang dong bo tai du lieu trong ${elapsed}ms", OutputStyle.SUCCESS))
 
             if (verbose) {
@@ -437,6 +482,17 @@ class SyncCommand : Command {
         lines.add(OutputLine(""))
 
         if (pendingBefore == 0) {
+            if (format == "json") {
+                val jsonLines = mutableListOf<OutputLine>()
+                jsonLines.add(OutputLine("{", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"action\": \"retry\",", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"success\": true,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"elapsed_ms\": 0,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"pending_before\": 0,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"pending_after\": 0", OutputStyle.CODE))
+                jsonLines.add(OutputLine("}", OutputStyle.CODE))
+                return CommandResult.success(jsonLines)
+            }
             lines.add(OutputLine("Khong co thao tac nao can thu lai.", OutputStyle.INFO))
             return CommandResult.success(lines)
         }
@@ -451,6 +507,18 @@ class SyncCommand : Command {
             syncService.retryFailedOperations()
             val elapsed = System.currentTimeMillis() - startTime
             val pendingAfter = syncService.getPendingCount()
+
+            if (format == "json") {
+                val jsonLines = mutableListOf<OutputLine>()
+                jsonLines.add(OutputLine("{", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"action\": \"retry\",", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"success\": true,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"elapsed_ms\": $elapsed,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"pending_before\": $pendingBefore,", OutputStyle.CODE))
+                jsonLines.add(OutputLine("  \"pending_after\": $pendingAfter", OutputStyle.CODE))
+                jsonLines.add(OutputLine("}", OutputStyle.CODE))
+                return CommandResult.success(jsonLines)
+            }
 
             lines.add(
                 OutputLine(
@@ -547,7 +615,6 @@ class SyncCommand : Command {
             "--verbose", "-v" -> "Hien thi thong tin chi tiet"
             "--force", "-f" -> "Bat buoc dong bo ngay ca khi ngoai tuyen"
             "--format" -> "Dinh dang xuat (table, json, text)"
-            "--timeout" -> "Thoi gian cho toi da (ms)"
             else -> ""
         }
     }

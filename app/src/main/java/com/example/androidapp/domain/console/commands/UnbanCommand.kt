@@ -21,15 +21,18 @@ import kotlinx.coroutines.flow.first
  * A `--dry-run` flag previews which users would be unbanned without performing
  * the operation.
  *
- * // Note: --banned-before/--banned-after removed — domain model lacks bannedAt field.
- * // Re-add when User model supports a dedicated banned timestamp.
+ * The `--all` flag unbans every currently banned user (requires `--confirm`).
+ *
+ * The `--banned-before` and `--banned-after` flags are recognized but not yet
+ * functional because the [User] domain model lacks a `bannedAt` field.
  *
  * Usage examples:
  * ```
  * unban user@example.com
  * unban --search "test" --dry-run
  * unban --role USER --confirm
- * unban --regex ".*@temp\\.com" --confirm
+ * unban --regex ".*@temp\.com" --confirm
+ * unban --all --confirm
  * ```
  */
 class UnbanCommand : Command {
@@ -46,7 +49,7 @@ class UnbanCommand : Command {
     /** @inheritDoc */
     override val usage: String =
         "unban <email|userId> [...] [--search <query>] [--regex <pattern>] " +
-                "[--role <role>] " +
+                "[--role <role>] [--all] [--banned-before <date>] [--banned-after <date>] " +
                 "[--dry-run] [--confirm] [--reason <text>] [--verbose] [--quiet] [--format <plain|table>]"
 
     /** @inheritDoc */
@@ -62,14 +65,18 @@ class UnbanCommand : Command {
     override val category: String = "admin"
 
     /** @inheritDoc */
-    // Note: --banned-before/--banned-after removed — domain model lacks bannedAt field.
-    // Re-add when User model supports a dedicated banned timestamp.
+    override val valueFlags: Set<String> = setOf(
+        "search", "regex", "role", "reason", "format", "banned-before", "banned-after"
+    )
+
+    /** @inheritDoc */
     override val examples: List<Pair<String, String>> = listOf(
         "unban user@example.com" to "Bo cam mot nguoi dung cu the",
         "unban user1@a.com user2@b.com" to "Bo cam nhieu nguoi dung",
         "unban --search test --dry-run" to "Xem truoc nguoi dung bi cam khop voi 'test'",
         "unban --role USER --confirm" to "Bo cam tat ca nguoi dung co role USER",
-        "unban --regex \".*@temp\\.com\" --confirm" to "Bo cam nguoi dung khop regex"
+        "unban --regex \".*@temp\\.com\" --confirm" to "Bo cam nguoi dung khop regex",
+        "unban --all --confirm" to "Bo cam tat ca nguoi dung dang bi cam"
     )
 
     /** @inheritDoc */
@@ -84,6 +91,9 @@ class UnbanCommand : Command {
             "--search" to "Tim kiem nguoi dung bi cam",
             "--regex" to "Loc bang bieu thuc chinh quy",
             "--role" to "Loc theo vai tro",
+            "--all" to "Bo cam tat ca nguoi dung dang bi cam",
+            "--banned-before" to "Loc theo thoi gian cam truoc ngay",
+            "--banned-after" to "Loc theo thoi gian cam sau ngay",
             "--dry-run" to "Xem truoc ket qua ma khong thuc hien",
             "--confirm" to "Bo qua xac nhan",
             "--reason" to "Ly do bo cam",
@@ -93,7 +103,8 @@ class UnbanCommand : Command {
         )
 
         for ((flag, desc) in availableFlags) {
-            if (flag !in flags) {
+            val flagName = flag.removePrefix("--")
+            if (flagName !in flags) {
                 suggestions.add(
                     CompletionSuggestion(
                         text = flag,
@@ -104,7 +115,7 @@ class UnbanCommand : Command {
             }
         }
 
-        if ("--role" in flags && flags["--role"] == null) {
+        if ("role" in flags && flags["role"] == null) {
             for (role in UserRole.entries) {
                 suggestions.add(
                     CompletionSuggestion(
@@ -116,7 +127,7 @@ class UnbanCommand : Command {
             }
         }
 
-        if ("--format" in flags && flags["--format"] == null) {
+        if ("format" in flags && flags["format"] == null) {
             suggestions.add(
                 CompletionSuggestion(text = "plain", description = "Van ban thuan", type = SuggestionType.ARGUMENT)
             )
@@ -137,15 +148,40 @@ class UnbanCommand : Command {
         val isDryRun = "dry-run" in flags
         val isVerbose = "verbose" in flags
         val isQuiet = "quiet" in flags
+        val isAll = "all" in flags
+        val confirm = "confirm" in flags
         val reason = flags["reason"]
         val format = flags["format"] ?: "plain"
         val searchQuery = flags["search"]
         val regexPattern = flags["regex"]
         val roleFilter = flags["role"]
+        val bannedBefore = flags["banned-before"]
+        val bannedAfter = flags["banned-after"]
 
-        if (args.isEmpty() && searchQuery == null && regexPattern == null && roleFilter == null) {
+        // Handle unsupported --banned-before / --banned-after flags early
+        if (bannedBefore != null || "banned-before" in flags) {
             return CommandResult.error(
-                "Vui long cung cap email/userId, hoac su dung --search, --regex, --role de chi dinh nguoi dung can bo cam."
+                "Tuy chon --banned-before chua duoc ho tro vi du lieu thoi gian cam chua co san."
+            )
+        }
+        if (bannedAfter != null || "banned-after" in flags) {
+            return CommandResult.error(
+                "Tuy chon --banned-after chua duoc ho tro vi du lieu thoi gian cam chua co san."
+            )
+        }
+
+        // Validate that at least one targeting mechanism is provided
+        if (!isAll && args.isEmpty() && searchQuery == null && regexPattern == null && roleFilter == null) {
+            return CommandResult.error(
+                "Vui long cung cap email/userId, hoac su dung --all, --search, --regex, --role de chi dinh nguoi dung can bo cam."
+            )
+        }
+
+        // --all requires --confirm (unless dry-run)
+        if (isAll && !confirm && !isDryRun) {
+            return CommandResult.error(
+                "Tuy chon --all yeu cau --confirm de xac nhan bo cam tat ca nguoi dung. " +
+                        "Su dung --dry-run de xem truoc."
             )
         }
 
@@ -164,6 +200,10 @@ class UnbanCommand : Command {
         val warnings = mutableListOf<OutputLine>()
 
         var targetUsers = when {
+            isAll -> {
+                bannedUsers
+            }
+
             args.isNotEmpty() -> {
                 val matched = mutableListOf<User>()
                 val notFound = mutableListOf<String>()

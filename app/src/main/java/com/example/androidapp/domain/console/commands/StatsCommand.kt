@@ -28,9 +28,6 @@ import kotlinx.coroutines.flow.first
  * - `--verbose`: hien thi them chi so phu (ty le phan tram, trung binh).
  * - `--export`: danh dau dau ra de xuat (tuong duong JSON khong co trang tri).
  *
- * Cac flag chua ho tro (se ra mat trong tuong lai):
- * - `--period`, `--compare-period`, `--breakdown`, `--trend`
- *
  * Yeu cau vai tro toi thieu [UserRole.ADMIN] va quyen [AdminPermission.VIEW_REPORTS].
  */
 class StatsCommand : Command {
@@ -87,11 +84,7 @@ class StatsCommand : Command {
             "--sync" to "Hien thi thong ke dong bo",
             "--format" to "Dinh dang dau ra (table/json)",
             "--verbose" to "Hien thi chi tiet",
-            "--export" to "Xuat du lieu de luu tru",
-            "--period" to "Tinh nang se ra mat",
-            "--compare-period" to "Tinh nang se ra mat",
-            "--breakdown" to "Tinh nang se ra mat",
-            "--trend" to "Tinh nang se ra mat"
+            "--export" to "Xuat du lieu de luu tru"
         )
 
         // Neu flag cuoi la --format va chua co gia tri, goi y gia tri
@@ -142,12 +135,8 @@ class StatsCommand : Command {
                 return CommandResult.success(
                     listOf(
                         OutputLine(
-                            "Flag --$flag: tinh nang se ra mat trong phien ban toi.",
+                            "Co '--$flag' chua duoc ho tro.",
                             OutputStyle.WARNING
-                        ),
-                        OutputLine(
-                            "Hien tai chi ho tro: --users, --quizzes, --attempts, --sync, --format, --verbose, --export.",
-                            OutputStyle.INFO
                         )
                     )
                 )

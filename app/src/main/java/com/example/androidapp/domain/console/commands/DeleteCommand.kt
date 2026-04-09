@@ -64,7 +64,7 @@ class DeleteCommand(
      * Tinh huy diet duoc uy quyen cho lenh con. Tat ca lenh con deu
      * la huy diet, nhung meta-dispatcher khong tu danh dau.
      */
-    override val isDestructive: Boolean = false
+    override val isDestructive: Boolean = true
 
     override val examples: List<Pair<String, String>> = listOf(
         "del -u user@example.com --confirm" to "Xoa nguoi dung theo email",

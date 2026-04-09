@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.first
  * ban --role USER --dry-run
  * ban --search "test" --confirm
  * ban user1@ex.com user2@ex.com --reason "Vi pham chinh sach"
+ * ban --role USER --all --confirm
+ * ban --role USER --all --exclude admin@ex.com --confirm
+ * ban --inactive-days 90 --dry-run
  * ```
  */
 class BanCommand : Command {
@@ -37,6 +40,7 @@ class BanCommand : Command {
 
     override val usage: String =
         "ban <email|id>... [--role <role>] [--search <query>] [--regex <pattern>] " +
+                "[--inactive-days <N>] [--all] [--exclude <email>] " +
                 "[--dry-run] [--confirm] [--reason <ly_do>] [--verbose] [--quiet] [--format <format>]"
 
     override val requiredPermission: AdminPermission = AdminPermission.BAN_USERS
@@ -47,13 +51,22 @@ class BanCommand : Command {
 
     override val category: String = "admin"
 
+    override val valueFlags: Set<String> = setOf(
+        "role", "search", "regex", "reason", "format", "inactive-days", "exclude"
+    )
+
     override val examples: List<Pair<String, String>> = listOf(
         "ban user@example.com" to "Chan mot nguoi dung theo email",
         "ban user@example.com --reason \"Spam\"" to "Chan nguoi dung voi ly do",
         "ban --role USER --dry-run" to "Xem truoc tat ca USER se bi chan",
         "ban --search test --confirm" to "Chan tat ca nguoi dung khop voi 'test'",
         "ban --regex \".*@temp\\.com\" --confirm" to "Chan nguoi dung khop voi regex",
-        "ban user1@ex.com user2@ex.com --confirm" to "Chan nhieu nguoi dung cung luc"
+        "ban user1@ex.com user2@ex.com --confirm" to "Chan nhieu nguoi dung cung luc",
+        "ban --role USER --all --confirm" to "Chan tat ca USER khop voi bo loc",
+        "ban --role USER --all --exclude admin@ex.com --confirm" to
+                "Chan tat ca USER, ngoai tru admin@ex.com",
+        "ban --inactive-days 90 --dry-run" to
+                "Xem truoc nguoi dung khong hoat dong 90+ ngay"
     )
 
     override suspend fun autocomplete(
@@ -67,6 +80,9 @@ class BanCommand : Command {
             "--role" to "Loc theo vai tro",
             "--search" to "Tim kiem nguoi dung",
             "--regex" to "Loc theo regex",
+            "--inactive-days" to "Chan nguoi dung khong hoat dong N+ ngay",
+            "--all" to "Chan tat ca nguoi dung khop voi bo loc",
+            "--exclude" to "Loai tru nguoi dung theo email",
             "--dry-run" to "Xem truoc ket qua",
             "--confirm" to "Bo qua xac nhan",
             "--reason" to "Ly do chan",
@@ -121,7 +137,7 @@ class BanCommand : Command {
         context: CommandContext
     ): CommandResult {
         val isDryRun = "dry-run" in flags
-        val isVerbose = "verbose" in flags
+        val isVerbose = "verbose" in flags || "v" in flags
         val isQuiet = "quiet" in flags
         val confirm = "confirm" in flags
         val reason = flags["reason"]
@@ -129,6 +145,9 @@ class BanCommand : Command {
         val roleFilter = flags["role"]
         val searchQuery = flags["search"]
         val regexPattern = flags["regex"]
+        val inactiveDaysRaw = flags["inactive-days"]
+        val useAll = "all" in flags
+        val excludeEmail = flags["exclude"]?.lowercase()
 
         if (!isDryRun && !confirm) {
             return CommandResult.error(
@@ -137,7 +156,16 @@ class BanCommand : Command {
             )
         }
 
-        if (args.isEmpty() && roleFilter == null && searchQuery == null && regexPattern == null) {
+        val hasFilter = roleFilter != null || searchQuery != null || regexPattern != null ||
+                inactiveDaysRaw != null
+
+        if (useAll && !hasFilter && args.isEmpty()) {
+            return CommandResult.error(
+                "Can chi dinh it nhat mot bo loc (--role, --search, ...) khi su dung --all."
+            )
+        }
+
+        if (args.isEmpty() && !hasFilter && !useAll) {
             return CommandResult.error(
                 "Vui long cung cap email/ID nguoi dung hoac tieu chi loc.\n" +
                         "Su dung: $usage"
@@ -162,6 +190,25 @@ class BanCommand : Command {
             }
         }
 
+        val inactiveDays: Int? = if (inactiveDaysRaw != null) {
+            val parsed = inactiveDaysRaw.toIntOrNull()
+            if (parsed == null || parsed < 1) {
+                return CommandResult.error(
+                    "Gia tri --inactive-days khong hop le: $inactiveDaysRaw. Phai la so nguyen duong."
+                )
+            }
+            parsed
+        } else {
+            null
+        }
+
+        // Early exit if --inactive-days is the only filter: User model has no activity timestamp
+        if (inactiveDays != null) {
+            return CommandResult.error(
+                "Tuy chon nay chua duoc ho tro vi du lieu hoat dong chua co san."
+            )
+        }
+
         val allUsers: List<User> = try {
             context.repositories.adminRepository.getAllUsers().first()
         } catch (e: Exception) {
@@ -170,12 +217,19 @@ class BanCommand : Command {
 
         val targetUsers = resolveTargetUsers(args, allUsers, roleFilter, searchQuery, regexPattern)
 
-        if (targetUsers.isEmpty()) {
+        // Apply --exclude filter
+        val filteredUsers = if (excludeEmail != null) {
+            targetUsers.filter { it.email.lowercase() != excludeEmail }
+        } else {
+            targetUsers
+        }
+
+        if (filteredUsers.isEmpty()) {
             return CommandResult.error("Khong tim thay nguoi dung nao khop voi tieu chi da cho.")
         }
 
-        val alreadyBanned = targetUsers.filter { it.isBanned }
-        val toBan = targetUsers.filter { !it.isBanned }
+        val alreadyBanned = filteredUsers.filter { it.isBanned }
+        val toBan = filteredUsers.filter { !it.isBanned }
 
         val protectedUsers = toBan.filter { it.role == UserRole.SUPERUSER }
         val effectiveToBan = toBan.filter { it.role != UserRole.SUPERUSER }
@@ -207,7 +261,9 @@ class BanCommand : Command {
         }
 
         if (isDryRun) {
-            return buildDryRunResult(effectiveToBan, alreadyBanned, protectedUsers, format, reason)
+            return buildDryRunResult(
+                effectiveToBan, alreadyBanned, protectedUsers, format, reason, excludeEmail
+            )
         }
 
         val lines = mutableListOf<OutputLine>()
@@ -262,6 +318,14 @@ class BanCommand : Command {
             lines.add(
                 OutputLine(
                     "Bo qua ${protectedUsers.size} SUPERUSER (khong the chan).",
+                    OutputStyle.MUTED
+                )
+            )
+        }
+        if (excludeEmail != null) {
+            lines.add(
+                OutputLine(
+                    "Da loai tru nguoi dung: $excludeEmail",
                     OutputStyle.MUTED
                 )
             )
@@ -359,6 +423,7 @@ class BanCommand : Command {
      * @param protectedUsers Superusers that cannot be banned.
      * @param format Output format: "table", "list", or "csv".
      * @param reason Optional ban reason.
+     * @param excludeEmail Optional email that was excluded from the results.
      * @return A successful [CommandResult] with the preview output.
      */
     private fun buildDryRunResult(
@@ -366,7 +431,8 @@ class BanCommand : Command {
         alreadyBanned: List<User>,
         protectedUsers: List<User>,
         format: String,
-        reason: String?
+        reason: String?,
+        excludeEmail: String?
     ): CommandResult {
         val lines = mutableListOf<OutputLine>()
 
@@ -438,6 +504,14 @@ class BanCommand : Command {
             lines.add(
                 OutputLine(
                     "Bo qua ${protectedUsers.size} SUPERUSER (khong the chan).",
+                    OutputStyle.MUTED
+                )
+            )
+        }
+        if (excludeEmail != null) {
+            lines.add(
+                OutputLine(
+                    "Da loai tru nguoi dung: $excludeEmail",
                     OutputStyle.MUTED
                 )
             )

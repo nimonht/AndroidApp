@@ -50,7 +50,7 @@ class PurgeCommand : Command {
 
     override val usage: String =
         "purge [--trash] [--inactive-users <days>] [--old-attempts <days>] " +
-                "[--orphan-attempts] [--revoked-pool] [--banned-users] [--empty-quizzes] " +
+                "[--orphan-attempts] [--banned-users] [--empty-quizzes] " +
                 "[--dry-run] [--confirm] [--verbose] [--format <table|csv|json>] [--output <count|full>]"
 
     override val isDestructive: Boolean = true
@@ -85,7 +85,6 @@ class PurgeCommand : Command {
             "--inactive-users" to "Xoa nguoi dung khong hoat dong (chi dinh so ngay)",
             "--old-attempts" to "Xoa luot lam cu (chi dinh so ngay)",
             "--orphan-attempts" to "Xoa luot lam cua quiz khong ton tai",
-            "--revoked-pool" to "Don dep pool item da thu hoi",
             "--banned-users" to "Xoa vinh vien nguoi dung bi cam",
             "--empty-quizzes" to "Xoa quiz co 0 cau hoi"
         )
@@ -174,7 +173,7 @@ class PurgeCommand : Command {
         val hasEmptyQuizzes = "empty-quizzes" in flags
 
         val hasAnyTarget = hasTrash || hasInactiveUsers || hasOldAttempts ||
-                hasOrphanAttempts || hasRevokedPool || hasBannedUsers || hasEmptyQuizzes
+                hasOrphanAttempts || hasBannedUsers || hasEmptyQuizzes
 
         if (!hasAnyTarget) {
             return buildNoTargetError()
@@ -295,8 +294,7 @@ class PurgeCommand : Command {
         if (hasRevokedPool) {
             allLines.add(
                 OutputLine(
-                    "[revoked-pool] Chuc nang nay hien bi han che boi API. " +
-                            "Chua the thuc hien don dep pool item da thu hoi.",
+                    "Co '--revoked-pool' chua duoc ho tro do han che API.",
                     OutputStyle.WARNING
                 )
             )
@@ -1237,12 +1235,6 @@ class PurgeCommand : Command {
         lines.add(
             OutputLine(
                 "  --empty-quizzes     Xoa quiz co 0 cau hoi",
-                OutputStyle.INFO
-            )
-        )
-        lines.add(
-            OutputLine(
-                "  --revoked-pool      Don dep pool item da thu hoi (han che)",
                 OutputStyle.INFO
             )
         )

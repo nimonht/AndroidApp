@@ -111,6 +111,7 @@ class RoleCommand : Command {
     ): CommandResult {
         val isDryRun = "dry-run" in flags
         val isVerbose = "verbose" in flags
+        val confirm = "confirm" in flags
         val format = flags["format"] ?: "table"
         val searchQuery = flags["search"] ?: flags["s"]
 
@@ -125,6 +126,7 @@ class RoleCommand : Command {
                 searchQuery = searchQuery,
                 isDryRun = isDryRun,
                 isVerbose = isVerbose,
+                confirm = confirm,
                 format = format,
                 context = context
             )
@@ -162,6 +164,7 @@ class RoleCommand : Command {
             newRole = newRole,
             isDryRun = isDryRun,
             isVerbose = isVerbose,
+            confirm = confirm,
             context = context
         )
     }
@@ -210,8 +213,16 @@ class RoleCommand : Command {
         newRole: UserRole,
         isDryRun: Boolean,
         isVerbose: Boolean,
+        confirm: Boolean,
         context: CommandContext
     ): CommandResult {
+        if (!isDryRun && !confirm) {
+            return CommandResult.error(
+                "Thao tac huy diet: thay doi vai tro nguoi dung. " +
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+            )
+        }
+
         val allUsers = context.repositories.adminRepository.getAllUsers().first()
         val user = findUser(allUsers, targetIdentifier)
             ?: return CommandResult.error(
@@ -302,9 +313,17 @@ class RoleCommand : Command {
         searchQuery: String?,
         isDryRun: Boolean,
         isVerbose: Boolean,
+        confirm: Boolean,
         format: String,
         context: CommandContext
     ): CommandResult {
+        if (!isDryRun && !confirm) {
+            return CommandResult.error(
+                "Thao tac huy diet: thay doi vai tro nguoi dung hang loat. " +
+                        "Su dung --confirm de xac nhan hoac --dry-run de mo phong."
+            )
+        }
+
         if (toRoleStr == null) {
             return CommandResult.error(
                 "Thieu vai tro dich (--to). Su dung: role --from <role> --to <role>"

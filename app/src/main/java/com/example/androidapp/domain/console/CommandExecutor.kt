@@ -137,8 +137,11 @@ class CommandExecutor(
 
         val context = contextProvider()
 
+        // Strip optional "sudo" prefix before any further processing
+        val stripped = stripSudoPrefix(trimmed)
+
         // Alias expansion: replace the first word if it matches an alias
-        val expanded = expandAliases(trimmed, context.aliases)
+        val expanded = expandAliases(stripped, context.aliases)
 
         // Lex and parse (pass aggregated value flags from all registered commands)
         val tokens = CommandLexer.tokenize(expanded)
@@ -190,7 +193,7 @@ class CommandExecutor(
             return emptyList()
         }
 
-        val textUpToCursor = rawInput.take(cursorPosition)
+        val textUpToCursor = stripSudoPrefix(rawInput.take(cursorPosition))
         val tokens = CommandLexer.tokenize(textUpToCursor)
 
         // Find the last segment (after the last pipe or semicolon)
@@ -396,6 +399,26 @@ class CommandExecutor(
                 "Loi khi thuc thi lenh '$commandName': ${e.message ?: "Loi khong xac dinh"}"
             )
         }
+    }
+
+    /**
+     * Strips an optional `sudo` prefix from the input.
+     *
+     * The console accepts `sudo` as a cosmetic prefix -- commands behave
+     * identically with or without it. If the first whitespace-delimited word
+     * is `sudo` (case-insensitive), it is removed and the remainder is
+     * returned (trimmed of leading whitespace). When the input is exactly
+     * `sudo` with nothing following, an empty string is returned.
+     */
+    private fun stripSudoPrefix(input: String): String {
+        val trimmed = input.trimStart()
+        if (trimmed.lowercase().startsWith("sudo ")) {
+            return trimmed.substring(5).trimStart()
+        }
+        if (trimmed.lowercase() == "sudo") {
+            return ""
+        }
+        return input
     }
 
     /**

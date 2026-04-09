@@ -28,7 +28,7 @@ class WhoamiCommand : Command {
 
     override val usage: String = "whoami [--verbose] [--permissions] [--format <table|json>] [--session]"
 
-    override val category: String = "system"
+    override val category: String = "user"
 
     override val examples: List<Pair<String, String>> = listOf(
         "whoami" to "Hien thi thong tin co ban cua nguoi dung",

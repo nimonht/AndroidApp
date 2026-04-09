@@ -32,7 +32,7 @@ class HelpCommand(
     override val usage: String =
         "help [<lenh>] [--all] [--category <danh-muc>] [--search <tu-khoa>] [--flags] [--examples] [--format <dinh-dang>]"
 
-    override val category: String = "general"
+    override val category: String = "util"
 
     override val examples: List<Pair<String, String>> = listOf(
         "help" to "Liet ke tat ca lenh kha dung",
@@ -219,6 +219,25 @@ class HelpCommand(
             return formatDetailedHelpJson(command)
         }
 
+        if (showExamples) {
+            val exampleLines = mutableListOf<OutputLine>()
+            val examples = command.examples
+            if (examples.isEmpty()) {
+                return CommandResult.error("Lenh '${command.name}' khong co vi du nao.")
+            }
+            exampleLines.add(OutputLine("Vi du cho '${command.name}':", OutputStyle.HEADER))
+            exampleLines.add(OutputLine(""))
+            for ((cmd, desc) in examples) {
+                exampleLines.add(OutputLine("  $cmd", OutputStyle.CODE))
+                exampleLines.add(OutputLine("    $desc", OutputStyle.MUTED))
+            }
+            return CommandResult.success(exampleLines)
+        }
+
+        if (showFlags) {
+            return formatFlagsSection(command)
+        }
+
         val lines = mutableListOf<OutputLine>()
 
         lines.add(OutputLine("=== ${command.name} ===", OutputStyle.HEADER))
@@ -251,20 +270,13 @@ class HelpCommand(
             lines.add(OutputLine("Ban khong co quyen su dung lenh nay.", OutputStyle.WARNING))
         }
 
-        if (showFlags) {
-            lines.add(OutputLine(""))
-            lines.add(OutputLine("Xem 'help ${command.name}' de biet cac co ho tro.", OutputStyle.MUTED))
-        }
-
-        if (showExamples || command.examples.isNotEmpty()) {
+        if (command.examples.isNotEmpty()) {
             val exampleList = command.examples
-            if (exampleList.isNotEmpty()) {
-                lines.add(OutputLine(""))
-                lines.add(OutputLine("Vi du:", OutputStyle.INFO))
-                for ((example, desc) in exampleList) {
-                    lines.add(OutputLine("  $ $example", OutputStyle.CODE))
-                    lines.add(OutputLine("    $desc", OutputStyle.MUTED))
-                }
+            lines.add(OutputLine(""))
+            lines.add(OutputLine("Vi du:", OutputStyle.INFO))
+            for ((example, desc) in exampleList) {
+                lines.add(OutputLine("  $ $example", OutputStyle.CODE))
+                lines.add(OutputLine("    $desc", OutputStyle.MUTED))
             }
         }
 
@@ -332,6 +344,68 @@ class HelpCommand(
         }
 
         return CommandResult.success(lines)
+    }
+
+    /**
+     * Dinh dang phan co (flags) cho mot lenh cu the.
+     *
+     * Liet ke cac co gia tri (valueFlags, shortValueFlags) va cac co boolean
+     * duoc trich xuat tu chuoi [Command.usage].
+     */
+    private fun formatFlagsSection(command: Command): CommandResult {
+        val flagLines = mutableListOf<OutputLine>()
+
+        // Collect all declared value flags (long)
+        val valueFlagNames = command.valueFlags.toMutableSet()
+        // Collect all declared short value flags
+        val shortValueFlagNames = command.shortValueFlags.toMutableSet()
+
+        // Extract flags from usage string
+        val longFlagRegex = Regex("--([a-zA-Z][a-zA-Z0-9-]*)")
+        val shortFlagRegex = Regex("(?:^|[\\s\\[|(])-(([a-zA-Z])(?:\\|(-[a-zA-Z]))*)")
+
+        val usageLongFlags = longFlagRegex.findAll(command.usage).map { it.groupValues[1] }.toSet()
+        val usageShortFlags = shortFlagRegex.findAll(command.usage).map { it.groupValues[2] }.toSet()
+
+        // Boolean flags = flags found in usage that are NOT value flags
+        val booleanLongFlags = usageLongFlags - valueFlagNames
+        val booleanShortFlags = usageShortFlags - shortValueFlagNames
+
+        val hasAnyFlags = valueFlagNames.isNotEmpty() ||
+                shortValueFlagNames.isNotEmpty() ||
+                booleanLongFlags.isNotEmpty() ||
+                booleanShortFlags.isNotEmpty()
+
+        if (!hasAnyFlags) {
+            return CommandResult.success(
+                listOf(OutputLine("Lenh nay khong co co nao duoc khai bao.", OutputStyle.MUTED))
+            )
+        }
+
+        flagLines.add(OutputLine("Co (Flags) cho '${command.name}':", OutputStyle.HEADER))
+        flagLines.add(OutputLine(""))
+
+        // Show value flags (long)
+        for (flag in valueFlagNames.sorted()) {
+            flagLines.add(OutputLine("  --$flag <value>".padEnd(25) + "(gia tri)", OutputStyle.TABLE_ROW))
+        }
+
+        // Show short value flags
+        for (flag in shortValueFlagNames.sorted()) {
+            flagLines.add(OutputLine("  -$flag <value>".padEnd(25) + "(gia tri)", OutputStyle.TABLE_ROW))
+        }
+
+        // Show boolean long flags
+        for (flag in booleanLongFlags.sorted()) {
+            flagLines.add(OutputLine("  --$flag".padEnd(25) + "(boolean)", OutputStyle.TABLE_ROW))
+        }
+
+        // Show boolean short flags
+        for (flag in booleanShortFlags.sorted()) {
+            flagLines.add(OutputLine("  -$flag".padEnd(25) + "(boolean)", OutputStyle.TABLE_ROW))
+        }
+
+        return CommandResult.success(flagLines)
     }
 
     /**

@@ -5,7 +5,7 @@
 The **Advanced Developer Tools** page is a built-in diagnostic and administration interface accessible from the Profile screen. It provides two sub-features within a tabbed layout:
 
 1. **Console** — A terminal-emulator-style command interface with autocomplete, syntax highlighting, and piping
-2. **Log Viewer** — A GCP-Cloud-Logging-inspired real-time log viewer with advanced filtering
+2. **Log Viewer** — A real-time log viewer with advanced filtering
 
 ```mermaid
 flowchart TD
@@ -328,8 +328,8 @@ help <command>                    # Detailed help for a command
 help --all                        # List ALL commands (including locked ones)
 help --category <cat>             # Filter by category: user, quiz, system, util, pipe
 help --search <text>              # Search across all help text
-help --flags                      # Show only flags for a command
-help --examples                   # Show only examples section
+help ban --flags                  # Enumerate ban's flags (value vs boolean)
+help ban --examples               # Show only ban's examples section
 help --format json                # Output in JSON format
 ```
 
@@ -339,6 +339,7 @@ help my                           # Detailed help for 'my' command
 help --category pipe              # Show pipe utility commands
 help --search "delete"            # Find all commands related to deletion
 help ban --examples               # Show only ban command examples
+help ls --flags                   # List all flags accepted by ls
 ```
 
 ---
@@ -526,6 +527,8 @@ cache status --format json        # Output format
 
 Manage data synchronization between Room and Firestore.
 
+> **Note:** Console sync commands bypass the user's sync preferences (auto-sync disabled, WiFi-only mode). They call `processPendingOperations()` directly without checking `isSyncAllowed()`. The `--force` flag specifically bypasses the command-level online-connectivity check, allowing sync attempts even when the device appears offline (Firestore's offline persistence will queue writes locally).
+
 **Usage:**
 ```
 sync                              # Show current sync state
@@ -535,8 +538,8 @@ sync pull                         # Download remote changes only
 sync status                       # Detailed state report
 sync status --verbose             # Per-entity-type breakdown
 sync retry                        # Retry failed operations
-sync now --force                  # Sync even in WiFi-only mode
-sync now --timeout 30             # Max duration in seconds
+sync now --force                  # Attempt sync even when offline
+sync now --format json            # Output format (all subcommands)
 sync status --format json         # Output format
 ```
 
@@ -966,12 +969,9 @@ stats --quizzes                               # Quiz stats only
 stats --attempts                              # Attempt stats only
 stats --pool                                  # Pool stats only
 stats --sync                                  # Sync stats
-stats --period 30d                            # For specific period
-stats --compare-period 7d                     # Compare with previous period
-stats --breakdown role                        # By: role, tag, date
-stats --trend 7d                              # Daily trend
 stats --format json                           # Output format
 stats --export                                # Export
+stats --verbose                               # Extended statistics
 ```
 
 ---
@@ -1015,8 +1015,6 @@ purge --inactive-users 180 --role guest       # Inactive guests only
 purge --old-attempts 365                      # Attempts older than 365 days
 purge --old-attempts 365 --quiz <quizId>      # For specific quiz
 purge --orphan-attempts                       # Attempts for deleted quizzes
-purge --revoked-pool                          # Revoked pool contributions
-purge --revoked-pool --older-than 90d         # Revoked + older than 90 days
 purge --banned-users                          # Delete all banned accounts
 purge --banned-users --banned-before 2024-06-01  # Banned before date
 purge --empty-quizzes                         # Quizzes with 0 questions
@@ -1044,7 +1042,6 @@ These flags are accepted by every listing/querying command:
 | `--quiet` | | Minimal output |
 | `--no-header` | | Suppress table headers |
 | `--fields <list>` | | Comma-separated columns: `--fields=id,email,role` |
-| `--timeout <sec>` | | Network timeout in seconds |
 | `--regex` | `-r` | Treat text arguments as regex patterns |
 | `--not` / `--exclude` | | Negate the next filter |
 | `--and` | | ALL filters must match (default) |
@@ -1066,7 +1063,7 @@ sudo del -u user@mail.com --confirm
 sudo purge --trash --confirm
 ```
 
-The console accepts `sudo` as an optional prefix; commands work identically with or without it. Autocomplete will suggest `sudo` before destructive commands to reinforce the seriousness of the operation. If the user lacks the required permission, the error message will note "requires elevated privileges."
+The console accepts `sudo` as an optional prefix; commands work identically with or without it. The `CommandExecutor` silently strips `sudo` (case-insensitive) before alias expansion and command resolution, so `sudo ban ...` is equivalent to `ban ...`. Autocomplete also strips the prefix, meaning suggestions work normally after typing `sudo `.
 
 ---
 

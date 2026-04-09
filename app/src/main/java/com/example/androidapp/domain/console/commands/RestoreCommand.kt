@@ -49,6 +49,8 @@ class RestoreCommand : Command {
 
     override val requiredPermission: AdminPermission = AdminPermission.MANAGE_QUIZZES
 
+    override val isDestructive: Boolean = true
+
     override val examples: List<Pair<String, String>> = listOf(
         "restore quizId123 --confirm" to "Khoi phuc quiz theo ID",
         "restore qid1 qid2 qid3 --confirm" to "Khoi phuc nhieu quiz theo ID",
