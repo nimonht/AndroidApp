@@ -24,6 +24,12 @@ domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/
                           TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting),
                           InputSanitizer, TagValidator,
                           SafeCall (try/catch → Result<T> wrapper for repository impls)
+            console/    ← In-app console engine: Command interface, CommandLexer, CommandParser,
+                          CommandExecutor, CommandRegistry, CommandResult, CommandContext,
+                          CommandToken, CommandFormatUtils, ConsoleJsonBuilder;
+                          commands/ sub-package has ~35 command implementations
+            service/    ← Domain service interfaces: LogService, NetworkService,
+                          SettingsService, SyncService
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.
 ui/       ← Compose screens + ViewModels. Screens are stateless; ViewModels own all state.
@@ -51,6 +57,9 @@ data/
                               `ShareCodeRepositoryImpl.kt`,
                               `PoolRepositoryImpl.kt`, `AdminRepositoryImpl.kt`,
                               `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
+  logging/
+    LogCollector.kt         ← Logcat ring buffer collector (10k entries); implements LogService;
+                              spawns coroutine reading `logcat -v threadtime --pid`; batched StateFlow emission
   network/
     NetworkMonitor.kt       ← ConnectivityManager wrapper; exposes `isOnline: StateFlow<Boolean>`
   preferences/
@@ -172,6 +181,12 @@ Existing screen directories under `ui/screens/`:
   `reports/` (`AdminReportsScreen`/`ViewModel`/`UiState`).
   Note: `users/` and `quizzes/` management screens have collapsible filter/search sections (collapsed by default, toggled via `AnimatedVisibility`).
   Admin routes: `admin/dashboard`, `admin/users`, `admin/quizzes`, `admin/reports`.
+- `advanced/` — Developer Tools (tabbed: Console + Log Viewer). Entry from Profile, accessible to all
+  logged-in users. `AdvancedScreen`/`AdvancedViewModel` (tab container).
+  Sub-packages: `console/` (`ConsoleScreen`/`ConsoleViewModel`/`ConsoleViewModelFactory`;
+  components: `ConsoleInputField`, `ConsoleOutputLine`, `SuggestionDropdown`, `TokenHighlighter`),
+  `logviewer/` (`LogViewerScreen`/`LogViewerViewModel`).
+  Console commands are defined in `domain/console/commands/` and registered via DI in `FirebaseModule.kt`.
 
 ## Build & Test Commands
 
@@ -215,3 +230,6 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
 | `data/local/AppDatabase.kt` | Room DB v5 definition; `fallbackToDestructiveMigration` — no explicit migrations |
 | `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |
+| `domain/console/Command.kt` | Console command interface + CompletionSuggestion |
+| `domain/console/CommandExecutor.kt` | Console command execution pipeline |
+| `data/logging/LogCollector.kt` | Logcat ring buffer collector (implements LogService) |

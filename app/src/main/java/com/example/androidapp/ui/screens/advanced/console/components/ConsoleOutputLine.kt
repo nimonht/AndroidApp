@@ -21,6 +21,10 @@ import com.example.androidapp.ui.screens.advanced.console.StyledOutputLine
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 // -- ColorScheme extensions for console output colors -------------------------
+// Intentional: These colors are fixed semantic values optimised for readability
+// on the console's dark surface. They do not vary by light/dark theme because
+// the console always renders on a near-black background. If the console ever
+// supports a light background mode, provide light/dark variants via the theme.
 
 /** Green used for success output lines. */
 val ColorScheme.consoleSuccess: Color

@@ -285,6 +285,9 @@ class LogViewerViewModel(
             _uiState.update { it.copy(exportedText = "") }
             return
         }
+        // TODO(C11): Hardcoded Vietnamese — stringResource() is unavailable in ViewModels.
+        //  Export header/filter labels below are hardcoded Vietnamese strings. A shared
+        //  resource mechanism is needed to resolve this consistently across the app.
         val text = buildString {
             appendLine("=== Xuat Nhat Ky Quizzez ===")
             appendLine("Tong muc: ${logsToExport.size}")

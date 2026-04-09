@@ -317,7 +317,7 @@ echo "She said \"hello\""
 
 ---
 
-#### `help` — Command Help System
+#### `help` / `h` / `?` — Command Help System
 
 Show available commands and their usage.
 
@@ -343,7 +343,7 @@ help ban --examples               # Show only ban command examples
 
 ---
 
-#### `whoami` — Current User Information
+#### `whoami` / `user` — Current User Information
 
 Display the currently logged-in user's details.
 
@@ -358,7 +358,7 @@ whoami --format json              # Output in JSON
 
 ---
 
-#### `ping` — Connectivity Check
+#### `ping` / `p` — Connectivity Check
 
 Test connectivity to Firebase services and measure latency.
 
@@ -383,7 +383,7 @@ Status: Online
 
 ---
 
-#### `my` — Self-Service Data Query
+#### `my` / `me` — Self-Service Data Query
 
 Query your own quizzes, attempts, stats, and pool contributions. This is the primary command for regular users to explore their data.
 
@@ -469,7 +469,7 @@ my pool --sort usage --desc                   # Sort by usage
 
 ---
 
-#### `config` — Application Settings
+#### `config` / `cfg` / `settings` — Application Settings
 
 View and modify app settings from the console.
 
@@ -499,7 +499,7 @@ config --export                   # Export as shareable text
 
 ---
 
-#### `cache` — Local Cache Management
+#### `cache` / `ca` — Local Cache Management
 
 Manage the Room database cache and sync operations.
 
@@ -522,7 +522,7 @@ cache status --format json        # Output format
 
 ---
 
-#### `sync` — Sync Control
+#### `sync` / `dong-bo` — Sync Control
 
 Manage data synchronization between Room and Firestore.
 
@@ -542,7 +542,7 @@ sync status --format json         # Output format
 
 ---
 
-#### `log` — Query Application Logs
+#### `log` / `logs` — Query Application Logs
 
 Query the in-memory log buffer from the console.
 
@@ -575,7 +575,7 @@ log --export                      # Export as shareable text
 
 ---
 
-#### `echo` — Echo Text
+#### `echo` / `print` — Echo Text
 
 Output text to the console. Useful for testing pipes and scripts.
 
@@ -591,7 +591,7 @@ echo --timestamp "event started"  # Prefix with timestamp
 
 ---
 
-#### `clear` — Clear Console
+#### `clear` / `cls` / `clr` — Clear Console
 
 Clears all output from the console display. No flags.
 
@@ -601,7 +601,7 @@ clear
 
 ---
 
-#### `history` — Command History
+#### `history` / `hist` — Command History
 
 View and manage past commands.
 
@@ -809,7 +809,7 @@ unban --dry-run                               # Preview
 
 ---
 
-#### `del` — Delete Entities — Various Permissions
+#### `del` / `delete` — Delete Entities — Various Permissions
 
 The `del` command is a dispatcher that routes to the correct handler:
 
@@ -865,6 +865,17 @@ del -a --incomplete                           # Incomplete only
 del -a --dry-run                              # Preview
 ```
 
+##### `del -p` (Delete Pool Items)
+
+```
+del -p <poolItemId>                           # Delete single pool item
+del -p --contributor user@mail.com            # All by contributor
+del -p --tag science                          # By tag
+del -p --revoked                              # Revoked items only
+del -p --dry-run                              # Preview
+del -p --confirm                              # Skip confirmation
+```
+
 ---
 
 #### `role` — Change User Role — Requires `CHANGE_USER_ROLES`
@@ -879,7 +890,7 @@ role --confirm user@mail.com admin            # Skip confirmation
 
 ---
 
-#### `perm` — Manage Permissions — Superuser Only
+#### `perm` / `permissions` — Manage Permissions — Superuser Only
 
 ```
 perm user@mail.com                            # Show user's permissions
@@ -892,7 +903,7 @@ perm list                                     # List all possible permissions
 
 ---
 
-#### `userinfo` / `whois` — User Details — Requires `MANAGE_USERS`
+#### `userinfo` / `whois` / `ui` — User Details — Requires `MANAGE_USERS`
 
 ```
 userinfo user@mail.com                        # Detailed user info
@@ -917,7 +928,7 @@ quizinfo --share-code ABC123                  # Look up by share code
 
 ---
 
-#### `publish` / `unpublish` — Quiz Visibility — Requires `PUBLISH_QUIZZES`
+#### `publish` (`pub`) / `unpublish` (`unpub`) — Quiz Visibility — Requires `PUBLISH_QUIZZES`
 
 ```
 publish <quizId>                              # Force publish
@@ -946,7 +957,7 @@ restore --dry-run                             # Preview
 
 ---
 
-#### `stats` — System Statistics — Requires `VIEW_REPORTS`
+#### `stats` / `stat` — System Statistics — Requires `VIEW_REPORTS`
 
 ```
 stats                                         # Full system stats
@@ -1167,7 +1178,7 @@ Tapping a log row expands it to show full details:
 │  ├── CommandToken.kt, CommandLexer.kt, CommandParser.kt     │
 │  ├── CommandResult.kt, CommandContext.kt                    │
 │  ├── CommandRegistry.kt, CommandExecutor.kt                 │
-│  └── commands/ (~30 command implementations)                │
+│  └── commands/ (~35 command implementations)                │
 │                                                             │
 ├─────────────────────────────────────────────────────────────┤
 │                        DATA LAYER                            │

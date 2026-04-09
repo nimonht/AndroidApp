@@ -77,6 +77,11 @@ import com.example.androidapp.domain.service.LogService
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 // -- Level badge colors as ColorScheme extensions -----------------------------
+// Intentional: These colors are fixed semantic values matching standard log-level
+// conventions (e.g. green=INFO, red=ERROR). They do not vary by light/dark theme
+// because the log viewer rows use alternating surface tones where these hues remain
+// legible in both modes. If readability regresses under a future theme, provide
+// light/dark variants via the theme.
 
 /** Console/log viewer color extensions for [ColorScheme]. */
 

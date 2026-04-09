@@ -43,6 +43,11 @@ import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 // -- ColorScheme extensions for suggestion icon tints -------------------------
+// Intentional: These colors are fixed semantic tints for suggestion-type icons,
+// optimised for legibility on the console's dark surface. They do not vary by
+// light/dark theme because the console always renders on a near-black background.
+// If the console ever supports a light background mode, provide light/dark
+// variants via the theme.
 
 /** Blue tint for command suggestion icons. */
 val ColorScheme.suggestionCommand: Color
