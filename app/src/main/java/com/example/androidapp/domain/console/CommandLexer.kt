@@ -232,7 +232,6 @@ object CommandLexer {
                 // Stop at the first digit to avoid emitting digits as flag names.
                 // If a digit is encountered, treat it (and any following chars) as
                 // a value for the preceding flag letter.
-                var hitDigit = false
                 for ((idx, ch) in chars.withIndex()) {
                     if (ch.isDigit()) {
                         // Remaining chars (starting with this digit) become the
@@ -249,13 +248,9 @@ object CommandLexer {
                         } else {
                             tokens.add(CommandToken.Keyword(digitSuffix))
                         }
-                        hitDigit = true
                         break
                     }
                     tokens.add(CommandToken.Flag(ch.toString()))
-                }
-                if (!hitDigit) {
-                    // All characters were letters — already added above
                 }
             }
         }
