@@ -43,31 +43,30 @@ import com.example.androidapp.domain.console.SuggestionType
 import com.example.androidapp.ui.theme.QuizzezTheme
 
 // -- ColorScheme extensions for suggestion icon tints -------------------------
-// Intentional: These colors are fixed semantic tints for suggestion-type icons,
-// optimised for legibility on the console's dark surface. They do not vary by
-// light/dark theme because the console always renders on a near-black background.
-// If the console ever supports a light background mode, provide light/dark
-// variants via the theme.
+// These tints leverage the current Material theme palette where possible so they
+// adapt automatically to light and dark modes. Accent colors that have no direct
+// theme equivalent (flag amber, tag teal) remain fixed but are chosen to be
+// legible on both light and dark surfaces.
 
-/** Blue tint for command suggestion icons. */
+/** Blue tint for command suggestion icons — delegates to theme [ColorScheme.primary]. */
 val ColorScheme.suggestionCommand: Color
-    get() = Color(0xFF42A5F5)
+    get() = primary
 
-/** Green tint for subcommand suggestion icons. */
+/** Green tint for subcommand suggestion icons — delegates to theme [ColorScheme.tertiary]. */
 val ColorScheme.suggestionSubcommand: Color
-    get() = Color(0xFF66BB6A)
+    get() = tertiary
 
 /** Amber tint for flag suggestion icons. */
 val ColorScheme.suggestionFlag: Color
-    get() = Color(0xFFFFC107)
+    get() = Color(0xFFFF9800)
 
-/** Purple tint for user suggestion icons. */
+/** Purple tint for user suggestion icons — delegates to theme [ColorScheme.secondary]. */
 val ColorScheme.suggestionUser: Color
-    get() = Color(0xFFAB47BC)
+    get() = secondary
 
-/** Orange tint for quiz suggestion icons. */
+/** Orange tint for quiz suggestion icons — delegates to theme [ColorScheme.error]. */
 val ColorScheme.suggestionQuiz: Color
-    get() = Color(0xFFFF7043)
+    get() = error
 
 /** Teal tint for tag suggestion icons. */
 val ColorScheme.suggestionTag: Color

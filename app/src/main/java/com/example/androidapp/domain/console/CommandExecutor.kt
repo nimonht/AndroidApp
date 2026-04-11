@@ -121,9 +121,15 @@ class CommandExecutor(
      * 6. Outputs from all chains are concatenated.
      *
      * @param rawInput The raw text entered by the user in the console.
+     * @param commandHistory Optional session command history to inject into the context.
+     * @param aliases Optional session aliases to inject into the context.
      * @return A [CommandResult] containing all output lines and a combined success status.
      */
-    suspend fun execute(rawInput: String): CommandResult {
+    suspend fun execute(
+        rawInput: String,
+        commandHistory: List<String> = emptyList(),
+        aliases: Map<String, String> = emptyMap()
+    ): CommandResult {
         val trimmed = rawInput.trim()
         if (trimmed.isEmpty()) {
             return CommandResult.empty()
@@ -135,7 +141,10 @@ class CommandExecutor(
             )
         }
 
-        val context = contextProvider()
+        val context = contextProvider().copy(
+            commandHistory = commandHistory,
+            aliases = aliases
+        )
 
         // Strip optional "sudo" prefix before any further processing
         val stripped = stripSudoPrefix(trimmed)
@@ -182,11 +191,21 @@ class CommandExecutor(
      *
      * @param rawInput The current text in the console input field.
      * @param cursorPosition The cursor index within [rawInput].
+     * @param commandHistory Optional session command history to inject into the context.
+     * @param aliases Optional session aliases to inject into the context.
      * @return An ordered list of [CompletionSuggestion]s.
      */
-    suspend fun autocomplete(rawInput: String, cursorPosition: Int): List<CompletionSuggestion> {
+    suspend fun autocomplete(
+        rawInput: String,
+        cursorPosition: Int,
+        commandHistory: List<String> = emptyList(),
+        aliases: Map<String, String> = emptyMap()
+    ): List<CompletionSuggestion> {
         val context = try {
-            contextProvider()
+            contextProvider().copy(
+                commandHistory = commandHistory,
+                aliases = aliases
+            )
         } catch (e: Exception) {
             // Log the exception class for debugging DI misconfiguration
             System.err.println("CommandExecutor.autocomplete: contextProvider failed: ${e::class.simpleName}: ${e.message}")

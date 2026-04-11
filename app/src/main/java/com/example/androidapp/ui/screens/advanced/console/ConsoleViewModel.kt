@@ -5,12 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.service.NetworkService
 import com.example.androidapp.domain.console.CommandExecutor
 import com.example.androidapp.domain.console.CompletionSuggestion
+import com.example.androidapp.domain.console.OutputLine
 import com.example.androidapp.domain.console.OutputStyle
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -145,6 +148,9 @@ class ConsoleViewModel(
     /** User-defined command aliases persisted for the session. */
     private val aliases = mutableMapOf<String, String>()
 
+    /** Active autocomplete coroutine job, cancelled on each new keystroke. */
+    private var autocompleteJob: Job? = null
+
     init {
         observeUser()
         observeNetwork()
@@ -232,9 +238,19 @@ class ConsoleViewModel(
             return
         }
 
-        viewModelScope.launch {
+        // Cancel any in-flight autocomplete to avoid stale results
+        autocompleteJob?.cancel()
+        autocompleteJob = viewModelScope.launch {
+            // Small debounce to avoid spamming autocomplete on rapid typing
+            delay(80)
+
             val suggestions = try {
-                commandExecutor.autocomplete(text, cursor)
+                commandExecutor.autocomplete(
+                    rawInput = text,
+                    cursorPosition = cursor,
+                    commandHistory = commandHistory.toList(),
+                    aliases = aliases.toMap()
+                )
             } catch (_: Exception) {
                 emptyList()
             }
@@ -309,7 +325,11 @@ class ConsoleViewModel(
 
         viewModelScope.launch {
             try {
-                val result = commandExecutor.execute(input)
+                val result = commandExecutor.execute(
+                    rawInput = input,
+                    commandHistory = commandHistory.toList(),
+                    aliases = aliases.toMap()
+                )
                 processCommandOutput(result.output)
             } catch (e: Exception) {
                 // TODO(C11): Hardcoded Vietnamese — stringResource() is unavailable in ViewModels.
@@ -334,13 +354,19 @@ class ConsoleViewModel(
      * management before appending to the visible output.
      */
     private fun processCommandOutput(
-        outputLines: List<com.example.androidapp.domain.console.OutputLine>
+        outputLines: List<OutputLine>
     ) {
         for (line in outputLines) {
             when {
                 // ClearCommand magic value
                 line.text == "__CLEAR__" -> {
                     _uiState.update { it.copy(outputLines = emptyList()) }
+                }
+
+                // HistoryCommand: clear session history
+                line.text == "__CLEAR_HISTORY__" -> {
+                    commandHistory.clear()
+                    historyIndex = -1
                 }
 
                 // AliasCommand: set alias (__ALIAS_SET_<name>=<value>)

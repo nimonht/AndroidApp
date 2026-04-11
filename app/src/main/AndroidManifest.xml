@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" >
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+>
 
     <!-- Internet permission for Firebase -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -17,17 +19,42 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidApp"
-        tools:targetApi="31" >
+        tools:targetApi="31"
+    >
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AndroidApp" >
+            android:theme="@style/Theme.AndroidApp"
+        >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--
+            ADB-to-console bridge for the Quizzez MCP server AI-agent integration.
+            Works in both debug and release builds — this is an intentional, production
+            AI-agent API surface, not a debug-only tool.
+
+            Transport: the MCP server sends an ordered broadcast; the receiver executes
+            the command via CommandExecutor and returns a Base64-encoded JSON payload via
+            PendingResult.setResultData(), which am broadcast prints to stdout. No file
+            I/O or run-as access is required, so the transport is equally reliable in
+            debug and release builds.
+
+            android:exported="true" is required so that the ADB shell (uid=2000) can
+            deliver the broadcast from outside the app's process.
+        -->
+        <receiver
+            android:name=".ConsoleBroadcastReceiver"
+            android:exported="true"
+        >
+            <intent-filter>
+                <action android:name="com.example.androidapp.CONSOLE_COMMAND" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

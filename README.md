@@ -204,7 +204,7 @@ Release → emulator (rare)
 ./gradlew assembleRelease -PuseFirebaseEmulator=true
 ```
 
-## Samples data for testing
+### Samples data for testing
 
 ```python
 # Create a virtual environment
