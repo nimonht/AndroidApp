@@ -152,56 +152,8 @@ The console screen does **not** need to be visible for commands to execute — t
 `ConsoleBroadcastReceiver` is registered globally. However, the app must be running
 in the foreground or background.
 
----
 
-## Zed Editor Configuration
-
-### Per-project (recommended)
-
-Edit `.zed/settings.json` in the project root (`AndroidApp/.zed/settings.json`):
-
-```json
-{
-  "context_servers": {
-    "quizzez-console": {
-      "command": {
-        "path": "/home/thanh/School/AndroidApp/mcp_server/.venv/bin/python",
-        "args": [
-          "/home/thanh/School/AndroidApp/mcp_server/server.py"
-        ],
-        "env": {
-          "PATH": "/home/thanh/Android/Sdk/platform-tools:/home/thanh/Android/Sdk/emulator:/usr/bin:/bin"
-        }
-      }
-    }
-  }
-}
-```
-
-### Global configuration
-
-Edit `~/.config/zed/settings.json` and add the same `context_servers` block.
-
-### Targeting a specific emulator serial
-
-```json
-"args": [
-  "/home/thanh/School/AndroidApp/mcp_server/server.py",
-  "--device", "emulator-5554"
-]
-```
-
-### Verify it works
-
-1. Save `settings.json` and restart Zed (or `Ctrl+Shift+P` → **workspace: reload**).
-2. Open the **Assistant Panel** (`Ctrl+Shift+A`).
-3. The agent should now list the 7 Quizzez Console tools.
-4. Ask: *"List all available Quizzez console commands"* — the agent calls `list_commands`.
-5. Ask: *"Check the app's network connectivity"* — the agent calls `execute_command("ping")`.
-
----
-
-## Claude Desktop Configuration
+## Example Claude Desktop Configuration
 
 Config file locations:
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -212,12 +164,12 @@ Config file locations:
 {
   "mcpServers": {
     "quizzez-console": {
-      "command": "/home/thanh/School/AndroidApp/mcp_server/.venv/bin/python",
+      "command": "Path to your project directory/AndroidApp/mcp_server/.venv/bin/python",
       "args": [
-        "/home/thanh/School/AndroidApp/mcp_server/server.py"
+        "Path to your project directory/AndroidApp/mcp_server/server.py"
       ],
       "env": {
-        "PATH": "/home/thanh/Android/Sdk/platform-tools:/usr/bin:/bin"
+        "PATH": "Path to your home directory/Android/Sdk/platform-tools:/usr/bin:/bin"
       }
     }
   }
