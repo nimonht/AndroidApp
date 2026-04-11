@@ -147,6 +147,15 @@ Firebase is **enabled by default in debug builds with the local emulator** (`use
 
 Firestore operations: use batch writes for multi-document mutations; use `callbackFlow` + `addSnapshotListener` for real-time streams. Collection names are in `FirestoreCollections` object (see `CODE_RULES.md` §5.1).
 
+**Sample Data Generation**:
+Populate the local Firestore emulator using the provided Python script:
+```bash
+python3 -m venv scripts/.venv
+source scripts/.venv/bin/activate
+pip install -r scripts/requirements.txt
+python scripts/generate-sample-data.py --clean --count 100 --seed 42
+```
+
 ## Navigation
 
 Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations live in the `NavigationDestination` sealed class. The single `NavHost` entry point is `QuizzezNavHost` (rendered from `MainActivity`). Bottom nav shows only on `HOME`, `SEARCH`, `PROFILE` routes.
@@ -187,6 +196,7 @@ Existing screen directories under `ui/screens/`:
   components: `ConsoleInputField`, `ConsoleOutputLine`, `SuggestionDropdown`, `TokenHighlighter`),
   `logviewer/` (`LogViewerScreen`/`LogViewerViewModel`).
   Console commands are defined in `domain/console/commands/` and registered via DI in `FirebaseModule.kt`.
+  **MCP Server**: An MCP server (`mcp_server/`) is available to connect AI agents directly to this in-app console via ADB broadcasts. It exposes tools like `execute_command`, `list_commands`, and `get_command_help`.
 
 ## Build & Test Commands
 
@@ -233,3 +243,5 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `domain/console/Command.kt` | Console command interface + CompletionSuggestion |
 | `domain/console/CommandExecutor.kt` | Console command execution pipeline |
 | `data/logging/LogCollector.kt` | Logcat ring buffer collector (implements LogService) |
+| `mcp_server/server.py` | MCP server connecting AI agents to the in-app console via ADB |
+| `scripts/generate-sample-data.py` | Populates local Firestore emulator with test data |
