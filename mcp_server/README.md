@@ -269,7 +269,7 @@ Get usage examples for a specific command.
 | `[ERROR] No device connected`     | Emulator not running or USB not authorized      | Run `adb devices` to confirm. Accept the USB authorization dialog on the device if needed   |
 | `[ERROR] No result received from app after 15s` | App not running or receiver not registered | Launch the Quizzez app. Check `adb logcat -s ConsoleBroadcastReceiver` for errors          |
 | `Broadcast completed: result=0` with no data | App is running but console not initialized | Navigate to any screen in the app to ensure it is fully initialized                        |
-| Tools not appearing in Zed        | Python path or MCP SDK issue                    | Run `<python_path> -c "import mcp; print('OK')"` to verify the SDK is installed            |
+| Tools not appearing        | Python path or MCP SDK issue                    | Run `<python_path> -c "import mcp; print('OK')"` to verify the SDK is installed            |
 | Server crashes on startup         | Import error                                    | Run `python server.py` from the terminal and inspect the stderr output                     |
 
 ### Debug mode

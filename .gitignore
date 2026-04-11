@@ -14,6 +14,10 @@
 # Zed
 .zed
 
+# Claude
+.claude
+.mcp.json
+
 # Files for the ART/Dalvik VM
 *.dex
 
