@@ -5,17 +5,17 @@ Quizzez Console MCP Server
 A Model Context Protocol (MCP) server that exposes the Quizzez Android app's
 in-app console system to AI agents.  Seven tools are registered:
 
-1. list_commands      -- List available commands (filterable by category/role)
-2. get_command_help   -- Detailed help for a specific command
-3. execute_command    -- Execute a command on device or via mock
-4. suggest_command    -- Autocomplete suggestions for partial input
-5. validate_command   -- Syntax validation without execution
-6. build_command      -- Natural-language to command translation
+1. list_commands        -- List available commands (filterable by category/role)
+2. get_command_help     -- Detailed help for a specific command
+3. execute_command      -- Execute a command on device/emulator via ADB
+4. suggest_command      -- Autocomplete suggestions for partial input
+5. validate_command     -- Syntax validation without execution
+6. build_command        -- Natural-language to command translation
 7. get_command_examples -- Usage examples for a command
 
 Run with:
-    python server.py            # stdio transport (default, for Claude Desktop)
-    python server.py --mock     # force mock executor for all execute calls
+    python server.py                          # stdio transport (default, for Claude Desktop)
+    python server.py --device emulator-5554   # target a specific ADB device
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import re
 import sys
 from difflib import SequenceMatcher
 
-from adb_bridge import AdbBridge, MockExecutor
+from adb_bridge import AdbBridge
 from command_registry import (
     ALL_COMMANDS,
     CATEGORIES,
@@ -54,31 +54,27 @@ logging.basicConfig(
 logger = logging.getLogger("quizzez-mcp")
 
 # ---------------------------------------------------------------------------
-# Server & executors
+# Server & executor
 # ---------------------------------------------------------------------------
 
 mcp = FastMCP(
     "Quizzez Console",
     instructions=(
-        "MCP server cho he thong console cua ung dung Quizzez Android. "
-        "Cung cap truy cap vao ~32 lenh console de kiem tra, quan ly va "
-        "tuong tac voi ung dung thong qua AI agent.\n\n"
-        "Cac tool chinh:\n"
-        "- list_commands: Liet ke lenh (loc theo danh muc/vai tro)\n"
-        "- get_command_help: Xem huong dan chi tiet cho 1 lenh\n"
-        "- execute_command: Thuc thi lenh (mock hoac ADB)\n"
-        "- suggest_command: Goi y autocomplete\n"
-        "- validate_command: Kiem tra cu phap\n"
-        "- build_command: Dich ngon ngu tu nhien thanh lenh\n"
-        "- get_command_examples: Xem vi du su dung"
+        "MCP server for the Quizzez Android app console system. "
+        "Provides access to ~32 console commands to inspect, manage, and automate "
+        "tasks in the app via ADB on a connected device or emulator.\n\n"
+        "Available tools:\n"
+        "- list_commands: List commands (filter by category/role)\n"
+        "- get_command_help: Detailed help for a specific command\n"
+        "- execute_command: Execute a command via ADB on a real device/emulator\n"
+        "- suggest_command: Autocomplete suggestions for partial input\n"
+        "- validate_command: Validate syntax without executing\n"
+        "- build_command: Translate natural language to a console command\n"
+        "- get_command_examples: View usage examples for a command"
     ),
 )
 
 _adb_bridge = AdbBridge()
-_mock_executor = MockExecutor()
-
-# Set via --mock CLI flag; when True every execute_command call uses the mock.
-_force_mock: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -89,16 +85,16 @@ _force_mock: bool = False
 def _format_output(output) -> str:
     """Format a CommandOutput into a plain-text string for the agent."""
     if output.error_message:
-        return f"[LOI] {output.error_message}"
+        return f"[ERROR] {output.error_message}"
     if not output.lines:
-        return "(khong co ket qua)"
+        return "(no output)"
     parts: list[str] = []
     for line in output.lines:
         prefix = ""
         if line.style == "ERROR":
-            prefix = "[LOI] "
+            prefix = "[ERROR] "
         elif line.style == "WARNING":
-            prefix = "[CANH BAO] "
+            prefix = "[WARNING] "
         elif line.style == "SUCCESS":
             prefix = "[OK] "
         parts.append(f"{prefix}{line.text}")
@@ -127,33 +123,35 @@ def _similarity(a: str, b: str) -> float:
 
 @mcp.tool()
 def list_commands(category: str = "", role: str = "USER") -> str:
-    """Liet ke cac lenh console co san, co the loc theo danh muc hoac vai tro.
+    """List available console commands, optionally filtered by category or role.
 
     Args:
-        category: Loc theo danh muc (util, user, system, pipe, admin). De trong = tat ca.
-        role: Vai tro nguoi dung (GUEST, USER, ADMIN, SUPERUSER). Mac dinh: USER.
+        category: Filter by category (util, user, system, pipe, admin). Empty = all.
+        role: User role (GUEST, USER, ADMIN, SUPERUSER). Default: USER.
 
     Returns:
-        Bang lenh voi ten, mo ta, danh muc.
+        Table of commands with name, description, and category.
     """
     role = role.upper() if role else "USER"
     if role not in ROLE_HIERARCHY:
-        return f"Vai tro khong hop le: '{role}'. Chon: {', '.join(ROLE_HIERARCHY)}"
+        return f"Invalid role: '{role}'. Choose from: {', '.join(ROLE_HIERARCHY)}"
 
     if category:
         cat = category.lower()
         if cat not in CATEGORIES:
-            return f"Danh muc khong hop le: '{category}'. Chon: {', '.join(CATEGORIES)}"
+            return (
+                f"Invalid category: '{category}'. Choose from: {', '.join(CATEGORIES)}"
+            )
         cmds = [
             c
             for c in get_commands_by_category(cat)
             if role_meets_minimum(role, c.minimum_role)
         ]
-        header = f"Lenh trong danh muc '{cat}' (vai tro: {role}):\n\n"
+        header = f"Commands in category '{cat}' (role: {role}):\n\n"
         return header + format_command_table(cmds, show_category=False)
 
     cmds = get_commands_for_role(role)
-    header = f"Tat ca lenh kha dung (vai tro: {role}):\n\n"
+    header = f"All available commands (role: {role}):\n\n"
 
     # Group by category for nicer display.
     sections: list[str] = []
@@ -167,7 +165,7 @@ def list_commands(category: str = "", role: str = "USER") -> str:
                 rows.append(f"  {cmd.name}{alias_str:<20s} {cmd.description}")
             sections.append(section_header + "\n" + "\n".join(rows))
 
-    footer = f"\nTong cong: {len(cmds)} lenh. Dung 'get_command_help' de xem chi tiet."
+    footer = f"\nTotal: {len(cmds)} commands. Use 'get_command_help' for details."
     return header + "\n\n".join(sections) + "\n" + footer
 
 
@@ -178,13 +176,13 @@ def list_commands(category: str = "", role: str = "USER") -> str:
 
 @mcp.tool()
 def get_command_help(command_name: str) -> str:
-    """Xem huong dan chi tiet cho mot lenh console cu the.
+    """Get detailed help documentation for a specific console command.
 
     Args:
-        command_name: Ten lenh hoac bi danh (vd: "ban", "ls", "h").
+        command_name: Command name or alias (e.g. "ban", "ls", "h").
 
     Returns:
-        Tai lieu day du: mo ta, cu phap, flags, vi du, quyen.
+        Full documentation: description, syntax, flags, examples, required role.
     """
     cmd = get_command_by_name(command_name)
     if cmd is None:
@@ -201,13 +199,12 @@ def get_command_help(command_name: str) -> str:
                 best = c
         if best and best_score > 0.5:
             suggestion = (
-                f"Lenh '{command_name}' khong ton tai. "
-                f"Co phai ban muon noi '{best.name}'?\n\n"
+                f"Command '{command_name}' not found. Did you mean '{best.name}'?\n\n"
             )
             return suggestion + format_command_detail(best)
         return (
-            f"Lenh '{command_name}' khong ton tai. "
-            f"Go list_commands de xem danh sach lenh."
+            f"Command '{command_name}' not found. "
+            "Use list_commands to see all available commands."
         )
     return format_command_detail(cmd)
 
@@ -218,35 +215,33 @@ def get_command_help(command_name: str) -> str:
 
 
 @mcp.tool()
-def execute_command(command: str, use_mock: bool = False) -> str:
-    """Thuc thi lenh console tren thiet bi/emulator hoac che do mock.
+def execute_command(command: str) -> str:
+    """Execute a console command on the connected Android device or emulator via ADB.
+
+    The Quizzez app must be running on the device/emulator with the ConsoleBroadcastReceiver
+    registered. The command is dispatched via ADB ordered broadcast and the result is
+    read from the broadcast return value.
 
     Args:
-        command: Chuoi lenh day du (vd: "ping --count 3", "ls -u --limit 5").
-        use_mock: True = dung mock (khong can thiet bi). False = gui qua ADB.
+        command: Full command string (e.g. "ping --count 3", "ls -u --limit 5").
 
     Returns:
-        Ket qua lenh (co the nhieu dong).
+        Command output (may be multi-line). Prefixed with [ERROR] on failure.
     """
     if not command or not command.strip():
-        return "[LOI] Lenh trong. Hay nhap mot lenh hop le."
+        return "[ERROR] Empty command. Please provide a valid command string."
 
-    logger.info("execute_command: %r (mock=%s)", command, use_mock or _force_mock)
+    logger.info("execute_command: %r", command)
 
-    if use_mock or _force_mock:
-        result = _mock_executor.execute(command.strip())
-        return _format_output(result)
-
-    # Real ADB execution
     if not _adb_bridge.check_adb_available():
         return (
-            "[LOI] adb khong tim thay tren PATH.\n"
-            "Hay cai dat Android SDK hoac dung use_mock=true de test."
+            "[ERROR] adb not found on PATH.\n"
+            "Install Android SDK platform-tools and ensure adb is on your PATH."
         )
 
     connected, detail = _adb_bridge.check_device_connected()
     if not connected:
-        return f"[LOI] {detail}\nHay ket noi thiet bi/emulator hoac dung use_mock=true."
+        return f"[ERROR] {detail}\nPlease connect a device or start an emulator."
 
     result = _adb_bridge.execute(command.strip())
     return _format_output(result)
@@ -259,17 +254,17 @@ def execute_command(command: str, use_mock: bool = False) -> str:
 
 @mcp.tool()
 def suggest_command(partial_input: str) -> str:
-    """Goi y lenh tu dau vao mot phan (autocomplete).
+    """Get autocomplete suggestions for a partial command input.
 
     Args:
-        partial_input: Chuoi dau vao hien tai (vd: "hel", "ls -", "ban --").
+        partial_input: Current input string (e.g. "hel", "ls -", "ban --").
 
     Returns:
-        Danh sach goi y kem mo ta.
+        List of suggestions with descriptions.
     """
     text = partial_input.strip().lower()
     if not text:
-        return "Nhap it nhat mot ky tu de nhan goi y."
+        return "Enter at least one character to get suggestions."
 
     parts = text.split()
     first_token = parts[0]
@@ -297,15 +292,15 @@ def suggest_command(partial_input: str) -> str:
             matches = [(name, desc) for _, name, desc in scored[:5]]
 
         if not matches:
-            return f"Khong tim thay lenh nao bat dau bang '{first_token}'."
+            return f"No commands found starting with '{first_token}'."
 
-        lines = [f"Goi y cho '{partial_input}':", ""]
+        lines = [f"Suggestions for '{partial_input}':", ""]
         for name, desc in matches[:10]:
             lines.append(f"  {name:<20s} {desc}")
         return "\n".join(lines)
 
     # Command is known; suggest flags/subcommands
-    lines = [f"Goi y cho '{partial_input}' (lenh: {cmd.name}):", ""]
+    lines = [f"Suggestions for '{partial_input}' (command: {cmd.name}):", ""]
 
     current_token = parts[-1] if not partial_input.endswith(" ") else ""
 
@@ -316,17 +311,17 @@ def suggest_command(partial_input: str) -> str:
         matching = [f for f in all_flags if f.startswith(prefix)]
         if matching:
             for f in matching:
-                tag = "<gia_tri>" if f in cmd.value_flags else "(boolean)"
+                tag = "<value>" if f in cmd.value_flags else "(boolean)"
                 lines.append(f"  --{f}  {tag}")
         else:
-            lines.append("  (khong co flag nao khop)")
+            lines.append("  (no matching flags)")
     elif current_token.startswith("-") and len(current_token) <= 2:
         # Short flags -- just list the available single-char flags
-        lines.append("  Flags kha dung:")
+        lines.append("  Available flags:")
         for f in cmd.boolean_flags[:8]:
             lines.append(f"    --{f}")
         for f in cmd.value_flags[:8]:
-            lines.append(f"    --{f} <gia_tri>")
+            lines.append(f"    --{f} <value>")
     else:
         # Suggest subcommands / general flags
         # Check for subcommand patterns in usage
@@ -336,14 +331,14 @@ def suggest_command(partial_input: str) -> str:
             used = set(parts[1:])
             remaining = [o for o in options if o not in used]
             if remaining:
-                lines.append("  Tham so:")
+                lines.append("  Arguments:")
                 for opt in remaining:
                     lines.append(f"    {opt}")
 
         if cmd.value_flags or cmd.boolean_flags:
-            lines.append("  Flags kha dung:")
+            lines.append("  Available flags:")
             for f in cmd.value_flags:
-                lines.append(f"    --{f} <gia_tri>")
+                lines.append(f"    --{f} <value>")
             for f in cmd.boolean_flags:
                 lines.append(f"    --{f}")
 
@@ -357,16 +352,16 @@ def suggest_command(partial_input: str) -> str:
 
 @mcp.tool()
 def validate_command(command: str) -> str:
-    """Kiem tra cu phap lenh ma khong thuc thi.
+    """Validate command syntax without executing it.
 
     Args:
-        command: Chuoi lenh can kiem tra (vd: "ban user@ex.com --confirm").
+        command: Full command string to validate (e.g. "ban user@ex.com --confirm").
 
     Returns:
-        Ket qua xac thuc: hop le hay khong, cac van de phat hien.
+        Validation result: whether it is valid, and any issues detected.
     """
     if not command or not command.strip():
-        return "KHONG HOP LE: Lenh trong."
+        return "INVALID: Empty command."
 
     text = command.strip()
     parts = text.split()
@@ -378,9 +373,9 @@ def validate_command(command: str) -> str:
         for c in ALL_COMMANDS:
             if _similarity(cmd_name, c.name) > 0.5:
                 suggestions.append(c.name)
-        msg = f"KHONG HOP LE: Lenh '{cmd_name}' khong ton tai."
+        msg = f"INVALID: Command '{cmd_name}' not found."
         if suggestions:
-            msg += f" Co phai: {', '.join(suggestions)}?"
+            msg += f" Did you mean: {', '.join(suggestions)}?"
         return msg
 
     issues: list[str] = []
@@ -393,11 +388,11 @@ def validate_command(command: str) -> str:
         if part.startswith("--"):
             flag_name = part.lstrip("-").split("=")[0]
             if flag_name and flag_name not in known:
-                issues.append(f"Flag khong nhan dien: --{flag_name}")
+                issues.append(f"Unrecognized flag: --{flag_name}")
         elif part.startswith("-") and len(part) == 2 and part[1].isalpha():
             short = part[1]
             if short not in known_short and short not in known:
-                warnings.append(f"Flag ngan co the khong hop le: -{short}")
+                warnings.append(f"Short flag may be invalid: -{short}")
 
     # Check destructive commands need --confirm
     if cmd.is_destructive:
@@ -405,7 +400,7 @@ def validate_command(command: str) -> str:
         has_dry_run = "--dry-run" in parts
         if not has_confirm and not has_dry_run:
             warnings.append(
-                "Lenh huy diet! Can --confirm de thuc thi hoac --dry-run de xem truoc."
+                "Destructive command! Requires --confirm to execute or --dry-run to preview."
             )
 
     # Check subcommand requirement patterns
@@ -420,32 +415,32 @@ def validate_command(command: str) -> str:
         ]
         if required_positional and not non_flag_args:
             example_args = required_positional[0]
-            warnings.append(f"Co the thieu tham so bat buoc: <{example_args}>")
+            warnings.append(f"Possibly missing required argument: <{example_args}>")
 
     # Check role requirement
     if cmd.minimum_role != "USER":
-        warnings.append(f"Lenh nay yeu cau vai tro toi thieu: {cmd.minimum_role}")
+        warnings.append(f"This command requires minimum role: {cmd.minimum_role}")
 
     if cmd.required_permission:
-        warnings.append(f"Can quyen: {cmd.required_permission}")
+        warnings.append(f"Requires permission: {cmd.required_permission}")
 
     # Build result
     lines: list[str] = []
     if not issues:
-        lines.append(f"HOP LE: Cu phap lenh '{cmd.name}' dung.")
+        lines.append(f"VALID: Syntax for command '{cmd.name}' looks correct.")
     else:
-        lines.append(f"KHONG HOP LE: Phat hien {len(issues)} loi:")
+        lines.append(f"INVALID: {len(issues)} error(s) found:")
         for i, issue in enumerate(issues, 1):
             lines.append(f"  {i}. {issue}")
 
     if warnings:
         lines.append("")
-        lines.append(f"Luu y ({len(warnings)}):")
+        lines.append(f"Notes ({len(warnings)}):")
         for w in warnings:
             lines.append(f"  - {w}")
 
     lines.append("")
-    lines.append(f"Cu phap chuan: {cmd.usage}")
+    lines.append(f"Standard syntax: {cmd.usage}")
 
     return "\n".join(lines)
 
@@ -455,6 +450,7 @@ def validate_command(command: str) -> str:
 # ---------------------------------------------------------------------------
 
 # Keyword -> command mapping for natural-language resolution.
+# Vietnamese and English keys are both intentional to support bilingual NL input.
 _NL_KEYWORDS: dict[str, list[str]] = {
     # Vietnamese keywords
     "xoa": ["del", "clear", "purge"],
@@ -499,7 +495,6 @@ _NL_KEYWORDS: dict[str, list[str]] = {
     "unpublish": ["unpublish"],
     "restore": ["restore"],
     "user": ["userinfo", "whoami", "ls"],
-    "quiz": ["quizinfo", "ls", "my"],
     "history": ["history"],
     "config": ["config"],
     "settings": ["config"],
@@ -523,17 +518,17 @@ _NL_KEYWORDS: dict[str, list[str]] = {
 
 @mcp.tool()
 def build_command(description: str) -> str:
-    """Xay dung lenh console tu mo ta bang ngon ngu tu nhien.
+    """Build a console command from a natural-language description.
 
     Args:
-        description: Mo ta viec muon lam (vd: "cam nguoi dung user@ex.com",
-                     "xem thong ke he thong", "liet ke tat ca quiz").
+        description: Description of what you want to do (e.g. "ban user user@ex.com",
+                     "view system statistics", "list all quizzes").
 
     Returns:
-        Lenh duoc goi y kem giai thich.
+        Suggested command with explanation.
     """
     if not description or not description.strip():
-        return "Hay mo ta viec ban muon lam."
+        return "Please describe what you want to do."
 
     text = description.strip().lower()
     words = text.split()
@@ -565,8 +560,8 @@ def build_command(description: str) -> str:
 
     if not scores:
         return (
-            "Khong the xac dinh lenh phu hop. "
-            "Hay mo ta cu the hon hoac dung list_commands de xem danh sach."
+            "Unable to determine a matching command. "
+            "Please be more specific or use list_commands to browse commands."
         )
 
     # Sort by score descending
@@ -576,26 +571,26 @@ def build_command(description: str) -> str:
     assert top_cmd is not None
 
     lines: list[str] = []
-    lines.append(f"Lenh goi y: {top_cmd.name}")
-    lines.append(f"Mo ta:      {top_cmd.description}")
-    lines.append(f"Cu phap:    {top_cmd.usage}")
+    lines.append(f"Suggested command: {top_cmd.name}")
+    lines.append(f"Description:       {top_cmd.description}")
+    lines.append(f"Syntax:            {top_cmd.usage}")
     lines.append("")
 
     # Try to build a concrete command from the description
     concrete = _build_concrete(top_cmd, text, words)
-    lines.append(f"Lenh cu the: {concrete}")
+    lines.append(f"Concrete command: {concrete}")
 
     if top_cmd.is_destructive:
         lines.append("")
         lines.append(
-            "Luu y: Lenh nay co tac dong khong the hoan tac. "
-            "Them --confirm de xac nhan hoac --dry-run de xem truoc."
+            "Note: This command is irreversible. "
+            "Add --confirm to execute or --dry-run to preview."
         )
 
     # Show alternatives if close scores
     if len(ranked) > 1:
         lines.append("")
-        lines.append("Cac lenh lien quan khac:")
+        lines.append("Related commands:")
         for alt_name, alt_score in ranked[1:4]:
             alt_cmd = get_command_by_name(alt_name)
             if alt_cmd:
@@ -605,7 +600,7 @@ def build_command(description: str) -> str:
 
 
 def _build_concrete(cmd: CommandInfo, text: str, words: list[str]) -> str:
-    """Attempt to construct a concrete command string from NL description."""
+    """Attempt to construct a concrete command string from an NL description."""
     parts = [cmd.name]
 
     # Extract email-like tokens
@@ -614,7 +609,8 @@ def _build_concrete(cmd: CommandInfo, text: str, words: list[str]) -> str:
     # Extract ID-like tokens (hex strings, long alphanumeric)
     ids = [w for w in words if len(w) > 8 and w.isalnum() and not w.isalpha()]
 
-    # Detect entity-type flags from context
+    # Detect entity-type flags from context.
+    # Bilingual word sets are intentional to support Vietnamese and English NL input.
     entity_words = {"nguoi dung", "user", "users"}
     quiz_words = {"quiz", "bai kiem tra", "quizzes"}
     attempt_words = {"attempt", "lan lam bai", "attempts"}
@@ -705,27 +701,27 @@ def _build_concrete(cmd: CommandInfo, text: str, words: list[str]) -> str:
 
 @mcp.tool()
 def get_command_examples(command_name: str) -> str:
-    """Xem vi du su dung cho mot lenh cu the.
+    """Get usage examples for a specific console command.
 
     Args:
-        command_name: Ten lenh hoac bi danh (vd: "ban", "ls", "my").
+        command_name: Command name or alias (e.g. "ban", "ls", "my").
 
     Returns:
-        Danh sach vi du kem mo ta.
+        List of examples with descriptions.
     """
     cmd = get_command_by_name(command_name)
     if cmd is None:
         return (
-            f"Lenh '{command_name}' khong ton tai. "
-            "Go list_commands de xem danh sach lenh."
+            f"Command '{command_name}' not found. "
+            "Use list_commands to see all available commands."
         )
 
     if not cmd.examples:
-        return f"Lenh '{cmd.name}' chua co vi du nao."
+        return f"No examples available for '{cmd.name}'."
 
     lines: list[str] = [
-        f"Vi du su dung cho '{cmd.name}':",
-        f"Cu phap: {cmd.usage}",
+        f"Usage examples for '{cmd.name}':",
+        f"Syntax: {cmd.usage}",
         "",
     ]
     for i, (example_cmd, example_desc) in enumerate(cmd.examples, 1):
@@ -735,8 +731,8 @@ def get_command_examples(command_name: str) -> str:
 
     if cmd.is_destructive:
         lines.append(
-            "Luu y: Lenh huy diet -- luon them --confirm de xac nhan "
-            "hoac --dry-run de xem truoc."
+            "Note: Destructive command -- always add --confirm to execute "
+            "or --dry-run to preview."
         )
 
     return "\n".join(lines)
@@ -750,17 +746,16 @@ def get_command_examples(command_name: str) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Quizzez Console MCP Server")
     parser.add_argument(
-        "--mock",
-        action="store_true",
-        help="Force mock executor for all execute_command calls (no ADB needed).",
+        "--device",
+        metavar="SERIAL",
+        default=None,
+        help="Target a specific ADB device/emulator serial (e.g. emulator-5554).",
     )
     args = parser.parse_args()
 
-    global _force_mock
-    _force_mock = args.mock
-
-    if _force_mock:
-        logger.info("Mock mode enabled -- all commands will use MockExecutor.")
+    if args.device:
+        _adb_bridge.device_serial = args.device
+        logger.info("Targeting device: %s", args.device)
 
     logger.info("Starting Quizzez Console MCP server (stdio transport)...")
     mcp.run(transport="stdio")
