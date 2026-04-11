@@ -178,6 +178,26 @@ enum class UiError {
 
     /** QuestionPoolViewModel — generic search failure */
     SEARCH_FAILED,
+
+    // -- Console / Developer Tools -----------------------------------------------
+
+    /** CommandExecutor — user lacks required admin permission */
+    COMMAND_PERMISSION_DENIED,
+
+    /** CommandExecutor — user's role below command's minimumRole */
+    COMMAND_ROLE_INSUFFICIENT,
+
+    /** CommandExecutor — unknown command name */
+    COMMAND_NOT_FOUND,
+
+    /** CommandExecutor — generic command runtime error */
+    COMMAND_EXECUTION_FAILED,
+
+    /** CommandExecutor — destructive operation without --confirm */
+    COMMAND_CONFIRMATION_REQUIRED,
+
+    /** LogCollector — logcat reading failed */
+    LOG_COLLECTOR_FAILED,
 }
 
 /**
@@ -259,4 +279,12 @@ fun UiError.toMessage(detail: String? = null): String = when (this) {
     UiError.POOL_REVOKE_FAILED -> stringResource(R.string.error_pool_revoke_failed)
     UiError.LOAD_DATA_FAILED -> stringResource(R.string.error_load_data_failed)
     UiError.SEARCH_FAILED -> stringResource(R.string.error_search_failed)
+
+    // Console / Developer Tools
+    UiError.COMMAND_PERMISSION_DENIED -> stringResource(R.string.error_command_permission_denied)
+    UiError.COMMAND_ROLE_INSUFFICIENT -> stringResource(R.string.error_command_role_insufficient)
+    UiError.COMMAND_NOT_FOUND -> stringResource(R.string.error_command_not_found)
+    UiError.COMMAND_EXECUTION_FAILED -> stringResource(R.string.error_command_execution_failed)
+    UiError.COMMAND_CONFIRMATION_REQUIRED -> stringResource(R.string.error_command_confirmation_required)
+    UiError.LOG_COLLECTOR_FAILED -> stringResource(R.string.error_log_collector_failed)
 }

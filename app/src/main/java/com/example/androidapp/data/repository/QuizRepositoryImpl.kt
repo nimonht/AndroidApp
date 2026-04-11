@@ -382,6 +382,34 @@ class QuizRepositoryImpl(
         }
     }
 
+    override suspend fun forceRefreshUserQuizzes(userId: String) {
+        try {
+            val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
+            val remoteQuizIds = dtos.map { it.id }.toSet()
+
+            dtos.forEach { dto ->
+                val quiz = dto.toDomain()
+                quizDao.insertQuiz(quiz.toEntity())
+                refreshQuestionsAndChoices(quiz.id, skipSyncCheck = true)
+            }
+
+            // Mark owner's quizzes absent from Firestore instead of deleting
+            // them outright — same logic as refreshMyQuizzes but without the
+            // isSyncAllowed() guard, for use by the developer console.
+            val localMyQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
+            val staleQuizzes = localMyQuizzes.filter { local ->
+                local.id !in remoteQuizIds && local.syncStatus != SyncStatus.PENDING.name
+            }
+            staleQuizzes.forEach { staleQuiz ->
+                if (!staleQuiz.isRemovedFromCloud) {
+                    quizDao.markRemovedFromCloud(staleQuiz.id, true)
+                }
+            }
+        } catch (_: Exception) {
+            // Best-effort refresh; Room data is still returned by the Flow
+        }
+    }
+
     override suspend fun refreshPublicQuizzes(currentUserId: String?) {
         if (!syncManager.isSyncAllowed()) return
         try {
@@ -416,8 +444,11 @@ class QuizRepositoryImpl(
      * and inserts them into the local Room database.
      * Deletes existing local questions/choices for the quiz first to remove stale data.
      */
-    private suspend fun refreshQuestionsAndChoices(quizId: String) {
-        if (!syncManager.isSyncAllowed()) return
+    private suspend fun refreshQuestionsAndChoices(
+        quizId: String,
+        skipSyncCheck: Boolean = false
+    ) {
+        if (!skipSyncCheck && !syncManager.isSyncAllowed()) return
         try {
             // Delete existing local questions (and their choices via cascade) to remove stale data
             val existingQuestions = questionDao.getQuestionsByQuizIdOnce(quizId)

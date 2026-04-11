@@ -2,6 +2,7 @@ package com.example.androidapp.di
 
 import android.content.Context
 import com.example.androidapp.data.local.AppDatabase
+import com.example.androidapp.data.logging.LogCollector
 import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
@@ -12,6 +13,8 @@ import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.network.NetworkMonitor
 import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.sync.SyncManager
+import com.example.androidapp.domain.console.CommandExecutor
+import com.example.androidapp.domain.console.CommandRegistry
 import com.example.androidapp.domain.repository.AdminRepository
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
@@ -65,4 +68,8 @@ interface AppContainer {
     val adminRepository: AdminRepository
     val searchRepository: SearchRepository
     val settingsPreferences: SettingsPreferences
+
+    val logCollector: LogCollector
+    val commandRegistry: CommandRegistry
+    val commandExecutor: CommandExecutor
 }

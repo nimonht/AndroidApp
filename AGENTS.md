@@ -24,6 +24,12 @@ domain/   ← Pure Kotlin. Models, repository interfaces, utilities. No Android/
                           TimeFormatter (HH:MM:SS / MM:SS + timestamp formatting),
                           InputSanitizer, TagValidator,
                           SafeCall (try/catch → Result<T> wrapper for repository impls)
+            console/    ← In-app console engine: Command interface, CommandLexer, CommandParser,
+                          CommandExecutor, CommandRegistry, CommandResult, CommandContext,
+                          CommandToken, CommandFormatUtils, ConsoleJsonBuilder;
+                          commands/ sub-package has ~35 command implementations
+            service/    ← Domain service interfaces: LogService, NetworkService,
+                          SettingsService, SyncService
 data/     ← Firebase DTOs (remote/model/), remote data sources (remote/firebase/),
             Room entities (local/entity/), mapper extensions, repository impls.
 ui/       ← Compose screens + ViewModels. Screens are stateless; ViewModels own all state.
@@ -51,6 +57,9 @@ data/
                               `ShareCodeRepositoryImpl.kt`,
                               `PoolRepositoryImpl.kt`, `AdminRepositoryImpl.kt`,
                               `SearchRepositoryImpl.kt` (SharedPreferences-backed recent searches)
+  logging/
+    LogCollector.kt         ← Logcat ring buffer collector (10k entries); implements LogService;
+                              spawns coroutine reading `logcat -v threadtime --pid`; batched StateFlow emission
   network/
     NetworkMonitor.kt       ← ConnectivityManager wrapper; exposes `isOnline: StateFlow<Boolean>`
   preferences/
@@ -138,6 +147,15 @@ Firebase is **enabled by default in debug builds with the local emulator** (`use
 
 Firestore operations: use batch writes for multi-document mutations; use `callbackFlow` + `addSnapshotListener` for real-time streams. Collection names are in `FirestoreCollections` object (see `CODE_RULES.md` §5.1).
 
+**Sample Data Generation**:
+Populate the local Firestore emulator using the provided Python script:
+```bash
+python3 -m venv scripts/.venv
+source scripts/.venv/bin/activate
+pip install -r scripts/requirements.txt
+python scripts/generate-sample-data.py --clean --count 100 --seed 42
+```
+
 ## Navigation
 
 Routes are string constants in `ui/navigation/Routes.kt`. Typed destinations live in the `NavigationDestination` sealed class. The single `NavHost` entry point is `QuizzezNavHost` (rendered from `MainActivity`). Bottom nav shows only on `HOME`, `SEARCH`, `PROFILE` routes.
@@ -172,6 +190,13 @@ Existing screen directories under `ui/screens/`:
   `reports/` (`AdminReportsScreen`/`ViewModel`/`UiState`).
   Note: `users/` and `quizzes/` management screens have collapsible filter/search sections (collapsed by default, toggled via `AnimatedVisibility`).
   Admin routes: `admin/dashboard`, `admin/users`, `admin/quizzes`, `admin/reports`.
+- `advanced/` — Developer Tools (tabbed: Console + Log Viewer). Entry from Profile, accessible to all
+  logged-in users. `AdvancedScreen`/`AdvancedViewModel` (tab container).
+  Sub-packages: `console/` (`ConsoleScreen`/`ConsoleViewModel`/`ConsoleViewModelFactory`;
+  components: `ConsoleInputField`, `ConsoleOutputLine`, `SuggestionDropdown`, `TokenHighlighter`),
+  `logviewer/` (`LogViewerScreen`/`LogViewerViewModel`).
+  Console commands are defined in `domain/console/commands/` and registered via DI in `FirebaseModule.kt`.
+  **MCP Server**: An MCP server (`mcp_server/`) is available to connect AI agents directly to this in-app console via ADB broadcasts. It exposes tools like `execute_command`, `list_commands`, and `get_command_help`.
 
 ## Build & Test Commands
 
@@ -215,3 +240,8 @@ build-debug | build-release | test | lint | clean | firebase-emulators
 | `Docs_en/` | Architecture, backend, frontend, and behavior docs |
 | `data/local/AppDatabase.kt` | Room DB v5 definition; `fallbackToDestructiveMigration` — no explicit migrations |
 | `data/local/EntityMappers.kt` | Entity ↔ Domain extension functions (`toDomain` / `toEntity`) |
+| `domain/console/Command.kt` | Console command interface + CompletionSuggestion |
+| `domain/console/CommandExecutor.kt` | Console command execution pipeline |
+| `data/logging/LogCollector.kt` | Logcat ring buffer collector (implements LogService) |
+| `mcp_server/server.py` | MCP server connecting AI agents to the in-app console via ADB |
+| `scripts/generate-sample-data.py` | Populates local Firestore emulator with test data |

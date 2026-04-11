@@ -11,6 +11,9 @@
 *.ap_
 *.aab
 
+# Zed
+.zed
+
 # Files for the ART/Dalvik VM
 *.dex
 

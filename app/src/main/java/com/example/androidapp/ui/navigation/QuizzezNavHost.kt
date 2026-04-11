@@ -55,6 +55,7 @@ import com.example.androidapp.ui.screens.search.SearchScreen
 import com.example.androidapp.ui.screens.pool.QuestionPoolScreen
 import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.settings.SettingsViewModel
+import com.example.androidapp.ui.screens.advanced.AdvancedScreen
 import com.example.androidapp.ui.screens.trash.TrashScreen
 
 /**
@@ -218,6 +219,13 @@ fun QuizzezNavHost(
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
+                        }
+                    },
+                    onNavigateToAdvanced = {
+                        if (currentUser != null) {
+                            navController.navigate(Routes.ADVANCED)
+                        } else {
+                            showLoginPrompt = true
                         }
                     }
                 )
@@ -570,6 +578,20 @@ fun QuizzezNavHost(
                     viewModel = viewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
+            }
+
+            // ==================== Advanced / Developer Tools ====================
+            composable(Routes.ADVANCED) {
+                // No admin guard — accessible to all logged-in users
+                // AdvancedScreen handles role-based content internally
+                if (currentUser == null) {
+                    LaunchedEffect(Unit) { navController.popBackStack() }
+                    showLoginPrompt = true
+                } else {
+                    AdvancedScreen(
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }

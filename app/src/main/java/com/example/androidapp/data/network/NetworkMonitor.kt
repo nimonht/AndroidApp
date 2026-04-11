@@ -5,22 +5,23 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import com.example.androidapp.domain.service.NetworkService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class NetworkMonitor(context: Context) {
+class NetworkMonitor(context: Context) : NetworkService {
 
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     private val _isOnline = MutableStateFlow(checkCurrentConnectivity())
-    val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
+    override val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
 
     private val _isWifi = MutableStateFlow(checkCurrentWifi())
 
     /** Whether the current active network uses an unmetered (WiFi) transport. */
-    val isWifi: StateFlow<Boolean> = _isWifi.asStateFlow()
+    override val isWifi: StateFlow<Boolean> = _isWifi.asStateFlow()
 
     init {
         val networkRequest = NetworkRequest.Builder()

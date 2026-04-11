@@ -25,10 +25,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.androidapp.domain.service.ConsoleSyncState
+import com.example.androidapp.domain.service.SyncService
 
 enum class SyncState {
     IDLE,
@@ -49,13 +54,22 @@ class SyncManager(
     private val networkMonitor: NetworkMonitor,
     private val settingsPreferences: SettingsPreferences,
     private val quizRepositoryLazy: Lazy<QuizRepository>
-) {
+) : SyncService {
     private val quizRepository: QuizRepository get() = quizRepositoryLazy.value
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _syncState = MutableStateFlow(SyncState.IDLE)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+
+    override val consoleSyncState: StateFlow<ConsoleSyncState> = _syncState.map {
+        when (it) {
+            SyncState.IDLE -> ConsoleSyncState.IDLE
+            SyncState.SYNCING -> ConsoleSyncState.SYNCING
+            SyncState.PENDING -> ConsoleSyncState.PENDING
+            SyncState.ERROR -> ConsoleSyncState.ERROR
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, ConsoleSyncState.IDLE)
 
     init {
         scope.launch {
@@ -74,7 +88,7 @@ class SyncManager(
      * - Returns false if the device is offline.
      * - Returns false if WiFi-only mode is on but the connection is not WiFi.
      */
-    suspend fun isSyncAllowed(): Boolean {
+    override suspend fun isSyncAllowed(): Boolean {
         val autoSync = settingsPreferences.autoSyncEnabled.first()
         if (!autoSync) return false
         if (!networkMonitor.isOnline.value) return false
@@ -83,7 +97,7 @@ class SyncManager(
         return true
     }
 
-    suspend fun processPendingOperations() {
+    override suspend fun processPendingOperations() {
         val pending = pendingSyncDao.getPendingOperations()
         if (pending.isEmpty()) {
             _syncState.value = SyncState.IDLE
@@ -135,11 +149,11 @@ class SyncManager(
         }
     }
 
-    suspend fun getPendingCount(): Int {
+    override suspend fun getPendingCount(): Int {
         return pendingSyncDao.getPendingCount()
     }
 
-    suspend fun retryFailedOperations() {
+    override suspend fun retryFailedOperations() {
         pendingSyncDao.resetFailedToPending()
         if (isSyncAllowed()) {
             scope.launch { processPendingOperations() }

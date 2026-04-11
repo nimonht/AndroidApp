@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
@@ -73,6 +74,7 @@ fun ProfileScreen(
     onNavigateToEditProfile: () -> Unit,
     onNavigateToQuestionPool: () -> Unit = {},
     onNavigateToAdminPanel: () -> Unit = {},
+    onNavigateToAdvanced: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val container = LocalAppContainer
@@ -116,6 +118,7 @@ fun ProfileScreen(
                 onSettingsClick = onNavigateToSettings,
                 onQuestionPoolClick = onNavigateToQuestionPool,
                 onAdminPanelClick = onNavigateToAdminPanel,
+                onAdvancedClick = onNavigateToAdvanced,
                 isAdmin = user.isAdmin()
             )
 
@@ -305,6 +308,7 @@ private fun ProfileMenuSection(
     onSettingsClick: () -> Unit,
     onQuestionPoolClick: () -> Unit,
     onAdminPanelClick: () -> Unit,
+    onAdvancedClick: () -> Unit,
     isAdmin: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -344,6 +348,11 @@ private fun ProfileMenuSection(
             icon = Icons.Default.Delete,
             title = stringResource(R.string.profile_menu_recycle_bin),
             onClick = onTrashClick
+        )
+        ProfileMenuItem(
+            icon = Icons.Default.Code,
+            title = stringResource(R.string.profile_menu_developer_tools),
+            onClick = onAdvancedClick
         )
         ProfileMenuItem(
             icon = Icons.Default.Settings,
