@@ -51,7 +51,7 @@ class SearchCommand : Command {
     override val name: String = "search"
 
     /** @inheritDoc */
-    override val aliases: List<String> = listOf("find")
+    override val aliases: List<String> = listOf("find", "s")
 
     /** @inheritDoc */
     override val description: String = "Tim kiem nguoi dung hoac quiz trong he thong"

@@ -30,7 +30,7 @@ class MyCommand : Command {
 
     override val name: String = "my"
 
-    override val aliases: List<String> = listOf("me")
+    override val aliases: List<String> = listOf("me", "mine")
 
     override val description: String = "Truy van du lieu ca nhan (quiz, lan lam bai, thong ke, dong gop)"
 

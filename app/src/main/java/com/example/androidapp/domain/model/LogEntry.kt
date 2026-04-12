@@ -102,6 +102,8 @@ enum class LogLevel {
          */
         fun fromString(value: String): LogLevel? {
             val normalized = value.trim().uppercase()
+            // Accept "warning" as a common alias for the WARN level
+            if (normalized == "WARNING") return WARN
             return entries.find { it.name == normalized }
                 ?: entries.find { it.abbreviation == normalized }
         }

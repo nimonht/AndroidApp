@@ -119,7 +119,20 @@ class AliasCommand : Command {
             return handleList(context)
         }
 
-        val definition = args.joinToString(" ")
+        // Reconstruct the full definition: include any non-alias flags that are
+        // actually part of the expansion (e.g. `alias ll=list --long` parses
+        // `--long` as a separate Flag token, not part of the bare-word "ll=list").
+        val ownFlags = setOf("remove", "r", "clear", "list")
+        val expansionFlags = flags.filterKeys { it !in ownFlags }
+        val definition = if (expansionFlags.isEmpty()) {
+            args.joinToString(" ")
+        } else {
+            val flagStr = expansionFlags.entries.joinToString(" ") { (k, v) ->
+                val prefix = if (k.length == 1) "-" else "--"
+                if (v == null) "$prefix$k" else "$prefix$k $v"
+            }
+            "${args.joinToString(" ")} $flagStr"
+        }
         return handleSet(definition, context)
     }
 
@@ -173,7 +186,22 @@ class AliasCommand : Command {
         }
 
         val name = definition.substring(0, eqIndex).trim()
-        val expansion = definition.substring(eqIndex + 1).trim()
+        // Strip a surrounding quote pair or a stray leading quote that the lexer
+        // includes when the user writes e.g. `alias ll="list --long"` — the lexer
+        // embeds the opening `"` into the preceding bare word rather than starting
+        // a quoted-string token at that position.
+        val rawExpansion = definition.substring(eqIndex + 1).trim()
+        val expansion = when {
+            rawExpansion.length >= 2 &&
+                    ((rawExpansion.startsWith('"') && rawExpansion.endsWith('"')) ||
+                            (rawExpansion.startsWith('\'') && rawExpansion.endsWith('\''))) ->
+                rawExpansion.substring(1, rawExpansion.length - 1)
+
+            rawExpansion.startsWith('"') || rawExpansion.startsWith('\'') ->
+                rawExpansion.substring(1)
+
+            else -> rawExpansion
+        }
 
         if (name.isEmpty()) {
             return CommandResult.error("Ten alias khong duoc de trong.")

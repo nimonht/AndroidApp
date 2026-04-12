@@ -40,7 +40,7 @@ class LogCommand : Command {
     override val description: String = "Xem va loc nhat ky ung dung"
 
     override val usage: String =
-        "log [so_dong] [-l|--level <muc>] [-t|--tag <tag>] [--search <tu_khoa>] " +
+        "log [so_dong|--limit <n>] [-l|--level <muc>] [-t|--tag <tag>] [--search <tu_khoa>] " +
                 "[--regex <bieu_thuc>] [--not <loai_tru>] [--since <thoi_gian>] " +
                 "[--after <thoi_gian>] [--before <thoi_gian>] [--between <bat_dau,ket_thuc>] " +
                 "[--thread <ten_luong>] [--format <dinh_dang>] [--fields <truong>] " +
@@ -51,6 +51,7 @@ class LogCommand : Command {
     override val examples: List<Pair<String, String>> = listOf(
         "log" to "Hien thi 50 ban ghi gan nhat",
         "log 100" to "Hien thi 100 ban ghi gan nhat",
+        "log --limit 20" to "Hien thi 20 ban ghi gan nhat (dung flag)",
         "log -l error" to "Chi hien thi cac ban ghi loi",
         "log -l W" to "Chi hien thi canh bao (dung viet tat)",
         "log -t Auth" to "Loc ban ghi co tag bat dau bang 'Auth'",
@@ -176,7 +177,9 @@ class LogCommand : Command {
         // --level / -l: loc theo muc do
         val levelStr = flags["level"] ?: flags["l"]
         if (levelStr != null) {
-            val requestedLevel = LogLevel.fromString(levelStr)
+            // Chap nhan "warning" nhu mot ten thay the cua "warn" de thuan tien nguoi dung
+            val normalizedLevelStr = if (levelStr.trim().lowercase() == "warning") "warn" else levelStr
+            val requestedLevel = LogLevel.fromString(normalizedLevelStr)
             if (requestedLevel == null) {
                 return CommandResult.error(
                     "Muc do khong hop le: '$levelStr'. Cac muc hop le: ${
@@ -248,14 +251,15 @@ class LogCommand : Command {
             )
         }
 
-        // Xac dinh so dong hien thi
-        val limit = if (args.isNotEmpty()) {
-            args[0].toIntOrNull() ?: return CommandResult.error(
-                "So dong khong hop le: '${args[0]}'. Vui long nhap so nguyen duong."
-            )
-        } else {
-            DEFAULT_LOG_COUNT
-        }
+        // Xac dinh so dong hien thi: --limit <n> duoc uu tien hon doi so vi tri
+        val limit = flags["limit"]?.toIntOrNull()
+            ?: if (args.isNotEmpty()) {
+                args[0].toIntOrNull() ?: return CommandResult.error(
+                    "So dong khong hop le: '${args[0]}'. Vui long nhap so nguyen duong."
+                )
+            } else {
+                DEFAULT_LOG_COUNT
+            }
 
         if (limit < 1) {
             return CommandResult.error("So dong phai lon hon 0.")

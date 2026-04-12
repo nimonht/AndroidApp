@@ -25,7 +25,7 @@ class CacheCommand : Command {
 
     override val name: String = "cache"
 
-    override val aliases: List<String> = listOf("ca")
+    override val aliases: List<String> = listOf("ca", "sync-cache")
 
     override val description: String = "Quan ly bo nho dem va hang doi dong bo"
 
