@@ -1,6 +1,6 @@
 # Quizzez Console MCP Server
 
-A [Model Context Protocol (MCP)](https://spec.modelcontextprotocol.io) server
+A [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/python-sdk) server
 that connects AI agents directly to the Quizzez Android app's built-in console system via ADB.
 AI agents can inspect, manage, and automate tasks in the app by calling the 7 registered tools.
 
@@ -69,10 +69,12 @@ The server decodes the Base64 payload and parses it as:
 
 ## Requirements
 
+- **OS**: Windows 10/11, macOS, or Linux
 - **Python 3.10+**
-- **`mcp` package** (MCP Python SDK ≥ 1.0.0)
+- **`mcp` package** (MCP Python SDK >= 1.0.0)
 - **ADB (Android Debug Bridge)** — must be on your `PATH`
 - **Android emulator or physical device** running the Quizzez app
+- **MCP Client** — any MCP-compatible client: Claude Desktop, LM Studio (with a tool-capable model), Zed, VS Code, etc.
 
 ---
 
@@ -80,11 +82,19 @@ The server decodes the Base64 payload and parses it as:
 
 ### 1. Create a virtual environment
 
+**Linux / macOS:**
 ```bash
 cd AndroidApp/mcp_server
 python -m venv .venv
-source .venv/bin/activate        # Linux/macOS
-# .venv\Scripts\activate         # Windows
+source .venv/bin/activate
+```
+
+**Windows (PowerShell):**
+```powershell
+cd C:\<PATH_TO_YOUR_PROJECT>\AndroidApp\mcp_server
+python -m venv .venv
+.\.venv\Scripts\activate
+# You should see (.venv) at the beginning of your prompt
 ```
 
 ### 2. Install dependencies
@@ -101,7 +111,10 @@ python -c "from mcp.server.fastmcp import FastMCP; print('MCP SDK OK')"
 
 ---
 
-## Running the Server
+## Running the Server 
+<warning>
+Not necessary, the agent will automatically run MCP server when they call a tool
+</warning>
 
 ```bash
 # Default: stdio transport, auto-detect any connected device
@@ -141,7 +154,8 @@ adb devices
 
 ```bash
 cd AndroidApp
-./gradlew installDebug
+./gradlew installDebug          # Linux/macOS
+.\gradlew installDebug          # Windows
 ```
 
 ### Step 4 — Open the console in the app
@@ -153,28 +167,124 @@ The console screen does **not** need to be visible for commands to execute — t
 in the foreground or background.
 
 
-## Example Claude Desktop Configuration
+## MCP Client Configuration
+
+### Claude Desktop
 
 Config file locations:
 - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
+**Linux / macOS:**
 ```json
 {
   "mcpServers": {
     "quizzez-console": {
-      "command": "Path to your project directory/AndroidApp/mcp_server/.venv/bin/python",
+      "command": "/path/to/AndroidApp/mcp_server/.venv/bin/python",
       "args": [
-        "Path to your project directory/AndroidApp/mcp_server/server.py"
+        "/path/to/AndroidApp/mcp_server/server.py"
       ],
       "env": {
-        "PATH": "Path to your home directory/Android/Sdk/platform-tools:/usr/bin:/bin"
+        "PATH": "$HOME/Android/Sdk/platform-tools:/usr/bin:/bin"
       }
     }
   }
 }
 ```
+
+**Windows:**
+```json
+{
+  "mcpServers": {
+    "quizzez-console": {
+      "command": "C:/<PATH_TO_YOUR_PROJECT>/AndroidApp/mcp_server/.venv/Scripts/python.exe",
+      "args": [
+        "C:/<PATH_TO_YOUR_PROJECT>/AndroidApp/mcp_server/server.py"
+      ],
+      "env": {
+        "PATH": "C:/Users/<YOUR_USERNAME>/AppData/Local/Android/Sdk/platform-tools;C:/Windows/system32;C:/Windows"
+      }
+    }
+  }
+}
+```
+
+> **Note (Windows):** Use forward slashes (`/`) in all JSON paths to avoid escape issues.
+
+---
+
+### LM Studio
+
+LM Studio supports MCP servers via its built-in **Developer** tab. A **tool-capable model**
+is required (e.g., Llama-3-Instruct, Qwen-2.5-Instruct).
+
+**Step 1 — Open the Developer tab**
+
+Press `Ctrl + 2`, or click the **Developer** icon on the left sidebar (terminal `>_` icon).
+
+**Step 2 — Edit `mcp.json`**
+
+At the top of the Developer panel, click the **[ mcp.json ]** button to open the
+MCP configuration file directly in LM Studio. Add the following block:
+
+> **Important:** Replace `<YOUR_USERNAME>` and `<PATH_TO_YOUR_PROJECT>` with your actual paths.
+> Use forward slashes (`/`) to prevent JSON escape errors.
+
+**Linux / macOS:**
+```json
+{
+  "mcpServers": {
+    "quizzez-console": {
+      "command": "/path/to/AndroidApp/mcp_server/.venv/bin/python",
+      "args": [
+        "/path/to/AndroidApp/mcp_server/server.py"
+      ],
+      "env": {
+        "PATH": "$HOME/Android/Sdk/platform-tools:/usr/bin:/bin"
+      }
+    }
+  }
+}
+```
+
+**Windows:**
+```json
+{
+  "mcpServers": {
+    "quizzez-console": {
+      "command": "C:/<PATH_TO_YOUR_PROJECT>/AndroidApp/mcp_server/.venv/Scripts/python.exe",
+      "args": [
+        "C:/<PATH_TO_YOUR_PROJECT>/AndroidApp/mcp_server/server.py"
+      ],
+      "env": {
+        "PATH": "C:/Users/<YOUR_USERNAME>/AppData/Local/Android/Sdk/platform-tools;C:/Windows/system32;C:/Windows"
+      }
+    }
+  }
+}
+```
+
+Save the file. The server status should appear as **running/enabled** in the Developer panel.
+
+**Step 3 — Load a tool-capable model**
+
+General conversational models will not trigger MCP tools. Use a model tagged
+**Instruct** or **Tool-use** (e.g., `Llama-3-8B-Instruct`, `Qwen-2.5-7B-Instruct`).
+Load the model using the blue **+ Load Model** button in the Developer tab.
+
+**Testing the integration**
+
+Open a chat in LM Studio and try a natural-language prompt:
+
+> "List all available console commands in the admin category for the Quizzez app."
+
+Behind the scenes:
+1. LM Studio parses your request.
+2. It triggers the `list_commands` tool via the MCP server.
+3. The Python server executes the ADB broadcast.
+4. The Android app processes the command and returns the data.
+5. LM Studio formats the response for you.
 
 ---
 
@@ -269,19 +379,33 @@ Get usage examples for a specific command.
 | `[ERROR] No device connected`     | Emulator not running or USB not authorized      | Run `adb devices` to confirm. Accept the USB authorization dialog on the device if needed   |
 | `[ERROR] No result received from app after 15s` | App not running or receiver not registered | Launch the Quizzez app. Check `adb logcat -s ConsoleBroadcastReceiver` for errors          |
 | `Broadcast completed: result=0` with no data | App is running but console not initialized | Navigate to any screen in the app to ensure it is fully initialized                        |
-| Tools not appearing        | Python path or MCP SDK issue                    | Run `<python_path> -c "import mcp; print('OK')"` to verify the SDK is installed            |
+| Tools not appearing in client     | Python path or MCP SDK issue                    | Run `<python_path> -c "import mcp; print('OK')"` to verify the SDK is installed            |
 | Server crashes on startup         | Import error                                    | Run `python server.py` from the terminal and inspect the stderr output                     |
+| `Plugin exited with code 1` (LM Studio) | Invalid Python path or missing dependencies | Verify `command` in JSON points to `.venv/Scripts/python.exe` (Win) or `.venv/bin/python` |
+| AI responds but never calls tools | Model does not support function calling         | Switch to an **Instruct/Tool** model and ensure Developer Mode is enabled in LM Studio      |
 
 ### Debug mode
 
+**Linux / macOS:**
 ```bash
 # Run the server manually and capture all stderr logs
 python server.py 2>debug.log
 
 # Watch logs in real time
 python server.py 2>&1 | tee debug.log
+```
 
-# Inspect the ADB broadcast directly (without the MCP layer)
+**Windows (PowerShell):**
+```powershell
+# Capture stderr to a file
+python server.py 2> debug.log
+
+# Watch logs in real time
+python server.py 2>&1 | Tee-Object -FilePath debug.log
+```
+
+**Inspect the ADB broadcast directly (without the MCP layer):**
+```bash
 adb shell am broadcast --ordered \
   -a com.example.androidapp.CONSOLE_COMMAND \
   -n com.example.androidapp/.ConsoleBroadcastReceiver \
@@ -334,5 +458,4 @@ print(f'ADB available: {b.check_adb_available()}')
 ## Links
 
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
-- [Model Context Protocol Specification](https://spec.modelcontextprotocol.io)
 - [Android Debug Bridge (ADB) reference](https://developer.android.com/tools/adb)
