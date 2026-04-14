@@ -2,13 +2,22 @@ package com.example.androidapp.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
  * Room entity representing a Quiz stored locally for offline cache.
  * Maps to the 'quizzes' table in the local SQLite database.
  */
-@Entity(tableName = "quizzes")
+@Entity(
+    tableName = "quizzes",
+    indices = [
+        Index(value = ["is_public", "deleted_at", "attempt_count"]),
+        Index(value = ["owner_id", "deleted_at", "updated_at"]),
+        Index(value = ["deleted_at", "updated_at"]),
+        Index(value = ["deleted_at", "title"])
+    ]
+)
 data class QuizEntity(
     @PrimaryKey
     val id: String,

@@ -29,6 +29,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -88,13 +91,13 @@ class QuizRepositoryImpl(
     override fun getMyQuizzes(userId: String): Flow<List<Quiz>> {
         return quizDao.getQuizzesByOwner(userId).map { entities ->
             entities.map { it.toDomain() }
-        }.onStart { refreshMyQuizzes(userId) }
+        }.onStart { ioScope.launch { refreshMyQuizzes(userId) } }
     }
 
     override fun getPublicQuizzes(): Flow<List<Quiz>> {
         return quizDao.getPublicQuizzes().map { entities ->
             entities.map { it.toDomain() }
-        }.onStart { refreshPublicQuizzes() }
+        }.onStart { ioScope.launch { refreshPublicQuizzes() } }
     }
 
     override fun searchQuizzes(query: String): Flow<List<Quiz>> {
@@ -248,14 +251,20 @@ class QuizRepositoryImpl(
     }
 
     override fun getTrendingQuizzes(): Flow<List<Quiz>> {
-        return quizDao.getPublicQuizzes().map { entities ->
-            entities.take(20).map { it.toDomain() }
-        }.onStart { refreshPublicQuizzes() }
+        return quizDao.getPublicQuizzesLimited(20).map { entities ->
+            entities.map { it.toDomain() }
+        }.onStart { ioScope.launch { refreshPublicQuizzes() } }
     }
 
     override suspend fun getAllTags(): List<String> {
         return try {
-            quizDao.getAllQuizzes().first().map { it.toDomain() }.flatMap { it.tags }.distinct()
+            quizDao.getAllTagStrings()
+                .flatMap { tagString ->
+                    tagString.split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                }
+                .distinct()
         } catch (e: Exception) {
             emptyList()
         }
@@ -296,13 +305,13 @@ class QuizRepositoryImpl(
     override fun getPublicQuizzesLimited(limit: Int): Flow<List<Quiz>> {
         return quizDao.getPublicQuizzesLimited(limit).map { entities ->
             entities.map { it.toDomain() }
-        }.onStart { refreshPublicQuizzes() }
+        }.onStart { ioScope.launch { refreshPublicQuizzes() } }
     }
 
     override fun getMyQuizzesLimited(userId: String, limit: Int): Flow<List<Quiz>> {
         return quizDao.getQuizzesByOwnerLimited(userId, limit).map { entities ->
             entities.map { it.toDomain() }
-        }.onStart { refreshMyQuizzes(userId) }
+        }.onStart { ioScope.launch { refreshMyQuizzes(userId) } }
     }
 
     override fun searchQuizzesLimited(query: String, limit: Int): Flow<List<Quiz>> {
@@ -357,18 +366,22 @@ class QuizRepositoryImpl(
     private suspend fun refreshMyQuizzes(userId: String) {
         if (!syncManager.isSyncAllowed()) return
         try {
-            val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
+            // Use one-shot get() instead of opening a real-time snapshot listener
+            val dtos = remoteDataSource.getQuizzesByOwnerOnce(userId)
             val remoteQuizIds = dtos.map { it.id }.toSet()
 
-            dtos.forEach { dto ->
-                val quiz = dto.toDomain()
-                quizDao.insertQuiz(quiz.toEntity())
-                refreshQuestionsAndChoices(quiz.id)
+            // Insert quiz metadata in parallel across all quizzes
+            coroutineScope {
+                dtos.map { dto ->
+                    async {
+                        val quiz = dto.toDomain()
+                        quizDao.insertQuiz(quiz.toEntity())
+                        refreshQuestionsAndChoices(quiz.id)
+                    }
+                }.awaitAll()
             }
 
-            // Mark owner's quizzes absent from Firestore instead of deleting
-            // them outright. They may have been removed by an admin; the user
-            // should be warned and allowed to delete them manually.
+            // Mark owner's quizzes absent from Firestore instead of deleting them
             val localMyQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
             val staleQuizzes = localMyQuizzes.filter { local ->
                 local.id !in remoteQuizIds && local.syncStatus != SyncStatus.PENDING.name
@@ -384,18 +397,19 @@ class QuizRepositoryImpl(
 
     override suspend fun forceRefreshUserQuizzes(userId: String) {
         try {
-            val dtos = remoteDataSource.getQuizzesByOwner(userId).first()
+            val dtos = remoteDataSource.getQuizzesByOwnerOnce(userId)
             val remoteQuizIds = dtos.map { it.id }.toSet()
 
-            dtos.forEach { dto ->
-                val quiz = dto.toDomain()
-                quizDao.insertQuiz(quiz.toEntity())
-                refreshQuestionsAndChoices(quiz.id, skipSyncCheck = true)
+            coroutineScope {
+                dtos.map { dto ->
+                    async {
+                        val quiz = dto.toDomain()
+                        quizDao.insertQuiz(quiz.toEntity())
+                        refreshQuestionsAndChoices(quiz.id, skipSyncCheck = true)
+                    }
+                }.awaitAll()
             }
 
-            // Mark owner's quizzes absent from Firestore instead of deleting
-            // them outright — same logic as refreshMyQuizzes but without the
-            // isSyncAllowed() guard, for use by the developer console.
             val localMyQuizzes = quizDao.getQuizzesByOwnerOnce(userId)
             val staleQuizzes = localMyQuizzes.filter { local ->
                 local.id !in remoteQuizIds && local.syncStatus != SyncStatus.PENDING.name
@@ -406,31 +420,34 @@ class QuizRepositoryImpl(
                 }
             }
         } catch (_: Exception) {
-            // Best-effort refresh; Room data is still returned by the Flow
         }
     }
 
     override suspend fun refreshPublicQuizzes(currentUserId: String?) {
         if (!syncManager.isSyncAllowed()) return
         try {
-            val dtos = remoteDataSource.getPublicQuizzes().first()
+            // Use one-shot get() instead of opening a real-time snapshot listener
+            val dtos = remoteDataSource.getPublicQuizzesOnce()
             val remoteQuizIds = dtos.map { it.id }.toSet()
 
-            dtos.forEach { dto ->
-                val quiz = dto.toDomain()
-                quizDao.insertQuiz(quiz.toEntity())
-                refreshQuestionsAndChoices(quiz.id)
+            // Insert quiz metadata in parallel across all quizzes
+            coroutineScope {
+                dtos.map { dto ->
+                    async {
+                        val quiz = dto.toDomain()
+                        quizDao.insertQuiz(quiz.toEntity())
+                        refreshQuestionsAndChoices(quiz.id)
+                    }
+                }.awaitAll()
             }
 
             // Clean up stale local public quizzes that no longer exist on remote.
-            // Only remove quizzes not owned by the current user to preserve their own data.
             if (currentUserId != null) {
                 val localPublicQuizzes = quizDao.getPublicQuizzesOnce()
                 val staleQuizzes = localPublicQuizzes.filter { local ->
                     local.id !in remoteQuizIds && local.ownerId != currentUserId
                 }
                 staleQuizzes.forEach { staleQuiz ->
-                    // Clean up associated questions and choices (no FK cascade)
                     LocalQuizPurger.purgeLocalQuiz(staleQuiz.id, quizDao, questionDao, choiceDao)
                 }
             }
@@ -456,16 +473,20 @@ class QuizRepositoryImpl(
                 questionDao.deleteQuestion(questionEntity)
             }
 
-            // Fetch and insert fresh questions and choices from Firestore
+            // Fetch all questions first (single RPC), then fetch choices for all questions in parallel
             val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quizId)
-            questionDtos.forEach { questionDto ->
-                val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quizId, questionDto.id)
-                val question = questionDto.toDomain().copy(quizId = quizId)
-                questionDao.insertQuestion(question.toEntity())
-                choiceDtos.forEach { choiceDto ->
-                    val choice = choiceDto.toDomain()
-                    choiceDao.insertChoice(choice.toEntity(question.id))
-                }
+            coroutineScope {
+                questionDtos.map { questionDto ->
+                    async {
+                        val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quizId, questionDto.id)
+                        val question = questionDto.toDomain().copy(quizId = quizId)
+                        questionDao.insertQuestion(question.toEntity())
+                        choiceDtos.forEach { choiceDto ->
+                            val choice = choiceDto.toDomain()
+                            choiceDao.insertChoice(choice.toEntity(question.id))
+                        }
+                    }
+                }.awaitAll()
             }
         } catch (_: Exception) {
             // Failure to refresh questions should not block quiz metadata refresh

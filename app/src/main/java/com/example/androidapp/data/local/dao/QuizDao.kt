@@ -247,4 +247,49 @@ interface QuizDao {
      */
     @Query("SELECT COUNT(*) FROM quizzes WHERE owner_id = :userId AND deleted_at IS NOT NULL")
     suspend fun getDeletedQuizzesCount(userId: String): Int
+
+    // ==================== FTS full-text search ====================
+
+    /**
+     * Full-text search using FTS4 virtual table for fast title/tag matching.
+     * Dramatically faster than LIKE '%query%' for large datasets because
+     * FTS uses an inverted index instead of a sequential scan.
+     *
+     * @param query The search term. Supports FTS MATCH syntax (prefix: "koth*").
+     * @param limit Maximum number of results to return.
+     */
+    @Query(
+        """
+        SELECT q.* FROM quizzes q
+        JOIN quizzes_fts ON quizzes_fts.rowid = q.rowid
+        WHERE quizzes_fts MATCH :query
+        AND q.deleted_at IS NULL
+        ORDER BY q.updated_at DESC
+        LIMIT :limit
+    """
+    )
+    fun searchQuizzesLimitedFts(query: String, limit: Int): Flow<List<QuizEntity>>
+
+    /**
+     * Count of full-text search results. Uses FTS4 for fast counting.
+     *
+     * @param query The search term.
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM quizzes q
+        JOIN quizzes_fts ON quizzes_fts.rowid = q.rowid
+        WHERE quizzes_fts MATCH :query
+        AND q.deleted_at IS NULL
+    """
+    )
+    suspend fun searchQuizzesCountFts(query: String): Int
+
+    /**
+     * Returns only the [tags] column for all non-deleted quizzes.
+     * Used by [com.example.androidapp.data.repository.QuizRepositoryImpl.getAllTags]
+     * to extract distinct tags without loading full quiz rows into memory.
+     */
+    @Query("SELECT tags FROM quizzes WHERE deleted_at IS NULL")
+    suspend fun getAllTagStrings(): List<String>
 }

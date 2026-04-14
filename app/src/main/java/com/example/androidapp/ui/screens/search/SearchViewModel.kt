@@ -6,10 +6,12 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.util.SearchFilterLogic
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -165,42 +167,40 @@ class SearchViewModel(
 
         viewModelScope.launch {
             _discoverLimit.flatMapLatest { limit ->
-                quizRepository.getPublicQuizzesLimited(limit)
-            }.collectLatest { quizzes ->
-                allPublicQuizzes = quizzes
-                val totalCount = try {
-                    quizRepository.getPublicQuizzesCount()
-                } catch (_: Exception) {
-                    quizzes.size
+                    quizRepository.getPublicQuizzesLimited(limit)
+                }.collectLatest { quizzes ->
+                    allPublicQuizzes = quizzes
+                    val limit = _discoverLimit.value
+
+                    // --- Tag cloud: dem tan suat, sap xep giam dan ---
+                    val tagFrequency: Map<String, Int> = quizzes
+                        .flatMap { it.tags }
+                        .groupingBy { it }
+                        .eachCount()
+
+                    val discoverTags: List<String> = tagFrequency.entries
+                        .sortedByDescending { it.value }
+                        .map { it.key }
+
+                    val discoverData = withContext(Dispatchers.Default) {
+                        deriveDiscoverData(quizzes, _uiState.value.selectedDiscoverTags)
+                    }
+
+                    _uiState.update { state ->
+                        state.copy(
+                            discoverTags = discoverTags,
+                            todayTopQuizzes = discoverData.todayTop,
+                            featuredQuizzes = discoverData.featured,
+                            trendingQuizzes = discoverData.trending,
+                            allTimeTopQuizzes = discoverData.allTimeTop,
+                            browseAllQuizzes = discoverData.browseAll,
+                            isLoadingDiscover = false,
+                            isLoadingBrowseAll = false,
+                            isLoadingMore = false,
+                            hasMoreDiscover = quizzes.size >= limit
+                        )
+                    }
                 }
-
-                // --- Tag cloud: dem tan suat, sap xep giam dan ---
-                val tagFrequency: Map<String, Int> = quizzes
-                    .flatMap { it.tags }
-                    .groupingBy { it }
-                    .eachCount()
-
-                val discoverTags: List<String> = tagFrequency.entries
-                    .sortedByDescending { it.value }
-                    .map { it.key }
-
-                val discoverData = deriveDiscoverData(quizzes, _uiState.value.selectedDiscoverTags)
-
-                _uiState.update { state ->
-                    state.copy(
-                        discoverTags = discoverTags,
-                        todayTopQuizzes = discoverData.todayTop,
-                        featuredQuizzes = discoverData.featured,
-                        trendingQuizzes = discoverData.trending,
-                        allTimeTopQuizzes = discoverData.allTimeTop,
-                        browseAllQuizzes = discoverData.browseAll,
-                        isLoadingDiscover = false,
-                        isLoadingBrowseAll = false,
-                        isLoadingMore = false,
-                        hasMoreDiscover = quizzes.size < totalCount
-                    )
-                }
-            }
         }
     }
 
@@ -386,12 +386,8 @@ class SearchViewModel(
                 quizRepository.searchQuizzesLimited(query, limit)
             }.collectLatest { quizzes ->
                 allResults = quizzes
+                val limit = _searchLimit.value
                 val availableTags = extractAvailableTags(quizzes)
-                val totalCount = try {
-                    quizRepository.getSearchResultsCount(query)
-                } catch (_: Exception) {
-                    quizzes.size
-                }
 
                 _uiState.update { state ->
                     // Giu lai chi nhung tag da chon ma van con trong ket qua moi
@@ -407,7 +403,7 @@ class SearchViewModel(
                             validSelectedTags,
                             state.sortOption
                         ),
-                        hasMoreSearchResults = quizzes.size < totalCount,
+                        hasMoreSearchResults = quizzes.size >= limit,
                         isLoadingMore = false
                     )
                 }
@@ -499,26 +495,27 @@ class SearchViewModel(
             }
         }
 
+        // Sort by createdAt once; reuse for todayTop and browseAll
+        val sortedByCreatedAt = filtered.sortedByDescending { it.createdAt }
+
+        // Sort by attemptCount once; reuse for featured, trending, and allTimeTop
+        val sortedByAttemptCount = filtered.sortedByDescending { it.attemptCount }
+
         return DiscoverData(
-            todayTop = filtered
-                .sortedByDescending { it.createdAt }
+            todayTop = sortedByCreatedAt
                 .take(10)
                 .map { it.toCardDraft() },
-            featured = filtered
+            featured = sortedByAttemptCount
                 .filter { it.isPublic }
-                .sortedByDescending { it.attemptCount }
                 .take(8)
                 .map { it.toCardDraft() },
-            trending = filtered
-                .sortedByDescending { it.attemptCount }
+            trending = sortedByAttemptCount
                 .take(10)
                 .map { it.toCardDraft() },
-            allTimeTop = filtered
-                .sortedByDescending { it.attemptCount }
+            allTimeTop = sortedByAttemptCount
                 .take(10)
                 .map { it.toCardDraft() },
-            browseAll = filtered
-                .sortedByDescending { it.createdAt }
+            browseAll = sortedByCreatedAt
                 .map { it.toCardDraft() }
         )
     }

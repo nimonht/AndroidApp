@@ -42,6 +42,36 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     )
 
     /**
+     * One-shot fetch of all public non-deleted quizzes using a single [get] call
+     * instead of opening a real-time snapshot listener. Preferred over
+     * [getPublicQuizzes] for background sync operations that do not need
+     * real-time updates.
+     */
+    suspend fun getPublicQuizzesOnce(): List<QuizDto> {
+        return firestore.collection(FirestoreCollections.QUIZZES)
+            .whereEqualTo(FirestoreCollections.Fields.IS_PUBLIC, true)
+            .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(QuizDto::class.java) }
+    }
+
+    /**
+     * One-shot fetch of quizzes owned by [userId] using a single [get] call.
+     * Preferred over [getQuizzesByOwner] for background sync operations.
+     */
+    suspend fun getQuizzesByOwnerOnce(userId: String): List<QuizDto> {
+        return firestore.collection(FirestoreCollections.QUIZZES)
+            .whereEqualTo(FirestoreCollections.Fields.OWNER_ID, userId)
+            .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { it.toObject(QuizDto::class.java) }
+    }
+
+    /**
      * Observes a Firestore [query] in real time, mapping each snapshot to a list of [QuizDto].
      * Centralizes the [callbackFlow] + [addSnapshotListener] boilerplate.
      */

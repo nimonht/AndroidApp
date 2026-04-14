@@ -38,6 +38,10 @@ import com.example.androidapp.ui.components.quiz.QuizCard
 import com.example.androidapp.domain.model.Quiz
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.filter
 
 /**
  * Man hinh Tim kiem / Kham pha de tim cac bai kiem tra cong khai.
@@ -209,10 +213,31 @@ private fun DiscoverContent(
         return
     }
 
+    val listState = rememberLazyListState()
+    val currentUiState by rememberUpdatedState(uiState)
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val total = layoutInfo.totalItemsCount
+            lastVisible to total
+        }
+            .filter { (lastVisible, total) ->
+                total > 0 && lastVisible >= total - 3
+            }
+            .collect {
+                if (currentUiState.hasMoreDiscover && !currentUiState.isLoadingMore) {
+                    onEvent(SearchEvent.LoadMoreDiscover)
+                }
+            }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        state = listState
     ) {
         // --- Tag cloud ---
         if (uiState.discoverTags.isNotEmpty()) {
@@ -330,24 +355,19 @@ private fun DiscoverContent(
             }
         }
 
-        // Pagination: load more discover quizzes
-        if (uiState.hasMoreDiscover) {
-            item(key = "discover_load_more") {
-                LaunchedEffect(Unit) {
-                    onEvent(SearchEvent.LoadMoreDiscover)
-                }
+        // Show spinner when actively loading more
+        if (uiState.isLoadingMore) {
+            item(key = "discover_load_more_spinner") {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (uiState.isLoadingMore) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
-                    }
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
                 }
             }
         }

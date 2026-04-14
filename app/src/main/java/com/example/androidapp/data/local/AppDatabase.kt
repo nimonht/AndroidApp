@@ -13,6 +13,7 @@ import com.example.androidapp.data.local.entity.ChoiceEntity
 import com.example.androidapp.data.local.entity.PendingSyncEntity
 import com.example.androidapp.data.local.entity.QuestionEntity
 import com.example.androidapp.data.local.entity.QuizEntity
+import com.example.androidapp.data.local.entity.QuizFtsEntity
 import com.example.androidapp.data.local.entity.UserEntity
 
 /**
@@ -33,13 +34,14 @@ import com.example.androidapp.data.local.entity.UserEntity
 @Database(
     entities = [
         QuizEntity::class,
+        QuizFtsEntity::class,
         QuestionEntity::class,
         ChoiceEntity::class,
         AttemptEntity::class,
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

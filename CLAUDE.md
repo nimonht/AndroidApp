@@ -38,22 +38,6 @@ Package: `com.example.androidapp`
 ./gradlew clean
 ```
 
-### Nix/devenv Shortcuts (if using Nix)
-
-```bash
-# Enter development shell
-nix develop
-# or: direnv allow
-
-# Available scripts
-build-debug        # Build debug APK
-build-release      # Build release APK
-test               # Run unit tests
-lint               # Run lint checks
-clean              # Clean build artifacts
-firebase-emulators # Start Firebase emulators
-```
-
 ## Architecture
 
 ### Clean Architecture + MVVM (3 Strict Layers)
