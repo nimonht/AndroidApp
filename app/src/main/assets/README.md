@@ -23,9 +23,8 @@ curl -L -o app/src/main/assets/use_multilingual_lite.tflite \
 #### How it works at runtime
 
 1. App launches -> `ModelManager` checks local cache
-2. If no cache -> downloads from Firebase ML (~6 MB, one-time)
+2. If no cache -> downloads from MediaPipe Model Garden (~6 MB, one-time)
 3. Model is cached locally for subsequent launches
-4. Background updates are applied automatically when you upload a new version
 
 ### How It Is Used
 
