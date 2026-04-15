@@ -43,6 +43,7 @@ $dokka.location:com.example.androidapp.data.local.dao/QuestionDao/updateQuestion
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao///PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/index.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/deleteQuiz/#com.example.androidapp.data.local.entity.QuizEntity/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/delete-quiz.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/deleteQuizById/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/delete-quiz-by-id.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/getAllEmbeddings/#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-all-embeddings.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getAllQuizzes/#/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-all-quizzes.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getAllTagStrings/#/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-all-tag-strings.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getDeletedQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-deleted-quizzes.html
@@ -54,10 +55,13 @@ $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getPublicQuizzesLi
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getPublicQuizzesOnce/#/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-public-quizzes-once.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizById/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quiz-by-id.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizByShareCode/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quiz-by-share-code.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizNeedingEmbeddingById/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quiz-needing-embedding-by-id.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizzesByIds/#kotlin.collections.List[kotlin.String]/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quizzes-by-ids.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizzesByOwner/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quizzes-by-owner.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizzesByOwnerCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quizzes-by-owner-count.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizzesByOwnerLimited/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quizzes-by-owner-limited.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizzesByOwnerOnce/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quizzes-by-owner-once.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/getQuizzesNeedingEmbedding/#kotlin.Int#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-quizzes-needing-embedding.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/getRecentAttemptQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/get-recent-attempt-quizzes.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/incrementAttemptCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/increment-attempt-count.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/insertQuiz/#com.example.androidapp.data.local.entity.QuizEntity/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/insert-quiz.html
@@ -65,12 +69,14 @@ $dokka.location:com.example.androidapp.data.local.dao/QuizDao/markRemovedFromClo
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/restoreQuiz/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/restore-quiz.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzesCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes-count.html
-$dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzesCountFts/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes-count-fts.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzesFts/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes-fts.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzesFtsCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes-fts-count.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzesLimited/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes-limited.html
-$dokka.location:com.example.androidapp.data.local.dao/QuizDao/searchQuizzesLimitedFts/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/search-quizzes-limited-fts.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/softDeleteQuiz/#kotlin.String#kotlin.Long/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/soft-delete-quiz.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/updateChecksum/#kotlin.String#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/update-checksum.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/updateEmbedding/#kotlin.String#kotlin.ByteArray#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/update-embedding.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/updateQuiz/#com.example.androidapp.data.local.entity.QuizEntity/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/update-quiz.html
+$dokka.location:com.example.androidapp.data.local.dao/QuizDao/updateQuizMetadata/#kotlin.String#kotlin.String#kotlin.String#kotlin.String?#kotlin.String#kotlin.String?#kotlin.Boolean#kotlin.Boolean#kotlin.String?#kotlin.String#kotlin.String?#kotlin.Int#kotlin.Int#kotlin.Long#kotlin.Long#kotlin.Long?#kotlin.String#kotlin.Boolean/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/update-quiz-metadata.html
 $dokka.location:com.example.androidapp.data.local.dao/QuizDao/updateSyncStatus/#kotlin.String#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-quiz-dao/update-sync-status.html
 $dokka.location:com.example.androidapp.data.local.dao/UserDao///PointingToDeclaration/app/com.example.androidapp.data.local.dao/-user-dao/index.html
 $dokka.location:com.example.androidapp.data.local.dao/UserDao/deleteUser/#com.example.androidapp.data.local.entity.UserEntity/PointingToDeclaration/app/com.example.androidapp.data.local.dao/-user-dao/delete-user.html
@@ -129,14 +135,24 @@ $dokka.location:com.example.androidapp.data.local.entity/QuestionEntity/mediaUrl
 $dokka.location:com.example.androidapp.data.local.entity/QuestionEntity/points/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-question-entity/points.html
 $dokka.location:com.example.androidapp.data.local.entity/QuestionEntity/position/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-question-entity/position.html
 $dokka.location:com.example.androidapp.data.local.entity/QuestionEntity/quizId/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-question-entity/quiz-id.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEmbeddingProjection///PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-embedding-projection/index.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEmbeddingProjection/QuizEmbeddingProjection/#kotlin.String#kotlin.ByteArray?/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-embedding-projection/-quiz-embedding-projection.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEmbeddingProjection/embedding/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-embedding-projection/embedding.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEmbeddingProjection/equals/#kotlin.Any?/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-embedding-projection/equals.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEmbeddingProjection/hashCode/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-embedding-projection/hash-code.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEmbeddingProjection/id/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-embedding-projection/id.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity///PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/index.html
-$dokka.location:com.example.androidapp.data.local.entity/QuizEntity/QuizEntity/#kotlin.String#kotlin.String#kotlin.String#kotlin.String?#kotlin.String#kotlin.Boolean#kotlin.Boolean#kotlin.String?#kotlin.String?#kotlin.String#kotlin.String?#kotlin.Int#kotlin.Int#kotlin.Long#kotlin.Long#kotlin.Long?#kotlin.String#kotlin.Boolean/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/-quiz-entity.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEntity/QuizEntity/#kotlin.String#kotlin.String#kotlin.String#kotlin.String?#kotlin.String#kotlin.Boolean#kotlin.Boolean#kotlin.String?#kotlin.String?#kotlin.String#kotlin.String?#kotlin.Int#kotlin.Int#kotlin.Long#kotlin.Long#kotlin.Long?#kotlin.ByteArray?#kotlin.Int#kotlin.String#kotlin.Boolean/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/-quiz-entity.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/attemptCount/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/attempt-count.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/authorName/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/author-name.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/checksum/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/checksum.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/createdAt/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/created-at.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/deletedAt/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/deleted-at.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/description/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/description.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEntity/embedding/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/embedding.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEntity/embeddingVersion/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/embedding-version.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEntity/equals/#kotlin.Any?/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/equals.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizEntity/hashCode/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/hash-code.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/id/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/id.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/isDraft/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/is-draft.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/isPublic/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/is-public.html
@@ -150,9 +166,16 @@ $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/thumbnailUrl
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/title/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/title.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizEntity/updatedAt/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-entity/updated-at.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizFtsEntity///PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-fts-entity/index.html
-$dokka.location:com.example.androidapp.data.local.entity/QuizFtsEntity/QuizFtsEntity/#kotlin.String#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-fts-entity/-quiz-fts-entity.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizFtsEntity/QuizFtsEntity/#kotlin.String#kotlin.String?#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-fts-entity/-quiz-fts-entity.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizFtsEntity/description/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-fts-entity/description.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizFtsEntity/tags/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-fts-entity/tags.html
 $dokka.location:com.example.androidapp.data.local.entity/QuizFtsEntity/title/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-fts-entity/title.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizIndexProjection///PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-index-projection/index.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizIndexProjection/QuizIndexProjection/#kotlin.String#kotlin.String#kotlin.String?#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-index-projection/-quiz-index-projection.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizIndexProjection/description/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-index-projection/description.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizIndexProjection/id/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-index-projection/id.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizIndexProjection/tags/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-index-projection/tags.html
+$dokka.location:com.example.androidapp.data.local.entity/QuizIndexProjection/title/#/PointingToDeclaration/app/com.example.androidapp.data.local.entity/-quiz-index-projection/title.html
 $dokka.location:com.example.androidapp.data.local.entity/SyncEntityType.ATTEMPT///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.data.local.entity/-sync-entity-type/-a-t-t-e-m-p-t/index.html
 $dokka.location:com.example.androidapp.data.local.entity/SyncEntityType.CHOICE///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.data.local.entity/-sync-entity-type/-c-h-o-i-c-e/index.html
 $dokka.location:com.example.androidapp.data.local.entity/SyncEntityType.QUESTION///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.data.local.entity/-sync-entity-type/-q-u-e-s-t-i-o-n/index.html
@@ -217,6 +240,32 @@ $dokka.location:com.example.androidapp.data.logging/LogCollector/clear/#/Pointin
 $dokka.location:com.example.androidapp.data.logging/LogCollector/export/#/PointingToDeclaration/app/com.example.androidapp.data.logging/-log-collector/export.html
 $dokka.location:com.example.androidapp.data.logging/LogCollector/install/#/PointingToDeclaration/app/com.example.androidapp.data.logging/-log-collector/install.html
 $dokka.location:com.example.androidapp.data.logging/LogCollector/logs/#/PointingToDeclaration/app/com.example.androidapp.data.logging/-log-collector/logs.html
+$dokka.location:com.example.androidapp.data.ml////PointingToDeclaration/app/com.example.androidapp.data.ml/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager.Companion///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/-companion/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager.Companion/LOCAL_CACHE_NAME/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/-companion/-l-o-c-a-l_-c-a-c-h-e_-n-a-m-e.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager/ModelManager/#android.content.Context/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/-model-manager.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager/getModelFile/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/get-model-file.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager/openBundledAssetBuffer/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/open-bundled-asset-buffer.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager/reportInitializationFailure/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/report-initialization-failure.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager/reportReady/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/report-ready.html
+$dokka.location:com.example.androidapp.data.ml/ModelManager/state/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-manager/state.html
+$dokka.location:com.example.androidapp.data.ml/ModelState.Downloading///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-downloading/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelState.Failed///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-failed/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelState.Failed/Failed/#kotlin.String?/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-failed/-failed.html
+$dokka.location:com.example.androidapp.data.ml/ModelState.Failed/message/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-failed/message.html
+$dokka.location:com.example.androidapp.data.ml/ModelState.Idle///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-idle/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelState.Ready///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-ready/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelState///PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/index.html
+$dokka.location:com.example.androidapp.data.ml/ModelState/ModelState/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-model-state/-model-state.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService.Companion///PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/-companion/index.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService///PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/index.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService/TFLiteEmbeddingService/#android.content.Context#com.example.androidapp.data.ml.ModelManager/PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/-t-f-lite-embedding-service.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService/close/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/close.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService/embed/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/embed.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService/embedBatch/#kotlin.collections.List[kotlin.String]/PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/embed-batch.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService/isReady/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/is-ready.html
+$dokka.location:com.example.androidapp.data.ml/TFLiteEmbeddingService/modelState/#/PointingToDeclaration/app/com.example.androidapp.data.ml/-t-f-lite-embedding-service/model-state.html
 $dokka.location:com.example.androidapp.data.network////PointingToDeclaration/app/com.example.androidapp.data.network/index.html
 $dokka.location:com.example.androidapp.data.network/NetworkMonitor///PointingToDeclaration/app/com.example.androidapp.data.network/-network-monitor/index.html
 $dokka.location:com.example.androidapp.data.network/NetworkMonitor/NetworkMonitor/#android.content.Context/PointingToDeclaration/app/com.example.androidapp.data.network/-network-monitor/-network-monitor.html
@@ -502,9 +551,10 @@ $dokka.location:com.example.androidapp.data.repository/PoolRepositoryImpl/getPoo
 $dokka.location:com.example.androidapp.data.repository/PoolRepositoryImpl/incrementUsageCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-pool-repository-impl/increment-usage-count.html
 $dokka.location:com.example.androidapp.data.repository/PoolRepositoryImpl/revokeContribution/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-pool-repository-impl/revoke-contribution.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl///PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/index.html
-$dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/QuizRepositoryImpl/#com.example.androidapp.data.local.dao.QuizDao#com.example.androidapp.data.local.dao.QuestionDao#com.example.androidapp.data.local.dao.ChoiceDao#com.example.androidapp.data.remote.firebase.QuizRemoteDataSource#com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource#com.example.androidapp.data.sync.SyncManager#com.example.androidapp.domain.repository.ShareCodeRepository/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/-quiz-repository-impl.html
+$dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/QuizRepositoryImpl/#com.example.androidapp.data.local.dao.QuizDao#com.example.androidapp.data.local.dao.QuestionDao#com.example.androidapp.data.local.dao.ChoiceDao#com.example.androidapp.data.remote.firebase.QuizRemoteDataSource#com.example.androidapp.data.remote.firebase.QuestionRemoteDataSource#com.example.androidapp.data.sync.SyncManager#com.example.androidapp.domain.repository.ShareCodeRepository#com.example.androidapp.domain.service.EmbeddingService#com.example.androidapp.domain.service.EmbeddingIndex/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/-quiz-repository-impl.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/deleteQuiz/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/delete-quiz.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/emptyTrash/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/empty-trash.html
+$dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/findSimilarQuizzes/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/find-similar-quizzes.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/forceRefreshUserQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/force-refresh-user-quizzes.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/getAllTags/#/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/get-all-tags.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/getDeletedQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/get-deleted-quizzes.html
@@ -521,6 +571,7 @@ $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/getQui
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/getQuizByShareCode/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/get-quiz-by-share-code.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/getSearchResultsCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/get-search-results-count.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/getTrendingQuizzes/#/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/get-trending-quizzes.html
+$dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/hybridSearchQuizzes/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/hybrid-search-quizzes.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/incrementAttemptCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/increment-attempt-count.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/permanentlyDeleteQuiz/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/permanently-delete-quiz.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/refreshHomeData/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/refresh-home-data.html
@@ -530,6 +581,7 @@ $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/restor
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/saveQuiz/#com.example.androidapp.domain.model.Quiz#kotlin.collections.List[com.example.androidapp.domain.model.Question]/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/save-quiz.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/searchQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/search-quizzes.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/searchQuizzesLimited/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/search-quizzes-limited.html
+$dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/semanticSearchQuizzes/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/semantic-search-quizzes.html
 $dokka.location:com.example.androidapp.data.repository/QuizRepositoryImpl/updateQuiz/#com.example.androidapp.domain.model.Quiz#kotlin.collections.List[com.example.androidapp.domain.model.Question]/PointingToDeclaration/app/com.example.androidapp.data.repository/-quiz-repository-impl/update-quiz.html
 $dokka.location:com.example.androidapp.data.repository/SearchRepositoryImpl.Companion///PointingToDeclaration/app/com.example.androidapp.data.repository/-search-repository-impl/-companion/index.html
 $dokka.location:com.example.androidapp.data.repository/SearchRepositoryImpl///PointingToDeclaration/app/com.example.androidapp.data.repository/-search-repository-impl/index.html
@@ -544,6 +596,16 @@ $dokka.location:com.example.androidapp.data.repository/ShareCodeRepositoryImpl/g
 $dokka.location:com.example.androidapp.data.repository/ShareCodeRepositoryImpl/lookupQuizId/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-share-code-repository-impl/lookup-quiz-id.html
 $dokka.location:com.example.androidapp.data.repository/ShareCodeRepositoryImpl/regenerateShareCode/#kotlin.String#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-share-code-repository-impl/regenerate-share-code.html
 $dokka.location:com.example.androidapp.data.repository/ShareCodeRepositoryImpl/validateShareCode/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.repository/-share-code-repository-impl/validate-share-code.html
+$dokka.location:com.example.androidapp.data.search////PointingToDeclaration/app/com.example.androidapp.data.search/index.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache.Companion///PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/-companion/index.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache///PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/index.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/EmbeddingCache/#com.example.androidapp.data.local.dao.QuizDao#kotlin.Function0[kotlin.Unit]?#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/-embedding-cache.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/close/#/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/close.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/get/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/get.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/isReady/#/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/is-ready.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/requestFullReindex/#/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/request-full-reindex.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/size/#/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/size.html
+$dokka.location:com.example.androidapp.data.search/EmbeddingCache/snapshot/#/PointingToDeclaration/app/com.example.androidapp.data.search/-embedding-cache/snapshot.html
 $dokka.location:com.example.androidapp.data.sync////PointingToDeclaration/app/com.example.androidapp.data.sync/index.html
 $dokka.location:com.example.androidapp.data.sync/QuizInvalidationManager.Companion///PointingToDeclaration/app/com.example.androidapp.data.sync/-quiz-invalidation-manager/-companion/index.html
 $dokka.location:com.example.androidapp.data.sync/QuizInvalidationManager///PointingToDeclaration/app/com.example.androidapp.data.sync/-quiz-invalidation-manager/index.html
@@ -582,6 +644,19 @@ $dokka.location:com.example.androidapp.data.worker/BackgroundSyncWorker.Companio
 $dokka.location:com.example.androidapp.data.worker/BackgroundSyncWorker///PointingToDeclaration/app/com.example.androidapp.data.worker/-background-sync-worker/index.html
 $dokka.location:com.example.androidapp.data.worker/BackgroundSyncWorker/BackgroundSyncWorker/#android.content.Context#androidx.work.WorkerParameters/PointingToDeclaration/app/com.example.androidapp.data.worker/-background-sync-worker/-background-sync-worker.html
 $dokka.location:com.example.androidapp.data.worker/BackgroundSyncWorker/doWork/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-background-sync-worker/do-work.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion///PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/index.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/CURRENT_MODEL_VERSION/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/-c-u-r-r-e-n-t_-m-o-d-e-l_-v-e-r-s-i-o-n.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/KEY_MODEL_VERSION/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/-k-e-y_-m-o-d-e-l_-v-e-r-s-i-o-n.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/KEY_QUIZ_ID/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/-k-e-y_-q-u-i-z_-i-d.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/PROGRESS_INDEXED/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/-p-r-o-g-r-e-s-s_-i-n-d-e-x-e-d.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/WORK_NAME_FULL/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/-w-o-r-k_-n-a-m-e_-f-u-l-l.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/WORK_NAME_INCREMENTAL/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/-w-o-r-k_-n-a-m-e_-i-n-c-r-e-m-e-n-t-a-l.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/enqueueForQuiz/#androidx.work.WorkManager#kotlin.String/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/enqueue-for-quiz.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/enqueueFullIndex/#androidx.work.WorkManager/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/enqueue-full-index.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker.Companion/enqueueIfNeeded/#androidx.work.WorkManager/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-companion/enqueue-if-needed.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker///PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/index.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker/EmbeddingIndexWorker/#android.content.Context#androidx.work.WorkerParameters/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/-embedding-index-worker.html
+$dokka.location:com.example.androidapp.data.worker/EmbeddingIndexWorker/doWork/#/PointingToDeclaration/app/com.example.androidapp.data.worker/-embedding-index-worker/do-work.html
 $dokka.location:com.example.androidapp.di////PointingToDeclaration/app/com.example.androidapp.di/index.html
 $dokka.location:com.example.androidapp.di//LocalAppContainer/#/PointingToDeclaration/app/com.example.androidapp.di/-local-app-container.html
 $dokka.location:com.example.androidapp.di/AppContainer///PointingToDeclaration/app/com.example.androidapp.di/-app-container/index.html
@@ -594,9 +669,12 @@ $dokka.location:com.example.androidapp.di/AppContainer/choiceDao/#/PointingToDec
 $dokka.location:com.example.androidapp.di/AppContainer/commandExecutor/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/command-executor.html
 $dokka.location:com.example.androidapp.di/AppContainer/commandRegistry/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/command-registry.html
 $dokka.location:com.example.androidapp.di/AppContainer/context/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/context.html
+$dokka.location:com.example.androidapp.di/AppContainer/embeddingIndex/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/embedding-index.html
+$dokka.location:com.example.androidapp.di/AppContainer/embeddingService/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/embedding-service.html
 $dokka.location:com.example.androidapp.di/AppContainer/firebaseAuth/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/firebase-auth.html
 $dokka.location:com.example.androidapp.di/AppContainer/firebaseFirestore/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/firebase-firestore.html
 $dokka.location:com.example.androidapp.di/AppContainer/logCollector/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/log-collector.html
+$dokka.location:com.example.androidapp.di/AppContainer/modelManager/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/model-manager.html
 $dokka.location:com.example.androidapp.di/AppContainer/networkMonitor/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/network-monitor.html
 $dokka.location:com.example.androidapp.di/AppContainer/pendingSyncDao/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/pending-sync-dao.html
 $dokka.location:com.example.androidapp.di/AppContainer/poolRepository/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container/pool-repository.html
@@ -621,9 +699,12 @@ $dokka.location:com.example.androidapp.di/AppContainerImpl/choiceDao/#/PointingT
 $dokka.location:com.example.androidapp.di/AppContainerImpl/commandExecutor/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/command-executor.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/commandRegistry/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/command-registry.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/context/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/context.html
+$dokka.location:com.example.androidapp.di/AppContainerImpl/embeddingIndex/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/embedding-index.html
+$dokka.location:com.example.androidapp.di/AppContainerImpl/embeddingService/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/embedding-service.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/firebaseAuth/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/firebase-auth.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/firebaseFirestore/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/firebase-firestore.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/logCollector/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/log-collector.html
+$dokka.location:com.example.androidapp.di/AppContainerImpl/modelManager/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/model-manager.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/networkMonitor/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/network-monitor.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/pendingSyncDao/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/pending-sync-dao.html
 $dokka.location:com.example.androidapp.di/AppContainerImpl/poolRepository/#/PointingToDeclaration/app/com.example.androidapp.di/-app-container-impl/pool-repository.html
@@ -784,6 +865,17 @@ $dokka.location:com.example.androidapp.domain.console.commands/EchoCommand/examp
 $dokka.location:com.example.androidapp.domain.console.commands/EchoCommand/execute/#kotlin.collections.List[kotlin.String]#kotlin.collections.Map[kotlin.String,kotlin.String?]#com.example.androidapp.domain.console.CommandContext/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-echo-command/execute.html
 $dokka.location:com.example.androidapp.domain.console.commands/EchoCommand/name/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-echo-command/name.html
 $dokka.location:com.example.androidapp.domain.console.commands/EchoCommand/usage/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-echo-command/usage.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand///PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/index.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/EmbeddingCommand/#com.example.androidapp.domain.service.EmbeddingService#com.example.androidapp.domain.service.EmbeddingIndex/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/-embedding-command.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/aliases/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/aliases.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/autocomplete/#kotlin.collections.List[kotlin.String]#kotlin.collections.Map[kotlin.String,kotlin.String?]#com.example.androidapp.domain.console.CommandContext/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/autocomplete.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/category/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/category.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/description/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/description.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/examples/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/examples.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/execute/#kotlin.collections.List[kotlin.String]#kotlin.collections.Map[kotlin.String,kotlin.String?]#com.example.androidapp.domain.console.CommandContext/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/execute.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/minimumRole/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/minimum-role.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/name/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/name.html
+$dokka.location:com.example.androidapp.domain.console.commands/EmbeddingCommand/usage/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-embedding-command/usage.html
 $dokka.location:com.example.androidapp.domain.console.commands/ExportCommand.Companion///PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-export-command/-companion/index.html
 $dokka.location:com.example.androidapp.domain.console.commands/ExportCommand///PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-export-command/index.html
 $dokka.location:com.example.androidapp.domain.console.commands/ExportCommand/ExportCommand/#/PointingToDeclaration/app/com.example.androidapp.domain.console.commands/-export-command/-export-command.html
@@ -1430,6 +1522,7 @@ $dokka.location:com.example.androidapp.domain.repository/PoolRepository/revokeCo
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository///PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/index.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/deleteQuiz/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/delete-quiz.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/emptyTrash/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/empty-trash.html
+$dokka.location:com.example.androidapp.domain.repository/QuizRepository/findSimilarQuizzes/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/find-similar-quizzes.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/forceRefreshUserQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/force-refresh-user-quizzes.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/getAllTags/#/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/get-all-tags.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/getDeletedQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/get-deleted-quizzes.html
@@ -1446,6 +1539,7 @@ $dokka.location:com.example.androidapp.domain.repository/QuizRepository/getQuizB
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/getQuizByShareCode/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/get-quiz-by-share-code.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/getSearchResultsCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/get-search-results-count.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/getTrendingQuizzes/#/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/get-trending-quizzes.html
+$dokka.location:com.example.androidapp.domain.repository/QuizRepository/hybridSearchQuizzes/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/hybrid-search-quizzes.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/incrementAttemptCount/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/increment-attempt-count.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/permanentlyDeleteQuiz/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/permanently-delete-quiz.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/refreshHomeData/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/refresh-home-data.html
@@ -1455,6 +1549,7 @@ $dokka.location:com.example.androidapp.domain.repository/QuizRepository/restoreQ
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/saveQuiz/#com.example.androidapp.domain.model.Quiz#kotlin.collections.List[com.example.androidapp.domain.model.Question]/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/save-quiz.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/searchQuizzes/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/search-quizzes.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/searchQuizzesLimited/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/search-quizzes-limited.html
+$dokka.location:com.example.androidapp.domain.repository/QuizRepository/semanticSearchQuizzes/#kotlin.String#kotlin.Int/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/semantic-search-quizzes.html
 $dokka.location:com.example.androidapp.domain.repository/QuizRepository/updateQuiz/#com.example.androidapp.domain.model.Quiz#kotlin.collections.List[com.example.androidapp.domain.model.Question]/PointingToDeclaration/app/com.example.androidapp.domain.repository/-quiz-repository/update-quiz.html
 $dokka.location:com.example.androidapp.domain.repository/SearchRepository///PointingToDeclaration/app/com.example.androidapp.domain.repository/-search-repository/index.html
 $dokka.location:com.example.androidapp.domain.repository/SearchRepository/addRecentSearch/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.repository/-search-repository/add-recent-search.html
@@ -1475,6 +1570,19 @@ $dokka.location:com.example.androidapp.domain.service/ConsoleSyncState///Pointin
 $dokka.location:com.example.androidapp.domain.service/ConsoleSyncState/entries/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-console-sync-state/entries.html
 $dokka.location:com.example.androidapp.domain.service/ConsoleSyncState/valueOf/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.service/-console-sync-state/value-of.html
 $dokka.location:com.example.androidapp.domain.service/ConsoleSyncState/values/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-console-sync-state/values.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingIndex///PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-index/index.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingIndex/get/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-index/get.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingIndex/isReady/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-index/is-ready.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingIndex/requestFullReindex/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-index/request-full-reindex.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingIndex/size/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-index/size.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingIndex/snapshot/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-index/snapshot.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService.Companion///PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/-companion/index.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService.Companion/CURRENT_MODEL_VERSION/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/-companion/-c-u-r-r-e-n-t_-m-o-d-e-l_-v-e-r-s-i-o-n.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService.Companion/EMBEDDING_DIM/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/-companion/-e-m-b-e-d-d-i-n-g_-d-i-m.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService///PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/index.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService/embed/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/embed.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService/embedBatch/#kotlin.collections.List[kotlin.String]/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/embed-batch.html
+$dokka.location:com.example.androidapp.domain.service/EmbeddingService/isReady/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-embedding-service/is-ready.html
 $dokka.location:com.example.androidapp.domain.service/LogService///PointingToDeclaration/app/com.example.androidapp.domain.service/-log-service/index.html
 $dokka.location:com.example.androidapp.domain.service/LogService/clear/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-log-service/clear.html
 $dokka.location:com.example.androidapp.domain.service/LogService/export/#/PointingToDeclaration/app/com.example.androidapp.domain.service/-log-service/export.html
@@ -1550,6 +1658,11 @@ $dokka.location:com.example.androidapp.domain.util/TagValidator/normalizeTags/#k
 $dokka.location:com.example.androidapp.domain.util/TagValidator/validateTag/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.domain.util/-tag-validator/validate-tag.html
 $dokka.location:com.example.androidapp.domain.util/TimeFormatter///PointingToDeclaration/app/com.example.androidapp.domain.util/-time-formatter/index.html
 $dokka.location:com.example.androidapp.domain.util/TimeFormatter/formatDuration/#kotlin.Long/PointingToDeclaration/app/com.example.androidapp.domain.util/-time-formatter/format-duration.html
+$dokka.location:com.example.androidapp.domain.util/VectorSimilarity///PointingToDeclaration/app/com.example.androidapp.domain.util/-vector-similarity/index.html
+$dokka.location:com.example.androidapp.domain.util/VectorSimilarity/cosineSimilarity/#kotlin.FloatArray#kotlin.FloatArray/PointingToDeclaration/app/com.example.androidapp.domain.util/-vector-similarity/cosine-similarity.html
+$dokka.location:com.example.androidapp.domain.util/VectorSimilarity/l2Normalize/#kotlin.FloatArray/PointingToDeclaration/app/com.example.androidapp.domain.util/-vector-similarity/l2-normalize.html
+$dokka.location:com.example.androidapp.domain.util/VectorSimilarity/rankBySimilarity/#kotlin.FloatArray#kotlin.collections.Map[kotlin.String,kotlin.FloatArray]#kotlin.Float/PointingToDeclaration/app/com.example.androidapp.domain.util/-vector-similarity/rank-by-similarity.html
+$dokka.location:com.example.androidapp.domain.util/VectorSimilarity/reciprocalRankFusion/#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.Int#kotlin.Double#kotlin.Double/PointingToDeclaration/app/com.example.androidapp.domain.util/-vector-similarity/reciprocal-rank-fusion.html
 $dokka.location:com.example.androidapp.ui.common////PointingToDeclaration/app/com.example.androidapp.ui.common/index.html
 $dokka.location:com.example.androidapp.ui.common//toMessage/com.example.androidapp.ui.common.UiError#kotlin.String?/PointingToDeclaration/app/com.example.androidapp.ui.common/to-message.html
 $dokka.location:com.example.androidapp.ui.common/UiError.ADMIN_DELETE_QUIZ_FAILED///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.ui.common/-ui-error/-a-d-m-i-n_-d-e-l-e-t-e_-q-u-i-z_-f-a-i-l-e-d/index.html
@@ -2564,7 +2677,7 @@ $dokka.location:com.example.androidapp.ui.screens.search//SearchResultsList/#kot
 $dokka.location:com.example.androidapp.ui.screens.search//SearchScreen/#kotlin.Function1[kotlin.String,kotlin.Unit]#kotlin.String?#androidx.compose.ui.Modifier/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-screen.html
 $dokka.location:com.example.androidapp.ui.screens.search//TagFilterRow/#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.Function1[kotlin.String,kotlin.Unit]#androidx.compose.ui.Modifier/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-tag-filter-row.html
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/index.html
-$dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/QuizCardDraft/#kotlin.String#kotlin.String#kotlin.String#kotlin.Int#kotlin.Int#kotlin.String?#kotlin.collections.List[kotlin.String]/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/-quiz-card-draft.html
+$dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/QuizCardDraft/#kotlin.String#kotlin.String#kotlin.String#kotlin.Int#kotlin.Int#kotlin.String?#kotlin.collections.List[kotlin.String]#kotlin.Long/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/-quiz-card-draft.html
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/attemptCount/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/attempt-count.html
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/authorName/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/author-name.html
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/coverImageUrl/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/cover-image-url.html
@@ -2572,6 +2685,7 @@ $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/id/#/Poin
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/questionCount/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/question-count.html
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/tags/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/tags.html
 $dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/title/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/title.html
+$dokka.location:com.example.androidapp.ui.screens.search/QuizCardDraft/updatedAt/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-quiz-card-draft/updated-at.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent.LoadMoreDiscover///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-event/-load-more-discover/index.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent.LoadMoreSearchResults///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-event/-load-more-search-results/index.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent.OnClearRecentSearches///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-event/-on-clear-recent-searches/index.html
@@ -2600,8 +2714,15 @@ $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent.OnTagToggle
 $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent.OnToggleViewMode///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-event/-on-toggle-view-mode/index.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-event/index.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchEvent/SearchEvent/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-event/-search-event.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode.HYBRID///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.ui.screens.search/-search-mode/-h-y-b-r-i-d/index.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode.KEYWORD///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.ui.screens.search/-search-mode/-k-e-y-w-o-r-d/index.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode.SEMANTIC///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.ui.screens.search/-search-mode/-s-e-m-a-n-t-i-c/index.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-mode/index.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode/entries/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-mode/entries.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode/valueOf/#kotlin.String/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-mode/value-of.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchMode/values/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-mode/values.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/index.html
-$dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/SearchUiState/#kotlin.String#kotlin.collections.List[kotlin.String]#kotlin.Boolean#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.Boolean#com.example.androidapp.ui.screens.search.SortOption#kotlin.Boolean#kotlin.collections.List[kotlin.String]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.Boolean#kotlin.Boolean#kotlin.collections.List[kotlin.String]#kotlin.Boolean#kotlin.Boolean#kotlin.Boolean/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/-search-ui-state.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/SearchUiState/#kotlin.String#kotlin.collections.List[kotlin.String]#kotlin.Boolean#kotlin.collections.List[kotlin.String]#kotlin.collections.List[kotlin.String]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.Boolean#com.example.androidapp.ui.screens.search.SortOption#kotlin.Boolean#kotlin.collections.List[kotlin.String]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.collections.List[com.example.androidapp.ui.screens.search.QuizCardDraft]#kotlin.Boolean#kotlin.Boolean#kotlin.collections.List[kotlin.String]#kotlin.Boolean#kotlin.Boolean#kotlin.Boolean#com.example.androidapp.ui.screens.search.SearchMode#kotlin.Boolean/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/-search-ui-state.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/allTimeTopQuizzes/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/all-time-top-quizzes.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/availableTags/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/available-tags.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/browseAllQuizzes/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/browse-all-quizzes.html
@@ -2610,6 +2731,7 @@ $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/featuredQ
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/hasMoreDiscover/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/has-more-discover.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/hasMoreSearchResults/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/has-more-search-results.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/hasSearched/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/has-searched.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/isEmbeddingReady/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/is-embedding-ready.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/isGridView/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/is-grid-view.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/isLoadingBrowseAll/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/is-loading-browse-all.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/isLoadingDiscover/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/is-loading-discover.html
@@ -2617,6 +2739,7 @@ $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/isLoading
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/isSearching/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/is-searching.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/query/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/query.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/recentSearches/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/recent-searches.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/searchMode/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/search-mode.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/searchResults/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/search-results.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/selectedDiscoverTags/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/selected-discover-tags.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/selectedTags/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/selected-tags.html
@@ -2624,7 +2747,7 @@ $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/sortOptio
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/todayTopQuizzes/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/today-top-quizzes.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchUiState/trendingQuizzes/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-ui-state/trending-quizzes.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchViewModel///PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-view-model/index.html
-$dokka.location:com.example.androidapp.ui.screens.search/SearchViewModel/SearchViewModel/#com.example.androidapp.domain.repository.QuizRepository#com.example.androidapp.domain.repository.SearchRepository/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-view-model/-search-view-model.html
+$dokka.location:com.example.androidapp.ui.screens.search/SearchViewModel/SearchViewModel/#com.example.androidapp.domain.repository.QuizRepository#com.example.androidapp.domain.repository.SearchRepository#com.example.androidapp.domain.service.EmbeddingService/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-view-model/-search-view-model.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchViewModel/onEvent/#com.example.androidapp.ui.screens.search.SearchEvent/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-view-model/on-event.html
 $dokka.location:com.example.androidapp.ui.screens.search/SearchViewModel/uiState/#/PointingToDeclaration/app/com.example.androidapp.ui.screens.search/-search-view-model/ui-state.html
 $dokka.location:com.example.androidapp.ui.screens.search/SortOption.DATE///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}app/com.example.androidapp.ui.screens.search/-sort-option/-d-a-t-e/index.html
@@ -2785,12 +2908,14 @@ com.example.androidapp.data.local
 com.example.androidapp.data.local.dao
 com.example.androidapp.data.local.entity
 com.example.androidapp.data.logging
+com.example.androidapp.data.ml
 com.example.androidapp.data.network
 com.example.androidapp.data.preferences
 com.example.androidapp.data.remote
 com.example.androidapp.data.remote.firebase
 com.example.androidapp.data.remote.model
 com.example.androidapp.data.repository
+com.example.androidapp.data.search
 com.example.androidapp.data.sync
 com.example.androidapp.data.worker
 com.example.androidapp.di
