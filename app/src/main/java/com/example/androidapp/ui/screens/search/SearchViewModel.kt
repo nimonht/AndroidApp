@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.SearchRepository
+import com.example.androidapp.domain.service.EmbeddingService
 import com.example.androidapp.domain.util.SearchFilterLogic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +40,8 @@ import kotlinx.coroutines.launch
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class SearchViewModel(
     private val quizRepository: QuizRepository,
-    private val searchRepository: SearchRepository
+    private val searchRepository: SearchRepository,
+    private val embeddingService: EmbeddingService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -89,6 +91,7 @@ class SearchViewModel(
         collectRecentSearches()
         observeQueryDebounce()
         loadDiscoverData()
+        observeEmbeddingReadiness()
     }
 
     /**
@@ -167,38 +170,69 @@ class SearchViewModel(
 
         viewModelScope.launch {
             _discoverLimit.flatMapLatest { limit ->
-                    quizRepository.getPublicQuizzesLimited(limit)
-                }.collectLatest { quizzes ->
-                    allPublicQuizzes = quizzes
-                    val limit = _discoverLimit.value
+                quizRepository.getPublicQuizzesLimited(limit)
+            }.collectLatest { quizzes ->
+                allPublicQuizzes = quizzes
+                val limit = _discoverLimit.value
 
-                    // --- Tag cloud: dem tan suat, sap xep giam dan ---
-                    val tagFrequency: Map<String, Int> = quizzes
-                        .flatMap { it.tags }
-                        .groupingBy { it }
-                        .eachCount()
+                // --- Tag cloud: dem tan suat, sap xep giam dan ---
+                val tagFrequency: Map<String, Int> = quizzes
+                    .flatMap { it.tags }
+                    .groupingBy { it }
+                    .eachCount()
 
-                    val discoverTags: List<String> = tagFrequency.entries
-                        .sortedByDescending { it.value }
-                        .map { it.key }
+                val discoverTags: List<String> = tagFrequency.entries
+                    .sortedByDescending { it.value }
+                    .map { it.key }
 
-                    val discoverData = withContext(Dispatchers.Default) {
-                        deriveDiscoverData(quizzes, _uiState.value.selectedDiscoverTags)
-                    }
+                val discoverData = withContext(Dispatchers.Default) {
+                    deriveDiscoverData(quizzes, _uiState.value.selectedDiscoverTags)
+                }
 
+                _uiState.update { state ->
+                    state.copy(
+                        discoverTags = discoverTags,
+                        todayTopQuizzes = discoverData.todayTop,
+                        featuredQuizzes = discoverData.featured,
+                        trendingQuizzes = discoverData.trending,
+                        allTimeTopQuizzes = discoverData.allTimeTop,
+                        browseAllQuizzes = discoverData.browseAll,
+                        isLoadingDiscover = false,
+                        isLoadingBrowseAll = false,
+                        isLoadingMore = false,
+                        hasMoreDiscover = quizzes.size >= limit
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Observes the embedding service and cache readiness, automatically
+     * switching to HYBRID mode when both are ready.
+     */
+    private fun observeEmbeddingReadiness() {
+        viewModelScope.launch {
+            embeddingService.isReady
+                .collectLatest { serviceReady ->
                     _uiState.update { state ->
                         state.copy(
-                            discoverTags = discoverTags,
-                            todayTopQuizzes = discoverData.todayTop,
-                            featuredQuizzes = discoverData.featured,
-                            trendingQuizzes = discoverData.trending,
-                            allTimeTopQuizzes = discoverData.allTimeTop,
-                            browseAllQuizzes = discoverData.browseAll,
-                            isLoadingDiscover = false,
-                            isLoadingBrowseAll = false,
-                            isLoadingMore = false,
-                            hasMoreDiscover = quizzes.size >= limit
+                            isEmbeddingReady = serviceReady,
+                            searchMode = if (serviceReady && state.searchMode == SearchMode.KEYWORD) {
+                                SearchMode.HYBRID
+                            } else {
+                                state.searchMode
+                            }
                         )
+                    }
+                    // Re-run active search now that the model is ready and mode has upgraded
+                    // to HYBRID. The running searchJob listens on _searchLimit; it does NOT
+                    // automatically restart when searchMode flips — we must restart it manually.
+                    if (serviceReady) {
+                        val currentQuery = _uiState.value.query
+                        if (currentQuery.isNotBlank()) {
+                            performSearch(currentQuery)
+                        }
                     }
                 }
         }
@@ -371,26 +405,35 @@ class SearchViewModel(
     // ---------------------------------------------------------------------------
 
     /**
-     * Thuc hien truy van tim kiem qua [QuizRepository] voi pagination.
+     * Executes a search query using the active search mode.
      * Cancels any previous search job and starts a new one that uses
      * [_searchLimit] via [flatMapLatest].
      */
     private fun performSearch(query: String) {
-        // Reset search limit for new query
         _searchLimit.value = INITIAL_SEARCH_LIMIT
         _uiState.update { it.copy(isSearching = true) }
 
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             _searchLimit.flatMapLatest { limit ->
-                quizRepository.searchQuizzesLimited(query, limit)
+                val mode = _uiState.value.searchMode
+                val isReady = _uiState.value.isEmbeddingReady
+                when {
+                    isReady && mode == SearchMode.HYBRID ->
+                        quizRepository.hybridSearchQuizzes(query, limit)
+
+                    isReady && mode == SearchMode.SEMANTIC ->
+                        quizRepository.semanticSearchQuizzes(query, limit)
+
+                    else ->
+                        quizRepository.searchQuizzesLimited(query, limit)
+                }
             }.collectLatest { quizzes ->
                 allResults = quizzes
                 val limit = _searchLimit.value
                 val availableTags = extractAvailableTags(quizzes)
 
                 _uiState.update { state ->
-                    // Giu lai chi nhung tag da chon ma van con trong ket qua moi
                     val validSelectedTags = state.selectedTags.filter { it in availableTags }
 
                     state.copy(
@@ -444,7 +487,7 @@ class SearchViewModel(
 
         val sorted = when (sortOption) {
             SortOption.RELEVANCE -> filtered
-            SortOption.DATE -> filtered
+            SortOption.DATE -> filtered.sortedByDescending { it.updatedAt }
             SortOption.POPULARITY -> filtered.sortedByDescending { it.attemptCount }
         }
 
@@ -461,7 +504,8 @@ class SearchViewModel(
         questionCount = questionCount,
         attemptCount = attemptCount,
         coverImageUrl = thumbnailUrl,
-        tags = tags
+        tags = tags,
+        updatedAt = updatedAt
     )
 
     // ---------------------------------------------------------------------------

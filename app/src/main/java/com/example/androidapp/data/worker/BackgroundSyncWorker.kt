@@ -3,6 +3,7 @@ package com.example.androidapp.data.worker
 import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.androidapp.QuizzezApplication
 import kotlinx.coroutines.flow.first
@@ -60,6 +61,13 @@ class BackgroundSyncWorker(
                     }
 
                     Log.d(TAG, "Full sync completed successfully.")
+
+                    // After sync deposits quizzes with null embeddings into Room,
+                    // trigger the embedding worker to recompute them.
+                    EmbeddingIndexWorker.enqueueFullIndex(
+                        WorkManager.getInstance(applicationContext)
+                    )
+
                     Result.success()
                 }
             }

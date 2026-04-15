@@ -237,6 +237,23 @@ SYNC = CommandInfo(
     ],
 )
 
+EMBEDDING = CommandInfo(
+    name="embedding",
+    aliases=["emb"],
+    description="Quan ly chi muc embedding tim kiem ngu nghia",
+    usage="embedding <status|reindex>",
+    category="system",
+    minimum_role="USER",
+    is_destructive=False,
+    examples=[
+        ("embedding status", "Hien thi trang thai mo hinh embedding va bo nho dem"),
+        ("embedding reindex", "Yeu cau tao lai chi muc embedding toan bo"),
+        ("emb status", "Viet tat cua 'embedding status'"),
+    ],
+    value_flags=[],
+    boolean_flags=[],
+)
+
 # ---------------------------------------------------------------------------
 # pipe category
 # ---------------------------------------------------------------------------
@@ -647,6 +664,7 @@ ALL_COMMANDS: list[CommandInfo] = [
     PING,
     CACHE,
     SYNC,
+    EMBEDDING,
     # pipe
     GREP,
     SORT,

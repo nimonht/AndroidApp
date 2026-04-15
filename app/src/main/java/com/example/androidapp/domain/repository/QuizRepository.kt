@@ -199,4 +199,33 @@ interface QuizRepository {
      *        owner's local data is preserved.
      */
     suspend fun refreshPublicQuizzes(currentUserId: String? = null)
+
+    // ==================== Semantic search ====================
+
+    /**
+     * Performs semantic similarity search using pre-computed quiz embeddings.
+     * Falls back to [searchQuizzesLimited] if embeddings are not available.
+     *
+     * @param query Raw search query text.
+     * @param limit Maximum number of results.
+     */
+    fun semanticSearchQuizzes(query: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Hybrid search combining FTS keyword matching with semantic similarity.
+     * Results are merged via Reciprocal Rank Fusion.
+     *
+     * @param query Raw search query text.
+     * @param limit Maximum number of results.
+     */
+    fun hybridSearchQuizzes(query: String, limit: Int): Flow<List<Quiz>>
+
+    /**
+     * Finds quizzes semantically similar to the given quiz.
+     * Used for "Related Quizzes" on the detail screen.
+     *
+     * @param quizId The source quiz to find similar quizzes for.
+     * @param limit Maximum number of similar quizzes to return.
+     */
+    fun findSimilarQuizzes(quizId: String, limit: Int = 6): Flow<List<Quiz>>
 }

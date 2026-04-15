@@ -19,7 +19,7 @@ android {
     // Override via: ./gradlew assembleDebug -PuseFirebaseEmulator=false
     val useEmulatorDebug = (project.findProperty("useFirebaseEmulator") as String?)
         ?.toBoolean()
-        ?: true
+        ?: false
     val useEmulatorRelease = (project.findProperty("useFirebaseEmulator") as String?)
         ?.toBoolean()
         ?: false
@@ -37,6 +37,14 @@ android {
         versionName = "11.4.26"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // MediaPipe Tasks Text does not ship x86_64 native libraries.
+        // Excluding x86_64 forces 32-bit x86 compat mode on x86_64 emulators,
+        // where the x86 variant of libmediapipe_tasks_text_jni.so IS available.
+        // Physical ARM devices are unaffected (arm64-v8a is included).
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86")
+        }
     }
 
     buildTypes {
@@ -69,6 +77,10 @@ android {
         buildConfig = true
         viewBinding = true
     }
+    androidResources {
+        noCompress += "tflite"
+    }
+
 }
 
 dependencies {
@@ -102,6 +114,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.functions)
 
+
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
@@ -127,6 +140,9 @@ dependencies {
     // DataStore Preferences
     implementation(libs.datastore.preferences)
     implementation(libs.zxing.core)
+
+    // MediaPipe Tasks Text (on-device text embeddings)
+    implementation(libs.mediapipe.tasks.text)
 
     // Testing
     testImplementation(libs.junit)

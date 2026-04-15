@@ -71,7 +71,11 @@ fun SearchScreen(
         factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                SearchViewModel(container.quizRepository, container.searchRepository) as T
+                SearchViewModel(
+                    container.quizRepository,
+                    container.searchRepository,
+                    container.embeddingService
+                ) as T
         }
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

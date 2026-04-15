@@ -11,7 +11,10 @@ import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
 import com.example.androidapp.data.logging.LogCollector
+import com.example.androidapp.data.ml.ModelManager
+import com.example.androidapp.data.ml.TFLiteEmbeddingService
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.remote.firebase.AdminRemoteDataSource
 import com.example.androidapp.data.remote.firebase.AttemptRemoteDataSource
 import com.example.androidapp.data.remote.firebase.PoolRemoteDataSource
@@ -24,10 +27,10 @@ import com.example.androidapp.data.repository.AttemptRepositoryImpl
 import com.example.androidapp.data.repository.AuthRepositoryImpl
 import com.example.androidapp.data.repository.PoolRepositoryImpl
 import com.example.androidapp.data.repository.QuizRepositoryImpl
-import com.example.androidapp.data.sync.QuizInvalidationManager
-import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
-import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.data.repository.SearchRepositoryImpl
+import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
+import com.example.androidapp.data.search.EmbeddingCache
+import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.console.CommandContext
 import com.example.androidapp.domain.console.CommandExecutor
@@ -41,8 +44,10 @@ import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
-import com.example.androidapp.domain.repository.ShareCodeRepository
 import com.example.androidapp.domain.repository.SearchRepository
+import com.example.androidapp.domain.repository.ShareCodeRepository
+import com.example.androidapp.domain.service.EmbeddingIndex
+import com.example.androidapp.domain.service.EmbeddingService
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -168,7 +173,9 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             quizRemoteDataSource,
             questionRemoteDataSource,
             syncManager,
-            shareCodeRepository
+            shareCodeRepository,
+            embeddingService,
+            embeddingIndex
         )
     }
 
@@ -198,6 +205,25 @@ class AppContainerImpl(override val context: Context) : AppContainer {
 
     override val logCollector: LogCollector by lazy {
         LogCollector(CoroutineScope(SupervisorJob() + Dispatchers.IO))
+    }
+
+    override val modelManager: ModelManager by lazy {
+        ModelManager(context)
+    }
+
+    override val embeddingService: EmbeddingService by lazy {
+        TFLiteEmbeddingService(context, modelManager)
+    }
+
+    override val embeddingIndex: EmbeddingIndex by lazy {
+        EmbeddingCache(
+            quizDao = quizDao,
+            reindexTrigger = {
+                com.example.androidapp.data.worker.EmbeddingIndexWorker.enqueueIfNeeded(
+                    androidx.work.WorkManager.getInstance(context)
+                )
+            }
+        )
     }
 
     override val commandRegistry: CommandRegistry by lazy {
@@ -240,7 +266,10 @@ class AppContainerImpl(override val context: Context) : AppContainer {
                 com.example.androidapp.domain.console.commands.StatsCommand(),
                 com.example.androidapp.domain.console.commands.SearchCommand(),
                 com.example.androidapp.domain.console.commands.ExportCommand(),
-                com.example.androidapp.domain.console.commands.PurgeCommand()
+                com.example.androidapp.domain.console.commands.PurgeCommand(),
+                com.example.androidapp.domain.console.commands.EmbeddingCommand(
+                    embeddingService, embeddingIndex
+                )
             )
         }
     }

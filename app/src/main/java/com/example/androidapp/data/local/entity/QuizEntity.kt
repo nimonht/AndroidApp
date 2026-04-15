@@ -15,7 +15,8 @@ import androidx.room.PrimaryKey
         Index(value = ["is_public", "deleted_at", "attempt_count"]),
         Index(value = ["owner_id", "deleted_at", "updated_at"]),
         Index(value = ["deleted_at", "updated_at"]),
-        Index(value = ["deleted_at", "title"])
+        Index(value = ["deleted_at", "title"]),
+        Index(value = ["embedding_version", "deleted_at"])
     ]
 )
 data class QuizEntity(
@@ -63,6 +64,22 @@ data class QuizEntity(
     @ColumnInfo(name = "deleted_at")
     val deletedAt: Long? = null,
 
+    /**
+     * Dense vector embedding of the quiz text content (title + description + tags),
+     * stored as a little-endian IEEE 754 float array serialized to bytes.
+     * Null when the quiz has not yet been indexed by [EmbeddingIndexWorker].
+     */
+    @ColumnInfo(name = "embedding")
+    val embedding: ByteArray? = null,
+
+    /**
+     * Version of the embedding model used to compute [embedding].
+     * Allows the [EmbeddingIndexWorker] to re-index quizzes when the model
+     * is upgraded without requiring a full database wipe.
+     */
+    @ColumnInfo(name = "embedding_version", defaultValue = "0")
+    val embeddingVersion: Int = 0,
+
     @ColumnInfo(name = "sync_status")
     val syncStatus: String = SyncStatus.SYNCED.name,
 
@@ -73,7 +90,56 @@ data class QuizEntity(
      */
     @ColumnInfo(name = "is_removed_from_cloud", defaultValue = "0")
     val isRemovedFromCloud: Boolean = false
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is QuizEntity) return false
+        return id == other.id &&
+                ownerId == other.ownerId &&
+                title == other.title &&
+                description == other.description &&
+                authorName == other.authorName &&
+                isPublic == other.isPublic &&
+                isDraft == other.isDraft &&
+                shareCode == other.shareCode &&
+                thumbnailUrl == other.thumbnailUrl &&
+                tags == other.tags &&
+                checksum == other.checksum &&
+                questionCount == other.questionCount &&
+                attemptCount == other.attemptCount &&
+                createdAt == other.createdAt &&
+                updatedAt == other.updatedAt &&
+                deletedAt == other.deletedAt &&
+                embedding.contentEquals(other.embedding) &&
+                embeddingVersion == other.embeddingVersion &&
+                syncStatus == other.syncStatus &&
+                isRemovedFromCloud == other.isRemovedFromCloud
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + ownerId.hashCode()
+        result = 31 * result + title.hashCode()
+        result = 31 * result + (description?.hashCode() ?: 0)
+        result = 31 * result + authorName.hashCode()
+        result = 31 * result + isPublic.hashCode()
+        result = 31 * result + isDraft.hashCode()
+        result = 31 * result + (shareCode?.hashCode() ?: 0)
+        result = 31 * result + (thumbnailUrl?.hashCode() ?: 0)
+        result = 31 * result + tags.hashCode()
+        result = 31 * result + (checksum?.hashCode() ?: 0)
+        result = 31 * result + questionCount
+        result = 31 * result + attemptCount
+        result = 31 * result + createdAt.hashCode()
+        result = 31 * result + updatedAt.hashCode()
+        result = 31 * result + (deletedAt?.hashCode() ?: 0)
+        result = 31 * result + (embedding?.contentHashCode() ?: 0)
+        result = 31 * result + embeddingVersion
+        result = 31 * result + syncStatus.hashCode()
+        result = 31 * result + isRemovedFromCloud.hashCode()
+        return result
+    }
+}
 
 /**
  * Represents the synchronization status of local data with the cloud.

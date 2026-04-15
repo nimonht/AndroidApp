@@ -1,7 +1,7 @@
 package com.example.androidapp.ui.screens.search
 
 /**
- * Tập hợp các sự kiện người dùng có thể kích hoạt trên thanh tìm kiếm.
+ * Events the user can trigger on the Search screen.
  */
 sealed class SearchEvent {
     data class OnQueryChange(val query: String) : SearchEvent()
@@ -10,24 +10,20 @@ sealed class SearchEvent {
     data class OnRecentSearchClicked(val query: String) : SearchEvent()
     object OnClearRecentSearches : SearchEvent()
 
-    // Task 2
+    // Tag filter
     data class OnTagToggle(val tag: String) : SearchEvent()
-
-    // Discover page tag filter toggle (multi-select, AND logic)
     data class OnDiscoverTagToggle(val tag: String) : SearchEvent()
 
-    // Task 4: Sự kiện nhấn nút chuyển đổi Grid/List
+    // View mode
     object OnToggleViewMode : SearchEvent()
 
-    // Task 5: Sự kiện khi người dùng chọn một tiêu chí sắp xếp
+    // Sort
     data class OnSortOptionSelected(val option: SortOption) : SearchEvent()
 
-    // Tag click navigation: nguoi dung nhan vao tag tu man hinh khac de tim kiem theo tag
+    // Tag navigation from other screens
     data class OnTagFilterFromNavigation(val tag: String) : SearchEvent()
 
-    /** Triggered when the user scrolls near the bottom of discover sections. */
+    // Pagination
     data object LoadMoreDiscover : SearchEvent()
-
-    /** Triggered when the user scrolls near the bottom of search results. */
     data object LoadMoreSearchResults : SearchEvent()
 }

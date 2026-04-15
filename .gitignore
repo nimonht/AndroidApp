@@ -182,3 +182,8 @@ devenv.local.nix
 result
 result-*
 app/google-services.json
+
+# ==================
+# Firebase Admin SDK Service Account Keys
+# ==================
+*firebase-adminsdk-*.json

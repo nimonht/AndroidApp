@@ -5,7 +5,9 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
 import androidx.room.Update
+import com.example.androidapp.data.local.entity.QuizEmbeddingProjection
 import com.example.androidapp.data.local.entity.QuizEntity
+import com.example.androidapp.data.local.entity.QuizIndexProjection
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -118,6 +120,57 @@ interface QuizDao {
      */
     @Update
     suspend fun updateQuiz(quiz: QuizEntity)
+
+    /**
+     * Updates all quiz metadata fields WITHOUT touching the embedding columns.
+     * Used by sync operations to preserve locally-computed embeddings when
+     * refreshing quiz data from Firestore.
+     *
+     * @return Number of rows affected (0 if quiz does not exist locally).
+     */
+    @Query(
+        """
+        UPDATE quizzes SET
+            owner_id = :ownerId,
+            title = :title,
+            description = :description,
+            author_name = :authorName,
+            thumbnail_url = :thumbnailUrl,
+            is_public = :isPublic,
+            is_draft = :isDraft,
+            share_code = :shareCode,
+            tags = :tags,
+            checksum = :checksum,
+            question_count = :questionCount,
+            attempt_count = :attemptCount,
+            created_at = :createdAt,
+            updated_at = :updatedAt,
+            deleted_at = :deletedAt,
+            sync_status = :syncStatus,
+            is_removed_from_cloud = :isRemovedFromCloud
+        WHERE id = :id
+    """
+    )
+    suspend fun updateQuizMetadata(
+        id: String,
+        ownerId: String,
+        title: String,
+        description: String?,
+        authorName: String,
+        thumbnailUrl: String?,
+        isPublic: Boolean,
+        isDraft: Boolean,
+        shareCode: String?,
+        tags: String,
+        checksum: String?,
+        questionCount: Int,
+        attemptCount: Int,
+        createdAt: Long,
+        updatedAt: Long,
+        deletedAt: Long?,
+        syncStatus: String,
+        isRemovedFromCloud: Boolean
+    ): Int
 
     /**
      * Update the sync status of a quiz.
@@ -248,15 +301,22 @@ interface QuizDao {
     @Query("SELECT COUNT(*) FROM quizzes WHERE owner_id = :userId AND deleted_at IS NOT NULL")
     suspend fun getDeletedQuizzesCount(userId: String): Int
 
-    // ==================== FTS full-text search ====================
+    /**
+     * Returns only the [tags] column for all non-deleted quizzes.
+     * Used by [com.example.androidapp.data.repository.QuizRepositoryImpl.getAllTags]
+     * to extract distinct tags without loading full quiz rows into memory.
+     */
+    @Query("SELECT tags FROM quizzes WHERE deleted_at IS NULL")
+    suspend fun getAllTagStrings(): List<String>
+
+    // ==================== FTS search  ====================
 
     /**
-     * Full-text search using FTS4 virtual table for fast title/tag matching.
-     * Dramatically faster than LIKE '%query%' for large datasets because
-     * FTS uses an inverted index instead of a sequential scan.
+     * Full-text search using FTS4 virtual table with MATCH syntax.
+     * Much faster than LIKE for large datasets due to inverted index.
      *
-     * @param query The search term. Supports FTS MATCH syntax (prefix: "koth*").
-     * @param limit Maximum number of results to return.
+     * @param query FTS MATCH query. Supports prefix: "koth*".
+     * @param limit Maximum results.
      */
     @Query(
         """
@@ -268,12 +328,10 @@ interface QuizDao {
         LIMIT :limit
     """
     )
-    fun searchQuizzesLimitedFts(query: String, limit: Int): Flow<List<QuizEntity>>
+    fun searchQuizzesFts(query: String, limit: Int): Flow<List<QuizEntity>>
 
     /**
-     * Count of full-text search results. Uses FTS4 for fast counting.
-     *
-     * @param query The search term.
+     * Count of full-text search results using FTS4 MATCH.
      */
     @Query(
         """
@@ -283,13 +341,68 @@ interface QuizDao {
         AND q.deleted_at IS NULL
     """
     )
-    suspend fun searchQuizzesCountFts(query: String): Int
+    suspend fun searchQuizzesFtsCount(query: String): Int
+
+    // ==================== Embedding queries ====================
 
     /**
-     * Returns only the [tags] column for all non-deleted quizzes.
-     * Used by [com.example.androidapp.data.repository.QuizRepositoryImpl.getAllTags]
-     * to extract distinct tags without loading full quiz rows into memory.
+     * Returns quiz IDs and their embeddings for the in-memory cache.
+     * Only returns embeddings computed with the specified model version.
      */
-    @Query("SELECT tags FROM quizzes WHERE deleted_at IS NULL")
-    suspend fun getAllTagStrings(): List<String>
+    @Query(
+        """
+        SELECT id, embedding FROM quizzes
+        WHERE deleted_at IS NULL
+          AND embedding IS NOT NULL
+          AND embedding_version = :modelVersion
+    """
+    )
+    suspend fun getAllEmbeddings(modelVersion: Int): List<QuizEmbeddingProjection>
+
+    /**
+     * Returns quizzes that need embedding (re-)generation.
+     * Selects quizzes with null embedding or outdated model version.
+     */
+    @Query(
+        """
+        SELECT id, title, description, tags FROM quizzes
+        WHERE deleted_at IS NULL
+          AND (embedding IS NULL OR embedding_version < :currentModelVersion)
+        LIMIT :batchSize
+    """
+    )
+    suspend fun getQuizzesNeedingEmbedding(
+        currentModelVersion: Int,
+        batchSize: Int
+    ): List<QuizIndexProjection>
+
+    /**
+     * Returns embedding metadata for a specific quiz if it needs (re-)generation.
+     * Returns null if the quiz already has an up-to-date embedding or does not exist.
+     */
+    @Query(
+        """
+        SELECT id, title, description, tags FROM quizzes
+        WHERE id = :quizId
+          AND deleted_at IS NULL
+          AND (embedding IS NULL OR embedding_version < :currentModelVersion)
+    """
+    )
+    suspend fun getQuizNeedingEmbeddingById(
+        quizId: String,
+        currentModelVersion: Int
+    ): QuizIndexProjection?
+
+    /**
+     * Saves a computed embedding for a quiz.
+     */
+    @Query("UPDATE quizzes SET embedding = :embedding, embedding_version = :version WHERE id = :id")
+    suspend fun updateEmbedding(id: String, embedding: ByteArray, version: Int)
+
+    /**
+     * Fetches full quiz rows by a list of IDs for reassembly after
+     * Reciprocal Rank Fusion merges results from multiple search backends.
+     */
+    @Query("SELECT * FROM quizzes WHERE id IN (:ids) AND deleted_at IS NULL")
+    suspend fun getQuizzesByIds(ids: List<String>): List<QuizEntity>
 }

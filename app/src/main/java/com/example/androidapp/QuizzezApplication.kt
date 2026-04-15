@@ -10,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.androidapp.data.worker.BackendMaintenanceWorker
 import com.example.androidapp.data.worker.BackgroundSyncWorker
+import com.example.androidapp.data.worker.EmbeddingIndexWorker
 import com.example.androidapp.di.AppContainer
 import com.example.androidapp.di.AppContainerImpl
 import kotlinx.coroutines.CoroutineScope
@@ -43,6 +44,7 @@ class QuizzezApplication : Application() {
 
         scheduleBackendMaintenance()
         scheduleBackgroundSync()
+        scheduleEmbeddingIndex()
         setupGlobalErrorHandler()
     }
 
@@ -150,6 +152,18 @@ class QuizzezApplication : Application() {
                 syncRequest
             )
         }
+    }
+
+    /**
+     * Enqueues the [EmbeddingIndexWorker] to generate text embeddings
+     * for any quizzes that are missing up-to-date vectors.
+     * Runs once at startup; incremental updates are triggered by
+     * quiz create/update operations in [QuizRepositoryImpl].
+     */
+    private fun scheduleEmbeddingIndex() {
+        EmbeddingIndexWorker.enqueueFullIndex(
+            WorkManager.getInstance(this)
+        )
     }
 
     /**

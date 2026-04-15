@@ -2,15 +2,17 @@ package com.example.androidapp.di
 
 import android.content.Context
 import com.example.androidapp.data.local.AppDatabase
-import com.example.androidapp.data.logging.LogCollector
-import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
 import com.example.androidapp.data.local.dao.QuestionDao
 import com.example.androidapp.data.local.dao.QuizDao
 import com.example.androidapp.data.local.dao.UserDao
+import com.example.androidapp.data.logging.LogCollector
+import com.example.androidapp.data.ml.ModelManager
 import com.example.androidapp.data.network.NetworkMonitor
+import com.example.androidapp.data.preferences.SettingsPreferences
+import com.example.androidapp.data.remote.firebase.QuizRemoteDataSource
 import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.console.CommandExecutor
@@ -22,7 +24,8 @@ import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.repository.SearchRepository
 import com.example.androidapp.domain.repository.ShareCodeRepository
-import com.example.androidapp.data.preferences.SettingsPreferences
+import com.example.androidapp.domain.service.EmbeddingIndex
+import com.example.androidapp.domain.service.EmbeddingService
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -72,4 +75,13 @@ interface AppContainer {
     val logCollector: LogCollector
     val commandRegistry: CommandRegistry
     val commandExecutor: CommandExecutor
+
+    /** Manages TFLite model file lifecycle (bundled asset + future OTA updates). */
+    val modelManager: ModelManager
+
+    /** On-device text embedding service (MediaPipe-backed, 100-dim output). */
+    val embeddingService: EmbeddingService
+
+    /** In-memory cache of quiz embeddings for fast vector similarity search. */
+    val embeddingIndex: EmbeddingIndex
 }

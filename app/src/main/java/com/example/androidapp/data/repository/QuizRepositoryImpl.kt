@@ -26,9 +26,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import com.example.androidapp.domain.service.EmbeddingIndex
+import com.example.androidapp.domain.service.EmbeddingService
+import com.example.androidapp.domain.util.VectorSimilarity
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -46,7 +51,9 @@ class QuizRepositoryImpl(
     private val remoteDataSource: QuizRemoteDataSource,
     private val questionRemoteDataSource: QuestionRemoteDataSource,
     private val syncManager: SyncManager,
-    private val shareCodeRepository: ShareCodeRepository
+    private val shareCodeRepository: ShareCodeRepository,
+    private val embeddingService: EmbeddingService,
+    private val embeddingIndex: EmbeddingIndex
 ) : QuizRepository {
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -57,6 +64,63 @@ class QuizRepositoryImpl(
 
         /** Maximum number of trending (public) quizzes shown on the home screen. */
         const val HOME_TRENDING_LIMIT = 20
+    }
+
+    /**
+     * Upserts a quiz from a Firestore sync operation while preserving any
+     * existing locally-computed embedding. Tries UPDATE first; falls back
+     * to INSERT if the quiz does not exist locally yet.
+     */
+    private suspend fun upsertQuizFromSync(quiz: Quiz, syncStatus: String = SyncStatus.SYNCED.name) {
+        val entity = quiz.toEntity(syncStatus)
+        val updated = quizDao.updateQuizMetadata(
+            id = entity.id,
+            ownerId = entity.ownerId,
+            title = entity.title,
+            description = entity.description,
+            authorName = entity.authorName,
+            thumbnailUrl = entity.thumbnailUrl,
+            isPublic = entity.isPublic,
+            isDraft = entity.isDraft,
+            shareCode = entity.shareCode,
+            tags = entity.tags,
+            checksum = entity.checksum,
+            questionCount = entity.questionCount,
+            attemptCount = entity.attemptCount,
+            createdAt = entity.createdAt,
+            updatedAt = entity.updatedAt,
+            deletedAt = entity.deletedAt,
+            syncStatus = entity.syncStatus,
+            isRemovedFromCloud = entity.isRemovedFromCloud
+        )
+        if (updated == 0) {
+            // Quiz doesn't exist locally yet -- full insert (embedding will be null,
+            // EmbeddingIndexWorker will compute it in the next batch).
+            quizDao.insertQuiz(entity)
+        }
+    }
+
+    /**
+     * Builds an FTS MATCH query from raw user input.
+     *
+     * Escapes FTS special characters, wraps in double quotes for phrase
+     * matching, and appends a wildcard for prefix search.
+     *
+     * @return The escaped FTS query string, or null if the input is
+     *         empty/blank after escaping (caller should fall back to LIKE).
+     */
+    private fun buildFtsQuery(raw: String): String? {
+        val trimmed = raw.trim()
+        if (trimmed.isEmpty()) return null
+        // Remove FTS special characters: quotes, wildcards, parentheses, operators
+        val escaped = trimmed
+            .replace("\"", "")
+            .replace("*", "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace(":", "")
+        if (escaped.isBlank()) return null
+        return "\"$escaped\"*"
     }
 
     override fun getHomeQuizzes(userId: String): Flow<HomeQuizzes> {
@@ -122,7 +186,7 @@ class QuizRepositoryImpl(
         return try {
             val remote = remoteDataSource.getQuizByShareCode(shareCode)
             remote?.toDomain()?.also { quiz ->
-                quizDao.insertQuiz(quiz.toEntity())
+                upsertQuizFromSync(quiz)
             }
         } catch (_: Exception) {
             null
@@ -315,8 +379,18 @@ class QuizRepositoryImpl(
     }
 
     override fun searchQuizzesLimited(query: String, limit: Int): Flow<List<Quiz>> {
-        return quizDao.searchQuizzesLimited(query, limit).map { entities ->
-            entities.map { it.toDomain() }
+        val ftsQuery = buildFtsQuery(query)
+            ?: return quizDao.searchQuizzesLimited(query, limit).map { entities ->
+                entities.map { it.toDomain() }
+            }
+        return try {
+            quizDao.searchQuizzesFts(ftsQuery, limit).map { entities ->
+                entities.map { it.toDomain() }
+            }
+        } catch (_: Exception) {
+            quizDao.searchQuizzesLimited(query, limit).map { entities ->
+                entities.map { it.toDomain() }
+            }
         }
     }
 
@@ -331,7 +405,12 @@ class QuizRepositoryImpl(
     }
 
     override suspend fun getSearchResultsCount(query: String): Int {
-        return quizDao.searchQuizzesCount(query)
+        val ftsQuery = buildFtsQuery(query) ?: return quizDao.searchQuizzesCount(query)
+        return try {
+            quizDao.searchQuizzesFtsCount(ftsQuery)
+        } catch (_: Exception) {
+            quizDao.searchQuizzesCount(query)
+        }
     }
 
     override suspend fun refreshQuizFromRemote(quizId: String): Result<Quiz> {
@@ -346,7 +425,7 @@ class QuizRepositoryImpl(
             }
 
             val quiz = quizDto.toDomain()
-            quizDao.insertQuiz(quiz.toEntity())
+            upsertQuizFromSync(quiz)
             refreshQuestionsAndChoices(quizId)
 
             quiz
@@ -360,6 +439,8 @@ class QuizRepositoryImpl(
             if (!syncManager.isSyncAllowed()) return@launch
             refreshMyQuizzes(userId)
             refreshPublicQuizzes(currentUserId = userId)
+            // Trigger embedding for newly-synced quizzes with null embeddings.
+            embeddingIndex.requestFullReindex()
         }
     }
 
@@ -375,7 +456,7 @@ class QuizRepositoryImpl(
                 dtos.map { dto ->
                     async {
                         val quiz = dto.toDomain()
-                        quizDao.insertQuiz(quiz.toEntity())
+                        upsertQuizFromSync(quiz)
                         refreshQuestionsAndChoices(quiz.id)
                     }
                 }.awaitAll()
@@ -391,6 +472,7 @@ class QuizRepositoryImpl(
                     quizDao.markRemovedFromCloud(staleQuiz.id, true)
                 }
             }
+            embeddingIndex.requestFullReindex()
         } catch (_: Exception) {
         }
     }
@@ -404,7 +486,7 @@ class QuizRepositoryImpl(
                 dtos.map { dto ->
                     async {
                         val quiz = dto.toDomain()
-                        quizDao.insertQuiz(quiz.toEntity())
+                        upsertQuizFromSync(quiz)
                         refreshQuestionsAndChoices(quiz.id, skipSyncCheck = true)
                     }
                 }.awaitAll()
@@ -435,7 +517,7 @@ class QuizRepositoryImpl(
                 dtos.map { dto ->
                     async {
                         val quiz = dto.toDomain()
-                        quizDao.insertQuiz(quiz.toEntity())
+                        upsertQuizFromSync(quiz)
                         refreshQuestionsAndChoices(quiz.id)
                     }
                 }.awaitAll()
@@ -451,6 +533,7 @@ class QuizRepositoryImpl(
                     LocalQuizPurger.purgeLocalQuiz(staleQuiz.id, quizDao, questionDao, choiceDao)
                 }
             }
+            embeddingIndex.requestFullReindex()
         } catch (_: Exception) {
         }
     }
@@ -491,5 +574,99 @@ class QuizRepositoryImpl(
         } catch (_: Exception) {
             // Failure to refresh questions should not block quiz metadata refresh
         }
+    }
+
+    // ==================== Semantic search ====================
+
+    override fun semanticSearchQuizzes(query: String, limit: Int): Flow<List<Quiz>> = flow {
+        val queryEmbedding = embeddingService.embed(query)
+        if (queryEmbedding == null) {
+            // Model not ready -- fall back to FTS
+            emitAll(searchQuizzesLimited(query, limit))
+            return@flow
+        }
+        val corpus = embeddingIndex.snapshot()
+        if (corpus.isEmpty()) {
+            // Index not populated yet -- fall back to FTS until embeddings are computed
+            emitAll(searchQuizzesLimited(query, limit))
+            return@flow
+        }
+        val ranked = VectorSimilarity.rankBySimilarity(queryEmbedding, corpus)
+            .take(limit)
+            .map { it.first }
+        if (ranked.isEmpty()) {
+            emit(emptyList())
+            return@flow
+        }
+        val quizMap = quizDao.getQuizzesByIds(ranked).associate { it.id to it.toDomain() }
+        emit(ranked.mapNotNull { quizMap[it] })
+    }
+
+    override fun hybridSearchQuizzes(query: String, limit: Int): Flow<List<Quiz>> = flow {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            emit(emptyList())
+            return@flow
+        }
+
+        // FTS path
+        val ftsQuery = buildFtsQuery(trimmed)
+        val ftsEntities = if (ftsQuery != null) {
+            try {
+                quizDao.searchQuizzesFts(ftsQuery, limit * 2).first()
+            } catch (_: Exception) {
+                quizDao.searchQuizzesLimited(trimmed, limit * 2).first()
+            }
+        } else {
+            quizDao.searchQuizzesLimited(trimmed, limit * 2).first()
+        }
+        val ftsIds = ftsEntities.map { it.id }
+
+        // Semantic path
+        val queryEmbedding = embeddingService.embed(trimmed)
+        val semanticIds = if (queryEmbedding != null) {
+            val corpus = embeddingIndex.snapshot()
+            VectorSimilarity.rankBySimilarity(queryEmbedding, corpus, threshold = 0.15f)
+                .take(limit * 3)
+                .map { it.first }
+        } else {
+            emptyList()
+        }
+
+        // Merge via Reciprocal Rank Fusion
+        val mergedIds = VectorSimilarity.reciprocalRankFusion(ftsIds, semanticIds, semanticWeight = 2.0)
+            .take(limit)
+
+        if (mergedIds.isEmpty()) {
+            emit(emptyList())
+            return@flow
+        }
+
+        // Load full Quiz objects, preserving RRF order
+        val quizMap = ftsEntities.associate { it.id to it.toDomain() }.toMutableMap()
+        val missingIds = mergedIds.filter { it !in quizMap }
+        if (missingIds.isNotEmpty()) {
+            quizDao.getQuizzesByIds(missingIds).forEach { quizMap[it.id] = it.toDomain() }
+        }
+        emit(mergedIds.mapNotNull { quizMap[it] })
+    }
+
+    override fun findSimilarQuizzes(quizId: String, limit: Int): Flow<List<Quiz>> = flow {
+        val sourceEmbedding = embeddingIndex[quizId]
+        if (sourceEmbedding == null) {
+            emit(emptyList())
+            return@flow
+        }
+        val corpus = embeddingIndex.snapshot().filterKeys { it != quizId }
+        val similarIds = VectorSimilarity.rankBySimilarity(sourceEmbedding, corpus, threshold = 0.4f)
+            .take(limit)
+            .map { it.first }
+        if (similarIds.isEmpty()) {
+            emit(emptyList())
+            return@flow
+        }
+        val quizzes = quizDao.getQuizzesByIds(similarIds)
+        val quizMap = quizzes.associate { it.id to it.toDomain() }
+        emit(similarIds.mapNotNull { quizMap[it] })
     }
 }

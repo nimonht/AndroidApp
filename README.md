@@ -5,6 +5,10 @@
 ![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-blue)
 ![Firebase](https://img.shields.io/badge/Backend-Firebase-orange)
 
+## AI transparency 
+
+This project was developed with the assistance of AI tools, including code generation and documentation. The AI contributions were guided and reviewed by human developers to ensure quality and accuracy. All AI-generated content has been verified and edited as necessary to meet project standards.
+
 ## Overview
 
 Android mobile application that enables users to create, share, and take multiple-choice quizzes. The app supports both online (cloud-synced) and offline (local-first) modes.

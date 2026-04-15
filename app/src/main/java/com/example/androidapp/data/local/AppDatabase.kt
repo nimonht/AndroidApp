@@ -41,7 +41,7 @@ import com.example.androidapp.data.local.entity.UserEntity
         UserEntity::class,
         PendingSyncEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

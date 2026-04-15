@@ -59,6 +59,12 @@ fun Quiz.toEntity(syncStatus: String = SyncStatus.SYNCED.name): QuizEntity = Qui
     createdAt = createdAt,
     updatedAt = updatedAt,
     deletedAt = deletedAt,
+    // Embeddings are computed locally by EmbeddingIndexWorker and are not part
+    // of the Quiz domain model. Setting null here means @Upsert will overwrite
+    // existing embeddings on sync. The worker automatically re-indexes affected
+    // quizzes in the next batch pass (triggered at app startup and after sync).
+    embedding = null,
+    embeddingVersion = 0,
     syncStatus = syncStatus,
     isRemovedFromCloud = isRemovedFromCloud
 )

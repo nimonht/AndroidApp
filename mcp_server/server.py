@@ -61,7 +61,7 @@ mcp = FastMCP(
     "Quizzez Console",
     instructions=(
         "MCP server for the Quizzez Android app console system. "
-        "Provides access to ~32 console commands to inspect, manage, and automate "
+        "Provides access to ~35 console commands to inspect, manage, and automate "
         "tasks in the app via ADB on a connected device or emulator.\n\n"
         "Available tools:\n"
         "- list_commands: List commands (filter by category/role)\n"
@@ -481,6 +481,8 @@ _NL_KEYWORDS: dict[str, list[str]] = {
     "sap xep": ["sort"],
     "bi danh": ["alias"],
     "in": ["echo"],
+    "chi muc": ["embedding"],
+    "ngu nghia": ["embedding", "search"],
     # English keywords
     "delete": ["del", "purge"],
     "remove": ["del"],
@@ -513,6 +515,10 @@ _NL_KEYWORDS: dict[str, list[str]] = {
     "echo": ["echo"],
     "print": ["echo"],
     "help": ["help"],
+    "embedding": ["embedding"],
+    "semantic": ["embedding"],
+    "vector": ["embedding"],
+    "reindex": ["embedding"],
 }
 
 
@@ -643,6 +649,7 @@ def _build_concrete(cmd: CommandInfo, text: str, words: list[str]) -> str:
             "banned",
             "empty-quizzes",
         ],
+        "embedding": ["status", "reindex"],
     }
     if cmd.name in sub_cmds_map:
         for sub in sub_cmds_map[cmd.name]:
@@ -659,6 +666,7 @@ def _build_concrete(cmd: CommandInfo, text: str, words: list[str]) -> str:
                 "perm": "list",
                 "export": "stats",
                 "purge": "trash",
+                "embedding": "status",
             }
             if cmd.name in defaults:
                 parts.append(defaults[cmd.name])

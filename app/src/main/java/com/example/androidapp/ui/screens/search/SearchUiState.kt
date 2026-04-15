@@ -1,69 +1,65 @@
 package com.example.androidapp.ui.screens.search
 
 /**
- * Các tùy chọn sắp xếp kết quả tìm kiếm (Task 5).
- * Định nghĩa Enum ngay tại đây để SearchUiState có thể tham chiếu tới.
+ * Search mode controlling which backend is used for query execution.
+ */
+enum class SearchMode {
+    /** Pure FTS keyword matching (always available). */
+    KEYWORD,
+
+    /** Pure semantic (vector similarity) search. Requires model to be loaded. */
+    SEMANTIC,
+
+    /** FTS + semantic merged via Reciprocal Rank Fusion (default when model is ready). */
+    HYBRID
+}
+
+/**
+ * Sort options for search results.
  */
 enum class SortOption { DATE, POPULARITY, RELEVANCE }
 
 /**
- * Trạng thái UI cho màn hình Tìm kiếm (Gồm Task 1 đến Task 5).
+ * UI state for the Search screen.
  */
 data class SearchUiState(
     val query: String = "",
     val recentSearches: List<String> = emptyList(),
     val isSearching: Boolean = false,
 
-    // Task 2: Tag Filter (dùng khi đang trong chế độ kết quả tìm kiếm)
+    // Tag filter (search results mode, OR logic)
     val availableTags: List<String> = emptyList(),
     val selectedTags: List<String> = emptyList(),
 
-    // Task 3: Danh sách kết quả tìm kiếm
+    // Search results
     val searchResults: List<QuizCardDraft> = emptyList(),
 
-    // Task 4: Cờ xác định chế độ xem hiện tại
+    // View mode
     val isGridView: Boolean = true,
 
-    // Task 5: Cờ xác định tùy chọn sắp xếp hiện tại
+    // Sort
     val sortOption: SortOption = SortOption.RELEVANCE,
 
-    // Task 6: Cờ xác định đã bấm tìm kiếm chưa (Dùng để hiện EmptyState)
+    // Whether a search has been performed
     val hasSearched: Boolean = false,
 
-    // Discover — hiển thị khi chưa tìm kiếm
-    /** Tất cả tag từ các quiz công khai, sắp xếp theo tần suất giảm dần. */
+    // Discover sections (shown when not searching)
     val discoverTags: List<String> = emptyList(),
-
-    /** Top 10 quiz mới nhất hôm nay (theo createdAt giảm dần). */
     val todayTopQuizzes: List<QuizCardDraft> = emptyList(),
-
-    /** Top 8 quiz nổi bật (theo attemptCount giảm dần, isPublic = true). */
     val featuredQuizzes: List<QuizCardDraft> = emptyList(),
-
-    /** Top 10 quiz đang trending (theo attemptCount giảm dần). */
     val trendingQuizzes: List<QuizCardDraft> = emptyList(),
-
-    /** Top 10 quiz mọi thời đại (theo attemptCount giảm dần toàn bộ). */
     val allTimeTopQuizzes: List<QuizCardDraft> = emptyList(),
-
-    /** Tat ca quiz cong khai hien thi trong muc Duyet tat ca. */
     val browseAllQuizzes: List<QuizCardDraft> = emptyList(),
-
-    /** Dang tai du lieu muc Duyet tat ca. */
     val isLoadingBrowseAll: Boolean = false,
-
-    /** Đang tải dữ liệu khám phá. */
     val isLoadingDiscover: Boolean = false,
-
-    /** Tag dang duoc chon de loc tren man hinh Kham pha (multi-select, AND logic). */
     val selectedDiscoverTags: List<String> = emptyList(),
 
-    /** Whether more discover quizzes can be loaded. */
+    // Pagination
     val hasMoreDiscover: Boolean = true,
-
-    /** Whether more search results can be loaded. */
     val hasMoreSearchResults: Boolean = true,
+    val isLoadingMore: Boolean = false,
 
-    /** Whether a load-more operation is in progress. */
-    val isLoadingMore: Boolean = false
+    // Semantic search state
+    val searchMode: SearchMode = SearchMode.KEYWORD,
+    val isEmbeddingReady: Boolean = false
 )
