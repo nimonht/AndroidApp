@@ -232,7 +232,7 @@ scripts/generate-sample-data.py --help
 
 ## Version
 
-App version 11.4.26
+App version 1.0.0
 
 ## License
 
