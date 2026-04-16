@@ -20,12 +20,6 @@ curl -L -o app/src/main/assets/use_multilingual_lite.tflite \
   "https://storage.googleapis.com/mediapipe-models/text_embedder/universal_sentence_encoder/float32/latest/universal_sentence_encoder.tflite"
 ```
 
-#### How it works at runtime
-
-1. App launches -> `ModelManager` checks local cache
-2. If no cache -> downloads from MediaPipe Model Garden (~6 MB, one-time)
-3. Model is cached locally for subsequent launches
-
 ### How It Is Used
 
 - `ModelManager` copies the model from this assets directory to the app's
