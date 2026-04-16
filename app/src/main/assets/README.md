@@ -4,12 +4,12 @@ This directory contains TensorFlow Lite model files for on-device inference.
 
 ## Required Model
 
-**File:** `use_multilingual_lite.tflite`
-**Source:** [MediaPipe Universal Sentence Encoder](https://ai.google.dev/edge/mediapipe/solutions/text/text_embedder#universal_sentence_encoder)
-**License:** Apache 2.0
-**Size:** ~6 MB
-**Output:** 100-dimensional dense vectors
-**Input:** String text processed via MediaPipe TextEmbedder
+- **File:** `use_multilingual_lite.tflite`
+- **Source:** [MediaPipe Universal Sentence Encoder](https://ai.google.dev/edge/mediapipe/solutions/text/text_embedder#universal_sentence_encoder)
+- **License:** Apache 2.0
+- **Size:** ~6 MB
+- **Output:** 100-dimensional dense vectors
+- **Input:** String text processed via MediaPipe TextEmbedder
 
 ### Download
 
