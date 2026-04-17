@@ -111,14 +111,14 @@ fun AdminUserCard(
     }
 
     val avatarBackgroundColor = when (user.role) {
-        UserRole.SUPERUSER -> superuserColor.copy(alpha = 0.15f)
+        UserRole.SUPERUSER -> SuperuserGold.copy(alpha = 0.15f)
         UserRole.ADMIN -> MaterialTheme.colorScheme.errorContainer
         UserRole.USER -> MaterialTheme.colorScheme.primaryContainer
         UserRole.GUEST -> MaterialTheme.colorScheme.surfaceVariant
     }
 
     val avatarTextColor = when (user.role) {
-        UserRole.SUPERUSER -> superuserColor
+        UserRole.SUPERUSER -> SuperuserGold
         UserRole.ADMIN -> MaterialTheme.colorScheme.onErrorContainer
         UserRole.USER -> MaterialTheme.colorScheme.onPrimaryContainer
         UserRole.GUEST -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -218,7 +218,7 @@ fun AdminUserCard(
                 if (user.role == UserRole.SUPERUSER) {
                     Surface(
                         shape = MaterialTheme.shapes.extraSmall,
-                        color = superuserColor.copy(alpha = 0.12f)
+                        color = SuperuserGold.copy(alpha = 0.12f)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -227,14 +227,14 @@ fun AdminUserCard(
                             Icon(
                                 imageVector = Icons.Default.Shield,
                                 contentDescription = null,
-                                tint = superuserColor,
+                                tint = SuperuserGold,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = stringResource(R.string.admin_superuser_protected),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                                color = superuserColor
+                                color = SuperuserGold
                             )
                         }
                     }
