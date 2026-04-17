@@ -26,7 +26,7 @@ enum class ConsoleSyncState {
  * Domain-layer interface for sync management operations.
  *
  * Commands use this to trigger and monitor background synchronisation
- * without coupling to the concrete [com.example.androidapp.data.sync.SyncManager].
+ * without coupling to the concrete implementation in the data layer.
  */
 interface SyncService {
     /** Current sync state as a reactive stream (using domain-layer enum). */

@@ -1,7 +1,7 @@
 package com.example.androidapp.ui.screens.attempt
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -179,7 +179,7 @@ private fun AttemptDetailContent(
 
         // Score display
         Text(
-            text = stringResource(R.string.score_format, state.attempt.score, state.attempt.totalQuestions),
+            text = stringResource(R.string.score_format, state.attempt.score, state.attempt.maxScore),
             fontFamily = PlayfairDisplayFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 48.sp,

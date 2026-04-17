@@ -1009,4 +1009,12 @@
     >Đã sao chép nhật ký vào bộ nhớ tạm</string>
     <string name="log_viewer_export_empty">Không có nhật ký nào để xuất</string>
 
+    <!-- Trash screen success messages -->
+    <string name="trash_restored">Đã khôi phục bài kiểm tra</string>
+    <string name="trash_deleted_permanently">Đã xóa vĩnh viễn</string>
+    <string name="trash_emptied">Đã dọn sạch thùng rác</string>
+
+    <!-- Pool screen success messages -->
+    <string name="pool_revoked">Đã thu hồi câu hỏi</string>
+
 </resources>

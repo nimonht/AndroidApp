@@ -152,7 +152,7 @@ class AdminQuizManagementViewModel(
                     hasMore = page.hasMore,
                     error = null
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = UiError.LOAD_QUIZ_LIST_FAILED
@@ -182,7 +182,7 @@ class AdminQuizManagementViewModel(
                     quizzes = applyFilters(allQuizzes),
                     hasMore = page.hasMore
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
                     error = UiError.LOAD_MORE_QUIZZES_FAILED

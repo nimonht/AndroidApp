@@ -1,5 +1,6 @@
 package com.example.androidapp.data.repository
 
+import android.util.Log
 import com.example.androidapp.data.local.LocalQuizPurger
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.QuestionDao
@@ -59,6 +60,8 @@ class QuizRepositoryImpl(
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private companion object {
+        private const val TAG = "QuizRepositoryImpl"
+
         /** Maximum number of user-owned quizzes shown on the home screen. */
         const val HOME_MY_QUIZZES_LIMIT = 20
 
@@ -289,7 +292,9 @@ class QuizRepositoryImpl(
                     // Share code cleanup failure should not block quiz deletion
                 }
             }
-            if (entity != null) quizDao.deleteQuiz(entity)
+            if (entity != null) {
+                LocalQuizPurger.purgeLocalQuiz(quizId, quizDao, questionDao, choiceDao)
+            }
             // Enqueue sync operation synchronously to ensure durability
             syncManager.enqueueSync(
                 SyncEntityType.QUIZ,
@@ -302,15 +307,11 @@ class QuizRepositoryImpl(
     override suspend fun incrementAttemptCount(quizId: String): Result<Unit> {
         return safeCall {
             quizDao.incrementAttemptCount(quizId)
-            ioScope.launch {
-                try {
-                    // Direct call for increment - this is a simple atomic operation
-                    remoteDataSource.incrementAttemptCount(quizId)
-                } catch (_: Exception) {
-                    // Failure is ignored; this bypasses SyncManager so there is no queued retry
-                }
-            }
-            Unit
+            syncManager.enqueueSync(
+                SyncEntityType.QUIZ,
+                quizId,
+                SyncOperation.UPDATE
+            )
         }
     }
 
@@ -330,6 +331,7 @@ class QuizRepositoryImpl(
                 }
                 .distinct()
         } catch (e: Exception) {
+            Log.w(TAG, "Failed to load tags", e)
             emptyList()
         }
     }
@@ -354,7 +356,7 @@ class QuizRepositoryImpl(
             // quiz so the deletion is retried automatically when connectivity
             // returns (instead of a fire-and-forget that silently drops offline).
             deletedQuizzes.forEach { entity ->
-                quizDao.deleteQuiz(entity)
+                LocalQuizPurger.purgeLocalQuiz(entity.id, quizDao, questionDao, choiceDao)
                 syncManager.enqueueSync(
                     SyncEntityType.QUIZ,
                     entity.id,
@@ -473,7 +475,8 @@ class QuizRepositoryImpl(
                 }
             }
             embeddingIndex.requestFullReindex()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to refresh user quizzes from Firestore", e)
         }
     }
 
@@ -501,7 +504,8 @@ class QuizRepositoryImpl(
                     quizDao.markRemovedFromCloud(staleQuiz.id, true)
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to force-refresh user quizzes", e)
         }
     }
 
@@ -534,7 +538,8 @@ class QuizRepositoryImpl(
                 }
             }
             embeddingIndex.requestFullReindex()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to refresh public quizzes from Firestore", e)
         }
     }
 
@@ -571,8 +576,8 @@ class QuizRepositoryImpl(
                     }
                 }.awaitAll()
             }
-        } catch (_: Exception) {
-            // Failure to refresh questions should not block quiz metadata refresh
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to refresh questions/choices for quiz $quizId", e)
         }
     }
 

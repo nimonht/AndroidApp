@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -69,6 +67,7 @@ object QuizTags {
 fun TagSuggestionDialog(
     currentTags: String,
     availableTags: List<String> = emptyList(),
+    modifier: Modifier = Modifier,
     onTagsConfirmed: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -79,6 +78,7 @@ fun TagSuggestionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = modifier,
         title = { Text(stringResource(R.string.tag_suggestion_title)) },
         text = {
             Column(

@@ -239,7 +239,6 @@ class CsvImportViewModel(
 
         try {
             val drafts = state.previewRows
-                .filter { !it.hasError }
                 .map { row -> row.toQuestionDraft() }
 
             onQuestionsImported(drafts)

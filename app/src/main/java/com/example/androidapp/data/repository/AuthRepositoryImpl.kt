@@ -8,6 +8,7 @@ import com.example.androidapp.data.remote.firebase.UserRemoteDataSource
 import com.example.androidapp.data.remote.model.UserDto
 import com.google.firebase.Timestamp
 import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -48,6 +49,21 @@ class AuthRepositoryImpl(
     private val userRemoteDataSource: UserRemoteDataSource,
     private val firestore: FirebaseFirestore
 ) : AuthRepository {
+
+    companion object {
+        // Error codes used as Exception messages. ViewModels map these to UiError values.
+        const val ERROR_LOGIN_FAILED = "auth_login_failed"
+        const val ERROR_ACCOUNT_BANNED = "auth_account_banned"
+        const val ERROR_INVALID_CREDENTIALS = "auth_invalid_credentials"
+        const val ERROR_REGISTER_FAILED = "auth_register_failed"
+        const val ERROR_EMAIL_IN_USE = "auth_email_in_use"
+        const val ERROR_WEAK_PASSWORD = "auth_weak_password"
+        const val ERROR_RESET_PASSWORD_FAILED = "auth_reset_password_failed"
+        const val ERROR_NO_USER = "auth_no_user"
+        const val ERROR_DELETE_ACCOUNT_FAILED = "auth_delete_account_failed"
+        const val ERROR_REFRESH_SESSION_FAILED = "auth_refresh_session_failed"
+        const val ERROR_UPDATE_PROFILE_FAILED = "auth_update_profile_failed"
+    }
 
     /**
      * Coroutine scope for background operations triggered by listeners.
@@ -120,7 +136,7 @@ class AuthRepositoryImpl(
         try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
-                ?: return Result.failure(Exception("Đăng nhập thất bại"))
+                ?: return Result.failure(Exception(ERROR_LOGIN_FAILED))
 
             // Fetch full profile (including role) from Firestore, falling back to Room
             val user = fetchFullUserProfile(firebaseUser.uid, firebaseUser)
@@ -128,14 +144,14 @@ class AuthRepositoryImpl(
             // Reject banned users — sign out immediately so they cannot use the app
             if (user.isBanned) {
                 firebaseAuth.signOut()
-                return Result.failure(Exception("Tài khoản của bạn đã bị cấm sử dụng ứng dụng. Vui lòng liên hệ quản trị viên để biết thêm chi tiết."))
+                return Result.failure(Exception(ERROR_ACCOUNT_BANNED))
             }
 
             // Update the shared flow so all collectors get the latest data
             _currentUser.value = user
             return Result.success(user)
         } catch (e: FirebaseAuthInvalidCredentialsException) {
-            return Result.failure(Exception("Email hoặc mật khẩu không đúng"))
+            return Result.failure(Exception(ERROR_INVALID_CREDENTIALS))
         } catch (e: Exception) {
             return Result.failure(e)
         } finally {
@@ -148,7 +164,7 @@ class AuthRepositoryImpl(
         try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
-                ?: return Result.failure(Exception("Đăng ký thất bại"))
+                ?: return Result.failure(Exception(ERROR_REGISTER_FAILED))
 
             // Set displayName on the Firebase Auth profile so that
             // AuthStateListener (currentUser Flow) emits the correct name
@@ -220,9 +236,9 @@ class AuthRepositoryImpl(
 
             return Result.success(user)
         } catch (e: FirebaseAuthUserCollisionException) {
-            return Result.failure(Exception("Email này đã được sử dụng"))
+            return Result.failure(Exception(ERROR_EMAIL_IN_USE))
         } catch (e: FirebaseAuthWeakPasswordException) {
-            return Result.failure(Exception("Mật khẩu quá yếu. Cần ít nhất 6 ký tự"))
+            return Result.failure(Exception(ERROR_WEAK_PASSWORD))
         } catch (e: Exception) {
             return Result.failure(e)
         } finally {
@@ -249,7 +265,7 @@ class AuthRepositoryImpl(
             firebaseAuth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(Exception("Gửi email đặt lại mật khẩu thất bại", e))
+            Result.failure(Exception(ERROR_RESET_PASSWORD_FAILED, e))
         }
     }
 
@@ -260,7 +276,7 @@ class AuthRepositoryImpl(
     override suspend fun deleteAccount(): Result<Unit> {
         return try {
             val firebaseUser = firebaseAuth.currentUser
-                ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
+                ?: return Result.failure(Exception(ERROR_NO_USER))
             val uid = firebaseUser.uid
 
             // Cascade-delete all user data from Firestore
@@ -278,7 +294,7 @@ class AuthRepositoryImpl(
             firebaseUser.delete().await()
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(Exception("Xóa tài khoản thất bại", e))
+            Result.failure(Exception(ERROR_DELETE_ACCOUNT_FAILED, e))
         }
     }
 
@@ -297,10 +313,10 @@ class AuthRepositoryImpl(
     override suspend fun refreshSession(): Result<Unit> {
         return try {
             firebaseAuth.currentUser?.getIdToken(true)?.await()
-                ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
+                ?: return Result.failure(Exception(ERROR_NO_USER))
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(Exception("Làm mới phiên đăng nhập thất bại", e))
+            Result.failure(Exception(ERROR_REFRESH_SESSION_FAILED, e))
         }
     }
 
@@ -318,7 +334,7 @@ class AuthRepositoryImpl(
         _suppressAuthStateUpdates = true
         try {
             val firebaseUser = firebaseAuth.currentUser
-                ?: return Result.failure(Exception("Không có người dùng đang đăng nhập"))
+                ?: return Result.failure(Exception(ERROR_NO_USER))
 
             // Build and apply the Firebase Auth profile update
             val profileUpdates = UserProfileChangeRequest.Builder()
@@ -371,13 +387,13 @@ class AuthRepositoryImpl(
                 displayName = displayName,
                 username = previousUser?.username ?: existing?.username ?: "",
                 photoUrl = updatedPhotoUrl,
-                role = previousUser?.role ?: com.example.androidapp.domain.model.UserRole.USER,
+                role = previousUser?.role ?: UserRole.USER,
                 isBanned = previousUser?.isBanned ?: false
             )
 
             return Result.success(Unit)
         } catch (e: Exception) {
-            return Result.failure(Exception("Cập nhật hồ sơ thất bại", e))
+            return Result.failure(Exception(ERROR_UPDATE_PROFILE_FAILED, e))
         } finally {
             _suppressAuthStateUpdates = false
         }

@@ -1,6 +1,7 @@
 package com.example.androidapp.ui.screens.admin.dashboard
 
 import android.content.res.Configuration
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -247,7 +248,7 @@ private fun GreetingHeader(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = stringResource(R.string.admin_greeting, "Admin"),
+        text = stringResource(R.string.admin_greeting, stringResource(R.string.admin_role_admin)),
         fontFamily = PlayfairDisplayFamily,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
@@ -525,7 +526,7 @@ private fun UserEngagementSection(
                 EngagementRingChart(
                     percentage = stats.activeUserPercentage.toFloat(),
                     centerLabel = stringResource(R.string.admin_active_ratio),
-                    centerValue = String.format("%.0f%%", stats.activeUserPercentage),
+                    centerValue = String.format(Locale.US, "%.0f%%", stats.activeUserPercentage),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                 )

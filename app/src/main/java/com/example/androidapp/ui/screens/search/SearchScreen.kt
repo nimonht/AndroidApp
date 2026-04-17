@@ -35,7 +35,7 @@ import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.forms.QuizSearchBar
 import com.example.androidapp.ui.components.quiz.QuizCard
-import com.example.androidapp.domain.model.Quiz
+
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -347,7 +347,7 @@ private fun DiscoverContent(
                 ) {
                     chunkedQuizzes[index].forEach { quiz ->
                         QuizCard(
-                            quiz = quiz.toBrowseQuiz(),
+                            quiz = quiz.toQuiz(isPublic = true),
                             onClick = { onQuizClick(quiz.id) },
                             modifier = Modifier.weight(1f)
                         )
@@ -377,19 +377,3 @@ private fun DiscoverContent(
         }
     }
 }
-
-/**
- * Chuyen doi [QuizCardDraft] sang domain [Quiz] de truyen cho [QuizCard]
- * trong muc Duyet tat ca.
- */
-private fun QuizCardDraft.toBrowseQuiz() = Quiz(
-    id = id,
-    ownerId = "",
-    title = title,
-    authorName = authorName,
-    thumbnailUrl = coverImageUrl,
-    questionCount = questionCount,
-    attemptCount = attemptCount,
-    isPublic = true,
-    tags = tags
-)

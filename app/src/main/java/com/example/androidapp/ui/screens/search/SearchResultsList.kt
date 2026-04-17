@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.quiz.QuizCard
 
 /**
@@ -70,14 +69,3 @@ fun SearchResultsList(
         }
     }
 }
-
-private fun QuizCardDraft.toQuiz() = Quiz(
-    id = id,
-    ownerId = "",
-    title = title,
-    authorName = authorName,
-    thumbnailUrl = coverImageUrl,
-    questionCount = questionCount,
-    attemptCount = attemptCount,
-    tags = tags
-)

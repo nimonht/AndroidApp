@@ -7,8 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Domain-layer interface for accessing the application log buffer.
  *
  * Provides a reactive stream of log entries and a clear operation
- * without coupling to the concrete
- * [com.example.androidapp.data.logging.LogCollector].
+ * without coupling to the concrete implementation in the data layer.
  */
 interface LogService {
     /** Reactive stream of captured log entries, oldest to newest. */

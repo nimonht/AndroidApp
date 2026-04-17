@@ -205,7 +205,7 @@ class TakeQuizViewModel(
                 userId = userId,
                 quizId = quizId,
                 score = scoreResult.earnedScore,
-                totalQuestions = scoreResult.maxScore,
+                maxScore = scoreResult.maxScore,
                 answers = answerMap,
                 startTimeMillis = startTimeMillis,
                 endTimeMillis = System.currentTimeMillis(),

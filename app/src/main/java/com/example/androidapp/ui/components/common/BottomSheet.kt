@@ -344,12 +344,14 @@ fun OptionsBottomSheet(
 fun FilterBottomSheet(
     showSheet: Boolean,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
     title: String = stringResource(R.string.filter_title),
     content: @Composable ColumnScope.() -> Unit
 ) {
     AppBottomSheet(
         showSheet = showSheet,
         onDismiss = onDismiss,
+        modifier = modifier,
         title = title,
         skipPartiallyExpanded = false,
         content = content

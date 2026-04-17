@@ -290,7 +290,7 @@ class QuizInfoCommand : Command {
                 val displayLimit = if (verbose) sortedAttempts.size else minOf(sortedAttempts.size, 20)
 
                 for (attempt in sortedAttempts.take(displayLimit)) {
-                    val scoreStr = "${attempt.score}/${attempt.totalQuestions}"
+                    val scoreStr = "${attempt.score}/${attempt.maxScore}"
                     val duration = if (attempt.endTimeMillis != null) {
                         CommandFormatUtils.formatDuration((attempt.endTimeMillis - attempt.startTimeMillis) / 1000)
                     } else {
@@ -355,35 +355,35 @@ class QuizInfoCommand : Command {
 
                 if (completedAttempts.isNotEmpty()) {
                     val scores = completedAttempts.map { it.score }
-                    val totalQuestions = completedAttempts.first().totalQuestions
+                    val maxPossibleScore = completedAttempts.first().maxScore
                     val avgScore = scores.average()
                     val maxScore = scores.max()
                     val minScore = scores.min()
                     val medianScore = calculateMedian(scores)
 
-                    val perfectCount = scores.count { it == totalQuestions }
+                    val perfectCount = scores.count { it == maxPossibleScore }
                     val zeroCount = scores.count { it == 0 }
 
                     lines.add(OutputLine(""))
                     lines.add(
                         OutputLine(
-                            "  Diem trung binh      : ${"%.2f".format(avgScore)}/$totalQuestions (${
+                            "  Diem trung binh      : ${"%.2f".format(avgScore)}/$maxPossibleScore (${
                                 "%.1f".format(
-                                    avgScore / totalQuestions * 100
+                                    avgScore / maxPossibleScore * 100
                                 )
                             }%)", OutputStyle.INFO
                         )
                     )
-                    lines.add(OutputLine("  Diem cao nhat        : $maxScore/$totalQuestions", OutputStyle.SUCCESS))
+                    lines.add(OutputLine("  Diem cao nhat        : $maxScore/$maxPossibleScore", OutputStyle.SUCCESS))
                     lines.add(
                         OutputLine(
-                            "  Diem thap nhat       : $minScore/$totalQuestions",
+                            "  Diem thap nhat       : $minScore/$maxPossibleScore",
                             if (minScore == 0) OutputStyle.WARNING else OutputStyle.NORMAL
                         )
                     )
                     lines.add(
                         OutputLine(
-                            "  Diem trung vi        : ${"%.1f".format(medianScore)}/$totalQuestions",
+                            "  Diem trung vi        : ${"%.1f".format(medianScore)}/$maxPossibleScore",
                             OutputStyle.NORMAL
                         )
                     )
@@ -406,15 +406,15 @@ class QuizInfoCommand : Command {
                     }
 
                     // Phan bo diem
-                    if (verbose && totalQuestions > 0) {
+                    if (verbose && maxPossibleScore > 0) {
                         lines.add(OutputLine(""))
                         lines.add(OutputLine("  Phan bo diem:", OutputStyle.HEADER))
 
-                        val bucketSize = maxOf(1, totalQuestions / 5)
+                        val bucketSize = maxOf(1, maxPossibleScore / 5)
                         val buckets = mutableMapOf<String, Int>()
                         for (score in scores) {
                             val bucketStart = (score / bucketSize) * bucketSize
-                            val bucketEnd = minOf(bucketStart + bucketSize - 1, totalQuestions)
+                            val bucketEnd = minOf(bucketStart + bucketSize - 1, maxPossibleScore)
                             val key = "$bucketStart-$bucketEnd"
                             buckets[key] = (buckets[key] ?: 0) + 1
                         }
@@ -681,7 +681,7 @@ class QuizInfoCommand : Command {
                     )
                 )
                 lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
-                lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
+                lines.add(OutputLine("      \"totalQuestions\": ${attempt.maxScore},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"startTimeMillis\": ${attempt.startTimeMillis},", OutputStyle.CODE))
                 lines.add(OutputLine("      \"endTimeMillis\": $endStr", OutputStyle.CODE))
                 lines.add(OutputLine("    }$aComma", OutputStyle.CODE))

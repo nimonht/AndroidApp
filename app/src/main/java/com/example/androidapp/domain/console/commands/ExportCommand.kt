@@ -611,9 +611,9 @@ class ExportCommand : Command {
         "userid", "user" -> attempt.userId
         "quizid", "quiz" -> attempt.quizId
         "score" -> attempt.score.toString()
-        "totalquestions", "total" -> attempt.totalQuestions.toString()
-        "percentage", "pct" -> if (attempt.totalQuestions > 0) {
-            val pct = (attempt.score.toDouble() / attempt.totalQuestions * 100)
+        "totalquestions", "total" -> attempt.maxScore.toString()
+        "percentage", "pct" -> if (attempt.maxScore > 0) {
+            val pct = (attempt.score.toDouble() / attempt.maxScore * 100)
             String.format("%.1f%%", pct)
         } else {
             "0.0%"

@@ -36,14 +36,12 @@ data class HistoryUiState(
     val attempts: List<AttemptWithQuiz> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
-    val hasMore: Boolean = true,
-    val error: String? = null
+    val hasMore: Boolean = true
 )
 
 /** Events that can be dispatched to [HistoryViewModel]. */
 sealed class HistoryEvent {
     data object Refresh : HistoryEvent()
-    data object ClearError : HistoryEvent()
     data object LoadMore : HistoryEvent()
 }
 
@@ -99,7 +97,6 @@ class HistoryViewModel(
                 loadHistory()
             }
 
-            is HistoryEvent.ClearError -> _uiState.update { it.copy(error = null) }
             is HistoryEvent.LoadMore -> handleLoadMore()
         }
     }

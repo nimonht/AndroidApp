@@ -6,8 +6,8 @@ package com.example.androidapp.domain.model
  * @property id Unique identifier for this attempt.
  * @property userId Identifier of the user who took the quiz.
  * @property quizId Identifier of the quiz that was attempted.
- * @property score Number of correctly answered questions.
- * @property totalQuestions Total number of questions in the quiz.
+ * @property score Points earned by the user (sum of points from correctly answered questions).
+ * @property maxScore Maximum possible score for the quiz (sum of all question point values).
  * @property answers Map of answers: key is the question ID, value is a list of selected choice IDs (supports multi-select).
  * @property startTimeMillis Timestamp in milliseconds when the attempt started.
  * @property endTimeMillis Timestamp in milliseconds when the attempt ended, or null if not yet finished.
@@ -18,7 +18,7 @@ data class Attempt(
     val userId: String,
     val quizId: String,
     val score: Int,
-    val totalQuestions: Int,
+    val maxScore: Int,
     val answers: Map<String, List<String>>,
     val startTimeMillis: Long,
     val endTimeMillis: Long?,

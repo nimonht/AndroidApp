@@ -41,7 +41,16 @@ fun QuizEntity.toDomain(): Quiz = Quiz(
     isRemovedFromCloud = isRemovedFromCloud
 )
 
-/** Maps domain [Quiz] to [QuizEntity] for Room storage. */
+/**
+ * Maps domain [Quiz] to [QuizEntity] for Room storage.
+ *
+ * **Warning:** This mapper sets [QuizEntity.embedding] to `null` and
+ * [QuizEntity.embeddingVersion] to `0`. Using `@Upsert` with the result
+ * will overwrite locally-computed embeddings. Prefer [QuizDao.updateQuizMetadata]
+ * for updates that should preserve embeddings.
+ *
+ * @see com.example.androidapp.data.local.dao.QuizDao.updateQuizMetadata
+ */
 fun Quiz.toEntity(syncStatus: String = SyncStatus.SYNCED.name): QuizEntity = QuizEntity(
     id = id,
     ownerId = ownerId,
@@ -136,7 +145,7 @@ fun AttemptEntity.toDomain(): Attempt {
         userId = userId,
         quizId = quizId,
         score = score,
-        totalQuestions = maxScore,
+        maxScore = maxScore,
         answers = answers,
         startTimeMillis = startedAt,
         endTimeMillis = finishedAt,
@@ -150,7 +159,7 @@ fun Attempt.toEntity(): AttemptEntity = AttemptEntity(
     userId = userId,
     quizId = quizId,
     score = score,
-    maxScore = totalQuestions,
+    maxScore = maxScore,
     multiAnswers = gson.toJson(answers),
     startedAt = startTimeMillis,
     finishedAt = endTimeMillis,
@@ -175,13 +184,22 @@ fun UserEntity.toDomain(): User = User(
     }
 )
 
-/** Maps domain [User] to [UserEntity] for Room storage. Serializes permissions as comma-separated string. */
-fun User.toEntity(): UserEntity = UserEntity(
+/**
+ * Maps domain [User] to [UserEntity] for Room storage.
+ * Serializes permissions as comma-separated string.
+ *
+ * @param existingEntity Optional existing entity to preserve fields not present
+ *   in the domain model (e.g. [UserEntity.createdAt]). When null, [createdAt]
+ *   defaults to [System.currentTimeMillis].
+ */
+fun User.toEntity(existingEntity: UserEntity? = null): UserEntity = UserEntity(
     id = id,
     username = username,
     email = email,
     displayName = displayName,
     photoUrl = photoUrl,
     role = role.toStorageValue(),
-    permissions = permissions.joinToString(",") { it.toStorageValue() }
+    permissions = permissions.joinToString(",") { it.toStorageValue() },
+    createdAt = existingEntity?.createdAt ?: System.currentTimeMillis(),
+    deletedAt = if (isBanned) (existingEntity?.deletedAt ?: System.currentTimeMillis()) else null
 )

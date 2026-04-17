@@ -435,7 +435,7 @@ class MyCommand : Command {
             }
         }
         if (isPerfect) {
-            attempts = attempts.filter { it.score == it.totalQuestions }
+            attempts = attempts.filter { it.score == it.maxScore }
         }
         if (isFailed) {
             attempts = attempts.filter { percentageScore(it) < 50 }
@@ -457,7 +457,7 @@ class MyCommand : Command {
             "score" -> attempts.sortedByDescending { percentageScore(it) }
             "date", "time", "recent" -> attempts.sortedByDescending { it.startTimeMillis }
             "duration" -> attempts.sortedByDescending { attemptDurationMs(it) }
-            "questions" -> attempts.sortedByDescending { it.totalQuestions }
+            "questions" -> attempts.sortedByDescending { it.maxScore }
             else -> attempts.sortedByDescending { it.startTimeMillis }
         }
 
@@ -515,7 +515,7 @@ class MyCommand : Command {
         for (attempt in attempts) {
             val quizTitle = resolveQuizTitle(attempt.quizId, context)
             val pct = percentageScore(attempt)
-            val scoreText = "${attempt.score}/${attempt.totalQuestions} ($pct%)"
+            val scoreText = "${attempt.score}/${attempt.maxScore} ($pct%)"
             val duration = formatDurationMs(attemptDurationMs(attempt))
             val dateText = formatDate(attempt.startTimeMillis)
 
@@ -577,7 +577,7 @@ class MyCommand : Command {
             val duration = formatDurationMs(attemptDurationMs(attempt))
             lines.add(
                 OutputLine(
-                    "  $num. $quizTitle - ${attempt.score}/${attempt.totalQuestions} ($pct%) - $duration",
+                    "  $num. $quizTitle - ${attempt.score}/${attempt.maxScore} ($pct%) - $duration",
                     OutputStyle.NORMAL
                 )
             )
@@ -623,7 +623,7 @@ class MyCommand : Command {
                 )
             )
             lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
-            lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
+            lines.add(OutputLine("      \"totalQuestions\": ${attempt.maxScore},", OutputStyle.CODE))
             lines.add(OutputLine("      \"percentage\": $pct,", OutputStyle.CODE))
             lines.add(OutputLine("      \"durationMs\": $duration,", OutputStyle.CODE))
             lines.add(OutputLine("      \"startTime\": ${attempt.startTimeMillis}", OutputStyle.CODE))
@@ -669,7 +669,7 @@ class MyCommand : Command {
         val totalAttemptsOnMyQuizzes = myQuizzes.sumOf { it.attemptCount }
 
         val totalAttempts = attempts.size
-        val perfectAttempts = attempts.count { it.score == it.totalQuestions }
+        val perfectAttempts = attempts.count { it.score == it.maxScore }
         val avgScore = if (attempts.isNotEmpty()) {
             attempts.map { percentageScore(it) }.average()
         } else {
@@ -928,8 +928,8 @@ class MyCommand : Command {
      * Tinh diem phan tram cua mot lan lam bai.
      */
     private fun percentageScore(attempt: Attempt): Int {
-        if (attempt.totalQuestions == 0) return 0
-        return (attempt.score * 100) / attempt.totalQuestions
+        if (attempt.maxScore == 0) return 0
+        return (attempt.score * 100) / attempt.maxScore
     }
 
     /**

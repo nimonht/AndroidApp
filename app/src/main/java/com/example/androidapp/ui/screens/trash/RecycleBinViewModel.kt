@@ -6,6 +6,7 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.ui.common.UiError
+import com.example.androidapp.ui.common.UiSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +25,7 @@ data class RecycleBinUiState(
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = true,
     val error: UiError? = null,
-    val successMessage: String? = null
+    val successMessage: UiSuccess? = null
 )
 
 /** Events that can be dispatched to [RecycleBinViewModel]. */
@@ -136,7 +137,7 @@ class RecycleBinViewModel(
             val result = quizRepository.restoreQuiz(quizId)
             result.fold(
                 onSuccess = {
-                    _uiState.update { it.copy(successMessage = "Da khoi phuc bai kiem tra") }
+                    _uiState.update { it.copy(successMessage = UiSuccess.QUIZ_RESTORED) }
                 },
                 onFailure = {
                     _uiState.update { it.copy(error = UiError.RESTORE_QUIZ_FAILED) }
@@ -155,7 +156,7 @@ class RecycleBinViewModel(
             val result = quizRepository.permanentlyDeleteQuiz(quizId)
             result.fold(
                 onSuccess = {
-                    _uiState.update { it.copy(successMessage = "Da xoa vinh vien") }
+                    _uiState.update { it.copy(successMessage = UiSuccess.QUIZ_DELETED_PERMANENTLY) }
                 },
                 onFailure = {
                     _uiState.update { it.copy(error = UiError.DELETE_QUIZ_FAILED) }
@@ -181,7 +182,7 @@ class RecycleBinViewModel(
             result.fold(
                 onSuccess = {
                     _uiState.update {
-                        it.copy(isLoading = false, successMessage = "Da don sach thung rac")
+                        it.copy(isLoading = false, successMessage = UiSuccess.TRASH_EMPTIED)
                     }
                 },
                 onFailure = {

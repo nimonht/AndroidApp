@@ -7,7 +7,6 @@ import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.repository.QuizRepository
 import com.example.androidapp.domain.util.ScoreCalculator
-import com.example.androidapp.domain.util.ScoreUtil
 import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +22,6 @@ sealed class QuizResultUiState {
         val quiz: Quiz,
         val attempt: Attempt,
         val percentage: Int,
-        val starRating: Int,
         /** Sum of points the user earned (correct questions * their point values). */
         val earnedScore: Int,
         /** Sum of all question point values (maximum possible score). */
@@ -79,12 +77,10 @@ class QuizResultViewModel(
             val scoreResult = ScoreCalculator.calculatePointScore(questions, userAnswers)
 
             val percentage = if (scoreResult.maxScore > 0) (scoreResult.earnedScore * 100) / scoreResult.maxScore else 0
-            val starRating = ScoreUtil.calculateStarRating(percentage)
             _uiState.value = QuizResultUiState.Success(
                 quiz = quiz,
                 attempt = attempt,
                 percentage = percentage,
-                starRating = starRating,
                 earnedScore = scoreResult.earnedScore,
                 maxScore = scoreResult.maxScore,
                 correctCount = scoreResult.correctCount,

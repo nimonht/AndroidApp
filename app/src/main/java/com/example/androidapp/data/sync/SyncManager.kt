@@ -1,5 +1,6 @@
 package com.example.androidapp.data.sync
 
+import android.util.Log
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.dao.ChoiceDao
 import com.example.androidapp.data.local.dao.PendingSyncDao
@@ -62,6 +63,10 @@ class SyncManager(
     private val _syncState = MutableStateFlow(SyncState.IDLE)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
+    private companion object {
+        const val TAG = "SyncManager"
+    }
+
     override val consoleSyncState: StateFlow<ConsoleSyncState> = _syncState.map {
         when (it) {
             SyncState.IDLE -> ConsoleSyncState.IDLE
@@ -114,6 +119,7 @@ class SyncManager(
                 pendingSyncDao.updateStatus(operation.id, PendingSyncStatus.COMPLETED.name)
             } catch (e: Exception) {
                 hasErrors = true
+                Log.w(TAG, "Sync operation ${operation.id} (${operation.entityType}/${operation.operation}) failed", e)
                 pendingSyncDao.incrementRetryCount(
                     operation.id,
                     e.message ?: "Unknown error"
@@ -374,6 +380,7 @@ class SyncManager(
 
             _syncState.value = SyncState.IDLE
         } catch (e: Exception) {
+            Log.w(TAG, "Failed to download quizzes for user", e)
             _syncState.value = SyncState.ERROR
         }
     }
@@ -407,8 +414,8 @@ class SyncManager(
                     attemptDao.insertAttempt(attempt.toEntity())
                 }
             }
-        } catch (_: Exception) {
-            // Silently fail
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to download attempts from Firestore", e)
         }
     }
 

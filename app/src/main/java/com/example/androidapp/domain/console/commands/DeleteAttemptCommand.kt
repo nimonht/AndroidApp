@@ -293,7 +293,7 @@ class DeleteAttemptCommand : Command {
 
             for (attempt in attempts) {
                 val status = if (attempt.endTimeMillis != null) "Hoan thanh" else "Dang lam"
-                val scoreStr = "${attempt.score}/${attempt.totalQuestions}"
+                val scoreStr = "${attempt.score}/${attempt.maxScore}"
                 lines.add(
                     OutputLine(
                         CommandFormatUtils.padRight(
@@ -410,7 +410,7 @@ class DeleteAttemptCommand : Command {
                 )
             )
             lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
-            lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
+            lines.add(OutputLine("      \"totalQuestions\": ${attempt.maxScore},", OutputStyle.CODE))
             lines.add(OutputLine("      \"startTimeMillis\": ${attempt.startTimeMillis},", OutputStyle.CODE))
             val endStr = attempt.endTimeMillis?.toString() ?: "null"
             lines.add(OutputLine("      \"endTimeMillis\": $endStr", OutputStyle.CODE))
@@ -444,7 +444,7 @@ class DeleteAttemptCommand : Command {
                         "Dang xoa attempt: ${attempt.id} " +
                                 "(user=${CommandFormatUtils.truncate(attempt.userId, 12)}, " +
                                 "quiz=${CommandFormatUtils.truncate(attempt.quizId, 12)}, " +
-                                "diem=${attempt.score}/${attempt.totalQuestions})...",
+                                "diem=${attempt.score}/${attempt.maxScore})...",
                         OutputStyle.INFO
                     )
                 )

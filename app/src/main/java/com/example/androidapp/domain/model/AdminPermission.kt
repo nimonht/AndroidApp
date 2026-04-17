@@ -50,7 +50,7 @@ enum class AdminPermission {
     }
 
     /**
-     * Convert permission to lowercase string for Firestore storage.
+     * Convert permission to lowercase string for persistent storage.
      *
      * @return Lowercase representation of this permission name
      */

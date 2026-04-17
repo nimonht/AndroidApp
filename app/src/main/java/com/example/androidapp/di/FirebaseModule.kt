@@ -1,6 +1,7 @@
 package com.example.androidapp.di
 
 import android.content.Context
+import androidx.work.WorkManager
 import androidx.room.Room
 import com.example.androidapp.BuildConfig
 import com.example.androidapp.data.local.AppDatabase
@@ -30,12 +31,49 @@ import com.example.androidapp.data.repository.QuizRepositoryImpl
 import com.example.androidapp.data.repository.SearchRepositoryImpl
 import com.example.androidapp.data.repository.ShareCodeRepositoryImpl
 import com.example.androidapp.data.search.EmbeddingCache
+import com.example.androidapp.data.worker.EmbeddingIndexWorker
 import com.example.androidapp.data.sync.QuizInvalidationManager
 import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.console.CommandContext
 import com.example.androidapp.domain.console.CommandExecutor
 import com.example.androidapp.domain.console.CommandRegistry
 import com.example.androidapp.domain.console.RepositoryBundle
+import com.example.androidapp.domain.console.commands.AliasCommand
+import com.example.androidapp.domain.console.commands.BanCommand
+import com.example.androidapp.domain.console.commands.CacheCommand
+import com.example.androidapp.domain.console.commands.ClearCommand
+import com.example.androidapp.domain.console.commands.ConfigCommand
+import com.example.androidapp.domain.console.commands.CountCommand
+import com.example.androidapp.domain.console.commands.DeleteAttemptCommand
+import com.example.androidapp.domain.console.commands.DeleteCommand
+import com.example.androidapp.domain.console.commands.DeletePoolItemCommand
+import com.example.androidapp.domain.console.commands.DeleteQuizCommand
+import com.example.androidapp.domain.console.commands.DeleteUserCommand
+import com.example.androidapp.domain.console.commands.EchoCommand
+import com.example.androidapp.domain.console.commands.EmbeddingCommand
+import com.example.androidapp.domain.console.commands.ExportCommand
+import com.example.androidapp.domain.console.commands.GrepCommand
+import com.example.androidapp.domain.console.commands.HeadTailCommand
+import com.example.androidapp.domain.console.commands.HelpCommand
+import com.example.androidapp.domain.console.commands.HistoryCommand
+import com.example.androidapp.domain.console.commands.LogCommand
+import com.example.androidapp.domain.console.commands.LsCommand
+import com.example.androidapp.domain.console.commands.MyCommand
+import com.example.androidapp.domain.console.commands.PermCommand
+import com.example.androidapp.domain.console.commands.PingCommand
+import com.example.androidapp.domain.console.commands.PublishCommand
+import com.example.androidapp.domain.console.commands.PurgeCommand
+import com.example.androidapp.domain.console.commands.QuizInfoCommand
+import com.example.androidapp.domain.console.commands.RestoreCommand
+import com.example.androidapp.domain.console.commands.RoleCommand
+import com.example.androidapp.domain.console.commands.SearchCommand
+import com.example.androidapp.domain.console.commands.SortCommand
+import com.example.androidapp.domain.console.commands.StatsCommand
+import com.example.androidapp.domain.console.commands.SyncCommand
+import com.example.androidapp.domain.console.commands.UnbanCommand
+import com.example.androidapp.domain.console.commands.UnpublishCommand
+import com.example.androidapp.domain.console.commands.UserInfoCommand
+import com.example.androidapp.domain.console.commands.WhoamiCommand
 import com.example.androidapp.domain.console.ServiceBundle
 import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
@@ -55,6 +93,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.functions
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -219,8 +258,8 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         EmbeddingCache(
             quizDao = quizDao,
             reindexTrigger = {
-                com.example.androidapp.data.worker.EmbeddingIndexWorker.enqueueIfNeeded(
-                    androidx.work.WorkManager.getInstance(context)
+                EmbeddingIndexWorker.enqueueIfNeeded(
+                    WorkManager.getInstance(context)
                 )
             }
         )
@@ -230,44 +269,44 @@ class AppContainerImpl(override val context: Context) : AppContainer {
         CommandRegistry().apply {
             // Register all commands
             registerAll(
-                com.example.androidapp.domain.console.commands.HelpCommand(this@apply),
-                com.example.androidapp.domain.console.commands.WhoamiCommand(),
-                com.example.androidapp.domain.console.commands.PingCommand(),
-                com.example.androidapp.domain.console.commands.EchoCommand(),
-                com.example.androidapp.domain.console.commands.ClearCommand(),
-                com.example.androidapp.domain.console.commands.HistoryCommand(),
-                com.example.androidapp.domain.console.commands.ConfigCommand(),
-                com.example.androidapp.domain.console.commands.CacheCommand(),
-                com.example.androidapp.domain.console.commands.SyncCommand(),
-                com.example.androidapp.domain.console.commands.MyCommand(),
-                com.example.androidapp.domain.console.commands.LogCommand(),
-                com.example.androidapp.domain.console.commands.GrepCommand(),
-                com.example.androidapp.domain.console.commands.SortCommand(),
-                com.example.androidapp.domain.console.commands.HeadTailCommand(isHead = true),
-                com.example.androidapp.domain.console.commands.HeadTailCommand(isHead = false),
-                com.example.androidapp.domain.console.commands.CountCommand(),
-                com.example.androidapp.domain.console.commands.AliasCommand(),
-                com.example.androidapp.domain.console.commands.BanCommand(),
-                com.example.androidapp.domain.console.commands.UnbanCommand(),
-                com.example.androidapp.domain.console.commands.RoleCommand(),
-                com.example.androidapp.domain.console.commands.PermCommand(),
-                com.example.androidapp.domain.console.commands.UserInfoCommand(),
-                com.example.androidapp.domain.console.commands.DeleteCommand(
-                    com.example.androidapp.domain.console.commands.DeleteUserCommand(),
-                    com.example.androidapp.domain.console.commands.DeleteQuizCommand(),
-                    com.example.androidapp.domain.console.commands.DeleteAttemptCommand(),
-                    com.example.androidapp.domain.console.commands.DeletePoolItemCommand()
+                HelpCommand(this@apply),
+                WhoamiCommand(),
+                PingCommand(),
+                EchoCommand(),
+                ClearCommand(),
+                HistoryCommand(),
+                ConfigCommand(),
+                CacheCommand(),
+                SyncCommand(),
+                MyCommand(),
+                LogCommand(),
+                GrepCommand(),
+                SortCommand(),
+                HeadTailCommand(isHead = true),
+                HeadTailCommand(isHead = false),
+                CountCommand(),
+                AliasCommand(),
+                BanCommand(),
+                UnbanCommand(),
+                RoleCommand(),
+                PermCommand(),
+                UserInfoCommand(),
+                DeleteCommand(
+                    DeleteUserCommand(),
+                    DeleteQuizCommand(),
+                    DeleteAttemptCommand(),
+                    DeletePoolItemCommand()
                 ),
-                com.example.androidapp.domain.console.commands.QuizInfoCommand(),
-                com.example.androidapp.domain.console.commands.PublishCommand(),
-                com.example.androidapp.domain.console.commands.UnpublishCommand(),
-                com.example.androidapp.domain.console.commands.RestoreCommand(),
-                com.example.androidapp.domain.console.commands.LsCommand(),
-                com.example.androidapp.domain.console.commands.StatsCommand(),
-                com.example.androidapp.domain.console.commands.SearchCommand(),
-                com.example.androidapp.domain.console.commands.ExportCommand(),
-                com.example.androidapp.domain.console.commands.PurgeCommand(),
-                com.example.androidapp.domain.console.commands.EmbeddingCommand(
+                QuizInfoCommand(),
+                PublishCommand(),
+                UnpublishCommand(),
+                RestoreCommand(),
+                LsCommand(),
+                StatsCommand(),
+                SearchCommand(),
+                ExportCommand(),
+                PurgeCommand(),
+                EmbeddingCommand(
                     embeddingService, embeddingIndex
                 )
             )
@@ -280,7 +319,7 @@ class AppContainerImpl(override val context: Context) : AppContainer {
             contextProvider = {
                 // Use the cached StateFlow value from AuthRepository to avoid
                 // blocking the calling thread (autocomplete runs on the UI thread).
-                val user = (authRepository.currentUser as? kotlinx.coroutines.flow.StateFlow<User?>)?.value
+                val user = (authRepository.currentUser as? StateFlow<User?>)?.value
                     ?: User(
                         id = "guest",
                         email = "",

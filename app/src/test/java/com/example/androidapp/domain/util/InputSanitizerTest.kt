@@ -139,33 +139,33 @@ class InputSanitizerTest {
         assertFalse(InputSanitizer.containsProhibitedContent(""))
     }
 
-    // ==================== sanitizeForFirestore ====================
+    // ==================== sanitizeForStorage ====================
 
     @Test
-    fun `sanitizeForFirestore returns empty string for null input`() {
-        assertEquals("", InputSanitizer.sanitizeForFirestore(null))
+    fun `sanitizeForStorage returns empty string for null input`() {
+        assertEquals("", InputSanitizer.sanitizeForStorage(null))
     }
 
     @Test
-    fun `sanitizeForFirestore trims whitespace`() {
-        assertEquals("hello", InputSanitizer.sanitizeForFirestore("  hello  "))
+    fun `sanitizeForStorage trims whitespace`() {
+        assertEquals("hello", InputSanitizer.sanitizeForStorage("  hello  "))
     }
 
     @Test
-    fun `sanitizeForFirestore removes null bytes`() {
-        assertEquals("abc", InputSanitizer.sanitizeForFirestore("a\u0000b\u0000c"))
+    fun `sanitizeForStorage removes null bytes`() {
+        assertEquals("abc", InputSanitizer.sanitizeForStorage("a\u0000b\u0000c"))
     }
 
     @Test
-    fun `sanitizeForFirestore truncates text exceeding 10000 characters`() {
+    fun `sanitizeForStorage truncates text exceeding 10000 characters`() {
         val longText = "x".repeat(15000)
-        val result = InputSanitizer.sanitizeForFirestore(longText)
+        val result = InputSanitizer.sanitizeForStorage(longText)
         assertEquals(10000, result.length)
     }
 
     @Test
-    fun `sanitizeForFirestore preserves text within limit`() {
+    fun `sanitizeForStorage preserves text within limit`() {
         val text = "Normal text content"
-        assertEquals(text, InputSanitizer.sanitizeForFirestore(text))
+        assertEquals(text, InputSanitizer.sanitizeForStorage(text))
     }
 }

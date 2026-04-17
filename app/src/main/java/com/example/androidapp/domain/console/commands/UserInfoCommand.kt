@@ -270,7 +270,7 @@ class UserInfoCommand : Command {
                                 padEnd(attempt.id, 24) +
                                         padEnd(attempt.quizId, 24) +
                                         padEnd(
-                                            "${attempt.score}/${attempt.totalQuestions}",
+                                            "${attempt.score}/${attempt.maxScore}",
                                             12
                                         ) +
                                         padEnd(duration, 16),
@@ -287,9 +287,9 @@ class UserInfoCommand : Command {
 
                     if (verbose && attempts.isNotEmpty()) {
                         val totalScore = attempts.sumOf { it.score }
-                        val totalQuestions = attempts.sumOf { it.totalQuestions }
-                        val avgPercent = if (totalQuestions > 0) {
-                            (totalScore.toDouble() / totalQuestions * 100)
+                        val totalMaxScore = attempts.sumOf { it.maxScore }
+                        val avgPercent = if (totalMaxScore > 0) {
+                            (totalScore.toDouble() / totalMaxScore * 100)
                         } else {
                             0.0
                         }

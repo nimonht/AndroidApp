@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Pool
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -85,10 +84,11 @@ fun QuestionPoolScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var revokeTargetId by remember { mutableStateOf<String?>(null) }
     val errorMessage = uiState.error?.toMessage()
+    val successMessage = uiState.successMessage?.toMessage()
 
     LaunchedEffect(uiState.successMessage) {
-        uiState.successMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
+        if (successMessage != null) {
+            snackbarHostState.showSnackbar(successMessage)
             viewModel.onEvent(QuestionPoolEvent.ClearSuccess)
         }
     }

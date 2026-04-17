@@ -8,6 +8,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <permission
+        android:name="com.example.androidapp.permission.CONSOLE_ACCESS"
+        android:protectionLevel="signature"
+    />
+
     <application
         android:name=".QuizzezApplication"
         android:allowBackup="true"
@@ -46,10 +51,15 @@
 
             android:exported="true" is required so that the ADB shell (uid=2000) can
             deliver the broadcast from outside the app's process.
+
+            Security: a signature-level permission ensures only apps signed with the
+            same key (or ADB shell/root, which bypass permission checks) can send
+            commands. The receiver also performs a runtime UID check as defence-in-depth.
         -->
         <receiver
             android:name=".ConsoleBroadcastReceiver"
             android:exported="true"
+            android:permission="com.example.androidapp.permission.CONSOLE_ACCESS"
         >
             <intent-filter>
                 <action android:name="com.example.androidapp.CONSOLE_COMMAND" />

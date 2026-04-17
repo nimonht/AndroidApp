@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.androidapp.data.preferences.SettingsPreferences
 import com.example.androidapp.domain.repository.AuthRepository
+import com.example.androidapp.ui.common.UiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +30,7 @@ data class SettingsUiState(
     val isLoggedIn: Boolean = false,
     val showDeleteAccountDialog: Boolean = false,
     val isDeleting: Boolean = false,
-    val deleteError: String? = null,
+    val deleteError: UiError? = null,
     val accountDeleted: Boolean = false
 )
 
@@ -133,11 +134,11 @@ class SettingsViewModel(
                         onSuccess = {
                             _uiState.update { it.copy(isDeleting = false, accountDeleted = true) }
                         },
-                        onFailure = { error ->
+                        onFailure = {
                             _uiState.update {
                                 it.copy(
                                     isDeleting = false,
-                                    deleteError = error.message
+                                    deleteError = UiError.DELETE_USER_FAILED
                                 )
                             }
                         }

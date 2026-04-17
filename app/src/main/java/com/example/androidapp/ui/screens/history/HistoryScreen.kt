@@ -29,7 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
-import com.example.androidapp.domain.model.Attempt
+
 import com.example.androidapp.domain.util.ScoreUtil
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
@@ -124,7 +124,7 @@ private fun AttemptCard(
     modifier: Modifier = Modifier
 ) {
     val attempt = attemptWithQuiz.attempt
-    val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.totalQuestions)
+    val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.maxScore)
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth()
@@ -151,7 +151,7 @@ private fun AttemptCard(
                     )
                 }
                 Text(
-                    text = stringResource(R.string.score_format, attempt.score, attempt.totalQuestions),
+                    text = stringResource(R.string.score_format, attempt.score, attempt.maxScore),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

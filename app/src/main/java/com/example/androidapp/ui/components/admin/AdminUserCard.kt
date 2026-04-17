@@ -55,6 +55,9 @@ import com.example.androidapp.domain.model.User
 import com.example.androidapp.domain.model.UserRole
 import com.example.androidapp.ui.theme.QuizzezTheme
 
+/** Theme-independent gold color for superuser role badges. */
+private val SuperuserGold = Color(0xFFD4A017)
+
 /**
  * Redesigned user card for admin user management.
  *
@@ -93,18 +96,15 @@ fun AdminUserCard(
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    // Gold / amber tint for superuser
-    val superuserColor = Color(0xFFD4A017)
-
     val roleColor = when (user.role) {
-        UserRole.SUPERUSER -> superuserColor
+        UserRole.SUPERUSER -> SuperuserGold
         UserRole.ADMIN -> MaterialTheme.colorScheme.error
         UserRole.USER -> MaterialTheme.colorScheme.primary
         UserRole.GUEST -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     val avatarBorderColor = when (user.role) {
-        UserRole.SUPERUSER -> superuserColor
+        UserRole.SUPERUSER -> SuperuserGold
         UserRole.ADMIN -> MaterialTheme.colorScheme.error
         UserRole.USER -> MaterialTheme.colorScheme.primary
         UserRole.GUEST -> MaterialTheme.colorScheme.outline
@@ -345,8 +345,6 @@ private fun RoleBadge(
     roleColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val superuserColor = Color(0xFFD4A017)
-
     val roleText = when (role) {
         UserRole.SUPERUSER -> stringResource(R.string.admin_user_role_superuser)
         UserRole.ADMIN -> stringResource(R.string.admin_role_admin)
@@ -355,7 +353,7 @@ private fun RoleBadge(
     }
 
     val badgeBackground = when (role) {
-        UserRole.SUPERUSER -> superuserColor.copy(alpha = 0.15f)
+        UserRole.SUPERUSER -> SuperuserGold.copy(alpha = 0.15f)
         UserRole.ADMIN -> roleColor.copy(alpha = 0.15f)
         UserRole.USER -> roleColor.copy(alpha = 0.15f)
         UserRole.GUEST -> MaterialTheme.colorScheme.surfaceVariant

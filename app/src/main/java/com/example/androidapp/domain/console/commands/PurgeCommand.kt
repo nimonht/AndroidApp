@@ -1126,7 +1126,7 @@ class PurgeCommand : Command {
                         OutputLine(
                             "${CommandFormatUtils.csvEscape(attempt.id)},${CommandFormatUtils.csvEscape(attempt.userId)}," +
                                     "${CommandFormatUtils.csvEscape(attempt.quizId)},${attempt.score}," +
-                                    "${attempt.totalQuestions},${attempt.startTimeMillis}",
+                                    "${attempt.maxScore},${attempt.startTimeMillis}",
                             OutputStyle.TABLE_ROW
                         )
                     )
@@ -1143,7 +1143,7 @@ class PurgeCommand : Command {
                                     "\"userId\":\"${CommandFormatUtils.escapeJson(attempt.userId)}\"," +
                                     "\"quizId\":\"${CommandFormatUtils.escapeJson(attempt.quizId)}\"," +
                                     "\"score\":${attempt.score}," +
-                                    "\"totalQuestions\":${attempt.totalQuestions}," +
+                                    "\"totalQuestions\":${attempt.maxScore}," +
                                     "\"startTimeMillis\":${attempt.startTimeMillis}}$comma",
                             OutputStyle.CODE
                         )
@@ -1171,7 +1171,7 @@ class PurgeCommand : Command {
                                 CommandFormatUtils.truncate(attempt.userId, 22),
                                 CommandFormatUtils.truncate(attempt.quizId, 22),
                                 attempt.score,
-                                attempt.totalQuestions,
+                                attempt.maxScore,
                                 CommandFormatUtils.formatTimestampShort(attempt.startTimeMillis)
                             ),
                             OutputStyle.TABLE_ROW

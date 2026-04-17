@@ -6,6 +6,7 @@ import com.example.androidapp.domain.model.QuestionPoolItem
 import com.example.androidapp.domain.repository.AuthRepository
 import com.example.androidapp.domain.repository.PoolRepository
 import com.example.androidapp.ui.common.UiError
+import com.example.androidapp.ui.common.UiSuccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +37,7 @@ data class QuestionPoolUiState(
     val hasMoreContributions: Boolean = true,
     val hasMoreBrowse: Boolean = true,
     val error: UiError? = null,
-    val successMessage: String? = null
+    val successMessage: UiSuccess? = null
 )
 
 /** Events that can be dispatched to [QuestionPoolViewModel]. */
@@ -257,7 +258,7 @@ class QuestionPoolViewModel(
             val result = poolRepository.revokeContribution(poolItemId)
             result.fold(
                 onSuccess = {
-                    _uiState.update { it.copy(successMessage = "Da thu hoi cau hoi") }
+                    _uiState.update { it.copy(successMessage = UiSuccess.CONTRIBUTION_REVOKED) }
                     // Reload from Firestore to confirm the write persisted
                     loadMyContributions(loadMore = false)
                 },

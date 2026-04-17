@@ -2,7 +2,6 @@ package com.example.androidapp.data.remote
 
 import com.example.androidapp.data.remote.model.*
 import com.example.androidapp.domain.model.*
-import com.example.androidapp.domain.model.AdminPermission
 import com.google.firebase.Timestamp
 import java.util.Date
 
@@ -106,7 +105,7 @@ fun AttemptDto.toDomain() = Attempt(
     userId = userId,
     quizId = quizId,
     score = score,
-    totalQuestions = maxScore,
+    maxScore = maxScore,
     answers = multiAnswers.ifEmpty { answers.mapValues { (_, v) -> listOf(v) } },
     startTimeMillis = startedAt?.toDate()?.time ?: System.currentTimeMillis(),
     endTimeMillis = finishedAt?.toDate()?.time,
@@ -119,10 +118,12 @@ fun Attempt.toDto() = AttemptDto(
     quizId = quizId,
     questionOrder = questionOrder,
     choiceOrders = emptyMap(),
+    // Backward-compatible single-answer field: takes only the first choice per question.
+    // Multi-select answers are preserved in the multiAnswers field above.
     answers = answers.mapValues { (_, v) -> v.firstOrNull() ?: "" },
     multiAnswers = answers,
     score = score,
-    maxScore = totalQuestions,
+    maxScore = maxScore,
     startedAt = Timestamp(Date(startTimeMillis)),
     finishedAt = endTimeMillis?.let { Timestamp(Date(it)) }
 )

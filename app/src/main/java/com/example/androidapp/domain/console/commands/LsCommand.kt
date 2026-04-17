@@ -1259,7 +1259,7 @@ class LsCommand : Command {
                     ), COL_NAME
                 )
 
-                "score" -> CommandFormatUtils.padRight("${attempt.score}/${attempt.totalQuestions}", COL_SHORT)
+                "score" -> CommandFormatUtils.padRight("${attempt.score}/${attempt.maxScore}", COL_SHORT)
                 "status" -> CommandFormatUtils.padRight(
                     if (attempt.endTimeMillis != null) "Hoan thanh" else "Dang lam",
                     COL_STATUS
@@ -1324,7 +1324,7 @@ class LsCommand : Command {
                 )
             )
             lines.add(OutputLine("      \"score\": ${attempt.score},", OutputStyle.CODE))
-            lines.add(OutputLine("      \"totalQuestions\": ${attempt.totalQuestions},", OutputStyle.CODE))
+            lines.add(OutputLine("      \"totalQuestions\": ${attempt.maxScore},", OutputStyle.CODE))
             lines.add(OutputLine("      \"startTimeMillis\": ${attempt.startTimeMillis},", OutputStyle.CODE))
             lines.add(OutputLine("      \"endTimeMillis\": $endStr", OutputStyle.CODE))
             lines.add(OutputLine("    }$comma", OutputStyle.CODE))
@@ -1352,7 +1352,7 @@ class LsCommand : Command {
                     "id" -> CommandFormatUtils.csvEscape(attempt.id)
                     "user", "userid" -> CommandFormatUtils.csvEscape(attempt.userId)
                     "quiz", "quizid" -> CommandFormatUtils.csvEscape(attempt.quizId)
-                    "score" -> "${attempt.score}/${attempt.totalQuestions}"
+                    "score" -> "${attempt.score}/${attempt.maxScore}"
                     "status" -> if (attempt.endTimeMillis != null) "completed" else "incomplete"
                     "start" -> attempt.startTimeMillis.toString()
                     "end" -> attempt.endTimeMillis?.toString() ?: ""

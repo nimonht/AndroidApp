@@ -61,24 +61,19 @@ class QuizzezApplication : Application() {
      */
     private fun scheduleBackendMaintenance() {
         applicationScope.launch {
-            val wifiOnly = try {
-                appContainer.settingsPreferences.wifiOnlySync.first()
-            } catch (_: Exception) {
-                false
-            }
-
-            val networkType = if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
+            val networkType = resolvedNetworkType()
 
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(networkType)
                 .build()
 
+            val workManager = WorkManager.getInstance(this@QuizzezApplication)
+
             // Immediate one-time run for testing
             val immediateRequest = OneTimeWorkRequestBuilder<BackendMaintenanceWorker>()
                 .setConstraints(constraints)
                 .build()
-            WorkManager.getInstance(this@QuizzezApplication)
-                .enqueue(immediateRequest)
+            workManager.enqueue(immediateRequest)
 
             // Periodic schedule (15 min minimum for WorkManager)
             val periodicRequest = PeriodicWorkRequestBuilder<BackendMaintenanceWorker>(
@@ -87,7 +82,7 @@ class QuizzezApplication : Application() {
                 .setConstraints(constraints)
                 .build()
 
-            WorkManager.getInstance(this@QuizzezApplication).enqueueUniquePeriodicWork(
+            workManager.enqueueUniquePeriodicWork(
                 BackendMaintenanceWorker.WORK_NAME,
                 ExistingPeriodicWorkPolicy.UPDATE,
                 periodicRequest
@@ -102,7 +97,7 @@ class QuizzezApplication : Application() {
                     val oneShot = OneTimeWorkRequestBuilder<BackendMaintenanceWorker>()
                         .setConstraints(constraints)
                         .build()
-                    WorkManager.getInstance(this@QuizzezApplication).enqueue(oneShot)
+                    workManager.enqueue(oneShot)
                     Log.d(TAG, "Debug: enqueued maintenance one-shot")
                 }
             }
@@ -122,19 +117,14 @@ class QuizzezApplication : Application() {
                 true
             }
 
+            val workManager = WorkManager.getInstance(this@QuizzezApplication)
+
             if (!autoSync) {
-                WorkManager.getInstance(this@QuizzezApplication)
-                    .cancelUniqueWork(BackgroundSyncWorker.WORK_NAME)
+                workManager.cancelUniqueWork(BackgroundSyncWorker.WORK_NAME)
                 return@launch
             }
 
-            val wifiOnly = try {
-                appContainer.settingsPreferences.wifiOnlySync.first()
-            } catch (_: Exception) {
-                false
-            }
-
-            val networkType = if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
+            val networkType = resolvedNetworkType()
 
             val syncConstraints = Constraints.Builder()
                 .setRequiredNetworkType(networkType)
@@ -146,7 +136,7 @@ class QuizzezApplication : Application() {
                 .setConstraints(syncConstraints)
                 .build()
 
-            WorkManager.getInstance(this@QuizzezApplication).enqueueUniquePeriodicWork(
+            workManager.enqueueUniquePeriodicWork(
                 BackgroundSyncWorker.WORK_NAME,
                 ExistingPeriodicWorkPolicy.UPDATE,
                 syncRequest
@@ -158,7 +148,7 @@ class QuizzezApplication : Application() {
      * Enqueues the [EmbeddingIndexWorker] to generate text embeddings
      * for any quizzes that are missing up-to-date vectors.
      * Runs once at startup; incremental updates are triggered by
-     * quiz create/update operations in [QuizRepositoryImpl].
+     * quiz create/update operations in [QuizRepository].
      */
     private fun scheduleEmbeddingIndex() {
         EmbeddingIndexWorker.enqueueFullIndex(
@@ -181,6 +171,19 @@ class QuizzezApplication : Application() {
                 android.os.Process.killProcess(android.os.Process.myPid())
             }
         }
+    }
+
+    /**
+     * Resolves the required [NetworkType] based on user preferences.
+     * Returns [NetworkType.UNMETERED] if wifi-only sync is enabled, otherwise [NetworkType.CONNECTED].
+     */
+    private suspend fun resolvedNetworkType(): NetworkType {
+        val wifiOnly = try {
+            appContainer.settingsPreferences.wifiOnlySync.first()
+        } catch (_: Exception) {
+            false
+        }
+        return if (wifiOnly) NetworkType.UNMETERED else NetworkType.CONNECTED
     }
 
     companion object {

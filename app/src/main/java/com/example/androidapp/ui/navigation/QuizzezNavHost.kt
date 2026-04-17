@@ -68,7 +68,8 @@ import com.example.androidapp.ui.screens.trash.TrashScreen
 @Composable
 fun QuizzezNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Routes.HOME
+    startDestination: String = Routes.HOME,
+    modifier: Modifier = Modifier
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -96,6 +97,7 @@ fun QuizzezNavHost(
     }
 
     Scaffold(
+        modifier = modifier,
         bottomBar = {
             // Show bottom navigation bar only on main screens
             if (shouldShowBottomBar(currentRoute)) {
@@ -360,10 +362,10 @@ fun QuizzezNavHost(
             // ==================== User Screens ====================
             composable(Routes.SETTINGS) {
                 val container = LocalAppContainer
-                val settingsViewModel = androidx.lifecycle.viewmodel.compose.viewModel<SettingsViewModel>(
-                    factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                val settingsViewModel = viewModel<SettingsViewModel>(
+                    factory = object : ViewModelProvider.Factory {
                         @Suppress("UNCHECKED_CAST")
-                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
                             return SettingsViewModel(
                                 settingsPreferences = container.settingsPreferences,
                                 authRepository = container.authRepository

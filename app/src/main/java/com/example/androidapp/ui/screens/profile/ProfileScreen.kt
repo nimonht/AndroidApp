@@ -48,6 +48,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.example.androidapp.R
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.ui.theme.QuizzezTheme
@@ -275,10 +277,10 @@ internal fun AvatarImage(
 ) {
     val sizeDp = size.dp
     if (photoUrl != null) {
-        coil.compose.AsyncImage(
+        AsyncImage(
             model = photoUrl,
             contentDescription = null,
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            contentScale = ContentScale.Crop,
             modifier = modifier
                 .size(sizeDp)
                 .clip(CircleShape)

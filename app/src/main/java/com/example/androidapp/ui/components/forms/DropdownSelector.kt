@@ -5,7 +5,6 @@ package com.example.androidapp.ui.components.forms
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -73,6 +72,7 @@ fun DropdownSelector(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
+
                         helperText != null -> {
                             Text(
                                 text = helperText,

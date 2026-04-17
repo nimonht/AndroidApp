@@ -7,7 +7,7 @@ package com.example.androidapp.domain.util
 object InputSanitizer {
 
     private const val DEFAULT_MAX_LENGTH = 1000
-    private const val FIRESTORE_MAX_LENGTH = 10000
+    private const val STORAGE_MAX_LENGTH = 10000
 
     private val CONTROL_CHAR_PATTERN = Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]")
     private val SCRIPT_TAG_PATTERN = Regex("<\\s*script", RegexOption.IGNORE_CASE)
@@ -57,23 +57,23 @@ object InputSanitizer {
      */
     fun containsProhibitedContent(input: String): Boolean {
         return SCRIPT_TAG_PATTERN.containsMatchIn(input) ||
-            JAVASCRIPT_URL_PATTERN.containsMatchIn(input) ||
-            DATA_URL_PATTERN.containsMatchIn(input)
+                JAVASCRIPT_URL_PATTERN.containsMatchIn(input) ||
+                DATA_URL_PATTERN.containsMatchIn(input)
     }
 
     /**
-     * Sanitizes input for safe storage in Firestore by trimming whitespace,
-     * removing null bytes, and limiting length to [FIRESTORE_MAX_LENGTH] characters.
+     * Sanitizes input for safe persistent storage by trimming whitespace,
+     * removing null bytes, and limiting length to [STORAGE_MAX_LENGTH] characters.
      *
      * @param input The raw text input, may be null.
-     * @return A sanitized string suitable for Firestore, or an empty string if input is null.
+     * @return A sanitized string suitable for storage, or an empty string if input is null.
      */
-    fun sanitizeForFirestore(input: String?): String {
+    fun sanitizeForStorage(input: String?): String {
         if (input == null) return ""
         val trimmed = input.trim()
         val cleaned = trimmed.replace("\u0000", "")
-        return if (cleaned.length > FIRESTORE_MAX_LENGTH) {
-            cleaned.substring(0, FIRESTORE_MAX_LENGTH)
+        return if (cleaned.length > STORAGE_MAX_LENGTH) {
+            cleaned.substring(0, STORAGE_MAX_LENGTH)
         } else {
             cleaned
         }

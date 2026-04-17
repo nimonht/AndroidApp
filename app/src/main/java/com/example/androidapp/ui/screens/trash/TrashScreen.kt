@@ -45,7 +45,6 @@ import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.di.LocalAppContainer
 import com.example.androidapp.domain.model.Quiz
 import com.example.androidapp.ui.components.common.AppAlertDialog
-import com.example.androidapp.ui.components.common.DeleteConfirmDialog
 import com.example.androidapp.ui.components.feedback.EmptyState
 import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.navigation.AppTopBar
@@ -76,9 +75,10 @@ fun TrashScreen(
     var showEmptyTrashDialog by remember { mutableStateOf(false) }
     var quizToDeletePermanently by remember { mutableStateOf<String?>(null) }
 
+    val successMessage = uiState.successMessage?.toMessage()
     LaunchedEffect(uiState.successMessage) {
-        uiState.successMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
+        if (successMessage != null) {
+            snackbarHostState.showSnackbar(successMessage)
             viewModel.onEvent(RecycleBinEvent.ClearMessage)
         }
     }

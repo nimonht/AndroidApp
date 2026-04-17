@@ -6,8 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Domain-layer interface for network connectivity status.
  *
  * Provides reactive streams for monitoring online status and WiFi
- * connectivity without coupling to the concrete
- * [com.example.androidapp.data.network.NetworkMonitor].
+ * connectivity without coupling to the concrete implementation in the data layer.
  */
 interface NetworkService {
     /** Whether the device currently has internet connectivity. */

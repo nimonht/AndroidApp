@@ -5,17 +5,17 @@ package com.example.androidapp.ui.screens.search
  */
 sealed class SearchEvent {
     data class OnQueryChange(val query: String) : SearchEvent()
-    object OnClearSearch : SearchEvent()
+    data object OnClearSearch : SearchEvent()
     data class OnSearchClicked(val query: String) : SearchEvent()
     data class OnRecentSearchClicked(val query: String) : SearchEvent()
-    object OnClearRecentSearches : SearchEvent()
+    data object OnClearRecentSearches : SearchEvent()
 
     // Tag filter
     data class OnTagToggle(val tag: String) : SearchEvent()
     data class OnDiscoverTagToggle(val tag: String) : SearchEvent()
 
     // View mode
-    object OnToggleViewMode : SearchEvent()
+    data object OnToggleViewMode : SearchEvent()
 
     // Sort
     data class OnSortOptionSelected(val option: SortOption) : SearchEvent()

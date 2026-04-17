@@ -6,8 +6,7 @@ import kotlinx.coroutines.flow.Flow
  * Domain-layer interface for application settings access.
  *
  * Exposes reactive [Flow]s for reading preferences and suspending setters
- * for writing changes, without coupling to the concrete
- * [com.example.androidapp.data.preferences.SettingsPreferences].
+ * for writing changes, without coupling to the concrete implementation in the data layer.
  */
 interface SettingsService {
 

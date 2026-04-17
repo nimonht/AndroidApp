@@ -27,7 +27,6 @@ data class HomeUiState(
     val joinCodeError: UiError? = null,
     val isJoining: Boolean = false,
     val joinedQuizId: String? = null,
-    val error: String? = null,
     val isLoggedIn: Boolean = false,
     val displayName: String = "",
     val photoUrl: String? = null,
@@ -45,7 +44,6 @@ sealed class HomeEvent {
     data class JoinCodeChanged(val code: String) : HomeEvent()
     data class JoinQuiz(val code: String) : HomeEvent()
     data object Refresh : HomeEvent()
-    data object ClearError : HomeEvent()
     data object ClearJoinResult : HomeEvent()
 }
 
@@ -121,7 +119,6 @@ class HomeViewModel(
 
             is HomeEvent.JoinQuiz -> onJoinQuiz(event.code)
             is HomeEvent.Refresh -> onRefresh()
-            is HomeEvent.ClearError -> _uiState.update { it.copy(error = null) }
             is HomeEvent.ClearJoinResult -> _uiState.update { it.copy(joinedQuizId = null) }
         }
     }

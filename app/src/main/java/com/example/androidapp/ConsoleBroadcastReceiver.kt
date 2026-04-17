@@ -3,6 +3,8 @@ package com.example.androidapp
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
+import android.os.Process
 import android.util.Base64
 import android.util.Log
 import com.example.androidapp.domain.console.OutputStyle
@@ -18,6 +20,18 @@ import java.io.IOException
  * ADB-to-console bridge that allows the Quizzez MCP server to execute
  * in-app console commands on a real device or emulator in **any build type**
  * (debug or release).
+ *
+ * ## Security
+ *
+ * Two layers of protection prevent arbitrary apps from executing commands:
+ *
+ * 1. **Signature-level permission** (`com.example.androidapp.permission.CONSOLE_ACCESS`)
+ *    declared in `AndroidManifest.xml` with `android:protectionLevel="signature"`.
+ *    Only apps signed with the same certificate can hold this permission.
+ * 2. **UID allowlist in [onReceive]**: even if the permission check passes, the
+ *    receiver rejects callers whose UID is not [Process.SHELL_UID] (ADB, uid 2000)
+ *    or [Process.ROOT_UID] (uid 0). This ensures only ADB or root can trigger
+ *    command execution at runtime.
  *
  * ## Why this exists
  *
@@ -83,10 +97,16 @@ import java.io.IOException
  */
 class ConsoleBroadcastReceiver : BroadcastReceiver() {
 
-    private val gson = Gson()
-
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != ACTION) return
+
+        // Allow ADB shell (uid 2000) to send commands without the signature permission.
+        // Other callers must hold the signature-level CONSOLE_ACCESS permission.
+        val callingUid = Binder.getCallingUid()
+        if (callingUid != Process.SHELL_UID && callingUid != Process.ROOT_UID) {
+            Log.w(TAG, "Rejected console command from unauthorized caller (uid=$callingUid).")
+            return
+        }
 
         val command = intent.getStringExtra(EXTRA_COMMAND)?.trim()
         if (command.isNullOrEmpty()) {
@@ -252,6 +272,7 @@ class ConsoleBroadcastReceiver : BroadcastReceiver() {
     // -------------------------------------------------------------------------
 
     companion object {
+        private val gson = Gson()
         private const val TAG = "ConsoleBroadcastReceiver"
 
         /**

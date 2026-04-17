@@ -1,5 +1,6 @@
 package com.example.androidapp.data.repository
 
+import android.util.Log
 import com.example.androidapp.data.local.dao.AttemptDao
 import com.example.androidapp.data.local.entity.SyncEntityType
 import com.example.androidapp.data.local.entity.SyncOperation
@@ -9,13 +10,9 @@ import com.example.androidapp.data.sync.SyncManager
 import com.example.androidapp.domain.model.Attempt
 import com.example.androidapp.domain.repository.AttemptRepository
 import com.example.androidapp.domain.util.safeCall
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 /**
@@ -27,7 +24,9 @@ class AttemptRepositoryImpl(
     private val syncManager: SyncManager
 ) : AttemptRepository {
 
-    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private companion object {
+        const val TAG = "AttemptRepositoryImpl"
+    }
 
     override fun getAttemptsByUser(userId: String): Flow<List<Attempt>> {
         return attemptDao.getAttemptsByUser(userId).map { entities ->
@@ -37,8 +36,8 @@ class AttemptRepositoryImpl(
             // history is available when logging in on a new device.
             try {
                 syncManager.downloadAttempts(userId)
-            } catch (_: Exception) {
-                // Silently fail; local data is still emitted by the Flow
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to download attempts from Firestore", e)
             }
         }
     }
@@ -65,18 +64,12 @@ class AttemptRepositoryImpl(
             // Write to Room first
             attemptDao.insertAttempt(finalAttempt.toEntity())
 
-            // Enqueue sync operation
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.ATTEMPT,
-                        attemptId,
-                        SyncOperation.CREATE
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.ATTEMPT,
+                attemptId,
+                SyncOperation.CREATE
+            )
 
             attemptId
         }
@@ -87,18 +80,12 @@ class AttemptRepositoryImpl(
             // Write to Room first
             attemptDao.updateAttempt(attempt.toEntity())
 
-            // Enqueue sync operation
-            ioScope.launch {
-                try {
-                    syncManager.enqueueSync(
-                        SyncEntityType.ATTEMPT,
-                        attempt.id,
-                        SyncOperation.UPDATE
-                    )
-                } catch (_: Exception) {
-                    // Sync will retry automatically when online
-                }
-            }
+            // Enqueue sync operation synchronously to ensure durability
+            syncManager.enqueueSync(
+                SyncEntityType.ATTEMPT,
+                attempt.id,
+                SyncOperation.UPDATE
+            )
 
             Unit
         }
@@ -118,8 +105,8 @@ class AttemptRepositoryImpl(
         }.onStart {
             try {
                 syncManager.downloadAttempts(userId)
-            } catch (_: Exception) {
-                // Silently fail; local data is still emitted by the Flow
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to download attempts from Firestore", e)
             }
         }
     }

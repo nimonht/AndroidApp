@@ -93,7 +93,7 @@ fun StatisticCard(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
-                    tint = Color.White
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
 

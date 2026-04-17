@@ -71,7 +71,7 @@ class AttemptDetailViewModel(
                 return@launch
             }
             val quiz = quizRepository.getQuizById(attempt.quizId)
-            val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.totalQuestions)
+            val percentage = ScoreUtil.calculatePercentage(attempt.score, attempt.maxScore)
             val starRating = ScoreUtil.calculateStarRating(percentage)
             val timeTakenMs = if (attempt.endTimeMillis != null) {
                 maxOf(0L, attempt.endTimeMillis - attempt.startTimeMillis)

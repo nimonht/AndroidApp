@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.androidapp.R
 import com.example.androidapp.data.preferences.SettingsPreferences
+import com.example.androidapp.ui.common.toMessage
 import com.example.androidapp.ui.components.forms.SwitchToggle
 import com.example.androidapp.ui.components.navigation.AppTopBar
 import com.example.androidapp.ui.theme.QuizzezTheme
@@ -101,7 +102,7 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { viewModel.onEvent(SettingsEvent.ClearDeleteError) },
             title = { Text(stringResource(R.string.error)) },
-            text = { Text(uiState.deleteError ?: "") },
+            text = { Text(uiState.deleteError?.toMessage() ?: "") },
             confirmButton = {
                 TextButton(onClick = { viewModel.onEvent(SettingsEvent.ClearDeleteError) }) {
                     Text(stringResource(R.string.ok))
