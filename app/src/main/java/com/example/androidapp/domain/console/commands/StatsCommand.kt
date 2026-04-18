@@ -256,7 +256,7 @@ class StatsCommand : Command {
                 OutputLine(
                     formatTableRow(
                         "Ty le hoat dong",
-                        String.format("%.1f%%", activePercent)
+                        String.format(java.util.Locale.ROOT, "%.1f%%", activePercent)
                     ),
                     OutputStyle.MUTED
                 )
@@ -318,7 +318,7 @@ class StatsCommand : Command {
                 OutputLine(
                     formatTableRow(
                         "Ty le cong khai",
-                        String.format("%.1f%%", publicPercent)
+                        String.format(java.util.Locale.ROOT, "%.1f%%", publicPercent)
                     ),
                     OutputStyle.MUTED
                 )
@@ -349,7 +349,7 @@ class StatsCommand : Command {
                 OutputLine(
                     formatTableRow(
                         "Trung binh/quiz",
-                        String.format("%.2f", avgAttempts)
+                        String.format(java.util.Locale.ROOT, "%.2f", avgAttempts)
                     ),
                     OutputStyle.MUTED
                 )
@@ -505,7 +505,7 @@ class StatsCommand : Command {
             lines.add(OutputLine("    \"regular\": $regularUsers,", OutputStyle.CODE))
             lines.add(
                 OutputLine(
-                    "    \"active_percentage\": ${String.format("%.1f", activePercent)}",
+                    "    \"active_percentage\": ${String.format(java.util.Locale.ROOT, "%.1f", activePercent)}",
                     OutputStyle.CODE
                 )
             )
@@ -541,7 +541,7 @@ class StatsCommand : Command {
             )
             lines.add(
                 OutputLine(
-                    "    \"public_percentage\": ${String.format("%.1f", publicPercent)}",
+                    "    \"public_percentage\": ${String.format(java.util.Locale.ROOT, "%.1f", publicPercent)}",
                     OutputStyle.CODE
                 )
             )
@@ -573,7 +573,7 @@ class StatsCommand : Command {
             lines.add(OutputLine("    \"total\": ${stats.totalAttempts},", OutputStyle.CODE))
             lines.add(
                 OutputLine(
-                    "    \"average_per_quiz\": ${String.format("%.2f", avgAttempts)}",
+                    "    \"average_per_quiz\": ${String.format(java.util.Locale.ROOT, "%.2f", avgAttempts)}",
                     OutputStyle.CODE
                 )
             )

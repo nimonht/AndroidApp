@@ -16,11 +16,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.automirrored.filled.Segment
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.Segment
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
@@ -217,7 +217,7 @@ private fun suggestionTypeVisuals(type: SuggestionType): Pair<ImageVector, Color
     val colorScheme = MaterialTheme.colorScheme
     return when (type) {
         SuggestionType.COMMAND -> Icons.Filled.Terminal to colorScheme.suggestionCommand
-        SuggestionType.SUBCOMMAND -> Icons.Filled.Segment to colorScheme.suggestionSubcommand
+        SuggestionType.SUBCOMMAND -> Icons.AutoMirrored.Filled.Segment to colorScheme.suggestionSubcommand
         SuggestionType.FLAG -> Icons.Filled.Flag to colorScheme.suggestionFlag
         SuggestionType.ARGUMENT -> Icons.Filled.Code to colorScheme.onSurfaceVariant
         SuggestionType.USER -> Icons.Filled.Person to colorScheme.suggestionUser

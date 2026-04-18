@@ -5,9 +5,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -58,7 +58,7 @@ fun SearchControlsRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { expanded = true }) {
                 Icon(
-                    imageVector = Icons.Default.Sort,
+                    imageVector = Icons.AutoMirrored.Filled.Sort,
                     contentDescription = stringResource(R.string.sort_tooltip),
                     modifier = Modifier.padding(end = 8.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -89,7 +89,7 @@ fun SearchControlsRow(
         // Cụm bên phải: Nút chuyển đổi Grid/List
         IconButton(onClick = onToggleView) {
             Icon(
-                imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                imageVector = if (isGridView) Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
                 contentDescription = stringResource(R.string.toggle_view_cd),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

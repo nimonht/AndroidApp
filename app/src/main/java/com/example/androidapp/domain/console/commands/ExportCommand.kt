@@ -614,7 +614,7 @@ class ExportCommand : Command {
         "totalquestions", "total" -> attempt.maxScore.toString()
         "percentage", "pct" -> if (attempt.maxScore > 0) {
             val pct = (attempt.score.toDouble() / attempt.maxScore * 100)
-            String.format("%.1f%%", pct)
+            String.format(java.util.Locale.ROOT, "%.1f%%", pct)
         } else {
             "0.0%"
         }
@@ -699,7 +699,7 @@ class ExportCommand : Command {
         "activeusers" to stats.activeUsers.toString(),
         "publicquizzes" to stats.publicQuizzes.toString(),
         "privatequizzes" to stats.privateQuizzes.toString(),
-        "avgattemptsperquiz" to String.format("%.2f", stats.averageAttemptsPerQuiz)
+        "avgattemptsperquiz" to String.format(java.util.Locale.ROOT, "%.2f", stats.averageAttemptsPerQuiz)
     )
 
     /**

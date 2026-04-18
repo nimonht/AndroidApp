@@ -68,7 +68,7 @@ fun RoleSelector(
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             textStyle = MaterialTheme.typography.titleMedium,
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = enabled)
                 .fillMaxWidth()
         )
 

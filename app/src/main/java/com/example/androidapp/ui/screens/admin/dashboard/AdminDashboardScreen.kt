@@ -603,7 +603,7 @@ private fun InsightsSection(
             title = stringResource(R.string.admin_insight_engagement_title),
             description = stringResource(
                 R.string.admin_insight_engagement_desc,
-                String.format("%.1f", stats.averageAttemptsPerQuiz)
+                String.format(Locale.ROOT, "%.1f", stats.averageAttemptsPerQuiz)
             ),
             icon = Icons.AutoMirrored.Filled.TrendingUp,
             accentColor = MaterialTheme.colorScheme.primary,
@@ -615,7 +615,7 @@ private fun InsightsSection(
             description = stringResource(
                 R.string.admin_insight_growth_desc,
                 stats.activeUsers.toString(),
-                String.format("%.0f", stats.activeUserPercentage)
+                String.format(Locale.ROOT, "%.0f", stats.activeUserPercentage)
             ),
             icon = Icons.Default.Group,
             accentColor = MaterialTheme.colorScheme.secondary,
