@@ -16,11 +16,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.automirrored.filled.Segment
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.Segment
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
