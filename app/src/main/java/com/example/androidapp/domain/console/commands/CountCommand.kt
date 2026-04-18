@@ -210,7 +210,7 @@ class CountCommand : Command {
         )
         output.add(
             OutputLine(
-                String.format("  %-30s %s", "GIA TRI", "SO LUONG"),
+                String.format(java.util.Locale.ROOT, "  %-30s %s", "GIA TRI", "SO LUONG"),
                 OutputStyle.TABLE_HEADER
             )
         )
