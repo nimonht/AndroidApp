@@ -58,7 +58,7 @@ fun SearchControlsRow(
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { expanded = true }) {
                 Icon(
-                    imageVector = Icons.Default.Sort,
+                    imageVector = Icons.AutoMirrored.Default.Sort,
                     contentDescription = stringResource(R.string.sort_tooltip),
                     modifier = Modifier.padding(end = 8.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -89,7 +89,7 @@ fun SearchControlsRow(
         // Cụm bên phải: Nút chuyển đổi Grid/List
         IconButton(onClick = onToggleView) {
             Icon(
-                imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                imageVector = if (isGridView) Icons.AutoMirrored.Default.ViewList else Icons.Default.GridView,
                 contentDescription = stringResource(R.string.toggle_view_cd),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

@@ -1014,6 +1014,7 @@ class PurgeCommand : Command {
                     lines.add(
                         OutputLine(
                             String.format(
+                                java.util.Locale.ROOT,
                                 "  %-24s %-28s %-24s %d",
                                 CommandFormatUtils.truncate(quiz.id, 22),
                                 CommandFormatUtils.truncate(quiz.title, 26),
@@ -1166,6 +1167,7 @@ class PurgeCommand : Command {
                     lines.add(
                         OutputLine(
                             String.format(
+                                java.util.Locale.ROOT,
                                 "  %-24s %-24s %-24s %-8d %-8d %s",
                                 CommandFormatUtils.truncate(attempt.id, 22),
                                 CommandFormatUtils.truncate(attempt.userId, 22),

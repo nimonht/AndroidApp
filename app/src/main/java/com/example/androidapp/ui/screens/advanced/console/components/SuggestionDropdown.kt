@@ -217,7 +217,7 @@ private fun suggestionTypeVisuals(type: SuggestionType): Pair<ImageVector, Color
     val colorScheme = MaterialTheme.colorScheme
     return when (type) {
         SuggestionType.COMMAND -> Icons.Filled.Terminal to colorScheme.suggestionCommand
-        SuggestionType.SUBCOMMAND -> Icons.Filled.Segment to colorScheme.suggestionSubcommand
+        SuggestionType.SUBCOMMAND -> Icons.AutoMirrored.Filled.Segment to colorScheme.suggestionSubcommand
         SuggestionType.FLAG -> Icons.Filled.Flag to colorScheme.suggestionFlag
         SuggestionType.ARGUMENT -> Icons.Filled.Code to colorScheme.onSurfaceVariant
         SuggestionType.USER -> Icons.Filled.Person to colorScheme.suggestionUser
