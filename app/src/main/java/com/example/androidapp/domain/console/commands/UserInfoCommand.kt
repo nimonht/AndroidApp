@@ -208,8 +208,8 @@ class UserInfoCommand : Command {
                 } else {
                     lines.add(
                         OutputLine(
-                            padEnd("ID", 24) + padEnd("Tieu de", 32) +
-                                    padEnd("Cong khai", 12) + padEnd("Luot thi", 10),
+                            "ID".padEnd(24) + "Tieu de".padEnd(32) +
+                                    "Cong khai".padEnd(12) + "Luot thi".padEnd(10),
                             OutputStyle.TABLE_HEADER
                         )
                     )
@@ -218,10 +218,10 @@ class UserInfoCommand : Command {
                         val draft = if (quiz.isDraft) " [Nhap]" else ""
                         lines.add(
                             OutputLine(
-                                padEnd(quiz.id, 24) +
-                                        padEnd(CommandFormatUtils.truncate(quiz.title, 28) + draft, 32) +
-                                        padEnd(visibility, 12) +
-                                        padEnd(quiz.attemptCount.toString(), 10),
+                                quiz.id.padEnd(24) +
+                                        (CommandFormatUtils.truncate(quiz.title, 28) + draft).padEnd(32) +
+                                        visibility.padEnd(12) +
+                                        quiz.attemptCount.toString().padEnd(10),
                                 OutputStyle.TABLE_ROW
                             )
                         )
@@ -254,8 +254,8 @@ class UserInfoCommand : Command {
                 } else {
                     lines.add(
                         OutputLine(
-                            padEnd("ID", 24) + padEnd("Quiz ID", 24) +
-                                    padEnd("Diem", 12) + padEnd("Thoi gian (ms)", 16),
+                            "ID".padEnd(24) + "Quiz ID".padEnd(24) +
+                                    "Diem".padEnd(12) + "Thoi gian (ms)".padEnd(16),
                             OutputStyle.TABLE_HEADER
                         )
                     )
@@ -267,13 +267,10 @@ class UserInfoCommand : Command {
                         }
                         lines.add(
                             OutputLine(
-                                padEnd(attempt.id, 24) +
-                                        padEnd(attempt.quizId, 24) +
-                                        padEnd(
-                                            "${attempt.score}/${attempt.maxScore}",
-                                            12
-                                        ) +
-                                        padEnd(duration, 16),
+                                attempt.id.padEnd(24) +
+                                        attempt.quizId.padEnd(24) +
+                                        "${attempt.score}/${attempt.maxScore}".padEnd(12) +
+                                        duration.padEnd(16),
                                 OutputStyle.TABLE_ROW
                             )
                         )
