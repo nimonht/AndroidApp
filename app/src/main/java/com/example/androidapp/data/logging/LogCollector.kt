@@ -96,7 +96,7 @@ class LogCollector(
      * Date format used to parse the logcat timestamp into epoch milliseconds.
      * Logcat outputs `MM-dd HH:mm:ss.SSS`; we prepend the current year.
      */
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+    private val dateFormat = SimpleDateFormat(TIMESTAMP_FORMAT, Locale.US)
 
     /**
      * Starts the logcat reader coroutine. Safe to call multiple times;
@@ -171,7 +171,7 @@ class LogCollector(
      *   string if no entries are captured.
      */
     override fun export(): String {
-        val exportFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+        val exportFormat = SimpleDateFormat(TIMESTAMP_FORMAT, Locale.US)
         return _logs.value.joinToString("\n") { entry ->
             val timestamp = exportFormat.format(entry.timestamp)
             val level = entry.level.abbreviation
@@ -255,6 +255,9 @@ class LogCollector(
     }
 
     private companion object {
+        /** Timestamp format used for both logcat parsing and log export. */
+        const val TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
+
         /** Maximum entries to accumulate before flushing to StateFlow. */
         const val FLUSH_BATCH_SIZE = 50
 

@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -208,7 +209,7 @@ fun MultiSelectDropdown(
                         label = { Text(option) },
                         trailingIcon = {
                             Icon(
-                                imageVector = Icons.Default.Check,
+                                imageVector = Icons.Default.Close,
                                 contentDescription = stringResource(R.string.remove_option, option),
                                 modifier = Modifier.size(16.dp)
                             )

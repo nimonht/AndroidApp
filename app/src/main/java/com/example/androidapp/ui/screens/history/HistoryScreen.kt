@@ -96,8 +96,8 @@ fun HistoryScreen(
                 // Pagination: load more trigger
                 if (uiState.hasMore) {
                     item {
-                        LaunchedEffect(uiState.isLoadingMore) {
-                            if (!uiState.isLoadingMore) viewModel.onEvent(HistoryEvent.LoadMore)
+                        LaunchedEffect(Unit) {
+                            viewModel.onEvent(HistoryEvent.LoadMore)
                         }
                         Box(
                             modifier = Modifier

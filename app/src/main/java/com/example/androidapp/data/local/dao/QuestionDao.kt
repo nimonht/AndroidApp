@@ -40,10 +40,10 @@ interface QuestionDao {
     suspend fun getQuestionCount(quizId: String): Int
 
     /**
-     * Insert a question, or update it if it already exists.
+     * Upsert a question, or update it if it already exists.
      */
     @Upsert
-    suspend fun insertQuestion(question: QuestionEntity)
+    suspend fun upsertQuestion(question: QuestionEntity)
 
     /**
      * Update an existing question.

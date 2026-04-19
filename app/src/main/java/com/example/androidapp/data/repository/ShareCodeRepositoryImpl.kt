@@ -17,7 +17,6 @@ class ShareCodeRepositoryImpl(
     private val remoteDataSource: ShareCodeRemoteDataSource
 ) : ShareCodeRepository {
 
-    /** {@inheritDoc} */
     override suspend fun lookupQuizId(shareCode: String): Result<String?> {
         return safeCall {
             val dto = remoteDataSource.lookupShareCode(shareCode)
@@ -25,10 +24,9 @@ class ShareCodeRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun generateShareCode(quizId: String): Result<String> {
         return safeCall {
-            val maxAttempts = 10
+            val maxAttempts = MAX_SHARE_CODE_ATTEMPTS
 
             repeat(maxAttempts) {
                 val code = ShareCodeUtil.generateCode()
@@ -43,14 +41,12 @@ class ShareCodeRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun deleteShareCode(shareCode: String): Result<Unit> {
         return safeCall {
             remoteDataSource.deleteShareCode(shareCode)
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun regenerateShareCode(
         quizId: String,
         oldShareCode: String
@@ -65,14 +61,12 @@ class ShareCodeRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun validateShareCode(shareCode: String): Result<String> {
         return safeCall {
             // Validate format locally first to avoid unnecessary network calls
             val normalizedCode = shareCode.trim().uppercase()
-            val pattern = Regex("^[A-Z0-9]{6}$")
 
-            if (!pattern.matches(normalizedCode)) {
+            if (!SHARE_CODE_PATTERN.matches(normalizedCode)) {
                 throw IllegalArgumentException("Invalid share code format: must be 6 alphanumeric characters")
             }
 
@@ -83,5 +77,10 @@ class ShareCodeRepositoryImpl(
                 throw IllegalArgumentException("Share code does not exist or is not associated with a quiz")
             }
         }
+    }
+
+    companion object {
+        private val SHARE_CODE_PATTERN = Regex("^[A-Z0-9]{6}$")
+        private const val MAX_SHARE_CODE_ATTEMPTS = 10
     }
 }

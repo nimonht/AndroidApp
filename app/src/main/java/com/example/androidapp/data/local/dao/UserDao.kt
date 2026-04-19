@@ -21,10 +21,10 @@ interface UserDao {
     suspend fun getUserById(userId: String): UserEntity?
 
     /**
-     * Insert a user, or update it if it already exists.
+     * Upsert a user (insert or update if it already exists).
      */
     @Upsert
-    suspend fun insertUser(user: UserEntity)
+    suspend fun upsertUser(user: UserEntity)
 
     /**
      * Update an existing user.

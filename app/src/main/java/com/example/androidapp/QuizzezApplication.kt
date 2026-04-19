@@ -16,7 +16,6 @@ import com.example.androidapp.di.AppContainerImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -51,13 +50,8 @@ class QuizzezApplication : Application() {
     /**
      * Schedules the [BackendMaintenanceWorker].
      *
-     * **Testing mode**: Triggers an immediate one-time run and then re-triggers
-     * every [DEBUG_REPEAT_INTERVAL_MS] milliseconds using a coroutine loop.
-     * WorkManager's minimum periodic interval is 15 minutes, which is too long
-     * for interactive testing, so the coroutine loop supplements it.
-     *
-     * **Production mode**: Change [DEBUG_REPEAT_INTERVAL_MS] to 0 and rely
-     * solely on the periodic WorkManager request (1 day interval).
+     * Triggers an immediate one-time run at startup and registers a periodic
+     * WorkManager request (15-minute minimum interval).
      */
     private fun scheduleBackendMaintenance() {
         applicationScope.launch {
@@ -87,20 +81,6 @@ class QuizzezApplication : Application() {
                 ExistingPeriodicWorkPolicy.UPDATE,
                 periodicRequest
             )
-
-            // Testing loop: re-trigger every 30 seconds for rapid iteration.
-            // Gated by BuildConfig.DEBUG to prevent battery drain in release builds.
-            if (BuildConfig.DEBUG && DEBUG_REPEAT_INTERVAL_MS > 0) {
-                Log.d(TAG, "Debug maintenance loop active (${DEBUG_REPEAT_INTERVAL_MS}ms interval)")
-                while (true) {
-                    delay(DEBUG_REPEAT_INTERVAL_MS)
-                    val oneShot = OneTimeWorkRequestBuilder<BackendMaintenanceWorker>()
-                        .setConstraints(constraints)
-                        .build()
-                    workManager.enqueue(oneShot)
-                    Log.d(TAG, "Debug: enqueued maintenance one-shot")
-                }
-            }
         }
     }
 
@@ -188,11 +168,5 @@ class QuizzezApplication : Application() {
 
     companion object {
         private const val TAG = "QuizzezApp"
-
-        /**
-         * Interval in milliseconds between debug maintenance runs.
-         * Set to 0 in release builds (gated by BuildConfig.DEBUG check).
-         */
-        private const val DEBUG_REPEAT_INTERVAL_MS = 0L
     }
 }

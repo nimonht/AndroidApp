@@ -62,7 +62,7 @@ class AttemptRepositoryImpl(
             val finalAttempt = attempt.copy(id = attemptId)
 
             // Write to Room first
-            attemptDao.insertAttempt(finalAttempt.toEntity())
+            attemptDao.upsertAttempt(finalAttempt.toEntity())
 
             // Enqueue sync operation synchronously to ensure durability
             syncManager.enqueueSync(

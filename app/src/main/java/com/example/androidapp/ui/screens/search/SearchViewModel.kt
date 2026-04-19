@@ -198,7 +198,6 @@ class SearchViewModel(
                         allTimeTopQuizzes = discoverData.allTimeTop,
                         browseAllQuizzes = discoverData.browseAll,
                         isLoadingDiscover = false,
-                        isLoadingBrowseAll = false,
                         isLoadingMore = false,
                         hasMoreDiscover = quizzes.size >= limit
                     )

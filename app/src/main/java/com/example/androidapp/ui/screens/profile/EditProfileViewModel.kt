@@ -85,6 +85,11 @@ class EditProfileViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
+    companion object {
+        private const val WALLHAVEN_RANDOM_AVATAR_URL =
+            "https://wallhaven.cc/api/v1/search?categories=010&purity=100&sorting=random&atleast=400x400&ratios=1x1"
+    }
+
     private val _uiState = MutableStateFlow(EditProfileUiState())
 
     /** Current UI state for the Edit Profile screen. */
@@ -147,9 +152,7 @@ class EditProfileViewModel(
 
             try {
                 val result = withContext(Dispatchers.IO) {
-                    val url = URL(
-                        "https://wallhaven.cc/api/v1/search?categories=010&purity=100&sorting=random&atleast=400x400&ratios=1x1"
-                    )
+                    val url = URL(WALLHAVEN_RANDOM_AVATAR_URL)
                     val connection = url.openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.connectTimeout = 10_000

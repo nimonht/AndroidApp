@@ -354,8 +354,7 @@ private fun RoleBadge(
 
     val badgeBackground = when (role) {
         UserRole.SUPERUSER -> SuperuserGold.copy(alpha = 0.15f)
-        UserRole.ADMIN -> roleColor.copy(alpha = 0.15f)
-        UserRole.USER -> roleColor.copy(alpha = 0.15f)
+        UserRole.ADMIN, UserRole.USER -> roleColor.copy(alpha = 0.15f)
         UserRole.GUEST -> MaterialTheme.colorScheme.surfaceVariant
     }
 

@@ -50,7 +50,6 @@ data class SearchUiState(
     val trendingQuizzes: List<QuizCardDraft> = emptyList(),
     val allTimeTopQuizzes: List<QuizCardDraft> = emptyList(),
     val browseAllQuizzes: List<QuizCardDraft> = emptyList(),
-    val isLoadingBrowseAll: Boolean = false,
     val isLoadingDiscover: Boolean = false,
     val selectedDiscoverTags: List<String> = emptyList(),
 

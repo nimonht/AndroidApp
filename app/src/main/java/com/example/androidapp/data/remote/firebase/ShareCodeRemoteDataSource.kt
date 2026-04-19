@@ -30,7 +30,7 @@ class ShareCodeRemoteDataSource(private val firestore: FirebaseFirestore) {
             if (snapshot.exists()) {
                 false
             } else {
-                transaction.set(docRef, mapOf("quizId" to quizId))
+                transaction.set(docRef, mapOf(FirestoreCollections.Fields.QUIZ_ID to quizId))
                 true
             }
         }.await()

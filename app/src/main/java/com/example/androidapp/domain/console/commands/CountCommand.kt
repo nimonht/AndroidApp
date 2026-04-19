@@ -38,25 +38,18 @@ import com.example.androidapp.domain.model.UserRole
  */
 class CountCommand : Command {
 
-    /** @inheritDoc */
     override val name: String = "count"
 
-    /** @inheritDoc */
     override val aliases: List<String> = listOf("wc")
 
-    /** @inheritDoc */
     override val description: String = "Dem dong, tu, ky tu hoac gia tri duy nhat tu dau vao pipe"
 
-    /** @inheritDoc */
     override val usage: String = "count [--lines|-l] [--words|-w] [--chars|-c] [--unique] [--non-empty] [--by-field N]"
 
-    /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.USER
 
-    /** @inheritDoc */
     override val category: String = "pipe"
 
-    /** @inheritDoc */
     override val examples: List<Pair<String, String>> = listOf(
         "ls -u | count" to "Dem so dong trong danh sach",
         "ls -u | count -w -c" to "Dem so tu va ky tu",
@@ -65,7 +58,6 @@ class CountCommand : Command {
         "ls -u | count --by-field 2" to "Thong ke tan suat theo truong thu 2"
     )
 
-    /** @inheritDoc */
     override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
@@ -106,7 +98,6 @@ class CountCommand : Command {
         return available
     }
 
-    /** @inheritDoc */
     override suspend fun execute(
         args: List<String>,
         flags: Map<String, String?>,

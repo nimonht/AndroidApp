@@ -37,39 +37,29 @@ import kotlinx.coroutines.flow.first
  */
 class UnbanCommand : Command {
 
-    /** @inheritDoc */
     override val name: String = "unban"
 
-    /** @inheritDoc */
     override val aliases: List<String> = emptyList()
 
-    /** @inheritDoc */
     override val description: String = "Bo cam nguoi dung da bi cam"
 
-    /** @inheritDoc */
     override val usage: String =
         "unban <email|userId> [...] [--search <query>] [--regex <pattern>] " +
                 "[--role <role>] [--all] [--banned-before <date>] [--banned-after <date>] " +
                 "[--dry-run] [--confirm] [--reason <text>] [--verbose] [--quiet] [--format <plain|table>]"
 
-    /** @inheritDoc */
     override val requiredPermission: AdminPermission = AdminPermission.BAN_USERS
 
-    /** @inheritDoc */
     override val isDestructive: Boolean = true
 
-    /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.ADMIN
 
-    /** @inheritDoc */
     override val category: String = "admin"
 
-    /** @inheritDoc */
     override val valueFlags: Set<String> = setOf(
         "search", "regex", "role", "reason", "format", "banned-before", "banned-after"
     )
 
-    /** @inheritDoc */
     override val examples: List<Pair<String, String>> = listOf(
         "unban user@example.com" to "Bo cam mot nguoi dung cu the",
         "unban user1@a.com user2@b.com" to "Bo cam nhieu nguoi dung",
@@ -79,7 +69,6 @@ class UnbanCommand : Command {
         "unban --all --confirm" to "Bo cam tat ca nguoi dung dang bi cam"
     )
 
-    /** @inheritDoc */
     override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
@@ -139,7 +128,6 @@ class UnbanCommand : Command {
         return suggestions
     }
 
-    /** @inheritDoc */
     override suspend fun execute(
         args: List<String>,
         flags: Map<String, String?>,

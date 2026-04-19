@@ -49,23 +49,23 @@ fun QuizSearchBar(
     Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = query,
-            onValueChange = { onEvent(SearchEvent.OnQueryChange(it)) }, // Updated event name
+            onValueChange = { onEvent(SearchEvent.OnQueryChange(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = { Text(stringResource(R.string.search_placeholder)) }, // Updated string resource name
+            placeholder = { Text(stringResource(R.string.search_placeholder)) },
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = stringResource(R.string.search_icon_cd) // Updated string resource name
+                    contentDescription = stringResource(R.string.search_icon_cd)
                 )
             },
             trailingIcon = {
                 if (query.isNotEmpty()) {
-                    IconButton(onClick = { onEvent(SearchEvent.OnClearSearch) }) { // Updated event name
+                    IconButton(onClick = { onEvent(SearchEvent.OnClearSearch) }) {
                         Icon(
                             imageVector = Icons.Default.Clear,
-                            contentDescription = stringResource(R.string.search_clear_cd) // Updated string resource name
+                            contentDescription = stringResource(R.string.search_clear_cd)
                         )
                     }
                 }
@@ -74,7 +74,7 @@ fun QuizSearchBar(
             keyboardActions = KeyboardActions(
                 onSearch = {
                     if (query.isNotBlank()) {
-                        onEvent(SearchEvent.OnSearchClicked(query)) // Updated event name
+                        onEvent(SearchEvent.OnSearchClicked(query))
                     }
                 }
             ),
@@ -90,8 +90,8 @@ fun QuizSearchBar(
         if (query.isEmpty() && recentSearches.isNotEmpty()) {
             RecentSearchesList(
                 recentSearches = recentSearches,
-                onRecentClick = { onEvent(SearchEvent.OnRecentSearchClicked(it)) }, // Updated event name
-                onClearAllClick = { onEvent(SearchEvent.OnClearRecentSearches) }    // Updated event name
+                onRecentClick = { onEvent(SearchEvent.OnRecentSearchClicked(it)) },
+                onClearAllClick = { onEvent(SearchEvent.OnClearRecentSearches) }
             )
         }
     }
@@ -111,12 +111,12 @@ private fun RecentSearchesList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.search_recent_title), // Updated string resource name
+                text = stringResource(R.string.search_recent_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             TextButton(onClick = onClearAllClick) {
-                Text(stringResource(R.string.search_clear_all)) // Updated string resource name
+                Text(stringResource(R.string.search_clear_all))
             }
         }
         LazyColumn {

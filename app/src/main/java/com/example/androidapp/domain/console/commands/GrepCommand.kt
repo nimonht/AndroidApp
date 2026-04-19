@@ -207,7 +207,6 @@ class GrepCommand : Command {
             val isMatchLine = idx in matchingIndices
 
             val displayText = when {
-                onlyMatching && isMatchLine && !invert -> ""
                 showLineNumbers -> "${idx + 1}: $line"
                 else -> line
             }

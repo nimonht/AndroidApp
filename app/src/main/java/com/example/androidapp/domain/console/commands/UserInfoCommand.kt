@@ -428,15 +428,4 @@ class UserInfoCommand : Command {
         }
     }
 
-    /**
-     * Pads a string to the right with spaces.
-     *
-     * @param text The text to pad.
-     * @param length The target length.
-     * @return Padded string.
-     */
-    private fun padEnd(text: String, length: Int): String {
-        return text.padEnd(length)
-    }
-
 }

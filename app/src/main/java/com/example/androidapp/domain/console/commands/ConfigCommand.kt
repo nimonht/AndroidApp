@@ -671,7 +671,5 @@ class ConfigCommand : Command {
     /**
      * Them khoang trang vao ben phai chuoi de can chinh cot.
      */
-    private fun padEnd(text: String, length: Int): String {
-        return if (text.length >= length) "$text " else text + " ".repeat(length - text.length)
-    }
+    private fun padEnd(text: String, length: Int): String = text.padEnd(length)
 }

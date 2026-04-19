@@ -58,9 +58,6 @@ sealed interface QuizFormEvent {
      */
     data object PublishQuiz : QuizFormEvent
 
-    /** Legacy save alias -- behaves identically to [PublishQuiz]. */
-    data object SaveQuiz : QuizFormEvent
-
     /** Toggles whether each question will be contributed to the community pool after publishing. */
     data class ShareToPoolChanged(val shareToPool: Boolean) : QuizFormEvent
 

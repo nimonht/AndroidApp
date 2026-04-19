@@ -26,28 +26,21 @@ import com.example.androidapp.domain.model.UserRole
  */
 class HistoryCommand : Command {
 
-    /** @inheritDoc */
     override val name: String = "history"
 
-    /** @inheritDoc */
     override val aliases: List<String> = listOf("hist")
 
-    /** @inheritDoc */
     override val description: String = "Hien thi va quan ly lich su lenh"
 
-    /** @inheritDoc */
     override val usage: String =
         "history [<so_luong>] [--search <tu_khoa>] [--regex <mau>] [--clear] " +
                 "[--unique] [--reverse] [--numbered] [--no-numbered] [--since <thoi_gian>] " +
                 "[--format <dinh_dang>] [--export]"
 
-    /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.USER
 
-    /** @inheritDoc */
     override val category: String = "util"
 
-    /** @inheritDoc */
     override val examples: List<Pair<String, String>> = listOf(
         "history" to "Hien thi toan bo lich su lenh",
         "history 5" to "Hien thi 5 lenh gan nhat",
@@ -61,7 +54,6 @@ class HistoryCommand : Command {
         "history 10 --numbered" to "Hien thi 10 lenh gan nhat co danh so"
     )
 
-    /** @inheritDoc */
     override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
@@ -120,7 +112,6 @@ class HistoryCommand : Command {
         return suggestions
     }
 
-    /** @inheritDoc */
     override suspend fun execute(
         args: List<String>,
         flags: Map<String, String?>,

@@ -26,7 +26,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -90,13 +89,13 @@ class AuthRepositoryImpl(
      * Room-enriched fields like `username`).
      */
     @Volatile
-    private var _suppressAuthStateUpdates = false
+    private var suppressAuthStateUpdates = false
 
     init {
         firebaseAuth.addAuthStateListener { auth ->
             // Skip if a login/register/updateProfile operation is in progress;
             // those methods will set _currentUser manually with richer data.
-            if (_suppressAuthStateUpdates) return@addAuthStateListener
+            if (suppressAuthStateUpdates) return@addAuthStateListener
 
             val firebaseUser = auth.currentUser
             if (firebaseUser != null) {
@@ -132,7 +131,7 @@ class AuthRepositoryImpl(
         get() = firebaseAuth.currentUser != null
 
     override suspend fun login(email: String, password: String): Result<User> {
-        _suppressAuthStateUpdates = true
+        suppressAuthStateUpdates = true
         try {
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
@@ -155,12 +154,12 @@ class AuthRepositoryImpl(
         } catch (e: Exception) {
             return Result.failure(e)
         } finally {
-            _suppressAuthStateUpdates = false
+            suppressAuthStateUpdates = false
         }
     }
 
     override suspend fun register(email: String, password: String, username: String): Result<User> {
-        _suppressAuthStateUpdates = true
+        suppressAuthStateUpdates = true
         try {
             val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
@@ -209,7 +208,7 @@ class AuthRepositoryImpl(
             // removal racing with coroutine dispatch).
             withContext(NonCancellable) {
                 // Cache locally
-                userDao.insertUser(user.toEntity())
+                userDao.upsertUser(user.toEntity())
                 // Persist to Firestore
                 try {
                     userRemoteDataSource.saveUser(
@@ -242,7 +241,7 @@ class AuthRepositoryImpl(
         } catch (e: Exception) {
             return Result.failure(e)
         } finally {
-            _suppressAuthStateUpdates = false
+            suppressAuthStateUpdates = false
         }
     }
 
@@ -331,7 +330,7 @@ class AuthRepositoryImpl(
      * @return [Result.success] on success, or [Result.failure] with the error.
      */
     override suspend fun updateProfile(displayName: String, photoUrl: String?): Result<Unit> {
-        _suppressAuthStateUpdates = true
+        suppressAuthStateUpdates = true
         try {
             val firebaseUser = firebaseAuth.currentUser
                 ?: return Result.failure(Exception(ERROR_NO_USER))
@@ -395,7 +394,7 @@ class AuthRepositoryImpl(
         } catch (e: Exception) {
             return Result.failure(Exception(ERROR_UPDATE_PROFILE_FAILED, e))
         } finally {
-            _suppressAuthStateUpdates = false
+            suppressAuthStateUpdates = false
         }
     }
 
@@ -422,7 +421,7 @@ class AuthRepositoryImpl(
             if (userDto != null) {
                 val domainUser = userDto.toDomain()
                 // Cache to Room for offline access
-                userDao.insertUser(domainUser.toEntity())
+                userDao.upsertUser(domainUser.toEntity())
                 return domainUser
             }
 
@@ -443,7 +442,7 @@ class AuthRepositoryImpl(
             )
             userRemoteDataSource.saveUser(newUserDto)
             val domainUser = newUserDto.toDomain()
-            userDao.insertUser(domainUser.toEntity())
+            userDao.upsertUser(domainUser.toEntity())
             return domainUser
         } catch (_: Exception) {
             // Firestore unavailable (offline) — fall through to Room

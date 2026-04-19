@@ -3,6 +3,9 @@ package com.example.androidapp.data.ml
 import android.content.Context
 import android.util.Log
 import com.example.androidapp.domain.service.EmbeddingService
+import com.google.mediapipe.tasks.core.BaseOptions
+import com.google.mediapipe.tasks.text.textembedder.TextEmbedder
+import com.google.mediapipe.tasks.text.textembedder.TextEmbedder.TextEmbedderOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -51,7 +54,7 @@ class TFLiteEmbeddingService(
     val modelState: StateFlow<ModelState> get() = modelManager.state
 
     // --- MediaPipe path ---
-    private var mediaPipeEmbedder: com.google.mediapipe.tasks.text.textembedder.TextEmbedder? = null
+    private var mediaPipeEmbedder: TextEmbedder? = null
 
     private val mutex = Mutex()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -127,37 +130,32 @@ class TFLiteEmbeddingService(
         return false
     }
 
-    private fun createMediaPipeFromAsset():
-            com.google.mediapipe.tasks.text.textembedder.TextEmbedder? {
-        val baseOptions = com.google.mediapipe.tasks.core.BaseOptions.builder()
-            .setModelAssetPath(BUNDLED_ASSET_NAME)
+    private fun createMediaPipeFromAsset(): TextEmbedder? {
+        val baseOptions = BaseOptions.builder()
+            .setModelAssetPath(ModelManager.MODEL_FILE_NAME)
             .build()
-        val options =
-            com.google.mediapipe.tasks.text.textembedder.TextEmbedder.TextEmbedderOptions.builder()
-                .setBaseOptions(baseOptions)
-                .build()
-        return com.google.mediapipe.tasks.text.textembedder.TextEmbedder
-            .createFromOptions(context, options)
+        val options = TextEmbedderOptions.builder()
+            .setBaseOptions(baseOptions)
+            .build()
+        return TextEmbedder.createFromOptions(context, options)
     }
 
     private fun createMediaPipeFromFile(
         file: File
-    ): com.google.mediapipe.tasks.text.textembedder.TextEmbedder? {
+    ): TextEmbedder? {
         // Memory-map the model file into a ByteBuffer for zero-copy loading.
         val channel = FileInputStream(file).channel
         val buffer: ByteBuffer =
             channel.map(FileChannel.MapMode.READ_ONLY, 0, file.length())
         channel.close()
 
-        val baseOptions = com.google.mediapipe.tasks.core.BaseOptions.builder()
+        val baseOptions = BaseOptions.builder()
             .setModelAssetBuffer(buffer)
             .build()
-        val options =
-            com.google.mediapipe.tasks.text.textembedder.TextEmbedder.TextEmbedderOptions.builder()
-                .setBaseOptions(baseOptions)
-                .build()
-        return com.google.mediapipe.tasks.text.textembedder.TextEmbedder
-            .createFromOptions(context, options)
+        val options = TextEmbedderOptions.builder()
+            .setBaseOptions(baseOptions)
+            .build()
+        return TextEmbedder.createFromOptions(context, options)
     }
 
     // ------------------------------------------------------------------
@@ -217,8 +215,5 @@ class TFLiteEmbeddingService(
 
         /** Maximum input character length to prevent OOM on very large texts. */
         private const val MAX_INPUT_LENGTH = 2048
-
-        /** Asset file name for the bundled model. */
-        private const val BUNDLED_ASSET_NAME = "use_multilingual_lite.tflite"
     }
 }

@@ -50,6 +50,8 @@ import com.example.androidapp.ui.components.feedback.LoadingSpinner
 import com.example.androidapp.ui.components.navigation.AppTopBar
 import kotlin.math.max
 
+private const val MILLIS_IN_DAY = 1000L * 60 * 60 * 24
+
 /**
  * Trash/Recycle Bin screen showing soft-deleted quizzes.
  * Stateless composable; all state is owned by [RecycleBinViewModel].
@@ -195,9 +197,8 @@ private fun TrashQuizCard(
     modifier: Modifier = Modifier
 ) {
     // Retention period: 30 days
-    val millisInDay = 1000L * 60 * 60 * 24
     val deletedAt = quiz.deletedAt ?: System.currentTimeMillis()
-    val elapsedDays = (System.currentTimeMillis() - deletedAt) / millisInDay
+    val elapsedDays = (System.currentTimeMillis() - deletedAt) / MILLIS_IN_DAY
     val daysLeft = max(0, 30 - elapsedDays).toInt()
 
     Card(modifier = modifier.fillMaxWidth()) {

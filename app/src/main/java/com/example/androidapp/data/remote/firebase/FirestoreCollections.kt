@@ -41,5 +41,11 @@ object FirestoreCollections {
         const val CONTRIBUTOR_ID = "contributorId"
         const val ROLE = "role"
         const val PERMISSIONS = "permissions"
+        const val ACTIVE = "active"
+        const val CREATED_AT = "createdAt"
+        const val EMAIL = "email"
+        const val STARTED_AT = "startedAt"
+        const val TAGS = "tags"
+        const val USAGE_COUNT = "usageCount"
     }
 }

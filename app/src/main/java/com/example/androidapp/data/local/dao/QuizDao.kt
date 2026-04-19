@@ -110,10 +110,10 @@ interface QuizDao {
     fun getDeletedQuizzes(userId: String): Flow<List<QuizEntity>>
 
     /**
-     * Insert a quiz, replacing if it already exists.
+     * Upsert a quiz, replacing if it already exists.
      */
     @Upsert
-    suspend fun insertQuiz(quiz: QuizEntity)
+    suspend fun upsertQuiz(quiz: QuizEntity)
 
     /**
      * Update an existing quiz.

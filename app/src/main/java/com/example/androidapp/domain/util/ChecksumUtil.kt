@@ -4,6 +4,8 @@ import com.example.androidapp.domain.model.Question
 import com.example.androidapp.domain.model.Quiz
 import java.security.MessageDigest
 
+private const val SEPARATOR = "|"
+
 /**
  * SHA-256 checksum computation for quiz data integrity verification.
  *
@@ -25,19 +27,18 @@ object ChecksumUtil {
      * @return A lowercase hex-encoded SHA-256 digest string.
      */
     fun computeQuizChecksum(quiz: Quiz, questions: List<Question>): String {
-        val sep = "|"
         val data = buildString {
-            append(quiz.title); append(sep)
-            append(quiz.description ?: ""); append(sep)
+            append(quiz.title); append(SEPARATOR)
+            append(quiz.description ?: ""); append(SEPARATOR)
             questions.sortedBy { it.position }.forEach { q ->
-                append(q.content); append(sep)
-                append(q.mediaUrl ?: ""); append(sep)
-                append(q.explanation ?: ""); append(sep)
-                append(q.points); append(sep)
-                append(q.isMultiSelect); append(sep)
+                append(q.content); append(SEPARATOR)
+                append(q.mediaUrl ?: ""); append(SEPARATOR)
+                append(q.explanation ?: ""); append(SEPARATOR)
+                append(q.points); append(SEPARATOR)
+                append(q.isMultiSelect); append(SEPARATOR)
                 q.choices.sortedBy { it.position }.forEach { c ->
-                    append(c.content); append(sep)
-                    append(c.isCorrect); append(sep)
+                    append(c.content); append(SEPARATOR)
+                    append(c.isCorrect); append(SEPARATOR)
                 }
             }
         }

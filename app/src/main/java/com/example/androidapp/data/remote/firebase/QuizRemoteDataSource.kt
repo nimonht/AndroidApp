@@ -159,7 +159,7 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     /**
      * Soft-deletes a quiz by setting the deletedAt timestamp.
      */
-    suspend fun softDeleteQuiz(quizId: String, deletedAt: com.google.firebase.Timestamp) {
+    suspend fun softDeleteQuiz(quizId: String, deletedAt: Timestamp) {
         firestore.collection(FirestoreCollections.QUIZZES)
             .document(quizId)
             .update(FirestoreCollections.Fields.DELETED_AT, deletedAt)
@@ -428,11 +428,5 @@ class QuizRemoteDataSource(private val firestore: FirebaseFirestore) {
     private fun buildTombstoneData(quizId: String): HashMap<String, Any> =
         FirestoreCascadeHelper.buildTombstoneData(quizId)
 
-    companion object {
-        /**
-         * When a batch pairs a tombstone write with a quiz delete (2 ops per quiz),
-         * chunk at half the batch limit to stay within Firestore constraints.
-         */
-        private const val TOMBSTONE_BATCH_LIMIT = FirestoreCollections.BATCH_LIMIT / 2
-    }
+
 }

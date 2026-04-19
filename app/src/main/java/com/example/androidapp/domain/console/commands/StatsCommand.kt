@@ -32,30 +32,22 @@ import kotlinx.coroutines.flow.first
  */
 class StatsCommand : Command {
 
-    /** @inheritDoc */
     override val name: String = "stats"
 
-    /** @inheritDoc */
     override val aliases: List<String> = listOf("stat")
 
-    /** @inheritDoc */
     override val description: String = "Hien thi thong ke he thong"
 
-    /** @inheritDoc */
     override val usage: String =
         "stats [--users] [--quizzes] [--attempts] [--sync] " +
                 "[--format <table|json>] [--verbose] [--export]"
 
-    /** @inheritDoc */
     override val requiredPermission: AdminPermission = AdminPermission.VIEW_REPORTS
 
-    /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.ADMIN
 
-    /** @inheritDoc */
     override val category: String = "admin"
 
-    /** @inheritDoc */
     override val examples: List<Pair<String, String>> = listOf(
         "stats" to "Hien thi toan bo thong ke he thong",
         "stats --users" to "Chi hien thi thong ke nguoi dung",
@@ -68,7 +60,6 @@ class StatsCommand : Command {
         "stats --export" to "Xuat thong ke dang JSON de luu tru"
     )
 
-    /** @inheritDoc */
     override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
@@ -122,7 +113,6 @@ class StatsCommand : Command {
         return suggestions
     }
 
-    /** @inheritDoc */
     override suspend fun execute(
         args: List<String>,
         flags: Map<String, String?>,

@@ -652,8 +652,6 @@ private fun AiInsightsSection(
     stats: SystemStats,
     modifier: Modifier = Modifier
 ) {
-    val purpleAccent = MaterialTheme.colorScheme.tertiary
-
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -720,7 +718,7 @@ private fun AiInsightsSection(
                 stats.totalQuestionsInPool.toString()
             ),
             icon = Icons.Default.Folder,
-            accentColor = purpleAccent
+            accentColor = MaterialTheme.colorScheme.tertiary
         )
     }
 }

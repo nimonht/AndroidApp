@@ -28,12 +28,7 @@ object QuestionShuffler {
         return questions.shuffled().map { question ->
             val originalChoices = getChoices(question)
 
-            // Only shuffle if there are choices to shuffle
-            val shuffledChoices = if (originalChoices.isNotEmpty()) {
-                originalChoices.shuffled()
-            } else {
-                originalChoices
-            }
+            val shuffledChoices = originalChoices.shuffled()
 
             copyWithNewChoices(question, shuffledChoices)
         }

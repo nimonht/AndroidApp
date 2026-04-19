@@ -1,5 +1,6 @@
 package com.example.androidapp.data.remote.firebase
 
+import android.util.Log
 import com.example.androidapp.data.remote.model.AttemptDto
 import com.example.androidapp.data.remote.model.QuizDto
 import com.example.androidapp.data.remote.model.UserDto
@@ -146,7 +147,7 @@ class AdminRemoteDataSource(
         } catch (e: Exception) {
             // Log but do not throw -- Firestore data is already deleted.
             // The Auth record may need manual cleanup if this fails.
-            android.util.Log.e("AdminRemoteDataSource", "Failed to delete user from Auth: ${e.message}")
+            Log.e(TAG, "Failed to delete user from Auth: ${e.message}")
         }
     }
 
@@ -334,7 +335,7 @@ class AdminRemoteDataSource(
      */
     fun getAllAttempts(): Flow<List<AttemptDto>> = callbackFlow {
         val listener = firestore.collection(FirestoreCollections.ATTEMPTS)
-            .orderBy("startedAt", Query.Direction.DESCENDING)
+            .orderBy(FirestoreCollections.Fields.STARTED_AT, Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -411,7 +412,7 @@ class AdminRemoteDataSource(
      */
     suspend fun getAdminUsersCount(): Int {
         return firestore.collection(FirestoreCollections.USERS)
-            .whereEqualTo("role", "admin")
+            .whereEqualTo(FirestoreCollections.Fields.ROLE, "admin")
             .whereEqualTo(FirestoreCollections.Fields.DELETED_AT, null)
             .get()
             .await()
@@ -476,7 +477,7 @@ class AdminRemoteDataSource(
 
         // Get users who took attempts recently
         val activeAttemptUsers = firestore.collection(FirestoreCollections.ATTEMPTS)
-            .whereGreaterThan("startedAt", thirtyDaysAgo)
+            .whereGreaterThan(FirestoreCollections.Fields.STARTED_AT, thirtyDaysAgo)
             .get()
             .await()
             .documents
@@ -503,7 +504,7 @@ class AdminRemoteDataSource(
         startAfterDoc: DocumentSnapshot? = null
     ): Pair<List<UserDto>, DocumentSnapshot?> {
         var query = firestore.collection(FirestoreCollections.USERS)
-            .orderBy("email")
+            .orderBy(FirestoreCollections.Fields.EMAIL)
             .limit(pageSize.toLong())
 
         if (startAfterDoc != null) {
@@ -549,5 +550,9 @@ class AdminRemoteDataSource(
         val quizzes = snapshot.documents.mapNotNull { it.toObject(QuizDto::class.java) }
         val lastDoc = snapshot.documents.lastOrNull()
         return Pair(quizzes, lastDoc)
+    }
+
+    companion object {
+        private const val TAG = "AdminRemoteDataSource"
     }
 }

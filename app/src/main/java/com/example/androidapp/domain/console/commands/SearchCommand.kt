@@ -47,22 +47,17 @@ import kotlinx.coroutines.flow.first
  */
 class SearchCommand : Command {
 
-    /** @inheritDoc */
     override val name: String = "search"
 
-    /** @inheritDoc */
     override val aliases: List<String> = listOf("find", "s")
 
-    /** @inheritDoc */
     override val description: String = "Tim kiem nguoi dung hoac quiz trong he thong"
 
-    /** @inheritDoc */
     override val usage: String =
         "search <-u|-q> <query> [--regex] [--tag <tag>] [--role <role>] " +
                 "[--exact] [--sort <field>] [--limit <n>] [--format <table|json>] " +
                 "[--fields <fields>] [--output <full|count|ids>]"
 
-    /** @inheritDoc */
     override val minimumRole: UserRole = UserRole.ADMIN
 
     /**
@@ -71,10 +66,8 @@ class SearchCommand : Command {
      */
     override val requiredPermission: AdminPermission? = null
 
-    /** @inheritDoc */
     override val category: String = "admin"
 
-    /** @inheritDoc */
     override val examples: List<Pair<String, String>> = listOf(
         "search -u admin" to "Tim nguoi dung co ten hoac email chua 'admin'",
         "search -u admin --role admin" to "Tim nguoi dung co vai tro admin",
@@ -89,7 +82,6 @@ class SearchCommand : Command {
         "search -u user --fields id,email,role" to "Tim nguoi dung, chi hien thi cac truong cu the"
     )
 
-    /** @inheritDoc */
     override suspend fun autocomplete(
         args: List<String>,
         flags: Map<String, String?>,
@@ -253,7 +245,6 @@ class SearchCommand : Command {
         return suggestions
     }
 
-    /** @inheritDoc */
     override suspend fun execute(
         args: List<String>,
         flags: Map<String, String?>,

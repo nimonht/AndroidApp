@@ -5,6 +5,7 @@ import com.example.androidapp.data.remote.model.QuestionPoolItemDto
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -39,11 +40,9 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
      */
     suspend fun getPoolItemsByTags(tags: List<String>): List<QuestionPoolItemDto> {
         if (tags.isEmpty()) return emptyList()
-        require(tags.size <= MAX_TAG_QUERY_LIMIT) {
-            "getPoolItemsByTags accepts at most $MAX_TAG_QUERY_LIMIT tags; received ${tags.size}."
-        }
+        validateTagQuery(tags)
         return firestore.collection(FirestoreCollections.QUESTION_POOL)
-            .whereArrayContainsAny("tags", tags)
+            .whereArrayContainsAny(FirestoreCollections.Fields.TAGS, tags)
             .get()
             .await()
             .documents
@@ -58,11 +57,9 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
      */
     suspend fun getActivePoolItemsByTags(tags: List<String>): List<QuestionPoolItemDto> {
         if (tags.isEmpty()) return emptyList()
-        require(tags.size <= MAX_TAG_QUERY_LIMIT) {
-            "getActivePoolItemsByTags accepts at most $MAX_TAG_QUERY_LIMIT tags; received ${tags.size}."
-        }
+        validateTagQuery(tags)
         return firestore.collection(FirestoreCollections.QUESTION_POOL)
-            .whereArrayContainsAny("tags", tags)
+            .whereArrayContainsAny(FirestoreCollections.Fields.TAGS, tags)
             .whereEqualTo(FirestoreCollections.Fields.IS_ACTIVE, true)
             .get()
             .await()
@@ -93,7 +90,7 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
     suspend fun incrementUsageCount(poolItemId: String) {
         firestore.collection(FirestoreCollections.QUESTION_POOL)
             .document(poolItemId)
-            .update("usageCount", FieldValue.increment(1))
+            .update(FirestoreCollections.Fields.USAGE_COUNT, FieldValue.increment(1))
             .await()
     }
 
@@ -119,7 +116,7 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
         docRef.update(
             mapOf(
                 FirestoreCollections.Fields.IS_ACTIVE to isActive,
-                "active" to isActive
+                FirestoreCollections.Fields.ACTIVE to isActive
             )
         ).await()
 
@@ -156,7 +153,7 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
     ): Pair<List<QuestionPoolItemDto>, DocumentSnapshot?> {
         var query = firestore.collection(FirestoreCollections.QUESTION_POOL)
             .whereEqualTo(FirestoreCollections.Fields.CONTRIBUTOR_ID, userId)
-            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .orderBy(FirestoreCollections.Fields.CREATED_AT, Query.Direction.DESCENDING)
             .limit(pageSize.toLong())
 
         if (startAfterDoc != null) {
@@ -184,12 +181,10 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
         startAfterDoc: DocumentSnapshot? = null
     ): Pair<List<QuestionPoolItemDto>, DocumentSnapshot?> {
         if (tags.isEmpty()) return Pair(emptyList(), null)
-        require(tags.size <= MAX_TAG_QUERY_LIMIT) {
-            "getActivePoolItemsByTagsPaged accepts at most $MAX_TAG_QUERY_LIMIT tags; received ${tags.size}."
-        }
+        validateTagQuery(tags)
 
         var query = firestore.collection(FirestoreCollections.QUESTION_POOL)
-            .whereArrayContainsAny("tags", tags)
+            .whereArrayContainsAny(FirestoreCollections.Fields.TAGS, tags)
             .whereEqualTo(FirestoreCollections.Fields.IS_ACTIVE, true)
             .limit(pageSize.toLong())
 
@@ -201,6 +196,16 @@ class PoolRemoteDataSource(private val firestore: FirebaseFirestore) {
         val items = snapshot.documents.mapNotNull { it.toObject(QuestionPoolItemDto::class.java) }
         val lastDoc = snapshot.documents.lastOrNull()
         return Pair(items, lastDoc)
+    }
+
+    /**
+     * Validates that the tag list does not exceed [MAX_TAG_QUERY_LIMIT].
+     * Throws [IllegalArgumentException] if the constraint is violated.
+     */
+    private fun validateTagQuery(tags: List<String>) {
+        require(tags.size <= MAX_TAG_QUERY_LIMIT) {
+            "Tag query accepts at most $MAX_TAG_QUERY_LIMIT tags; received ${tags.size}."
+        }
     }
 
     companion object {

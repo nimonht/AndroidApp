@@ -26,7 +26,7 @@ fun CreateQuizFAB(
 ) {
     ExtendedFloatingActionButton(
         onClick = onClick,
-        icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.quiz_create)) },
+        icon = { Icon(Icons.Default.Add, contentDescription = null) },
         text = { Text(text = stringResource(R.string.quiz_create)) },
         expanded = expanded,
         containerColor = MaterialTheme.colorScheme.primaryContainer,

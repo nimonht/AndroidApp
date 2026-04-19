@@ -166,9 +166,6 @@ class EditQuizViewModel(
             is QuizFormEvent.PublishQuiz ->
                 onSaveQuiz(publishAfterSave = true)
 
-            is QuizFormEvent.SaveQuiz ->
-                onSaveQuiz(publishAfterSave = true)
-
             is QuizFormEvent.ShareToPoolChanged ->
                 _uiState.update { it.copy(shareToPool = event.shareToPool) }
 

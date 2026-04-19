@@ -43,14 +43,12 @@ class PoolRepositoryImpl(
     /** Cursor for pool browse pagination. */
     private var lastBrowseDoc: DocumentSnapshot? = null
 
-    /** {@inheritDoc} */
     override suspend fun contributeQuestion(poolItem: QuestionPoolItem): Result<Unit> {
         return safeCall {
             remoteDataSource.addPoolItem(poolItem.toDto())
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun contributeQuestions(
         questions: List<Question>,
         contributorId: String,
@@ -90,7 +88,6 @@ class PoolRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun getPoolQuestionsByTags(
         tags: List<String>,
         activeOnly: Boolean
@@ -105,7 +102,6 @@ class PoolRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun getMyContributions(userId: String): Result<List<QuestionPoolItem>> {
         return safeCall {
             val dtos = remoteDataSource.getContributionsByUser(userId)
@@ -113,7 +109,6 @@ class PoolRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun revokeContribution(poolItemId: String): Result<Unit> {
         Log.d(TAG, "revokeContribution: revoking pool item $poolItemId")
         return safeCall {
@@ -127,14 +122,12 @@ class PoolRepositoryImpl(
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun incrementUsageCount(poolItemId: String): Result<Unit> {
         return safeCall {
             remoteDataSource.incrementUsageCount(poolItemId)
         }
     }
 
-    /** {@inheritDoc} */
     override suspend fun autoGenerateQuiz(
         tags: List<String>,
         count: Int

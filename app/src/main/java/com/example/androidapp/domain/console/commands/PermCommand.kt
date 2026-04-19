@@ -280,7 +280,7 @@ class PermCommand : Command {
                 )
             }
             val permName = subArgs[1].uppercase()
-            val perm = parsePermission(permName)
+            val perm = AdminPermission.fromString(permName)
                 ?: return CommandResult.error(
                     "Quyen khong hop le: $permName\n" +
                             "Cac quyen hop le: ${AdminPermission.entries.joinToString(", ") { it.name }}"
@@ -404,7 +404,7 @@ class PermCommand : Command {
                 )
             }
             val permName = subArgs[1].uppercase()
-            val perm = parsePermission(permName)
+            val perm = AdminPermission.fromString(permName)
                 ?: return CommandResult.error(
                     "Quyen khong hop le: $permName\n" +
                             "Cac quyen hop le: ${AdminPermission.entries.joinToString(", ") { it.name }}"
@@ -557,19 +557,6 @@ class PermCommand : Command {
         }
     }
 
-    /**
-     * Phan tich ten quyen tu chuoi.
-     *
-     * @param name Ten quyen (vd: "MANAGE_USERS").
-     * @return [AdminPermission] tuong ung hoac null neu khong hop le.
-     */
-    private fun parsePermission(name: String): AdminPermission? {
-        return try {
-            AdminPermission.valueOf(name)
-        } catch (_: IllegalArgumentException) {
-            null
-        }
-    }
 
     /**
      * Tra ve mo ta tieng Viet cho mot quyen admin.

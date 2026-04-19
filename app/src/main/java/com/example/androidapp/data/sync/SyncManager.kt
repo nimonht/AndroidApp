@@ -266,8 +266,7 @@ class SyncManager(
             }
 
             SyncOperation.DELETE.name -> {
-                // Choice deletion is handled by parent question sync
-                // Individual choice deletes require re-syncing the entire question
+                // Choice deletion is handled by parent question sync cascade; no-op here
             }
         }
     }
@@ -335,7 +334,7 @@ class SyncManager(
 
                 if (localQuiz == null || localQuiz.updatedAt < quiz.updatedAt || localQuestionCount < quiz.questionCount) {
                     // Firebase version is newer or doesn't exist locally - download it
-                    quizDao.insertQuiz(quiz.toEntity())
+                    quizDao.upsertQuiz(quiz.toEntity())
 
                     // Also download associated questions and choices
                     val questionDtos = questionRemoteDataSource.getQuestionsForQuiz(quiz.id)
@@ -345,12 +344,12 @@ class SyncManager(
 
                         // Convert to domain with proper quizId and choices
                         val question = questionDto.toDomain().copy(quizId = quiz.id)
-                        questionDao.insertQuestion(question.toEntity())
+                        questionDao.upsertQuestion(question.toEntity())
 
                         // Insert choices
                         val choices = choiceDtos.map { choiceDto ->
                             val choice = choiceDto.toDomain()
-                            choiceDao.insertChoice(choice.toEntity(question.id))
+                            choiceDao.upsertChoice(choice.toEntity(question.id))
                             choice
                         }
 
@@ -411,7 +410,7 @@ class SyncManager(
 
                 if (localAttempt == null || localAttempt.finishedAt == null) {
                     // Download new or incomplete attempts
-                    attemptDao.insertAttempt(attempt.toEntity())
+                    attemptDao.upsertAttempt(attempt.toEntity())
                 }
             }
         } catch (e: Exception) {

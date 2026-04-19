@@ -46,7 +46,8 @@ class MainActivity : FragmentActivity() {
         fragmentContainer = findViewById(R.id.fragmentContainer)
 
         // Set up the Compose content once (it stays ready but hidden until needed).
-        val settingsPreferences = (application as QuizzezApplication).appContainer.settingsPreferences
+        val appContainer = (application as QuizzezApplication).appContainer
+        val settingsPreferences = appContainer.settingsPreferences
 
         composeView.setContent {
             val themeMode by settingsPreferences.darkThemeMode.collectAsStateWithLifecycle(
@@ -67,8 +68,6 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-
-        val appContainer = (application as QuizzezApplication).appContainer
 
         // Check for an existing logged-in session. If the user is already
         // authenticated we skip the auth landing entirely.

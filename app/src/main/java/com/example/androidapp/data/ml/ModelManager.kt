@@ -69,7 +69,7 @@ class ModelManager(private val context: Context) {
     // ------------------------------------------------------------------
 
     private fun getLocalCache(): File? {
-        val file = File(context.filesDir, LOCAL_CACHE_NAME)
+        val file = File(context.filesDir, MODEL_FILE_NAME)
         return if (file.exists() && file.length() > MIN_MODEL_SIZE) file else null
     }
 
@@ -91,7 +91,7 @@ class ModelManager(private val context: Context) {
      */
     fun openBundledAssetBuffer(): MappedByteBuffer? {
         return try {
-            context.assets.openFd(BUNDLED_ASSET_NAME).use { afd ->
+            context.assets.openFd(MODEL_FILE_NAME).use { afd ->
                 FileInputStream(afd.fileDescriptor).channel.use { channel ->
                     channel.map(
                         FileChannel.MapMode.READ_ONLY,
@@ -107,9 +107,9 @@ class ModelManager(private val context: Context) {
     }
 
     private fun copyFromBundledAsset(): File? {
-        val outFile = File(context.filesDir, LOCAL_CACHE_NAME)
+        val outFile = File(context.filesDir, MODEL_FILE_NAME)
         return try {
-            val afd = context.assets.openFd(BUNDLED_ASSET_NAME)
+            val afd = context.assets.openFd(MODEL_FILE_NAME)
             afd.use { descriptor ->
                 FileInputStream(descriptor.fileDescriptor).use { inputStream ->
                     // Seek to the correct offset within the APK
@@ -170,11 +170,8 @@ class ModelManager(private val context: Context) {
     companion object {
         private const val TAG = "ModelManager"
 
-        /** Local cache file name in [Context.getFilesDir]. */
-        const val LOCAL_CACHE_NAME = "use_multilingual_lite.tflite"
-
-        /** Asset file name for the bundled model. */
-        private const val BUNDLED_ASSET_NAME = "use_multilingual_lite.tflite"
+        /** TFLite model file name — used for both the APK asset and the local cache copy. */
+        const val MODEL_FILE_NAME = "use_multilingual_lite.tflite"
 
         /** Minimum valid model file size (1 MB) to reject corrupt/empty files. */
         private const val MIN_MODEL_SIZE = 1L * 1024 * 1024
@@ -189,9 +186,6 @@ class ModelManager(private val context: Context) {
 sealed class ModelState {
     /** Initial state before any resolution attempt. */
     data object Idle : ModelState()
-
-    /** Model is being downloaded (retained for UI compatibility). */
-    data object Downloading : ModelState()
 
     /** Model is loaded and ready for inference. */
     data object Ready : ModelState()

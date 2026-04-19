@@ -34,10 +34,10 @@ interface ChoiceDao {
     suspend fun getChoiceById(choiceId: String): ChoiceEntity?
 
     /**
-     * Insert a choice, or update it if it already exists.
+     * Upsert a choice, or update it if it already exists.
      */
     @Upsert
-    suspend fun insertChoice(choice: ChoiceEntity)
+    suspend fun upsertChoice(choice: ChoiceEntity)
 
     /**
      * Update an existing choice.

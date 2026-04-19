@@ -57,6 +57,7 @@ import com.example.androidapp.ui.screens.settings.SettingsScreen
 import com.example.androidapp.ui.screens.settings.SettingsViewModel
 import com.example.androidapp.ui.screens.advanced.AdvancedScreen
 import com.example.androidapp.ui.screens.trash.TrashScreen
+import com.google.gson.Gson
 
 /**
  * Main navigation host for the Quizzez application.
@@ -179,6 +180,7 @@ fun QuizzezNavHost(
 
             composable(Routes.PROFILE) {
                 val container = LocalAppContainer
+                val isOnline by container.networkMonitor.isOnline.collectAsStateWithLifecycle()
                 ProfileScreen(
                     onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
                     onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
@@ -212,7 +214,7 @@ fun QuizzezNavHost(
                     },
                     onNavigateToAdminPanel = {
                         if (currentUser != null && currentUser!!.isAdmin()) {
-                            if (container.networkMonitor.isOnline.value) {
+                            if (isOnline) {
                                 navController.navigate(Routes.ADMIN_DASHBOARD)
                             } else {
                                 Toast.makeText(
@@ -322,7 +324,7 @@ fun QuizzezNavHost(
                     onQuestionsImported = { questions ->
                         navController.previousBackStackEntry?.savedStateHandle?.set(
                             "imported_questions_json",
-                            com.google.gson.Gson().toJson(questions)
+                            Gson().toJson(questions)
                         )
                         navController.popBackStack()
                     }

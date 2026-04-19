@@ -68,7 +68,7 @@ val OutlineVariantDark = Color(0xFF4A5160)
 val Scrim = Color(0x66000000)
 
 // ---- Semantic / Status --------------------------------------------------
-val Success = Color(0xFF27AE60)
+val Success = Color(0xFF27AE60)     // Same value as Secondary — intentional semantic alias
 
 val Error = Color(0xFFE74C3C)
 val ErrorContainer = Color(0xFFFDECEC)
@@ -79,7 +79,7 @@ val OnErrorContainerDark = Color(0xFFFFDAD6)
 
 val Warning = Color(0xFFF5A623)
 
-val Info = Color(0xFF4A90E2)
+val Info = Color(0xFF4A90E2)     // Same value as Primary — intentional semantic alias
 
 // ---- Score / Gamification -----------------------------------------------
 val GoldStar = Color(0xFFFFD700)

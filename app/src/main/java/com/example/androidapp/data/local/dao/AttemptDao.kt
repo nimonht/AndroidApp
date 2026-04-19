@@ -47,10 +47,10 @@ interface AttemptDao {
     suspend fun getLatestAttempt(userId: String, quizId: String): AttemptEntity?
 
     /**
-     * Insert an attempt, or update it if it already exists.
+     * Upsert an attempt, or update it if it already exists.
      */
     @Upsert
-    suspend fun insertAttempt(attempt: AttemptEntity)
+    suspend fun upsertAttempt(attempt: AttemptEntity)
 
     /**
      * Update an existing attempt.

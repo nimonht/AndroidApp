@@ -1,7 +1,20 @@
 package com.example.androidapp.data.remote
 
-import com.example.androidapp.data.remote.model.*
-import com.example.androidapp.domain.model.*
+import com.example.androidapp.data.remote.model.AttemptDto
+import com.example.androidapp.data.remote.model.ChoiceDto
+import com.example.androidapp.data.remote.model.PoolChoiceDto
+import com.example.androidapp.data.remote.model.QuestionDto
+import com.example.androidapp.data.remote.model.QuestionPoolItemDto
+import com.example.androidapp.data.remote.model.QuizDto
+import com.example.androidapp.data.remote.model.UserDto
+import com.example.androidapp.domain.model.AdminPermission
+import com.example.androidapp.domain.model.Attempt
+import com.example.androidapp.domain.model.Choice
+import com.example.androidapp.domain.model.Question
+import com.example.androidapp.domain.model.QuestionPoolItem
+import com.example.androidapp.domain.model.Quiz
+import com.example.androidapp.domain.model.User
+import com.example.androidapp.domain.model.UserRole
 import com.google.firebase.Timestamp
 import java.util.Date
 

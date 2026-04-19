@@ -63,10 +63,10 @@ class QuizRepositoryImpl(
         private const val TAG = "QuizRepositoryImpl"
 
         /** Maximum number of user-owned quizzes shown on the home screen. */
-        const val HOME_MY_QUIZZES_LIMIT = 20
+        private const val HOME_MY_QUIZZES_LIMIT = 20
 
         /** Maximum number of trending (public) quizzes shown on the home screen. */
-        const val HOME_TRENDING_LIMIT = 20
+        private const val HOME_TRENDING_LIMIT = 20
     }
 
     /**
@@ -99,7 +99,7 @@ class QuizRepositoryImpl(
         if (updated == 0) {
             // Quiz doesn't exist locally yet -- full insert (embedding will be null,
             // EmbeddingIndexWorker will compute it in the next batch).
-            quizDao.insertQuiz(entity)
+            quizDao.upsertQuiz(entity)
         }
     }
 
@@ -221,14 +221,14 @@ class QuizRepositoryImpl(
             val checksum = ChecksumUtil.computeQuizChecksum(finalQuiz, questions)
 
             // Write to Room first with PENDING status
-            quizDao.insertQuiz(finalQuiz.toEntity(syncStatus = SyncStatus.PENDING.name).copy(checksum = checksum))
+            quizDao.upsertQuiz(finalQuiz.toEntity(syncStatus = SyncStatus.PENDING.name).copy(checksum = checksum))
             questions.forEachIndexed { idx, question ->
                 val qId = question.id.ifBlank { UUID.randomUUID().toString() }
                 val finalQuestion = question.copy(id = qId, quizId = quizId, position = idx)
-                questionDao.insertQuestion(finalQuestion.toEntity())
+                questionDao.upsertQuestion(finalQuestion.toEntity())
                 finalQuestion.choices.forEachIndexed { cIdx, choice ->
                     val cId = choice.id.ifBlank { UUID.randomUUID().toString() }
-                    choiceDao.insertChoice(choice.copy(id = cId).toEntity(qId))
+                    choiceDao.upsertChoice(choice.copy(id = cId).toEntity(qId))
                 }
             }
 
@@ -316,7 +316,7 @@ class QuizRepositoryImpl(
     }
 
     override fun getTrendingQuizzes(): Flow<List<Quiz>> {
-        return quizDao.getPublicQuizzesLimited(20).map { entities ->
+        return quizDao.getPublicQuizzesLimited(HOME_TRENDING_LIMIT).map { entities ->
             entities.map { it.toDomain() }
         }.onStart { ioScope.launch { refreshPublicQuizzes() } }
     }
@@ -568,10 +568,10 @@ class QuizRepositoryImpl(
                     async {
                         val choiceDtos = questionRemoteDataSource.getChoicesForQuestion(quizId, questionDto.id)
                         val question = questionDto.toDomain().copy(quizId = quizId)
-                        questionDao.insertQuestion(question.toEntity())
+                        questionDao.upsertQuestion(question.toEntity())
                         choiceDtos.forEach { choiceDto ->
                             val choice = choiceDto.toDomain()
-                            choiceDao.insertChoice(choice.toEntity(question.id))
+                            choiceDao.upsertChoice(choice.toEntity(question.id))
                         }
                     }
                 }.awaitAll()
