@@ -2,7 +2,7 @@
 <html class="no-js">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>lookupQuizId</title>
+    <title>upsertQuiz</title>
     <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
     <script>var pathToRoot = "../../../";</script>
     <script>document.documentElement.classList.replace("no-js","js");</script>
@@ -104,12 +104,12 @@
                 </div>
             </div>
             <div id="main">
-<div class="main-content" data-page-type="member" id="content" pageIds="app::com.example.androidapp.data.repository/ShareCodeRepositoryImpl/lookupQuizId/#kotlin.String/PointingToDeclaration//492899073">
-  <div class="breadcrumbs"><a href="../../../index.html">app</a><span class="delimiter">/</span><a href="../index.html">com.example.androidapp.data.repository</a><span class="delimiter">/</span><a href="index.html">ShareCodeRepositoryImpl</a><span class="delimiter">/</span><span class="current">lookupQuizId</span></div>
+<div class="main-content" data-page-type="member" id="content" pageIds="app::com.example.androidapp.data.local.dao/QuizDao/upsertQuiz/#com.example.androidapp.data.local.entity.QuizEntity/PointingToDeclaration//492899073">
+  <div class="breadcrumbs"><a href="../../../index.html">app</a><span class="delimiter">/</span><a href="../index.html">com.example.androidapp.data.local.dao</a><span class="delimiter">/</span><a href="index.html">QuizDao</a><span class="delimiter">/</span><span class="current">upsertQuiz</span></div>
   <div class="cover ">
-    <h1 class="cover"><span>lookup</span><wbr></wbr><span>Quiz</span><wbr></wbr><span><span>Id</span></span></h1>
+    <h1 class="cover"><span>upsert</span><wbr></wbr><span><span>Quiz</span></span></h1>
   </div>
-  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">suspend override </span><span class="token keyword">fun </span><a href="lookup-quiz-id.html"><span class="token function">lookupQuizId</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">shareCode<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/index.html">Result</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><p class="paragraph">Looks up the quiz ID associated with a share code.</p><span class="kdoc-tag"><h4 class="">Return</h4><p class="paragraph"><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-result/index.html">Result</a> containing the quiz ID, or null if the code does not exist.</p></span><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":app:dokkaHtml/release" data-filterable-set=":app:dokkaHtml/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>share</span><wbr></wbr><span><span>Code</span></span></u></div></span></div><div><div class="title"><p class="paragraph">The 6-character share code to look up.</p></div></div></div></div></div></div></div>
+  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:dokkaHtml/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="upsert-quiz.html"><span class="token function">upsertQuiz</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">quiz<span class="token operator">: </span><a href="../../com.example.androidapp.data.local.entity/-quiz-entity/index.html">QuizEntity</a></span></span><span class="token punctuation">)</span></div><p class="paragraph">Upsert a quiz, replacing if it already exists.</p></div></div>
 </div>
     <div class="footer">
         <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
